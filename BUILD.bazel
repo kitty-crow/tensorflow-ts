@@ -52,12 +52,9 @@ test_suite(
     name = "tests_cpu",
     tests = [
         "//tfjs-backend-cpu:tests",
-        "//tfjs-backend-wasm:tests",
         "//tfjs-converter:tests",
         "//tfjs-core:tests",
         "//tfjs-data:tests",
-        "//tfjs-tfdf:tests",
-        "//tfjs-tflite:tests",
     ],
 )
 

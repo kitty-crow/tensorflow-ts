@@ -1,0 +1,6 @@
+# Exclude non-TypeScript files from GitHub language statistics.
+* linguist-vendored
+
+# Count every TypeScript source file as TypeScript, including executable files
+# whose Node.js shebang would otherwise make Linguist classify them as JavaScript.
+*.ts linguist-vendored=false linguist-detectable linguist-language=TypeScript
