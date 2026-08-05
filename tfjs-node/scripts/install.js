@@ -132,38 +132,88 @@ async function downloadLibtensorflow() {
   await fs.promises.rename(libtensorflowDll, depsLibTensorFlowPath);
 }
 
-function exec(command) {
+function exec(command, args, env = process.env) {
   return new Promise((resolve, reject) => {
-    const child = cp.spawn(command, {shell: true, stdio: 'inherit'});
+    const child = cp.spawn(command, args, {env, shell: false, stdio: 'inherit'});
     child.once('error', reject);
     child.once('exit', code => {
       if (code === 0) {
         resolve();
         return;
       }
-      reject(new Error(`${command} exited with code ${code}`));
+      reject(new Error(
+          `${command} ${args.join(' ')} exited with code ${code}`));
     });
   });
 }
 
-async function build() {
-  setPackageJsonFile();
+function getNapiBuildVersion() {
+  const runtimeVersion = Number(process.versions.napi);
+  const versions = packageJsonFile.binary.napi_versions
+      .filter(version => version <= runtimeVersion)
+      .sort((left, right) => left - right);
+  const version = versions.at(-1);
+  if (version === undefined) {
+    throw new Error(`No supported N-API version for runtime ${runtimeVersion}`);
+  }
+  return version;
+}
+
+async function buildFromSource() {
+  const nodeGyp = require.resolve('node-gyp/bin/node-gyp.js');
+  const napiBuildVersion = getNapiBuildVersion();
+  const binary = packageJsonFile.binary;
+  const outputPath = binary.module_path.replace(
+      '{napi_build_version}', String(napiBuildVersion));
+
+  console.error('* Building TensorFlow Node.js bindings from source');
+  await exec(process.execPath, [
+    nodeGyp,
+    'rebuild',
+    `--module_name=${binary.module_name}`,
+    `--module_path=${outputPath}`,
+    `--napi_version=${process.versions.napi}`,
+    `--napi_build_version=${napiBuildVersion}`,
+    '--node_abi_napi=napi'
+  ]);
+}
+
+async function installPrebuiltAddon() {
+  const nodePreGyp = require.resolve('@mapbox/node-pre-gyp/bin/node-pre-gyp');
   const origBinary = structuredClone(packageJsonFile.binary);
   updateAddonName();
-  console.error('* Building TensorFlow Node.js bindings');
-  let buildOption = packageJsonFile.version === '0.0.0' ?
-      '--build-from-source' : '--fallback-to-build';
-  if (customTFLibUri !== undefined && customAddon === undefined) {
-    buildOption = '--build-from-source';
-  }
+  console.error('* Installing TensorFlow Node.js bindings');
 
   try {
-    await exec(`node-pre-gyp install ${buildOption}`);
-    if (platform === 'win32') {
-      await exec(`node scripts/deps-stage.js symlink ${modulePath}`);
-    }
+    await exec(process.execPath, [
+      nodePreGyp,
+      'install',
+      customTFLibUri !== undefined && customAddon === undefined ?
+          '--build-from-source' : '--fallback-to-build'
+    ]);
   } finally {
     revertAddonName(origBinary);
+  }
+}
+
+async function build() {
+  setPackageJsonFile();
+  const sourceBuild = packageJsonFile.version === '0.0.0' ||
+      process.env.TFJS_NODE_BUILD_FROM_SOURCE === '1' ||
+      (customTFLibUri !== undefined && customAddon === undefined);
+
+  if (sourceBuild) {
+    await buildFromSource();
+  } else {
+    await installPrebuiltAddon();
+  }
+
+  if (platform === 'win32') {
+    await exec(process.execPath, [
+      'scripts/deps-stage.js',
+      'symlink',
+      modulePath
+    ]);
   }
 }
 

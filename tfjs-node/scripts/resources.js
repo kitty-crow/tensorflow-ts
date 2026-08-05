@@ -21,20 +21,30 @@ const https = require('node:https');
 const path = require('node:path');
 const {pipeline} = require('node:stream/promises');
 const {URL} = require('node:url');
-const {HttpsProxyAgent} = require('https-proxy-agent');
 const tar = require('tar');
 const AdmZip = require('adm-zip');
 
-function requestOptions() {
+let proxyAgent;
+
+async function requestOptions() {
   const proxy = process.env.HTTPS_PROXY || process.env.https_proxy ||
       process.env.HTTP_PROXY || process.env.http_proxy;
-  return proxy ? {agent: new HttpsProxyAgent(proxy)} : {};
+  if (!proxy) {
+    return {};
+  }
+
+  if (!proxyAgent) {
+    const {HttpsProxyAgent} = await import('https-proxy-agent');
+    proxyAgent = new HttpsProxyAgent(proxy);
+  }
+  return {agent: proxyAgent};
 }
 
-function request(uri) {
+async function request(uri) {
   const client = uri.startsWith('https:') ? https : http;
+  const options = await requestOptions();
   return new Promise((resolve, reject) => {
-    const req = client.get(uri, requestOptions(), response => {
+    const req = client.get(uri, options, response => {
       if (response.statusCode !== 200) {
         response.resume();
         reject(new Error(`Download failed with HTTP ${response.statusCode}`));

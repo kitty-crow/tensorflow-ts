@@ -23,7 +23,7 @@
     "build-deps-ci": "yarn build-link-package && yarn build-union-ci",
     "build-npm": "./scripts/build-npm.sh",
     "build-and-upload-addon": "./scripts/build-and-upload-addon.sh",
-    "build-addon-from-source": "node-pre-gyp install --build-from-source",
+    "build-addon-from-source": "TFJS_NODE_BUILD_FROM_SOURCE=1 node scripts/install.js",
     "clean-deps": "node -e \"require('node:fs').rmSync('deps',{recursive:true,force:true});require('node:fs').rmSync('lib',{recursive:true,force:true})\"",
     "coverage": "nyc yarn ts-node -P tsconfig.test.json src/run_tests.ts",
     "enable-gpu": "node scripts/install.js gpu download && yarn && yarn build-addon-from-source",
@@ -48,7 +48,6 @@
     "@types/yargs": "^17.0.33",
     "clang-format": "~1.8.0",
     "jasmine": "~4.2.1",
-    "node-fetch": "2.7.0",
     "nyc": "^17.1.0",
     "tmp": "^0.2.5",
     "ts-node": "^10.9.2",
@@ -64,6 +63,7 @@
     "adm-zip": "0.6.0",
     "google-protobuf": "4.0.2",
     "https-proxy-agent": "9.1.0",
+    "node-gyp": "12.4.0",
     "tar": "7.5.22"
   },
   "binary": {
@@ -71,6 +71,6 @@
     "module_path": "./lib/napi-v{napi_build_version}",
     "host": "https://storage.googleapis.com/tf-builds/pre-built-binary",
     "remote_path": "./napi-v{napi_build_version}/{version}/",
-    "napi_versions": [3,4,5,6,7,8,9]
+    "napi_versions": [3, 4, 5, 6, 7, 8, 9]
   }
 }
