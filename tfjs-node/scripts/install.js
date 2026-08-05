@@ -163,9 +163,13 @@ async function buildFromSource() {
   const nodeGyp = require.resolve('node-gyp/bin/node-gyp.js');
   const napiBuildVersion = getNapiBuildVersion();
   const binary = packageJsonFile.binary;
-  const outputPath = binary.module_path.replace(
-      '{napi_build_version}', String(napiBuildVersion));
+  const outputPath = path.resolve(
+      __dirname,
+      '..',
+      binary.module_path.replace(
+          '{napi_build_version}', String(napiBuildVersion)));
 
+  await ensureDir(outputPath);
   console.error('* Building TensorFlow Node.js bindings from source');
   await exec(process.execPath, [
     nodeGyp,
