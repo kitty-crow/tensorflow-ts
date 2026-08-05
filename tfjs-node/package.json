@@ -11,7 +11,7 @@
   },
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=8.11.0"
+    "node": ">=20"
   },
   "scripts": {
     "build": "tsc && npx mkdirp dist/proto && cp src/proto/api_pb.js dist/proto/api_pb.js",
@@ -24,7 +24,7 @@
     "build-npm": "./scripts/build-npm.sh",
     "build-and-upload-addon": "./scripts/build-and-upload-addon.sh",
     "build-addon-from-source": "node-pre-gyp install --build-from-source",
-    "clean-deps": "rm -rf deps && rm -rf lib",
+    "clean-deps": "node -e \"require('node:fs').rmSync('deps',{recursive:true,force:true});require('node:fs').rmSync('lib',{recursive:true,force:true})\"",
     "coverage": "nyc yarn ts-node -P tsconfig.test.json src/run_tests.ts",
     "enable-gpu": "node scripts/install.js gpu download && yarn && yarn build-addon-from-source",
     "ensure-cpu-gpu-packages-align": "node scripts/ensure-cpu-gpu-packages-align.js",
@@ -44,45 +44,33 @@
   "devDependencies": {
     "@tensorflow/tfjs-core": "link:../link-package/node_modules/@tensorflow/tfjs-core",
     "@types/jasmine": "~4.0.3",
-    "@types/node": "^10.5.1",
-    "@types/progress": "^2.0.1",
-    "@types/rimraf": "~2.0.2",
-    "@types/yargs": "^13.0.3",
+    "@types/node": "^24.0.0",
+    "@types/yargs": "^17.0.33",
     "clang-format": "~1.8.0",
     "jasmine": "~4.2.1",
-    "node-fetch": "~2.6.1",
-    "nyc": "^15.1.0",
-    "tmp": "^0.0.33",
-    "ts-node": "~8.8.2",
+    "node-fetch": "2.7.0",
+    "nyc": "^17.1.0",
+    "tmp": "^0.2.5",
+    "ts-node": "^10.9.2",
     "tslint": "~6.1.3",
     "tslint-no-circular-imports": "^0.7.0",
-    "typescript": "5.0.4",
+    "typescript": "5.9.3",
     "yalc": "~1.0.0-pre.50",
-    "yargs": "^16.2.0"
+    "yargs": "^17.7.2"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "1.0.9",
+    "@mapbox/node-pre-gyp": "2.0.3",
     "@tensorflow/tfjs": "link:../tfjs",
-    "adm-zip": "^0.5.2",
-    "google-protobuf": "^3.9.2",
-    "https-proxy-agent": "^2.2.1",
-    "progress": "^2.0.0",
-    "rimraf": "^2.6.2",
-    "tar": "^6.2.1"
+    "adm-zip": "0.6.0",
+    "google-protobuf": "4.0.2",
+    "https-proxy-agent": "9.1.0",
+    "tar": "7.5.19"
   },
   "binary": {
     "module_name": "tfjs_binding",
     "module_path": "./lib/napi-v{napi_build_version}",
     "host": "https://storage.googleapis.com/tf-builds/pre-built-binary",
     "remote_path": "./napi-v{napi_build_version}/{version}/",
-    "napi_versions": [
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9
-    ]
+    "napi_versions": [3,4,5,6,7,8,9]
   }
 }
