@@ -13,7 +13,6 @@
 # limitations under the License.
 # =============================================================================
 
-load("//tfjs-converter/scripts:gen_op.bzl", "gen_op")
 load("//tools:defaults.bzl", "ts_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -24,26 +23,17 @@ TEST_SRCS = [
     "operations/executors/spy_ops.ts",
 ]
 
-# Used for test-snippets
 filegroup(
     name = "all_srcs",
-    srcs = glob(["**/*.ts"]),
-)
-
-gen_op(
-    name = "ops_ts_files",
-    srcs = [
-        "//tfjs-converter/python/tensorflowjs/op_list:ops",
-    ],
-    dest_dir = "operations/op_list/",
+    srcs = glob(["**/*.ts", "**/*.json"]),
 )
 
 ts_library(
     name = "tfjs-converter_src_lib",
     srcs = glob(
-        ["**/*.ts"],
+        ["**/*.ts", "**/*.json"],
         exclude = TEST_SRCS + ["index.ts"],
-    ) + [":ops_ts_files"],
+    ),
     module_name = "@tensorflow/tfjs-converter/dist",
     deps = [
         "//tfjs-core/src:tfjs-core_lib",
