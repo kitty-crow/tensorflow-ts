@@ -45,6 +45,7 @@
     "@tensorflow/tfjs-core": "link:../link-package/node_modules/@tensorflow/tfjs-core",
     "@types/jasmine": "~4.0.3",
     "@types/node": "^24.0.0",
+    "@types/progress": "^2.0.7",
     "@types/yargs": "^17.0.33",
     "clang-format": "~1.8.0",
     "jasmine": "~4.2.1",
@@ -64,6 +65,7 @@
     "google-protobuf": "4.0.2",
     "https-proxy-agent": "9.1.0",
     "node-gyp": "12.4.0",
+    "progress": "2.0.3",
     "tar": "7.5.22"
   },
   "binary": {
