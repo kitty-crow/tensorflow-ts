@@ -151,7 +151,8 @@ async function build() {
   const origBinary = structuredClone(packageJsonFile.binary);
   updateAddonName();
   console.error('* Building TensorFlow Node.js bindings');
-  let buildOption = '--fallback-to-build';
+  let buildOption = packageJsonFile.version === '0.0.0' ?
+      '--build-from-source' : '--fallback-to-build';
   if (customTFLibUri !== undefined && customAddon === undefined) {
     buildOption = '--build-from-source';
   }
