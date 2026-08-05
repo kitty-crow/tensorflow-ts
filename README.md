@@ -21,8 +21,6 @@ This fork retains the general-purpose TensorFlow.js packages needed for TypeScri
 
 The fork does not maintain React Native applications, TensorFlow Lite or Decision Forest bindings, AutoML helpers, visualisation packages, Python model-conversion tooling, obsolete experimental backends, cloud release infrastructure, broad upstream demos or platform-specific publishing machinery outside the retained Node.js and browser runtimes.
 
-The codebase remains application-agnostic. Downstream projects consume it as a TensorFlow implementation rather than defining its architecture or repository identity.
-
 ## Licence
 
 Apache License 2.0. Original TensorFlow.js copyright and licence notices are retained.
