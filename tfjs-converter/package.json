@@ -45,9 +45,7 @@
     "test-snippets": "bazel test :test_snippets_test --test_output=all",
     "gen-doc": "ts-node -s ./scripts/gen_doc.ts",
     "model-summary": "ts-node -s ./tools/model_summary.ts",
-    "pb2json": "ts-node -s ./tools/pb2json_converter.ts",
-    "build-pip-package": "cd python && ./build-pip-package.sh --test /tmp/tfjs-pips",
-    "run-python-tests": "bazel test python/..."
+    "pb2json": "ts-node -s ./tools/pb2json_converter.ts"
   },
   "resolutions": {
     "minimist": "1.2.6"

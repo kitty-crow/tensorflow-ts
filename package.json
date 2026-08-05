@@ -78,12 +78,13 @@
     "verdaccio": "^5.9.0"
   },
   "scripts": {
+    "check:source-policy": "node scripts/check-source-policy.mjs",
     "lint": "tslint -p tsconfig_tslint.json",
-    "test": "bazel test //:tests",
+    "test": "node scripts/check-source-policy.mjs && bazel test //:tests",
     "test-cpu": "bazel test --test_output=all //:tests_cpu",
     "test-gpu": "bazel test --test_output=all //:tests_gpu",
     "test-non-bazel": "cd link-package && yarn build-deps-for --all",
-    "build": "cd link-package && yarn build",
+    "build": "node scripts/check-source-policy.mjs && cd link-package && yarn build",
     "test-packages-ci": "yarn generate-cloudbuild-for-packages && ./scripts/run-build.sh",
     "nightly-cloudbuild": "NIGHTLY=true yarn generate-cloudbuild-for-packages && gcloud builds submit . --config=cloudbuild_generated.yml --substitutions=_NIGHTLY=true",
     "generate-cloudbuild-for-packages": "ts-node -s ./scripts/generate_cloudbuild_for_packages.ts",
@@ -92,7 +93,6 @@
     "release": "ts-node -s ./scripts/release.ts",
     "release-tfjs": "ts-node -s ./scripts/release-tfjs.ts",
     "publish-npm": "ts-node -s ./scripts/publish-npm.ts",
-    "publish-pypi": "ts-node -s ./scripts/publish-pypi.ts",
     "release-notes": "ts-node -s ./scripts/release_notes/release_notes.ts",
     "test-release-notes": "ts-node -s ./scripts/release_notes/run_tests.ts",
     "update-tfjs-lockfiles": "ts-node -s ./scripts/update-tfjs-lockfiles",
