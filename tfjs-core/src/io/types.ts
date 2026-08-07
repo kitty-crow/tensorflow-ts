@@ -212,7 +212,7 @@ export declare interface TrainingConfig {
   // TODO(cais): Tighten the typing once keras spec is available to tfjs-core.
   sample_weight_mode?: string;
 
-  loss_weights?: number[]|{[key: string]: number};
+  loss_weights?: number|number[]|{[key: string]: number};
 }
 
 export type WeightData = ArrayBuffer | ArrayBuffer[];

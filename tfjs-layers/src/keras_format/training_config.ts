@@ -16,9 +16,12 @@ import {PyJsonDict} from './types';
 export type MetricsIdentifier = string;
 
 /**
- * a type for valid values of the `loss_weights` field.
+ * A valid Keras `loss_weights` value.
+ *
+ * Keras accepts a scalar for a single-output model, or one weight per output
+ * as an Array/tuple or output-name dictionary for a multi-output model.
  */
-export type LossWeights = number[]|{[key: string]: number};
+export type LossWeights = number|number[]|{[key: string]: number};
 
 /**
  * Configuration of the Keras trainer. This includes the configuration to the
