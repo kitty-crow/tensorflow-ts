@@ -1,0 +1,43 @@
+name: Validate Keras loss_weights
+
+on:
+  push:
+    branches:
+      - feature/keras-loss-weights
+    paths:
+      - .github/workflows/validate-keras-loss-weights.yml
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/keras-loss-weights
+
+      - name: Install repository dependencies
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+
+      - name: Typecheck tfjs-layers
+        run: yarn tsc --noEmit -p tfjs-layers/tsconfig.json
+
+      - name: Restore removed Python package boundary for Bazel analysis only
+        run: |
+          mkdir -p tfjs-converter/python
+          cat > tfjs-converter/python/BUILD.bazel <<'EOF'
+          package(default_visibility = ["//visibility:public"])
+          exports_files([
+              "requirements_lock.txt",
+              "requirements-dev_lock.txt",
+          ])
+          EOF
+          : > tfjs-converter/python/requirements_lock.txt
+          : > tfjs-converter/python/requirements-dev_lock.txt
+
+      - name: Build Layers test bundle
+        run: yarn bazel build //tfjs-layers/src:tfjs-layers_test_bundle
+
+      - name: Run focused Keras parity tests
+        run: yarn bazel test //tfjs-layers:tfjs-layers_webgl2_test --//:grep="Keras loss_weights compatibility" --test_output=errors
