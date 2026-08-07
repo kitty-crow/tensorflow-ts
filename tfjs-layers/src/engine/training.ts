@@ -20,7 +20,7 @@ import {NotImplementedError, RuntimeError, ValueError} from '../errors';
 import {Shape} from '../keras_format/common';
 import {LossIdentifier} from '../keras_format/loss_config';
 import {OptimizerSerialization} from '../keras_format/optimizer_config';
-import {MetricsIdentifier, TrainingConfig} from '../keras_format/training_config';
+import {LossWeights, MetricsIdentifier, TrainingConfig} from '../keras_format/training_config';
 import {deserialize} from '../layers/serialization';
 import { disposeTensorsInLogs, UnresolvedLogs } from '../logs';
 import * as losses from '../losses';
@@ -401,6 +401,70 @@ export function collectMetrics(
   }
 }
 
+/**
+ * Normalizes Keras `loss_weights` to model output order.
+ *
+ * Keras accepts a scalar for a single-output model, or one scalar per
+ * output as a list/tuple or dictionary for a multi-output model.
+ */
+export function standardizeLossWeights(
+    lossWeights: LossWeights, outputNames: string[]): number[] {
+  if (lossWeights == null) {
+    return outputNames.map(_ => 1);
+  }
+
+  if (typeof lossWeights === 'number') {
+    if (outputNames.length !== 1) {
+      throw new ValueError(
+          '`loss_weights` may be a scalar only for a single-output model. ' +
+          `Received ${outputNames.length} outputs.`);
+    }
+    return [lossWeights];
+  }
+
+  if (Array.isArray(lossWeights)) {
+    if (lossWeights.length !== outputNames.length) {
+      throw new ValueError(
+          '`loss_weights` must match the number of model outputs. ' +
+          `Expected ${outputNames.length} weight(s), received ` +
+          `${lossWeights.length}.`);
+    }
+    for (const weight of lossWeights) {
+      if (typeof weight !== 'number') {
+        throw new ValueError(
+            '`loss_weights` list entries must be numeric scalars.');
+      }
+    }
+    return lossWeights.slice();
+  }
+
+  if (typeof lossWeights === 'object') {
+    for (const name of Object.keys(lossWeights)) {
+      if (outputNames.indexOf(name) === -1) {
+        throw new ValueError(
+            `Unknown output in \`loss_weights\` dictionary: "${name}". ` +
+            `Expected: ${outputNames}`);
+      }
+    }
+    const missing = outputNames.filter(name => lossWeights[name] == null);
+    if (missing.length > 0) {
+      throw new ValueError(
+          `\`loss_weights\` dictionary is missing output(s): ${missing}.`);
+    }
+    return outputNames.map(name => {
+      const weight = lossWeights[name];
+      if (typeof weight !== 'number') {
+        throw new ValueError(
+            `\`loss_weights\` value for "${name}" must be a numeric scalar.`);
+      }
+      return weight;
+    });
+  }
+
+  throw new ValueError(
+      'Expected `loss_weights` to be a numeric scalar, list, or dictionary.');
+}
+
 export interface ModelEvaluateArgs {
   /**
    * Batch size (Integer). If unspecified, it will default to 32.
@@ -454,8 +518,18 @@ export interface ModelCompileArgs {
   metrics?: string|LossOrMetricFn|Array<string|LossOrMetricFn>|
       {[outputName: string]: string | LossOrMetricFn};
 
-  // TODO(cais): Add lossWeights, sampleWeightMode, weightedMetrics, and
-  //   targetTensors.
+  /**
+   * Keras-compatible loss weights. A scalar is valid for a single output;
+   * multi-output models accept an Array or output-name dictionary.
+   */
+  loss_weights?: LossWeights;
+
+  /**
+   * TensorFlow.js camelCase alias for `loss_weights`.
+   */
+  lossWeights?: LossWeights;
+
+  // TODO(cais): Add sampleWeightMode, weightedMetrics, and targetTensors.
 }
 
 const LAYERS_MODEL_FORMAT_NAME = 'layers-model';
@@ -485,6 +559,11 @@ export class LayersModel extends Container implements tfc.InferenceModel {
   loss: string|string[]|{[outputName: string]: string}|LossOrMetricFn|
       LossOrMetricFn[]|{[outputName: string]: LossOrMetricFn};
   lossFunctions: LossOrMetricFn[];
+  /** Exact Keras spelling retained for API and serialization parity. */
+  loss_weights?: LossWeights;
+  /** TensorFlow.js-style alias of `loss_weights`. */
+  lossWeights?: LossWeights;
+  private lossWeightValues: number[];
 
   // TODO(cais): These private variables should probably not have the string
   //   'feed' in their names, because we are not dealing with a symbolic
@@ -586,6 +665,17 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     }
     this.loss = args.loss;
 
+    if (args.loss_weights != null && args.lossWeights != null) {
+      throw new ValueError(
+          'Specify only one of `loss_weights` and `lossWeights`.');
+    }
+    const configuredLossWeights = args.loss_weights != null ?
+        args.loss_weights : args.lossWeights;
+    this.loss_weights = configuredLossWeights;
+    this.lossWeights = configuredLossWeights;
+    this.lossWeightValues =
+        standardizeLossWeights(configuredLossWeights, this.outputNames);
+
     if (typeof args.optimizer === 'string') {
       this.optimizer_ = optimizers.getOptimizer(args.optimizer);
       this.isOptimizerOwned = true;
@@ -598,7 +688,6 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       this.isOptimizerOwned = false;
     }
 
-    // TODO(cais): Add lossWeights.
     // TODO(cais): Add sampleWeightMode.
 
     // Prepare loss functions.
@@ -671,11 +760,11 @@ export class LayersModel extends Container implements tfc.InferenceModel {
         if (skipTargetIndices.indexOf(i) !== -1) {
           continue;
         }
-        // TODO(cais): Add weightedLoss, sampleWeight and mask.
-        //   The following line should be weightedLoss
-        const weightedLoss = this.lossFunctions[i];
+        // Keras reports per-output loss metrics before applying
+        // `loss_weights`; only the total optimization loss is weighted.
+        const outputLoss = this.lossFunctions[i];
         if (this.outputs.length > 1) {
-          this.metricsTensors.push([weightedLoss, i]);
+          this.metricsTensors.push([outputLoss, i]);
           this.metricsNames.push(this.outputNames[i] + '_loss');
         }
       }
@@ -1322,7 +1411,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
         // TODO(cais): Take care of the case of multiple outputs from a
         //   single layer?
 
-        let totalLoss: Tensor;
+        let totalLoss: Scalar;
         for (let i = 0; i < this.lossFunctions.length; ++i) {
           const lossFunction = this.lossFunctions[i];
           let loss = lossFunction(targets[i], outputs[i]);
@@ -1330,14 +1419,17 @@ export class LayersModel extends Container implements tfc.InferenceModel {
             loss = computeWeightedLoss(loss, sampleWeights[i]);
           }
 
-          // TODO(cais): push Scalar instead.
           const meanLoss: Scalar = tfc.mean(loss);
-          // TODO(cais): Use a scope() instead, to avoid ownership.
+          // Keep the raw per-output loss for Keras-compatible metrics.
           lossValues.push(meanLoss);
+
+          const lossWeight = this.lossWeightValues[i];
+          const weightedMeanLoss: Scalar = lossWeight === 1 ?
+              meanLoss : tfc.mul(meanLoss, lossWeight) as Scalar;
           if (i === 0) {
-            totalLoss = loss;
+            totalLoss = weightedMeanLoss;
           } else {
-            totalLoss = tfc.add(totalLoss, loss);
+            totalLoss = tfc.add(totalLoss, weightedMeanLoss) as Scalar;
           }
         }
 
@@ -1361,7 +1453,8 @@ export class LayersModel extends Container implements tfc.InferenceModel {
           metricsValues.push(weightedMetric);
         }
 
-        totalLoss = tfc.mean(totalLoss);
+        // Individual output losses are reduced before their weighted
+        // sum, matching Keras and allowing heterogeneous output shapes.
 
         // Add regularizer penalties.
         this.calculateLosses().forEach(regularizerLoss => {
@@ -1390,6 +1483,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     this.testFunction = (data: Tensor[]) => {
       return tfc.tidy(() => {
         const valOutputs: Scalar[] = [];
+        const lossValues: Scalar[] = [];
         let totalLoss: Scalar;
         const inputs = data.slice(0, this.inputs.length);
         const targets = data.slice(
@@ -1400,27 +1494,40 @@ export class LayersModel extends Container implements tfc.InferenceModel {
         }
         const feedDict = new FeedDict(feeds);
         const outputs = execute(this.outputs, feedDict) as Tensor[];
-        // Compute total loss.
+
+        // Compute raw per-output losses and the Keras-compatible weighted
+        // total loss. Per-output loss metrics remain unweighted.
         for (let i = 0; i < this.lossFunctions.length; ++i) {
           const lossFunction = this.lossFunctions[i];
           // TODO(cais): Add sample weighting and replace the simple
           // averaging.
-          const loss: Scalar = tfc.mean(lossFunction(targets[i], outputs[i]));
+          const loss: Scalar =
+              tfc.mean(lossFunction(targets[i], outputs[i]));
+          lossValues.push(loss);
+          const lossWeight = this.lossWeightValues[i];
+          const weightedLoss: Scalar = lossWeight === 1 ?
+              loss : tfc.mul(loss, lossWeight) as Scalar;
           if (i === 0) {
-            totalLoss = loss;
+            totalLoss = weightedLoss;
           } else {
-            totalLoss = tfc.add(totalLoss, loss);
+            totalLoss = tfc.add(totalLoss, weightedLoss) as Scalar;
           }
-          valOutputs.push(totalLoss);
         }
-        // Compute the metrics.
+        valOutputs.push(totalLoss);
+
+        // Compute the metrics in the same order as makeTrainFunction().
         for (let i = 0; i < this.metricsTensors.length; ++i) {
-          const metric = this.metricsTensors[i][0];
-          const outputIndex = this.metricsTensors[i][1];
-          // TODO(cais): Replace K.mean() with a proper weighting function.
-          const meanMetric =
-              tfc.mean(metric(targets[outputIndex], outputs[outputIndex]));
-          valOutputs.push(meanMetric as Scalar);
+          let meanMetric: Scalar;
+          if (this.outputs.length > 1 && i < this.outputs.length) {
+            meanMetric = lossValues[i];
+          } else {
+            const metric = this.metricsTensors[i][0];
+            const outputIndex = this.metricsTensors[i][1];
+            // TODO(cais): Replace K.mean() with a proper weighting function.
+            meanMetric = tfc.mean(
+                metric(targets[outputIndex], outputs[outputIndex]));
+          }
+          valOutputs.push(meanMetric);
         }
         return valOutputs;
       });
@@ -1978,6 +2085,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     return {
       loss: this.getLossIdentifiers(),
       metrics: this.getMetricIdentifiers(),
+      loss_weights: this.loss_weights,
       optimizer_config: {
         class_name: this.optimizer.getClassName(),
         config: this.optimizer.getConfig()
@@ -1985,15 +2093,11 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     };
     // TODO(cais): Add weight_metrics when they are supported.
     // TODO(cais): Add sample_weight_mode when it's supported.
-    // TODO(cais): Add loss_weights when it's supported.
   }
 
   loadTrainingConfig(trainingConfig: TrainingConfig) {
     if (trainingConfig.weighted_metrics != null) {
       throw new Error('Loading weight_metrics is not supported yet.');
-    }
-    if (trainingConfig.loss_weights != null) {
-      throw new Error('Loading loss_weights is not supported yet.');
     }
     if (trainingConfig.sample_weight_mode != null) {
       throw new Error('Loading sample_weight_mode is not supported yet.');
@@ -2025,7 +2129,12 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       }
     }
 
-    this.compile({loss, metrics, optimizer});
+    this.compile({
+      loss,
+      metrics,
+      optimizer,
+      loss_weights: trainingConfig.loss_weights
+    });
   }
 
   /**
