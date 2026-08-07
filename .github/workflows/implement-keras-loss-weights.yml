@@ -23,6 +23,16 @@ jobs:
         run: |
           sed -i 's/^    """,$/    "",/' .github/scripts/apply_keras_loss_weights.py
           python3 .github/scripts/apply_keras_loss_weights.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tfjs-core/src/io/types.ts')
+          source = path.read_text()
+          old = '  loss_weights?: number[]|{[key: string]: number};'
+          new = '  loss_weights?: number|number[]|{[key: string]: number};'
+          if source.count(old) != 1:
+              raise SystemExit('unexpected tfjs-core loss_weights declaration')
+          path.write_text(source.replace(old, new, 1))
+          PY
 
       - name: Install repository dependencies
         run: |
@@ -36,6 +46,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tfjs-layers/src/engine/training.ts
+          git add tfjs-layers/src/engine/training.ts tfjs-core/src/io/types.ts
           git commit -m "Implement Keras-compatible loss_weights"
           git push origin HEAD:feature/keras-loss-weights
