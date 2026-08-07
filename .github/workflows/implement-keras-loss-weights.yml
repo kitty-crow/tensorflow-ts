@@ -20,7 +20,9 @@ jobs:
           fetch-depth: 0
 
       - name: Apply asserted source patch
-        run: python3 .github/scripts/apply_keras_loss_weights.py
+        run: |
+          sed -i 's/^    """,$/    "",/' .github/scripts/apply_keras_loss_weights.py
+          python3 .github/scripts/apply_keras_loss_weights.py
 
       - name: Install repository dependencies
         run: |
