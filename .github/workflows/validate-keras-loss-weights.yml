@@ -31,6 +31,7 @@ jobs:
             --format=cjs \
             --target=node20 \
             --tree-shaking=false \
+            --ignore-annotations \
             --alias:@tensorflow/tfjs-core="$PWD/tfjs-core/src/index.ts" \
             --alias:@tensorflow/tfjs-core/dist="$PWD/tfjs-core/src" \
             --alias:@tensorflow/tfjs-backend-cpu="$PWD/tfjs-backend-cpu/src/index.ts" \
