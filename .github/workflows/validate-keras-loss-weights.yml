@@ -25,8 +25,7 @@ jobs:
 
       - name: Bundle direct source runtime smoke
         run: |
-          test -x node_modules/.bin/esbuild
-          node_modules/.bin/esbuild .github/scripts/loss_weights_runtime_smoke.ts \
+          npx --yes esbuild@0.24.2 .github/scripts/loss_weights_runtime_smoke.ts \
             --bundle \
             --platform=node \
             --format=cjs \
