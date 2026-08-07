@@ -23,41 +23,20 @@ jobs:
       - name: Typecheck tfjs-layers
         run: yarn tsc --noEmit -p tfjs-layers/tsconfig.json
 
-      - name: Restore removed workspace boundaries for Bazel analysis only
+      - name: Bundle direct source runtime smoke
         run: |
-          mkdir -p tfjs-converter/python
-          cat > tfjs-converter/python/BUILD.bazel <<'EOF'
-          package(default_visibility = ["//visibility:public"])
-          exports_files([
-              "requirements_lock.txt",
-              "requirements-dev_lock.txt",
-          ])
-          EOF
-          : > tfjs-converter/python/requirements_lock.txt
-          : > tfjs-converter/python/requirements-dev_lock.txt
+          test -x node_modules/.bin/esbuild
+          node_modules/.bin/esbuild .github/scripts/loss_weights_runtime_smoke.ts \
+            --bundle \
+            --platform=node \
+            --format=cjs \
+            --target=node20 \
+            --tree-shaking=false \
+            --alias:@tensorflow/tfjs-core="$PWD/tfjs-core/src/index.ts" \
+            --alias:@tensorflow/tfjs-core/dist="$PWD/tfjs-core/src" \
+            --alias:@tensorflow/tfjs-backend-cpu="$PWD/tfjs-backend-cpu/src/index.ts" \
+            --alias:@tensorflow/tfjs-backend-cpu/dist="$PWD/tfjs-backend-cpu/src" \
+            --outfile=/tmp/loss-weights-runtime-smoke.cjs
 
-          mkdir -p tfjs-tflite
-          cat > tfjs-tflite/BUILD.bazel <<'EOF'
-          package(default_visibility = ["//visibility:public"])
-          exports_files(["tflite_repositories.bzl"])
-          EOF
-          cat > tfjs-tflite/tflite_repositories.bzl <<'EOF'
-          def tflite_repositories():
-              pass
-          EOF
-
-          mkdir -p tfjs-tfdf
-          cat > tfjs-tfdf/BUILD.bazel <<'EOF'
-          package(default_visibility = ["//visibility:public"])
-          exports_files(["tfdf_repositories.bzl"])
-          EOF
-          cat > tfjs-tfdf/tfdf_repositories.bzl <<'EOF'
-          def tfdf_repositories():
-              pass
-          EOF
-
-      - name: Build Layers test bundle
-        run: yarn bazel build //tfjs-layers/src:tfjs-layers_test_bundle
-
-      - name: Run focused Keras parity tests
-        run: yarn bazel test //tfjs-layers:tfjs-layers_webgl2_test --//:grep="Keras loss_weights compatibility" --test_output=errors
+      - name: Run direct source runtime smoke
+        run: node /tmp/loss-weights-runtime-smoke.cjs
