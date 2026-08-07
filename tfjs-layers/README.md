@@ -57,6 +57,38 @@ const output = model.predict(tf.tensor2d([[5]], [1, 1]));
 output.print();
 ```
 
+### Keras-compatible multi-output loss weights
+
+This fork supports Keras-compatible `loss_weights` in `LayersModel.compile()`.
+Each output loss is reduced independently, multiplied by its configured weight,
+and then included in the total optimisation loss. Per-output loss metrics remain
+unweighted, matching Keras behaviour.
+
+Use the same snake-case name as Keras:
+
+```js
+model.compile({
+  optimizer: 'adam',
+  loss: {
+    category: 'categoricalCrossentropy',
+    offset: 'meanSquaredError'
+  },
+  loss_weights: {
+    category: 2,
+    offset: 0.5
+  }
+});
+```
+
+For multi-output models, `loss_weights` may be an array in model-output order or
+a dictionary keyed by output name. A numeric scalar is accepted for a
+single-output model. The TensorFlow.js-style `lossWeights` spelling remains an
+alias for JavaScript and TypeScript callers, but serialized Keras training
+configuration uses `loss_weights`.
+
+The weighted total is computed from scalar-reduced output losses, so outputs do
+not need to have mutually broadcastable loss tensor shapes.
+
 ### Loading a pretrained Keras model
 
 You can also load a model previously trained and saved from elsewhere (e.g.,
