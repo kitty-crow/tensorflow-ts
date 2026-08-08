@@ -33,7 +33,7 @@ describeMathCPU('Keras fit class_weight compatibility', () => {
        const ys = tfc.tensor2d([[1, 0], [0, 1]]);
        try {
          model.compile({
-           optimizer: tfc.train.sgd(0),
+           optimizer: tfc.train.sgd(0.01),
            loss: 'categoricalCrossentropy'
          });
          const history = await model.fit(xs, ys, {
@@ -44,6 +44,8 @@ describeMathCPU('Keras fit class_weight compatibility', () => {
            class_weight: {1: 3}
          });
          expect(history.history.loss.length).toBe(1);
+         // The only batch begins from zero logits, so the returned training
+         // loss is the weighted pre-update categorical crossentropy.
          expect(history.history.loss[0] as number)
              .toBeCloseTo(2 * Math.log(2), 5);
        } finally {
