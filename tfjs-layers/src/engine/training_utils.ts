@@ -15,7 +15,6 @@ import {
   mul,
   reshape,
   Tensor,
-  Tensor1D,
   tensor1d,
   tidy
 } from '@tensorflow/tfjs-core';
@@ -62,7 +61,7 @@ function standardizeSampleOrClassWeights(
     weightType: 'sampleWeight'|'classWeight'): ClassWeight[] {
   const numOutputs = outputNames.length;
   if (xWeight == null || (Array.isArray(xWeight) && xWeight.length === 0)) {
-    return outputNames.map(name => null);
+    return outputNames.map(_name => null);
   }
   if (numOutputs === 1) {
     if (Array.isArray(xWeight) && xWeight.length === 1) {
@@ -130,7 +129,7 @@ export function standardizeSampleWeights(
     sampleWeight: SampleWeight, outputNames: string[]): Tensor[] {
   const numOutputs = outputNames.length;
   if (sampleWeight == null) {
-    return outputNames.map(_ => null);
+    return outputNames.map(_name => null);
   }
 
   if (numOutputs === 1) {
@@ -169,7 +168,7 @@ export function standardizeSampleWeights(
           'non-scalar sample weights, pass a `sample_weight` argument with ' +
           'one array per model output.');
     }
-    return outputNames.map(_ => sampleWeight);
+    return outputNames.map(_name => sampleWeight);
   }
 
   if (Array.isArray(sampleWeight)) {
@@ -209,7 +208,8 @@ export function standardizeSampleWeights(
  * @param sampleWeightMode Retained for TensorFlow.js API compatibility. Modern
  *     Keras no longer requires a temporal mode; structural dimensions are
  *     represented directly by the sample-weight tensor.
- * @return A caller-owned weight tensor, or null if no weighting was requested.
+ * @return A training-owned weight tensor, or null if no weighting was
+ *     requested.
  */
 export async function standardizeWeights(
     y: Tensor, sampleWeight?: Tensor, classWeight?: ClassWeight,
@@ -290,11 +290,19 @@ export async function standardizeWeights(
 /**
  * Apply sample/structural weights to the unreduced loss tensor.
  *
- * TensorFlow.js broadcasting semantics are used intentionally. This permits
- * canonical Keras use cases such as `[batch]`, `[batch, timesteps]`,
- * `[batch, groups]`, and `[batch, groups, subelements]` whenever the loss has
- * the corresponding unreduced shape.
+ * Keras sample-wise weights are conceptually expanded across trailing loss
+ * dimensions. TensorFlow broadcasting is then used for temporal/structural
+ * weight tensors that already retain those dimensions.
  */
 export function computeWeightedLoss(losses: Tensor, sampleWeights: Tensor) {
-  return mul(losses, sampleWeights);
+  return tidy(() => {
+    let alignedWeights = sampleWeights;
+    if (sampleWeights.rank < losses.rank) {
+      alignedWeights = reshape(
+          sampleWeights,
+          sampleWeights.shape.concat(
+              new Array(losses.rank - sampleWeights.rank).fill(1)));
+    }
+    return mul(losses, alignedWeights);
+  });
 }
