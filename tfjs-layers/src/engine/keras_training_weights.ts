@@ -192,23 +192,54 @@ async function tensorScalarsToNumbers(tensors: Scalar[]): Promise<number[]> {
  */
 declare module './training' {
   interface LayersModel {
+    // Preserve the historic TFJS return type for the ordinary call. This is
+    // important for Sequential, which delegates to LayersModel.trainOnBatch().
+    trainOnBatch(x: TensorData, y: TensorData): Promise<number|number[]>;
     trainOnBatch(
         x: TensorData, y: TensorData, sampleWeight?: SampleWeight,
         classWeight?: ClassWeight|ClassWeight[]|ClassWeightMap,
-        returnDict?: boolean): Promise<BatchMetricResult>;
+        returnDict?: false): Promise<number|number[]>;
+    trainOnBatch(
+        x: TensorData, y: TensorData, sampleWeight: SampleWeight,
+        classWeight: ClassWeight|ClassWeight[]|ClassWeightMap,
+        returnDict: true): Promise<BatchMetricMap>;
+    trainOnBatch(
+        x: TensorData, y: TensorData, sampleWeight: SampleWeight,
+        classWeight: ClassWeight|ClassWeight[]|ClassWeightMap,
+        returnDict: boolean): Promise<BatchMetricResult>;
 
     train_on_batch(
         x: TensorData, y: TensorData, sample_weight?: SampleWeight,
         class_weight?: ClassWeight,
-        return_dict?: boolean): Promise<BatchMetricResult>;
+        return_dict?: false): Promise<number|number[]>;
+    train_on_batch(
+        x: TensorData, y: TensorData, sample_weight: SampleWeight,
+        class_weight: ClassWeight, return_dict: true):
+        Promise<BatchMetricMap>;
+    train_on_batch(
+        x: TensorData, y: TensorData, sample_weight: SampleWeight,
+        class_weight: ClassWeight, return_dict: boolean):
+        Promise<BatchMetricResult>;
 
     testOnBatch(
         x: TensorData, y: TensorData, sampleWeight?: SampleWeight,
-        returnDict?: boolean): Promise<BatchMetricResult>;
+        returnDict?: false): Promise<number|number[]>;
+    testOnBatch(
+        x: TensorData, y: TensorData, sampleWeight: SampleWeight,
+        returnDict: true): Promise<BatchMetricMap>;
+    testOnBatch(
+        x: TensorData, y: TensorData, sampleWeight: SampleWeight,
+        returnDict: boolean): Promise<BatchMetricResult>;
 
     test_on_batch(
         x: TensorData, y: TensorData, sample_weight?: SampleWeight,
-        return_dict?: boolean): Promise<BatchMetricResult>;
+        return_dict?: false): Promise<number|number[]>;
+    test_on_batch(
+        x: TensorData, y: TensorData, sample_weight: SampleWeight,
+        return_dict: true): Promise<BatchMetricMap>;
+    test_on_batch(
+        x: TensorData, y: TensorData, sample_weight: SampleWeight,
+        return_dict: boolean): Promise<BatchMetricResult>;
 
     predict_on_batch(x: Tensor|Tensor[]): Tensor|Tensor[];
   }
@@ -239,7 +270,7 @@ if (!prototype[PATCH_FLAG]) {
     }
 
     let standardSampleWeights: Tensor[] =
-        this.outputNames.map((_name: string) => null);
+        this.outputNames.map((_name: string): Tensor => null);
 
     if (sampleWeight != null) {
       const orderedWeights =
