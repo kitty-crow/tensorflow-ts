@@ -19,7 +19,8 @@
  *   test_on_batch(..., sample_weight=..., return_dict=...)
  *
  * Existing TensorFlow.js camelCase methods remain available and route through
- * the same implementation.
+ * the same implementation while retaining their legacy multi-output
+ * `classWeight` structures.
  *
  * The compatibility implementation is installed from the public package
  * entrypoint (`../index.ts`). Keeping it isolated avoids changing the model
@@ -48,6 +49,7 @@ import {
   ClassWeightMap,
   computeWeightedLoss,
   SampleWeight,
+  standardizeClassWeights,
   standardizeSampleWeights,
   standardizeWeights
 } from './training_utils';
@@ -107,34 +109,12 @@ function normalizeFitArgs(rawArgs: FitArgsWithKerasAliases = {}):
   return args;
 }
 
-function normalizeSingleOutputClassWeight(
-    classWeight: ClassWeight|ClassWeight[]|ClassWeightMap,
-    outputNames: string[]): ClassWeight {
-  if (outputNames.length !== 1) {
+function assertKerasClassWeightCompatible(
+    classWeight: ClassWeight, outputNames: string[]): void {
+  if (classWeight != null && outputNames.length !== 1) {
     throw new ValueError(
         '`class_weight` is only supported for Models with a single output.');
   }
-  if (classWeight == null) {
-    return null;
-  }
-
-  // Preserve source compatibility with the older TensorFlow.js singleton
-  // array/output-map forms while resolving them to Keras' single dictionary.
-  if (Array.isArray(classWeight)) {
-    if (classWeight.length !== 1) {
-      throw new ValueError(
-          '`class_weight` is only supported for Models with a single output.');
-    }
-    return classWeight[0];
-  }
-
-  const outputName = outputNames[0];
-  const possibleMapValue =
-      (classWeight as ClassWeightMap)[outputName] as ClassWeight;
-  if (possibleMapValue != null && typeof possibleMapValue === 'object') {
-    return possibleMapValue;
-  }
-  return classWeight as ClassWeight;
 }
 
 function sliceWeightArrays(
@@ -248,6 +228,10 @@ if (!prototype[PATCH_FLAG]) {
    * Standardize TensorFlow.js/Keras weight structures to one optional Tensor
    * per output. Returned weight tensors are owned by the training call, never
    * by the caller, so normal training cleanup is safe.
+   *
+   * This internal method deliberately retains TensorFlow.js' historical
+   * multi-output `classWeight` forms. The Keras single-output restriction is
+   * enforced only at canonical snake_case API boundaries.
    */
   prototype.standardizeUserData = async function(
       x: TensorData, y: TensorData, sampleWeight?: SampleWeight,
@@ -262,8 +246,7 @@ if (!prototype[PATCH_FLAG]) {
       throw canonicalWeightConflictError(sampleWeight, classWeight);
     }
 
-    let standardSampleWeights: Tensor[] =
-        this.outputNames.map((_name: string): Tensor => null);
+    let standardSampleWeights: Tensor[] = null;
 
     if (sampleWeight != null) {
       const orderedWeights =
@@ -274,10 +257,13 @@ if (!prototype[PATCH_FLAG]) {
             standardYs[i], orderedWeights[i], null));
       }
     } else if (classWeight != null) {
-      const canonicalClassWeight =
-          normalizeSingleOutputClassWeight(classWeight, this.outputNames);
-      standardSampleWeights = [await standardizeWeights(
-          standardYs[0], null, canonicalClassWeight)];
+      const orderedClassWeights =
+          standardizeClassWeights(classWeight, this.outputNames);
+      standardSampleWeights = [];
+      for (let i = 0; i < orderedClassWeights.length; ++i) {
+        standardSampleWeights.push(await standardizeWeights(
+            standardYs[i], null, orderedClassWeights[i]));
+      }
     }
 
     return [standardXs, standardYs, standardSampleWeights];
@@ -356,7 +342,12 @@ if (!prototype[PATCH_FLAG]) {
   prototype.fit = async function(
       x: TensorData, y: TensorData,
       rawArgs: FitArgsWithKerasAliases = {}): Promise<History> {
+    const usesKerasClassWeight = rawArgs.class_weight != null;
     const args = normalizeFitArgs(rawArgs);
+    if (usesKerasClassWeight) {
+      assertKerasClassWeightCompatible(
+          args.classWeight as ClassWeight, this.outputNames);
+    }
     if (this.isTraining) {
       throw new Error(
           'Cannot start training because another fit() call is ongoing.');
@@ -409,7 +400,8 @@ if (!prototype[PATCH_FLAG]) {
         valX = valStandardized[0];
         valY = valStandardized[1];
         valSampleWeights = valStandardized[2];
-        valIns = valX.concat(valY).concat(valSampleWeights);
+        valIns = valX.concat(valY).concat(
+            valSampleWeights == null ? [] : valSampleWeights);
       } else if (
           args.validationSplit != null && args.validationSplit > 0 &&
           args.validationSplit < 1) {
@@ -431,12 +423,14 @@ if (!prototype[PATCH_FLAG]) {
         valSampleWeights = sliceWeightArrays(
             originalSampleWeights, splitAt, originalBatchSize);
         sampleWeights = sliceWeightArrays(originalSampleWeights, 0, splitAt);
-        valIns = valX.concat(valY).concat(valSampleWeights);
+        valIns = valX.concat(valY).concat(
+            valSampleWeights == null ? [] : valSampleWeights);
       } else if (args.validationSteps != null) {
         doValidation = true;
       }
 
-      const ins = inputs.concat(targets).concat(sampleWeights);
+      const ins = inputs.concat(targets).concat(
+          sampleWeights == null ? [] : sampleWeights);
       this.checkTrainableWeightsConsistency();
 
       const trainFunction = this.makeTrainFunction();
@@ -488,7 +482,8 @@ if (!prototype[PATCH_FLAG]) {
           [Tensor[], Tensor[], Tensor[]];
       const trainFunction = this.makeTrainFunction();
       lossTensors = trainFunction(
-          standardized[0].concat(standardized[1]).concat(standardized[2]));
+          standardized[0].concat(standardized[1]).concat(
+              standardized[2] == null ? [] : standardized[2]));
       const values = await tensorScalarsToNumbers(lossTensors);
       return returnDict ? valuesToMetricMap(this, values) :
           singletonOrArray(values);
@@ -506,6 +501,7 @@ if (!prototype[PATCH_FLAG]) {
       x: TensorData, y: TensorData, sample_weight?: SampleWeight,
       class_weight?: ClassWeight,
       return_dict = false): Promise<BatchMetricResult> {
+    assertKerasClassWeightCompatible(class_weight, this.outputNames);
     return this.trainOnBatch(
         x, y, sample_weight, class_weight, return_dict);
   };
@@ -520,7 +516,8 @@ if (!prototype[PATCH_FLAG]) {
           x, y, sampleWeight, null) as [Tensor[], Tensor[], Tensor[]];
       this.makeTestFunction();
       resultTensors = this.testFunction(
-          standardized[0].concat(standardized[1]).concat(standardized[2]));
+          standardized[0].concat(standardized[1]).concat(
+              standardized[2] == null ? [] : standardized[2]));
       const values = await tensorScalarsToNumbers(resultTensors);
       return returnDict ? valuesToMetricMap(this, values) :
           singletonOrArray(values);
