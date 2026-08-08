@@ -53,7 +53,7 @@ describeMathCPU('standardizeWeights', () => {
 
   it('rounds half-valued sparse classes ties-to-even like NumPy', async () => {
     const y = tensor1d([0.5, 1.5, 2.5, 3.5, -0.5, -1.5]);
-    const classWeight: ClassWeight = {-2: 20, 0: 10, 2: 2, 4: 4};
+    const classWeight: ClassWeight = {[-2]: 20, 0: 10, 2: 2, 4: 4};
     const classSampleWeight = await standardizeWeights(y, null, classWeight);
     // np.round => [0, 2, 2, 4, -0, -2].
     expectTensorsClose(classSampleWeight, tensor1d([10, 2, 2, 4, 10, 20]));
