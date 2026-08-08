@@ -208,26 +208,27 @@ describeMathCPU('Keras sample_weight and class_weight compatibility', () => {
     }
   });
 
-  it('rejects class_weight for multi-output models like Keras 3', async () => {
-    const model = makeTwoOutputStructuralModel();
-    const xs = tfc.zeros([2, 1]);
-    const firstTarget = tfc.ones([2, 2, 1]);
-    const secondTarget = tfc.ones([2, 2, 3, 1]);
-    let caught: Error;
-    try {
-      compileTwoOutputModel(model);
-      try {
-        await model.trainOnBatch(
-            xs, [firstTarget, secondTarget], null, {0: 1, 1: 2});
-      } catch (error) {
-        caught = error;
-      }
-      expect(caught.message).toMatch(/class_weight.*single output/);
-    } finally {
-      model.dispose();
-      tfc.dispose([xs, firstTarget, secondTarget]);
-    }
-  });
+  it('rejects canonical class_weight for multi-output models like Keras 3',
+     async () => {
+       const model = makeTwoOutputStructuralModel();
+       const xs = tfc.zeros([2, 1]);
+       const firstTarget = tfc.ones([2, 2, 1]);
+       const secondTarget = tfc.ones([2, 2, 3, 1]);
+       let caught: Error;
+       try {
+         compileTwoOutputModel(model);
+         try {
+           await model.train_on_batch(
+               xs, [firstTarget, secondTarget], null, {0: 1, 1: 2});
+         } catch (error) {
+           caught = error;
+         }
+         expect(caught.message).toMatch(/class_weight.*single output/);
+       } finally {
+         model.dispose();
+         tfc.dispose([xs, firstTarget, secondTarget]);
+       }
+     });
 
   it('fit accepts Keras sample_weight spelling and validation weights',
      async () => {
