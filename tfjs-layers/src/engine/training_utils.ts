@@ -8,7 +8,17 @@
  * =============================================================================
  */
 
-import {argMax, clone, dispose, mul, reshape, Tensor, Tensor1D, tensor1d, tidy} from '@tensorflow/tfjs-core';
+import {
+  argMax,
+  clone,
+  dispose,
+  mul,
+  reshape,
+  Tensor,
+  Tensor1D,
+  tensor1d,
+  tidy
+} from '@tensorflow/tfjs-core';
 
 /**
  * For multi-class classification problems, this object is designed to store a
@@ -23,13 +33,29 @@ export type ClassWeight = {
 };
 
 /**
- * Class weighting for a model with multiple outputs.
+ * Legacy TensorFlow.js class weighting for a model with multiple outputs.
  *
- * This object maps each output name to a class-weighting object.
+ * Keras 3 itself only accepts `class_weight` for single-output models. The
+ * type is retained because older TensorFlow.js callers may import it directly;
+ * the public fit/batch compatibility layer enforces the Keras 3 restriction.
  */
 export type ClassWeightMap = {
   [outputName: string]: ClassWeight
 };
+
+/** A dictionary of sample-weight tensors keyed by model output name. */
+export type SampleWeightMap = {
+  [outputName: string]: Tensor
+};
+
+/**
+ * Keras-compatible sample-weight structure.
+ *
+ * A single-output model accepts one Tensor. A multi-output model accepts one
+ * Tensor per output as either an Array or an output-name dictionary. A single
+ * rank-1 (or `[batch, 1]`) Tensor may also be shared by all outputs.
+ */
+export type SampleWeight = Tensor|Tensor[]|SampleWeightMap;
 
 function standardizeSampleOrClassWeights(
     xWeight: ClassWeight|ClassWeight[]|ClassWeightMap, outputNames: string[],
@@ -41,7 +67,9 @@ function standardizeSampleOrClassWeights(
   if (numOutputs === 1) {
     if (Array.isArray(xWeight) && xWeight.length === 1) {
       return xWeight;
-    } else if (typeof xWeight === 'object' && outputNames[0] in xWeight) {
+    } else if (typeof xWeight === 'object' && outputNames[0] in xWeight &&
+               typeof (xWeight as ClassWeightMap)[outputNames[0]] ===
+                   'object') {
       return [(xWeight as ClassWeightMap)[outputNames[0]]];
     } else {
       return [xWeight as ClassWeight];
@@ -78,17 +106,11 @@ function standardizeSampleOrClassWeights(
 }
 
 /**
- * Standardize class weighting objects.
+ * Standardize legacy TensorFlow.js class weighting objects.
  *
- * This function takes a single class-weighting object, an array of them,
- * or a map from output name to class-weighting object. It compares it to the
- * output name(s) of the model, base on which it outputs an array of
- * class-weighting objects of which the length matches the number of outputs.
- *
- * @param classWeight Input class-weighting object(s).
- * @param outputNames All output name(s) of the model.
- * @return An array of class-weighting objects. The length of the array matches
- *   the model's number of outputs.
+ * Public Keras-compatible training APIs restrict `class_weight` to a
+ * single-output model, matching current Keras. This helper remains exported
+ * for backwards compatibility with existing TensorFlow.js code.
  */
 export function standardizeClassWeights(
     classWeight: ClassWeight|ClassWeight[]|ClassWeightMap,
@@ -97,93 +119,181 @@ export function standardizeClassWeights(
       classWeight, outputNames, 'classWeight');
 }
 
+/**
+ * Normalize a Keras sample-weight structure to model output order.
+ *
+ * For a multi-output model, a singleton rank-1 Tensor (or `[batch, 1]`
+ * Tensor) is sample-wise and therefore shared across all outputs. Structured
+ * weights must contain exactly one Tensor per output.
+ */
 export function standardizeSampleWeights(
-    classWeight: ClassWeight|ClassWeight[]|ClassWeightMap,
-    outputNames: string[]): ClassWeight[] {
-  return standardizeSampleOrClassWeights(
-      classWeight, outputNames, 'sampleWeight');
+    sampleWeight: SampleWeight, outputNames: string[]): Tensor[] {
+  const numOutputs = outputNames.length;
+  if (sampleWeight == null) {
+    return outputNames.map(_ => null);
+  }
+
+  if (numOutputs === 1) {
+    if (sampleWeight instanceof Tensor) {
+      return [sampleWeight];
+    }
+    if (Array.isArray(sampleWeight)) {
+      if (sampleWeight.length !== 1) {
+        throw new Error(
+            'You should provide one `sample_weight` array per output in `y`. ' +
+            `The model has 1 output but received ${sampleWeight.length} ` +
+            'sample-weight arrays.');
+      }
+      return [sampleWeight[0]];
+    }
+
+    const keys = Object.keys(sampleWeight);
+    const expectedName = outputNames[0];
+    const unknown = keys.filter(key => key !== expectedName);
+    if (unknown.length > 0 || !(expectedName in sampleWeight)) {
+      throw new Error(
+          'You should provide one `sample_weight` array per output in `y`. ' +
+          `Expected output key "${expectedName}", received: ${keys}.`);
+    }
+    return [(sampleWeight as SampleWeightMap)[expectedName]];
+  }
+
+  if (sampleWeight instanceof Tensor) {
+    const isSamplewise = sampleWeight.rank === 1 ||
+        (sampleWeight.rank === 2 && sampleWeight.shape[1] === 1);
+    if (!isSamplewise) {
+      throw new Error(
+          'For a model with multiple outputs, when providing a single ' +
+          '`sample_weight` array, it should only have one scalar score per ' +
+          'sample (i.e. shape `(num_samples,)`). If you want to use ' +
+          'non-scalar sample weights, pass a `sample_weight` argument with ' +
+          'one array per model output.');
+    }
+    return outputNames.map(_ => sampleWeight);
+  }
+
+  if (Array.isArray(sampleWeight)) {
+    if (sampleWeight.length !== numOutputs) {
+      throw new Error(
+          'You should provide one `sample_weight` array per output in `y`. ' +
+          `The model has ${numOutputs} outputs but received ` +
+          `${sampleWeight.length} sample-weight arrays.`);
+    }
+    return sampleWeight.slice();
+  }
+
+  const keys = Object.keys(sampleWeight);
+  const missing = outputNames.filter(name => !(name in sampleWeight));
+  const unknown = keys.filter(name => outputNames.indexOf(name) === -1);
+  if (missing.length > 0 || unknown.length > 0) {
+    throw new Error(
+        'You should provide one `sample_weight` array per output in `y`. ' +
+        `Expected keys: ${outputNames}. Missing: ${missing}. Unknown: ` +
+        `${unknown}.`);
+  }
+  return outputNames.map(name => (sampleWeight as SampleWeightMap)[name]);
 }
 
 /**
- * Standardize by-sample and/or by-class weights for training.
+ * Standardize by-sample and/or by-class weights for one model output.
  *
- * Note that this function operates on one model output at a time. For a model
- * with multiple outputs, you must call this function multiple times.
+ * Keras treats `sample_weight` and `class_weight` as mutually exclusive.
+ * Missing entries in `class_weight` receive the canonical default weight 1.0.
  *
- * @param y The target tensor that the by-sample and/or by-class weight is for.
- *     The values of y are assumed to encode the classes, either directly
- *     as an integer index, or as one-hot encoding.
- * @param sampleWeight By-sample weights.
- * @param classWeight By-class weights: an object mapping class indices
- *     (integers) to a weight (float) to apply to the model's loss for the
- *     samples from this class during training. This can be useful to tell the
- *     model to "pay more attention" to samples from an under-represented class.
- * @param sampleWeightMode The mode for the sample weights.
- * @return A Promise of weight tensor, of which the size of the first dimension
- *     matches that of `y`.
+ * @param y The target tensor that the weight applies to.
+ * @param sampleWeight Explicit sample/structural weights. The first dimension
+ *     must match the batch dimension of `y`; remaining dimensions are kept so
+ *     they can broadcast against the unreduced loss.
+ * @param classWeight Mapping from class index to scalar weight. This is only
+ *     valid when there is exactly one class label per batch sample.
+ * @param sampleWeightMode Retained for TensorFlow.js API compatibility. Modern
+ *     Keras no longer requires a temporal mode; structural dimensions are
+ *     represented directly by the sample-weight tensor.
+ * @return A caller-owned weight tensor, or null if no weighting was requested.
  */
 export async function standardizeWeights(
     y: Tensor, sampleWeight?: Tensor, classWeight?: ClassWeight,
     sampleWeightMode?: 'temporal'): Promise<Tensor> {
-  if (sampleWeight != null || sampleWeightMode != null) {
-    // TODO(cais): Once 'temporal' mode is implemented, document it in the doc
-    // string.
-    throw new Error('Support sampleWeight is not implemented yet');
+  if (sampleWeight != null && classWeight != null) {
+    throw new Error(
+        'Arguments `sample_weight` and `class_weight` cannot be specified at ' +
+        'the same time.');
+  }
+
+  if (sampleWeight != null) {
+    if (sampleWeight.rank < 1) {
+      throw new Error('`sample_weight` must have rank 1 or greater.');
+    }
+    if (sampleWeight.shape[0] !== y.shape[0]) {
+      throw new Error(
+          '`sample_weight` must contain one first-axis entry per target ' +
+          `sample. Received target batch ${y.shape[0]} and sample_weight ` +
+          `batch ${sampleWeight.shape[0]}.`);
+    }
+    // Clone so training cleanup never disposes a caller-owned Tensor. Keeping
+    // all structural dimensions is essential for losses such as
+    // [batch, groups] and [batch, groups, satellites].
+    return clone(sampleWeight);
   }
 
   if (classWeight != null) {
-    // Apply class weights per sample.
-    const yClasses: Tensor1D = tidy(() => {
-      if (y.shape.length === 1) {
-        // Assume class indices.
-        return clone(y) as Tensor1D;
-      } else if (y.shape.length === 2) {
-        if (y.shape[1] > 1) {
-          // Assume one-hot encoding of classes.
-          const axis = 1;
-          return argMax(y, axis);
-        } else if (y.shape[1] === 1) {
-          // Class index.
-          return reshape(y, [y.shape[0]]);
-        } else {
-          throw new Error(
-              `Encountered unexpected last-dimension size (${y.shape[1]}) ` +
-              `during handling of class weights. The size is expected to be ` +
-              `>= 1.`);
-        }
-      } else {
-        throw new Error(
-            `Unexpected rank of target (y) tensor (${y.rank}) during ` +
-            `handling of class weights. The rank is expected to be 1 or 2.`);
+    // Keras class_weight_to_sample_weights() produces exactly one scalar
+    // weight per batch item. Derive one class index per sample and reject
+    // structural targets for which no single class per sample exists.
+    const yClasses = tidy(() => {
+      if (y.rank === 1) {
+        return clone(y);
       }
+
+      const lastAxis = y.rank - 1;
+      const lastDim = y.shape[lastAxis];
+      if (lastDim == null || lastDim < 1) {
+        throw new Error(
+            'Encountered an unexpected empty last dimension while handling ' +
+            '`class_weight`.');
+      }
+
+      if (lastDim !== 1) {
+        return argMax(y, lastAxis);
+      }
+      return reshape(y, y.shape.slice(0, -1));
     });
 
-    const yClassIndices = Array.from(await yClasses.data());
-    dispose(yClasses);
-    const classSampleWeight: number[] = [];
-    yClassIndices.forEach(classIndex => {
-      if (classWeight[classIndex] == null) {
+    try {
+      if (yClasses.rank !== 1) {
         throw new Error(
-            `classWeight must contain all classes in the training data. ` +
-            `The class ${classIndex} exists in the data but not in ` +
-            `classWeight`);
-      } else {
-        classSampleWeight.push(classWeight[classIndex]);
+            '`class_weight` is only supported when each sample has one class ' +
+            'label. Use `sample_weight` for structural or temporal targets.');
       }
-    });
 
-    return tensor1d(classSampleWeight, 'float32');
-  } else {
-    return null;
+      const yClassIndices = Array.from(await yClasses.data());
+      const classSampleWeight: number[] = [];
+      yClassIndices.forEach(rawClassIndex => {
+        // Keras rounds class-index targets before conversion to int32.
+        const classIndex = Math.round(Number(rawClassIndex));
+        const configuredWeight = classWeight[classIndex];
+        classSampleWeight.push(
+            configuredWeight == null ? 1.0 : configuredWeight);
+      });
+      return tensor1d(classSampleWeight, 'float32');
+    } finally {
+      dispose(yClasses);
+    }
   }
+
+  // `sampleWeightMode` is intentionally not used. It remains in the signature
+  // solely for source compatibility with older TensorFlow.js callers.
+  void sampleWeightMode;
+  return null;
 }
 
 /**
- * Apply per-sample weights on the loss values from a number of samples.
+ * Apply sample/structural weights to the unreduced loss tensor.
  *
- * @param losses Loss tensor of shape `[batchSize]`.
- * @param sampleWeights Per-sample weight tensor of shape `[batchSize]`.
- * @returns Tensor of the same shape as`losses`.
+ * TensorFlow.js broadcasting semantics are used intentionally. This permits
+ * canonical Keras use cases such as `[batch]`, `[batch, timesteps]`,
+ * `[batch, groups]`, and `[batch, groups, subelements]` whenever the loss has
+ * the corresponding unreduced shape.
  */
 export function computeWeightedLoss(losses: Tensor, sampleWeights: Tensor) {
   return mul(losses, sampleWeights);
