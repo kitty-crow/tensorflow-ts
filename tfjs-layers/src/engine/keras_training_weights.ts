@@ -55,7 +55,7 @@ import {
 export type BatchMetricMap = {[metricName: string]: number};
 export type BatchMetricResult = number|number[]|BatchMetricMap;
 
-type TensorData =
+export type TensorData =
     Tensor|Tensor[]|{[inputName: string]: Tensor};
 
 type FitArgsWithKerasAliases = ModelFitArgs&{
@@ -64,7 +64,7 @@ type FitArgsWithKerasAliases = ModelFitArgs&{
 };
 
 function canonicalWeightConflictError(
-    sampleWeight: SampleWeight, classWeight: unknown): ValueError {
+    sampleWeight: SampleWeight, _classWeight: unknown): ValueError {
   return new ValueError(
       'Arguments `sample_weight` and `class_weight` cannot be specified at ' +
       'the same time. Received both sample_weight and class_weight.');
@@ -302,11 +302,6 @@ if (!prototype[PATCH_FLAG]) {
           totalLoss = totalLoss == null ? weightedLoss :
               tfc.add(totalLoss, weightedLoss) as Scalar;
         }
-
-        model.calculateLosses().forEach((regularizerLoss: Scalar) => {
-          totalLoss = totalLoss == null ? regularizerLoss :
-              tfc.add(totalLoss, regularizerLoss) as Scalar;
-        });
         if (totalLoss == null) {
           totalLoss = tfc.scalar(0);
         }
@@ -439,8 +434,7 @@ if (!prototype[PATCH_FLAG]) {
       return await this.fitLoop(
           trainFunction, ins, outLabels, batchSize, args.epochs,
           args.verbose, callbacks, valFunction, valIns, args.shuffle,
-          callbackMetrics, args.initialEpoch, args.stepsPerEpoch,
-          args.validationSteps);
+          callbackMetrics, args.initialEpoch, null, null);
     } finally {
       this.isTraining = false;
       disposeNewTensors(inputs, x);
