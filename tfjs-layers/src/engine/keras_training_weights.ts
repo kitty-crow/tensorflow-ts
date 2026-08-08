@@ -188,25 +188,18 @@ async function tensorScalarsToNumbers(tensors: Scalar[]): Promise<number[]> {
 
 /**
  * Declaration merging adds the Keras spellings and the weighted camelCase
- * overloads to the public LayersModel TypeScript surface.
+ * surface to LayersModel. The existing two-argument trainOnBatch method keeps
+ * its historic return type; the wider compatibility signature deliberately
+ * returns `any` so subclasses with the original narrower return type remain
+ * substitutable. The canonical snake_case methods carry the precise Keras
+ * return_dict typing.
  */
 declare module './training' {
   interface LayersModel {
-    // Preserve the historic TFJS return type for the ordinary call. This is
-    // important for Sequential, which delegates to LayersModel.trainOnBatch().
-    trainOnBatch(x: TensorData, y: TensorData): Promise<number|number[]>;
     trainOnBatch(
         x: TensorData, y: TensorData, sampleWeight?: SampleWeight,
         classWeight?: ClassWeight|ClassWeight[]|ClassWeightMap,
-        returnDict?: false): Promise<number|number[]>;
-    trainOnBatch(
-        x: TensorData, y: TensorData, sampleWeight: SampleWeight,
-        classWeight: ClassWeight|ClassWeight[]|ClassWeightMap,
-        returnDict: true): Promise<BatchMetricMap>;
-    trainOnBatch(
-        x: TensorData, y: TensorData, sampleWeight: SampleWeight,
-        classWeight: ClassWeight|ClassWeight[]|ClassWeightMap,
-        returnDict: boolean): Promise<BatchMetricResult>;
+        returnDict?: boolean): Promise<any>;
 
     train_on_batch(
         x: TensorData, y: TensorData, sample_weight?: SampleWeight,
