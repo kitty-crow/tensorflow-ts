@@ -100,7 +100,7 @@ describeMathCPU('Keras loss_weights compatibility', () => {
     expect(() => standardizeLossWeights({a: 2}, ['a', 'b']))
         .toThrowError(/loss_weights.*missing.*b/);
     expect(() => standardizeLossWeights({a: 2, b: 3, c: 4}, ['a', 'b']))
-        .toThrowError(/loss_weights.*unknown.*c/);
+        .toThrowError(/unknown output.*loss_weights.*c/i);
   });
 
   it('uses exact Keras loss_weights spelling and reduces heterogeneous losses',
