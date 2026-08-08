@@ -12,6 +12,8 @@ import './flags_layers';
 import '@tensorflow/tfjs-core';
 // tslint:disable-next-line: no-imports-from-dist
 import '@tensorflow/tfjs-core/dist/register_all_gradients';
+// Install the Keras-compatible weighted-training surface on LayersModel.
+import './engine/keras_training_weights';
 
 // This file lists all exports of TensorFlow.js Layers
 
@@ -26,9 +28,10 @@ export {CallbackList, CustomCallback, CustomCallbackArgs, History} from './base_
 export {Callback, callbacks, EarlyStopping, EarlyStoppingCallbackArgs} from './callbacks';
 export {InputSpec, SymbolicTensor} from './engine/topology';
 export {LayersModel, ModelCompileArgs, ModelEvaluateArgs} from './engine/training';
+export {BatchMetricMap, BatchMetricResult} from './engine/keras_training_weights';
 export {ModelFitDatasetArgs} from './engine/training_dataset';
 export {ModelFitArgs} from './engine/training_tensors';
-export {ClassWeight, ClassWeightMap} from './engine/training_utils';
+export {ClassWeight, ClassWeightMap, SampleWeight, SampleWeightMap} from './engine/training_utils';
 export {input, loadLayersModel, model, registerCallbackConstructor, sequential} from './exports';
 export {Shape} from './keras_format/common';
 export {GRUCellLayerArgs, GRULayerArgs, LSTMCellLayerArgs, LSTMLayerArgs, RNN, RNNLayerArgs, SimpleRNNCellLayerArgs, SimpleRNNLayerArgs} from './layers/recurrent';
