@@ -16,7 +16,7 @@ import * as tfc from '@tensorflow/tfjs-core';
 import {Tensor, Tensor1D} from '@tensorflow/tfjs-core';
 import {expandDims, gather, sliceAlongFirstAxis} from '../backend/tfjs_backend';
 import {BaseCallback, CustomCallbackArgs, ModelLoggingVerbosity, YieldEveryOptions} from '../base_callbacks';
-import {ClassWeight, ClassWeightMap} from './training_utils';
+import {ClassWeight, ClassWeightMap, SampleWeight} from './training_utils';
 
 /**
  * Interface configuration model training based on data as `tf.Tensor`s.
@@ -81,7 +81,7 @@ export interface ModelFitArgs {
    */
   validationData?: [
     Tensor|Tensor[], Tensor|Tensor[]
-  ]|[Tensor | Tensor[], Tensor|Tensor[], Tensor|Tensor[]];
+  ]|[Tensor|Tensor[], Tensor|Tensor[], SampleWeight];
 
   /**
    * Whether to shuffle the training data before each epoch. Has
@@ -90,27 +90,32 @@ export interface ModelFitArgs {
   shuffle?: boolean;
 
   /**
-   * Optional object mapping class indices (integers) to
-   * a weight (float) to apply to the model's loss for the samples from this
-   * class during training. This can be useful to tell the model to "pay more
-   * attention" to samples from an under-represented class.
+   * TensorFlow.js camelCase spelling of Keras `class_weight`.
    *
-   * If the model has multiple outputs, a class weight can be specified for
-   * each of the outputs by setting this field an array of weight object
-   * or an object that maps model output names (e.g., `model.outputNames[0]`)
-   * to weight objects.
+   * Current Keras supports class weighting only for models with a single
+   * output. Legacy TensorFlow.js array/map types remain accepted by the type
+   * surface for source compatibility, but the Keras-compatible runtime rejects
+   * multi-output `class_weight` and directs structural weighting to
+   * `sample_weight`.
    */
   classWeight?: ClassWeight|ClassWeight[]|ClassWeightMap;
 
+  /** Exact Keras spelling of `class_weight`. */
+  class_weight?: ClassWeight;
+
   /**
-   * Optional array of the same length as x, containing
-   * weights to apply to the model's loss for each sample. In the case of
-   * temporal data, you can pass a 2D array with shape (samples,
-   * sequenceLength), to apply a different weight to every timestep of every
-   * sample. In this case you should make sure to specify
-   * sampleWeightMode="temporal" in compile().
+   * TensorFlow.js camelCase spelling of Keras `sample_weight`.
+   *
+   * A single-output model accepts a Tensor. Multi-output models may pass one
+   * Tensor per output using an Array or output-name dictionary. A shared
+   * rank-1 (or `[batch, 1]`) sample-wise Tensor is also valid for all outputs.
+   * Structural weights may retain dimensions such as `[batch, groups]` or
+   * `[batch, groups, subelements]`, matching the unreduced loss.
    */
-  sampleWeight?: Tensor;
+  sampleWeight?: SampleWeight;
+
+  /** Exact Keras spelling of `sample_weight`. */
+  sample_weight?: SampleWeight;
 
   /**
    * Epoch at which to start training (useful for resuming a previous training
@@ -121,7 +126,7 @@ export interface ModelFitArgs {
   initialEpoch?: number;
 
   /**
-   * Total number of steps (batches of samples) before
+   * Total number of steps (batches on samples) before
    * declaring one epoch finished and starting the next epoch. When training
    * with Input Tensors such as TensorFlow data tensors, the default `null` is
    * equal to the number of unique samples in your dataset divided by the
@@ -166,7 +171,7 @@ export function checkBatchSize(batchSize: number) {
  * Slice a Tensor or an Array of Tensors, by start and stop indices.
  *
  * Porting Note: The `_slice_arrays` function in PyKeras is covered by this
- *   function and `sliceArraysByIndices()` together.
+ * function and `sliceArraysByIndices()` together.
  *
  * @param arrays: the input.
  * @param start: the starting index (inclusive).
@@ -181,7 +186,7 @@ export function sliceArrays(
     return [null];
   } else if (Array.isArray(arrays)) {
     return arrays.map(array => sliceAlongFirstAxis(array, start, stop - start));
-  } else {  // Tensor.
+  } else {
     return sliceAlongFirstAxis(arrays, start, stop - start);
   }
 }
@@ -190,7 +195,7 @@ export function sliceArrays(
  * Slice a Tensor or an Array of Tensors, by random-order indices.
  *
  * Porting Note: The `_slice_arrays` function in PyKeras is covered by this
- *   function and `sliceArrays()` together.
+ * function and `sliceArrays()` together.
  *
  * @param arrays The input `tf.Tensor` or `Array` of `tf.Tensor`s to slice.
  *   If an `Array` of `tf.Tensor`s, all `tf.Tensor`s will be sliced in the
@@ -208,8 +213,6 @@ export function sliceArraysByIndices(
       return arrays.map(
           array => (sliceArraysByIndices(array, indices) as Tensor));
     } else {
-      // TODO(cais): indices should be a pre-constructed Tensor1D to avoid
-      //   tensor1d() calls.
       return gather(
           arrays,
           indices.dtype === 'int32' ? indices : tfc.cast(indices, 'int32'));
@@ -220,7 +223,7 @@ export function sliceArraysByIndices(
 /**
  * Returns a list of batch indices (tuples of indices).
  * @param size: Integer, total size of the data to slice into batches.
- * @param batchSize: Integer, batch size.
+ * @param batchSize Integer, batch size.
  * @returns An Array of [batchStart, batchEnd] tuples. batchStart is
  *   inclusive; batchEnd is exclusive. I.e., each batch consists of indices x
  *   that satisfy batchStart <= x < batchEnd.
@@ -253,7 +256,6 @@ export function ensureTensorsRank2OrHigher(tensors: Tensor|Tensor[]): Tensor[] {
     tensors = [tensors];
   }
 
-  // Make Tensors at least 2D.
   for (let i = 0; i < tensors.length; ++i) {
     const tensor = tensors[i];
     if (tensor.rank === 1) {
@@ -273,14 +275,9 @@ export function ensureTensorsRank2OrHigher(tensors: Tensor|Tensor[]): Tensor[] {
  * Compare a set of tensors with a reference (old) set, discard the ones
  * in the new set that are not present in the reference set.
  *
- * This method is used for memory clenaup during calls such as
+ * This method is used for memory cleanup during calls such as
  * LayersModel.fit().
- *
- * @param tensors New set which may contain Tensors not present in
- *   `refTensors`.
- * @param refTensors Reference Tensor set.
  */
-// TODO(cais, kangyizhang): Deduplicate with tfjs-data.
 export function disposeNewTensors(
     tensors: Tensor|Tensor[]|{[inputName: string]: Tensor},
     refTensors: Tensor|Tensor[]|{[inputName: string]: Tensor}): void {
@@ -293,7 +290,6 @@ export function disposeNewTensors(
   } else if (Array.isArray(refTensors)) {
     refTensors.forEach(t => oldTensorIds.push(t.id));
   } else if (refTensors != null) {
-    // `oldTensors` is a map from string name to Tensor.
     for (const name in refTensors) {
       const oldTensor = refTensors[name];
       oldTensorIds.push(oldTensor.id);
@@ -307,15 +303,14 @@ export function disposeNewTensors(
     }
   } else if (Array.isArray(tensors)) {
     tensors.forEach(t => {
-      if (oldTensorIds.indexOf(t.id) === -1) {
+      if (t != null && oldTensorIds.indexOf(t.id) === -1) {
         tensorsToDispose.push(t);
       }
     });
   } else if (tensors != null) {
-    // `oldTensors` is a map from string name to Tensor.
     for (const name in tensors) {
       const tensor = tensors[name];
-      if (oldTensorIds.indexOf(tensor.id) === -1) {
+      if (tensor != null && oldTensorIds.indexOf(tensor.id) === -1) {
         tensorsToDispose.push(tensor);
       }
     }
