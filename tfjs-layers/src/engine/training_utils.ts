@@ -36,7 +36,7 @@ export type ClassWeight = {
  *
  * Keras 3 itself only accepts `class_weight` for single-output models. The
  * type is retained because older TensorFlow.js callers may import it directly;
- * the public fit/batch compatibility layer enforces the Keras 3 restriction.
+ * the canonical Keras compatibility surface enforces the Keras 3 restriction.
  */
 export type ClassWeightMap = {
   [outputName: string]: ClassWeight
@@ -55,6 +55,25 @@ export type SampleWeightMap = {
  * rank-1 (or `[batch, 1]`) Tensor may also be shared by all outputs.
  */
 export type SampleWeight = Tensor|Tensor[]|SampleWeightMap;
+
+/**
+ * Match NumPy's `round` behaviour used by Keras before class labels are cast
+ * to int32: exact half-way values round to the nearest even integer.
+ */
+function roundToNearestEven(value: number): number {
+  if (!Number.isFinite(value)) {
+    return Math.round(value);
+  }
+  const lower = Math.floor(value);
+  const fraction = value - lower;
+  if (fraction < 0.5) {
+    return lower;
+  }
+  if (fraction > 0.5) {
+    return lower + 1;
+  }
+  return lower % 2 === 0 ? lower : lower + 1;
+}
 
 function standardizeSampleOrClassWeights(
     xWeight: ClassWeight|ClassWeight[]|ClassWeightMap, outputNames: string[],
@@ -107,7 +126,7 @@ function standardizeSampleOrClassWeights(
 /**
  * Standardize legacy TensorFlow.js class weighting objects.
  *
- * Public Keras-compatible training APIs restrict `class_weight` to a
+ * Canonical Keras-compatible `class_weight` APIs restrict weighting to a
  * single-output model, matching current Keras. This helper remains exported
  * for backwards compatibility with existing TensorFlow.js code.
  */
@@ -269,8 +288,8 @@ export async function standardizeWeights(
       const yClassIndices = Array.from(await yClasses.data());
       const classSampleWeight: number[] = [];
       yClassIndices.forEach(rawClassIndex => {
-        // Keras rounds class-index targets before conversion to int32.
-        const classIndex = Math.round(Number(rawClassIndex));
+        // Keras uses np.round() before converting class-index targets to int32.
+        const classIndex = roundToNearestEven(Number(rawClassIndex));
         const configuredWeight = classWeight[classIndex];
         classSampleWeight.push(
             configuredWeight == null ? 1.0 : configuredWeight);
