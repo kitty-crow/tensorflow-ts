@@ -57,20 +57,24 @@ clones standardized weights before training and disposes only its own clones.
 
 ## `class_weight`
 
-Current Keras supports `class_weight` only for a model with one output. The
-public compatibility API follows that rule.
+Canonical Keras `class_weight` is supported only for a model with one output,
+matching current Keras 3.
+
+The historical TensorFlow.js camelCase `classWeight` spelling retains its
+existing multi-output behaviour: callers may provide a `ClassWeight[]` or a
+`ClassWeightMap` keyed by output name. This compatibility is intentionally kept
+separate from canonical Keras snake-case semantics so adding Keras support does
+not break existing TensorFlow.js applications.
 
 Class weights are converted to one scalar sample weight per batch item. For
 one-hot targets the class is selected with `argmax`; single-column class-index
-targets are squeezed. An omitted class index receives the Keras default weight
-`1.0`.
+targets are squeezed. Sparse numeric class labels are rounded with NumPy's
+nearest-even semantics before conversion to a class index, matching Keras. An
+omitted class index receives the Keras default weight `1.0`.
 
-Legacy TensorFlow.js `ClassWeight[]` and `ClassWeightMap` normalization helpers
-remain exported so existing source that imports those utilities does not break.
-They do not change the public Keras-compatible restriction on multi-output
-`class_weight`.
-
-`sample_weight` and `class_weight` are mutually exclusive in one training call.
+`sample_weight` and `class_weight` are mutually exclusive in one canonical
+Keras training call. The corresponding TensorFlow.js camelCase options are also
+mutually exclusive when used in the same call.
 
 ## Batch methods
 
@@ -82,13 +86,17 @@ test_on_batch(x, y, sample_weight=None, return_dict=False)
 predict_on_batch(x)
 ```
 
-TensorFlow.js camelCase forms are retained and use the same implementation:
+TensorFlow.js camelCase forms are retained:
 
 ```text
 trainOnBatch(...)
 testOnBatch(...)
 predictOnBatch(...)
 ```
+
+The camelCase surface preserves TensorFlow.js compatibility where it differs
+from Keras, notably legacy multi-output `classWeight` structures. Both surfaces
+share the same structural `sample_weight` implementation.
 
 When `return_dict` / `returnDict` is true, batch loss/metric values are keyed by
 the model's deduplicated metric names. Otherwise the historical TensorFlow.js
@@ -97,14 +105,16 @@ single-value-or-array return convention is preserved.
 ## `fit`
 
 `fit()` accepts both Keras snake-case and TensorFlow.js camelCase spellings for
-the new weighting options:
+weighting options:
 
 ```text
 sample_weight / sampleWeight
 class_weight  / classWeight
 ```
 
-Specifying both spellings of the same option is an error.
+`class_weight` follows Keras' single-output restriction; `classWeight` retains
+legacy TensorFlow.js multi-output arrays/maps. Specifying both spellings of the
+same option is an error.
 
 Weighted validation is supported through a three-item validation tuple
 `(valX, valY, valSampleWeight)`. `validationSplit` slices training sample-weight
@@ -121,8 +131,10 @@ snake-case key.
 ## Compatibility policy
 
 When Keras and historical TensorFlow.js naming differ, the canonical Keras name
-is added without removing the existing TensorFlow.js name where preserving the
-alias is practical.
+is added without removing the existing TensorFlow.js name. If existing
+TensorFlow.js behaviour conflicts with current Keras behaviour, the snake-case
+API follows Keras and the camelCase API preserves TensorFlow.js source and
+runtime compatibility.
 
 Behavioural tests should prefer invariant Keras semantics over details of a
 specific application. Any future extension should first be expressible as a
