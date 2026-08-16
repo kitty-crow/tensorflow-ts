@@ -1,6 +1,6 @@
 import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmod, cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -9,9 +9,7 @@ import process from 'node:process';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
-const runtime = resolve(repo, '.cache', 'pretrained-runtime');
-const tfDst = resolve(runtime, 'node_modules', '@tensorflow');
-const stamp = resolve(runtime, 'stamp');
+const runtimeRoot = resolve(repo, '.cache', 'pretrained-runtime');
 const bazeliskVersion = '1.29.0';
 const packages = ['tfjs-core', 'tfjs-backend-cpu', 'tfjs-converter', 'tfjs-layers'];
 const targets = packages.map(name => `//${name}:${name}_pkg`);
@@ -65,24 +63,25 @@ const bazelisk = async () => {
   return path;
 };
 
-const runtimeDependencyPaths = () => Object.keys(runtimeDependencies)
+const tfDst = runtime => resolve(runtime, 'node_modules', '@tensorflow');
+
+const runtimeDependencyPaths = runtime => Object.keys(runtimeDependencies)
   .map(name => resolve(runtime, 'node_modules', name, 'package.json'));
 
-const nodeBundlePaths = () => Object.entries(nodeBundles)
-  .map(([name, file]) => resolve(tfDst, name, 'dist', file));
+const nodeBundlePaths = runtime => Object.entries(nodeBundles)
+  .map(([name, file]) => resolve(tfDst(runtime), name, 'dist', file));
 
-const staged = async head => {
-  if (!await exists(stamp)) return false;
-  if ((await readFile(stamp, 'utf8')).trim() !== head) return false;
+const staged = async runtime => {
   const paths = [
-    ...packages.map(name => resolve(tfDst, name, 'package.json')),
-    ...nodeBundlePaths(),
-    ...runtimeDependencyPaths(),
+    resolve(runtime, 'package.json'),
+    ...packages.map(name => resolve(tfDst(runtime), name, 'package.json')),
+    ...nodeBundlePaths(runtime),
+    ...runtimeDependencyPaths(runtime),
   ];
   return (await Promise.all(paths.map(exists))).every(Boolean);
 };
 
-const installRuntimeDependencies = async () => {
+const installRuntimeDependencies = async runtime => {
   const pkg = `${JSON.stringify({ private: true, dependencies: runtimeDependencies }, null, 2)}\n`;
   await writeFile(resolve(runtime, 'package.json'), pkg);
   const isBun = typeof process.versions.bun === 'string';
@@ -98,7 +97,8 @@ const installRuntimeDependencies = async () => {
 
 export const prepareRuntime = async () => {
   const head = gitHead();
-  if (await staged(head)) {
+  const runtime = resolve(runtimeRoot, head);
+  if (await staged(runtime)) {
     stage('using cached prepared runtime.');
     return runtime;
   }
@@ -109,24 +109,36 @@ export const prepareRuntime = async () => {
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) throw new Error(`Bazel runtime build failed with exit ${result.status ?? 'unknown'}`);
 
-  await rm(resolve(runtime, 'node_modules'), { recursive: true, force: true });
-  await mkdir(runtime, { recursive: true });
-  await installRuntimeDependencies();
+  await mkdir(runtimeRoot, { recursive: true });
+  const work = resolve(runtimeRoot, `.tmp-${head}-${process.pid}-${Date.now()}`);
+  await mkdir(work, { recursive: true });
+  let promoted = false;
+  try {
+    await installRuntimeDependencies(work);
 
-  stage('staging built TensorFlow.js packages…');
-  await mkdir(tfDst, { recursive: true });
-  for (const name of packages) {
-    const src = resolve(repo, 'dist', 'bin', name, `${name}_pkg`);
-    if (!await exists(resolve(src, 'package.json'))) throw new Error(`Built TensorFlow package is missing: ${name}`);
-    await cp(src, resolve(tfDst, name), { recursive: true });
+    stage('staging built TensorFlow.js packages…');
+    await mkdir(tfDst(work), { recursive: true });
+    for (const name of packages) {
+      const src = resolve(repo, 'dist', 'bin', name, `${name}_pkg`);
+      if (!await exists(resolve(src, 'package.json'))) throw new Error(`Built TensorFlow package is missing: ${name}`);
+      await cp(src, resolve(tfDst(work), name), { recursive: true });
+    }
+    const missingBundles = [];
+    for (const path of nodeBundlePaths(work)) if (!await exists(path)) missingBundles.push(path);
+    if (missingBundles.length > 0) throw new Error(`Built TensorFlow Node bundle(s) missing: ${missingBundles.join(', ')}`);
+    if (!await staged(work)) throw new Error('Prepared TensorFlow runtime failed completeness validation');
+
+    try {
+      await rename(work, runtime);
+      promoted = true;
+    } catch (error) {
+      if (!await staged(runtime)) throw error;
+    }
+    stage('prepared runtime is ready.');
+    return runtime;
+  } finally {
+    if (!promoted && await exists(work)) await rm(work, { recursive: true, force: true }).catch(() => undefined);
   }
-  const missingBundles = [];
-  for (const path of nodeBundlePaths()) if (!await exists(path)) missingBundles.push(path);
-  if (missingBundles.length > 0) throw new Error(`Built TensorFlow Node bundle(s) missing: ${missingBundles.join(', ')}`);
-
-  await writeFile(stamp, `${head}\n`);
-  stage('prepared runtime is ready.');
-  return runtime;
 };
 
 if (resolve(process.argv[1] ?? '') === fileURLToPath(import.meta.url)) {
