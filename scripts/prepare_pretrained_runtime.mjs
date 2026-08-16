@@ -84,13 +84,10 @@ const staged = async runtime => {
 const installRuntimeDependencies = async runtime => {
   const pkg = `${JSON.stringify({ private: true, dependencies: runtimeDependencies }, null, 2)}\n`;
   await writeFile(resolve(runtime, 'package.json'), pkg);
-  const isBun = typeof process.versions.bun === 'string';
-  const command = isBun ? process.execPath : 'npm';
-  const args = isBun
-    ? ['install', '--ignore-scripts']
-    : ['install', '--ignore-scripts', '--omit=dev', '--no-audit', '--no-fund', '--package-lock=false'];
-  stage('installing prepared runtime dependencies…');
-  const result = spawnSync(command, args, { cwd: runtime, stdio: childStdio });
+  const npm = process.env.MAE_NPM_BINARY?.trim() || 'npm';
+  const args = ['install', '--ignore-scripts', '--omit=dev', '--no-audit', '--no-fund', '--package-lock=false'];
+  stage('installing prepared Node runtime dependencies…');
+  const result = spawnSync(npm, args, { cwd: runtime, stdio: childStdio });
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) throw new Error(`Runtime dependency install failed with exit ${result.status ?? 'unknown'}`);
 };
