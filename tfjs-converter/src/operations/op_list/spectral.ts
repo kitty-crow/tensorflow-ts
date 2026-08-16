@@ -1,4 +1,4 @@
 /** @license Copyright 2022 Google LLC. Licensed under Apache-2.0. */
-import data from './spectral.json';
 import type {OpMapper} from '../types';
-export const json = data as OpMapper[];
+const raw = "[\n  {\n    \"tfOpName\": \"FFT\",\n    \"category\": \"spectral\",\n    \"inputs\": [\n      {\n        \"start\": 0,\n        \"name\": \"x\",\n        \"type\": \"tensor\"\n      }\n    ]\n  },\n  {\n    \"tfOpName\": \"IFFT\",\n    \"category\": \"spectral\",\n    \"inputs\": [\n      {\n        \"start\": 0,\n        \"name\": \"x\",\n        \"type\": \"tensor\"\n      }\n    ]\n  },\n  {\n    \"tfOpName\": \"RFFT\",\n    \"category\": \"spectral\",\n    \"inputs\": [\n      {\n        \"start\": 0,\n        \"name\": \"x\",\n        \"type\": \"tensor\"\n      },\n      {\n        \"start\": 1,\n        \"name\": \"fft_length\",\n        \"type\": \"number\",\n        \"notSupported\": true\n      }\n    ]\n  },\n  {\n    \"tfOpName\": \"IRFFT\",\n    \"category\": \"spectral\",\n    \"inputs\": [\n      {\n        \"start\": 0,\n        \"name\": \"x\",\n        \"type\": \"tensor\"\n      },\n      {\n        \"start\": 1,\n        \"name\": \"fft_length\",\n        \"type\": \"number\",\n        \"notSupported\": true\n      }\n    ]\n  }\n]";
+export const json = JSON.parse(raw) as OpMapper[];

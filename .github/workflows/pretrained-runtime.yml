@@ -1,0 +1,47 @@
+name: Pretrained runtime
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  graph-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: yarn
+      - run: npm install --global yarn@1.22.22
+      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile
+        working-directory: link-package
+      - name: Verify converter operation snapshots
+        run: node scripts/sync_converter_ops.mjs --check
+      - name: Build CPU GraphModel runtime
+        run: >-
+          yarn bazel build
+          //tfjs-core:tfjs-core_pkg
+          //tfjs-backend-cpu:tfjs-backend-cpu_pkg
+          //tfjs-converter:tfjs-converter_pkg
+        working-directory: link-package
+      - name: Stage built packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          dst='link-package/node_modules/@tensorflow'
+          mkdir -p "$dst"
+          for pkg in tfjs-core tfjs-backend-cpu tfjs-converter; do
+            src="dist/bin/$pkg/${pkg}_pkg"
+            test -d "$src"
+            rm -rf "$dst/$pkg"
+            cp -a "$src" "$dst/$pkg"
+          done
+      - name: Load and execute official pretrained COCO-SSD graph
+        run: node pretrained_smoke.mjs
+        working-directory: link-package

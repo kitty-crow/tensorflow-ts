@@ -67,4 +67,9 @@ if (violations.length > 0) {
   process.exit(1);
 }
 
+execFileSync(process.execPath, ['scripts/sync_converter_ops.mjs', '--check'], {
+  cwd: process.cwd(),
+  stdio: 'inherit'
+});
+
 console.log('Source policy passed: no tracked Python source or Python/PyPI workflow.');
