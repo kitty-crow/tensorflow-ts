@@ -132,10 +132,8 @@ const photographicScore = async image => {
 };
 
 const scoreImage = async image => {
-  const [person, photographic] = await Promise.all([
-    personScore(image),
-    photographicScore(image),
-  ]);
+  const person = await personScore(image);
+  const photographic = await photographicScore(image);
   return {
     person,
     photographic,
