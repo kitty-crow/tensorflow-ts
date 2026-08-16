@@ -9,6 +9,7 @@ const ref = '5940117af9afc86a0994d959f50603aeeeac1f2d';
 const base = `https://raw.githubusercontent.com/kitty-crow/nsfwjs/${ref}/models/mobilenet_v2/`;
 const worker = fileURLToPath(new URL('./avatar_photo_worker.mjs', import.meta.url));
 const dir = await mkdtemp(join(tmpdir(), 'tfjs-avatar-smoke-'));
+const node = process.env.MAE_NODE_BINARY?.trim() || 'node';
 
 const download = async name => {
   const response = await fetch(`${base}${name}`);
@@ -18,7 +19,7 @@ const download = async name => {
 
 try {
   await Promise.all([download('model.json'), download('group1-shard1of1')]);
-  const child = spawn(process.execPath, [worker, dir], {
+  const child = spawn(node, [worker, dir], {
     stdio: ['pipe', 'pipe', 'inherit'],
   });
   const lines = createInterface({ input: child.stdout, crlfDelay: Infinity });
