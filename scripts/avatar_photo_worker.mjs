@@ -9,6 +9,7 @@ const photoModelDir = process.argv[2];
 if (!photoModelDir) throw new Error('Usage: node scripts/avatar_photo_worker.mjs <photo-model-dir>');
 const stage = message => console.error(`[Avatar model] ${message}`);
 const errorText = error => error instanceof Error ? error.message : String(error);
+const maxDimension = 1024;
 
 const runtime = await prepareRuntime();
 const require = createRequire(resolve(runtime, 'package.json'));
@@ -144,8 +145,8 @@ const scoreImage = async image => {
 const classify = async request => {
   const width = Number(request.width);
   const height = Number(request.height);
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 4096 || height > 4096) {
-    throw new Error('Invalid RGB dimensions');
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > maxDimension || height > maxDimension) {
+    throw new Error(`Invalid RGB dimensions; maximum is ${maxDimension}x${maxDimension}`);
   }
   const bytes = Buffer.from(String(request.rgb ?? ''), 'base64');
   const expected = width * height * 3;
