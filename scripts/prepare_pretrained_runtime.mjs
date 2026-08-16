@@ -15,6 +15,12 @@ const stamp = resolve(runtime, 'stamp');
 const bazeliskVersion = '1.29.0';
 const packages = ['tfjs-core', 'tfjs-backend-cpu', 'tfjs-converter', 'tfjs-layers'];
 const targets = packages.map(name => `//${name}:${name}_pkg`);
+const nodeBundles = {
+  'tfjs-core': 'tf-core.node.js',
+  'tfjs-backend-cpu': 'tf-backend-cpu.node.js',
+  'tfjs-converter': 'tf-converter.node.js',
+  'tfjs-layers': 'tf-layers.node.js',
+};
 const runtimeDependencies = {
   long: '4.0.0',
   'node-fetch': '2.6.1',
@@ -62,11 +68,15 @@ const bazelisk = async () => {
 const runtimeDependencyPaths = () => Object.keys(runtimeDependencies)
   .map(name => resolve(runtime, 'node_modules', name, 'package.json'));
 
+const nodeBundlePaths = () => Object.entries(nodeBundles)
+  .map(([name, file]) => resolve(tfDst, name, 'dist', file));
+
 const staged = async head => {
   if (!await exists(stamp)) return false;
   if ((await readFile(stamp, 'utf8')).trim() !== head) return false;
   const paths = [
     ...packages.map(name => resolve(tfDst, name, 'package.json')),
+    ...nodeBundlePaths(),
     ...runtimeDependencyPaths(),
   ];
   return (await Promise.all(paths.map(exists))).every(Boolean);
@@ -107,6 +117,9 @@ export const prepareRuntime = async () => {
     if (!await exists(resolve(src, 'package.json'))) throw new Error(`Built TensorFlow package is missing: ${name}`);
     await cp(src, resolve(tfDst, name), { recursive: true });
   }
+  const missingBundles = [];
+  for (const path of nodeBundlePaths()) if (!await exists(path)) missingBundles.push(path);
+  if (missingBundles.length > 0) throw new Error(`Built TensorFlow Node bundle(s) missing: ${missingBundles.join(', ')}`);
   await installRuntimeDependencies();
   await writeFile(stamp, `${head}\n`);
   stage('prepared runtime is ready.');
