@@ -1,6 +1,12 @@
-import '@tensorflow/tfjs-backend-cpu';
-import * as tf from '@tensorflow/tfjs-core';
-import { loadLayersModel } from '@tensorflow/tfjs-layers';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import { prepareRuntime } from '../scripts/prepare_pretrained_runtime.mjs';
+
+const runtime = await prepareRuntime();
+const require = createRequire(resolve(runtime, 'package.json'));
+require('@tensorflow/tfjs-backend-cpu');
+const tf = require('@tensorflow/tfjs-core');
+const { loadLayersModel } = require('@tensorflow/tfjs-layers');
 
 const modelUrl = process.env.TFJS_LAYERS_SMOKE_MODEL ??
   'https://raw.githubusercontent.com/kitty-crow/nsfwjs/5940117af9afc86a0994d959f50603aeeeac1f2d/models/mobilenet_v2/model.json';
