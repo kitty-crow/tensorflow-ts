@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  graph-model:
+  pretrained-models:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -23,12 +23,13 @@ jobs:
         working-directory: link-package
       - name: Verify converter operation snapshots
         run: node scripts/sync_converter_ops.mjs --check
-      - name: Build CPU GraphModel runtime
+      - name: Build CPU pretrained-model runtime
         run: >-
           yarn bazel build
           //tfjs-core:tfjs-core_pkg
           //tfjs-backend-cpu:tfjs-backend-cpu_pkg
           //tfjs-converter:tfjs-converter_pkg
+          //tfjs-layers:tfjs-layers_pkg
         working-directory: link-package
       - name: Stage built packages
         shell: bash
@@ -36,7 +37,7 @@ jobs:
           set -euo pipefail
           dst='link-package/node_modules/@tensorflow'
           mkdir -p "$dst"
-          for pkg in tfjs-core tfjs-backend-cpu tfjs-converter; do
+          for pkg in tfjs-core tfjs-backend-cpu tfjs-converter tfjs-layers; do
             src="dist/bin/$pkg/${pkg}_pkg"
             test -d "$src"
             rm -rf "$dst/$pkg"
@@ -44,4 +45,7 @@ jobs:
           done
       - name: Load and execute official pretrained COCO-SSD graph
         run: node pretrained_smoke.mjs
+        working-directory: link-package
+      - name: Load and execute pretrained NSFWJS MobileNetV2 layers model
+        run: node layers_pretrained_smoke.mjs
         working-directory: link-package
