@@ -109,8 +109,11 @@ export const prepareRuntime = async () => {
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) throw new Error(`Bazel runtime build failed with exit ${result.status ?? 'unknown'}`);
 
-  stage('staging built TensorFlow.js packages…');
   await rm(resolve(runtime, 'node_modules'), { recursive: true, force: true });
+  await mkdir(runtime, { recursive: true });
+  await installRuntimeDependencies();
+
+  stage('staging built TensorFlow.js packages…');
   await mkdir(tfDst, { recursive: true });
   for (const name of packages) {
     const src = resolve(repo, 'dist', 'bin', name, `${name}_pkg`);
@@ -120,7 +123,7 @@ export const prepareRuntime = async () => {
   const missingBundles = [];
   for (const path of nodeBundlePaths()) if (!await exists(path)) missingBundles.push(path);
   if (missingBundles.length > 0) throw new Error(`Built TensorFlow Node bundle(s) missing: ${missingBundles.join(', ')}`);
-  await installRuntimeDependencies();
+
   await writeFile(stamp, `${head}\n`);
   stage('prepared runtime is ready.');
   return runtime;
