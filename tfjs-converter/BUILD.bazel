@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -91,6 +91,12 @@ copy_ts_library_to_dist(
 )
 
 copy_to_dist(
+    name = "copy_op_json",
+    srcs = ["//tfjs-converter/src:op_json"],
+    root = "src",
+)
+
+copy_to_dist(
     name = "copy_bundles",
     srcs = [
         ":tf-converter",
@@ -127,6 +133,7 @@ pkg_npm(
         ":copy_bundles",
         ":copy_miniprogram",
         ":copy_miniprogram_map",
+        ":copy_op_json",
         ":copy_src_to_dist",
         "//tfjs-converter/metadata:kernels_to_ops",
     ],
