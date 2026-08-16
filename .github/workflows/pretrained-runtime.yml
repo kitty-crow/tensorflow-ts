@@ -5,15 +5,15 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   graph-model:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: yarn
@@ -21,21 +21,8 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn install --frozen-lockfile
         working-directory: link-package
-      - name: Sync converter operation snapshots
-        run: node scripts/sync_converter_ops.mjs
-      - name: Commit converter operation snapshots
-        if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- tfjs-converter/src/operations/op_list; then
-            exit 0
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add tfjs-converter/src/operations/op_list/*.ts
-          git commit -m 'Embed converter operation mappings'
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+      - name: Verify converter operation snapshots
+        run: node scripts/sync_converter_ops.mjs --check
       - name: Build CPU GraphModel runtime
         run: >-
           yarn bazel build
@@ -43,12 +30,6 @@ jobs:
           //tfjs-backend-cpu:tfjs-backend-cpu_pkg
           //tfjs-converter:tfjs-converter_pkg
         working-directory: link-package
-      - name: Show generated converter TypeScript config on failure
-        if: failure()
-        shell: bash
-        run: |
-          set -euo pipefail
-          find bazel-out -name '*tfjs-converter_src_lib*tsconfig.json' -print -exec cat {} \; || true
       - name: Stage built packages
         shell: bash
         run: |
