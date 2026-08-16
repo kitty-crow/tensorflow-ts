@@ -57,7 +57,7 @@ parser.add_argument('--bazel_options', {
  */
 async function main() {
   const args = parser.parse_args();
-  let packageNames: string[] = args.tfjs_package;
+  const packageNames: string[] = args.tfjs_package;
 
   let targets: string[];
   if (args.all) {
@@ -76,19 +76,24 @@ async function main() {
         child.stderr.pipe(process.stderr);
         child.on('exit', code => {
           if (code !== 0) {
-            reject(code);
+            reject(new Error(`Bazel build failed with exit ${code ?? 'unknown'}`));
+            return;
           }
           resolve(code);
         });
       });
     } else {
-      // Use spawnSync intead of exec for prettier printing.
+      // Use spawnSync instead of exec for prettier printing.
       const bazelArgs = ['bazel', 'build'];
       if (args.bazel_options) {
         bazelArgs.push(args.bazel_options);
       }
       bazelArgs.push(...targets);
-      spawnSync('yarn', bazelArgs, {stdio:'inherit'});
+      const child = spawnSync('yarn', bazelArgs, {stdio: 'inherit'});
+      if (child.error) throw child.error;
+      if (child.status !== 0) {
+        throw new Error(`Bazel build failed with exit ${child.status ?? 'unknown'}`);
+      }
     }
   }
 
@@ -204,14 +209,14 @@ function dirToTarget(dir: string) {
  * @param dest The destination to copy src to.
  */
 function copyRecursive(src: string, dest: string) {
-  // Avoid 'cp -r', which Windows does not suppport
+  // Avoid 'cp -r', which Windows does not support.
   const stat = fs.lstatSync(src);
   if (stat.isFile()) {
     fs.copyFileSync(src, dest);
   } else if (stat.isDirectory()) {
     const contents = fs.readdirSync(src);
     fs.mkdirSync(dest);
-    for (let name of contents) {
+    for (const name of contents) {
       copyRecursive(path.join(src, name),
                     path.join(dest, name));
     }
@@ -222,14 +227,14 @@ function copyRecursive(src: string, dest: string) {
  * Map a function on all files and directories under a path.
  *
  * @param rootPath The path where the function will be mapped.
- * @param mapFn The function to map on all subpaths of the rootPath.
+ * @param mapFn The function to map on all subpaths of rootPath.
  */
 function mapFiles(rootPath: string, mapFn: (path: string) => void) {
   mapFn(rootPath);
   const stat = fs.lstatSync(rootPath);
   if (stat.isDirectory()) {
     const contents = fs.readdirSync(rootPath);
-    for (let subPath of contents) {
+    for (const subPath of contents) {
       mapFiles(path.join(rootPath, subPath), mapFn);
     }
   }
