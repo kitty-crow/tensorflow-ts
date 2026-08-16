@@ -80,7 +80,9 @@ const classify = async request => {
       const raw = await coco.executeAsync(batch);
       const outputs = Array.isArray(raw) ? raw : [raw];
       const scores = outputs[0];
-      if (scores === undefined || scores.shape.length !== 3) throw new Error('Unexpected COCO score tensor');
+      if (scores === undefined || scores.shape.length !== 3 || scores.shape[0] !== 1 || scores.shape[2] !== 90) {
+        throw new Error(`Unexpected COCO score tensor shape ${scores?.shape.join('x') ?? 'missing'}`);
+      }
       const values = await scores.data();
       const boxes = scores.shape[1] ?? 0;
       const classes = scores.shape[2] ?? 0;
