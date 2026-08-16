@@ -15,6 +15,11 @@ const stamp = resolve(runtime, 'stamp');
 const bazeliskVersion = '1.29.0';
 const packages = ['tfjs-core', 'tfjs-backend-cpu', 'tfjs-converter', 'tfjs-layers'];
 const targets = packages.map(name => `//${name}:${name}_pkg`);
+const runtimeDependencies = {
+  long: '4.0.0',
+  'node-fetch': '2.6.1',
+  seedrandom: '3.0.5',
+};
 
 const assets = {
   'linux-x64': ['bazelisk-linux-amd64', '5a408715e932c0250d28bd84555f12edbf70117de42f9181691c736eacc4a992'],
@@ -51,10 +56,30 @@ const bazelisk = async () => {
   return path;
 };
 
+const runtimeDependencyPaths = () => Object.keys(runtimeDependencies)
+  .map(name => resolve(runtime, 'node_modules', name, 'package.json'));
+
 const staged = async head => {
   if (!await exists(stamp)) return false;
   if ((await readFile(stamp, 'utf8')).trim() !== head) return false;
-  return (await Promise.all(packages.map(name => exists(resolve(tfDst, name, 'package.json'))))).every(Boolean);
+  const paths = [
+    ...packages.map(name => resolve(tfDst, name, 'package.json')),
+    ...runtimeDependencyPaths(),
+  ];
+  return (await Promise.all(paths.map(exists))).every(Boolean);
+};
+
+const installRuntimeDependencies = async () => {
+  const pkg = `${JSON.stringify({ private: true, dependencies: runtimeDependencies }, null, 2)}\n`;
+  await writeFile(resolve(runtime, 'package.json'), pkg);
+  const isBun = typeof process.versions.bun === 'string';
+  const command = isBun ? process.execPath : 'npm';
+  const args = isBun
+    ? ['install', '--ignore-scripts']
+    : ['install', '--ignore-scripts', '--omit=dev', '--no-audit', '--no-fund', '--package-lock=false'];
+  const result = spawnSync(command, args, { cwd: runtime, stdio: 'inherit' });
+  if (result.error !== undefined) throw result.error;
+  if (result.status !== 0) throw new Error(`Runtime dependency install failed with exit ${result.status ?? 'unknown'}`);
 };
 
 export const prepareRuntime = async () => {
@@ -73,7 +98,7 @@ export const prepareRuntime = async () => {
     if (!await exists(resolve(src, 'package.json'))) throw new Error(`Built TensorFlow package is missing: ${name}`);
     await cp(src, resolve(tfDst, name), { recursive: true });
   }
-  await writeFile(resolve(runtime, 'package.json'), '{"private":true}\n');
+  await installRuntimeDependencies();
   await writeFile(stamp, `${head}\n`);
   return runtime;
 };
