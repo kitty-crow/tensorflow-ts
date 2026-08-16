@@ -1,0 +1,51 @@
+name: Pretrained runtime bootstrap
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  clean-bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Install pinned Bazelisk only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache
+          curl -fsSL -o .cache/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.29.0/bazelisk-linux-amd64
+          echo '5a408715e932c0250d28bd84555f12edbf70117de42f9181691c736eacc4a992  .cache/bazelisk' | sha256sum -c -
+          chmod 755 .cache/bazelisk
+      - name: Build CPU pretrained-model runtime from a clean checkout
+        run: >-
+          ./.cache/bazelisk build
+          //tfjs-core:tfjs-core_pkg
+          //tfjs-backend-cpu:tfjs-backend-cpu_pkg
+          //tfjs-converter:tfjs-converter_pkg
+          //tfjs-layers:tfjs-layers_pkg
+      - name: Stage built packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          dst='link-package/node_modules/@tensorflow'
+          mkdir -p "$dst"
+          for pkg in tfjs-core tfjs-backend-cpu tfjs-converter tfjs-layers; do
+            src="dist/bin/$pkg/${pkg}_pkg"
+            test -d "$src"
+            rm -rf "$dst/$pkg"
+            cp -a "$src" "$dst/$pkg"
+          done
+      - name: Execute pretrained GraphModel
+        run: node pretrained_smoke.mjs
+        working-directory: link-package
+      - name: Execute pretrained LayersModel
+        run: node layers_pretrained_smoke.mjs
+        working-directory: link-package
