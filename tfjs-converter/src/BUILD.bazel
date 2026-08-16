@@ -28,18 +28,12 @@ filegroup(
     srcs = glob(["**/*.ts"]),
 )
 
-filegroup(
-    name = "op_json",
-    srcs = glob(["operations/op_list/*.json"]),
-)
-
 ts_library(
     name = "tfjs-converter_src_lib",
     srcs = glob(
         ["**/*.ts"],
         exclude = TEST_SRCS + ["index.ts"],
     ),
-    data = [":op_json"],
     module_name = "@tensorflow/tfjs-converter/dist",
     deps = [
         "//tfjs-core/src:tfjs-core_lib",
