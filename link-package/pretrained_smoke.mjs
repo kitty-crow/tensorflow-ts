@@ -1,6 +1,12 @@
-import '@tensorflow/tfjs-backend-cpu';
-import * as tf from '@tensorflow/tfjs-core';
-import { loadGraphModel } from '@tensorflow/tfjs-converter';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import { prepareRuntime } from '../scripts/prepare_pretrained_runtime.mjs';
+
+const runtime = await prepareRuntime();
+const require = createRequire(resolve(runtime, 'package.json'));
+require('@tensorflow/tfjs-backend-cpu');
+const tf = require('@tensorflow/tfjs-core');
+const { loadGraphModel } = require('@tensorflow/tfjs-converter');
 
 const modelUrl = process.env.TFJS_SMOKE_MODEL ??
   'https://storage.googleapis.com/tfjs-models/savedmodel/ssdlite_mobilenet_v2/model.json';
