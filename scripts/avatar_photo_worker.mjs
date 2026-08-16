@@ -10,10 +10,14 @@ if (!photoModelDir) throw new Error('Usage: node scripts/avatar_photo_worker.mjs
 
 const runtime = await prepareRuntime();
 const require = createRequire(resolve(runtime, 'package.json'));
-require('@tensorflow/tfjs-backend-cpu');
-const tf = require('@tensorflow/tfjs-core');
-const { loadGraphModel } = require('@tensorflow/tfjs-converter');
-const { loadLayersModel } = require('@tensorflow/tfjs-layers');
+const tfPath = resolve(runtime, 'node_modules', '@tensorflow', 'tfjs-core', 'dist', 'tf-core.node.js');
+const cpuPath = resolve(runtime, 'node_modules', '@tensorflow', 'tfjs-backend-cpu', 'dist', 'tf-backend-cpu.node.js');
+const converterPath = resolve(runtime, 'node_modules', '@tensorflow', 'tfjs-converter', 'dist', 'tf-converter.node.js');
+const layersPath = resolve(runtime, 'node_modules', '@tensorflow', 'tfjs-layers', 'dist', 'tf-layers.node.js');
+const tf = require(tfPath);
+require(cpuPath);
+const { loadGraphModel } = require(converterPath);
+const { loadLayersModel } = require(layersPath);
 
 if (!await tf.setBackend('cpu')) throw new Error('TensorFlow.js CPU backend did not initialise');
 await tf.ready();
