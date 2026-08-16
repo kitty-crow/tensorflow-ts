@@ -32,6 +32,8 @@ const assets = {
 
 const exists = async path => await access(path, fsConstants.F_OK).then(() => true).catch(() => false);
 const gitHead = () => execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim();
+const stage = message => console.error(`[TensorFlow runtime] ${message}`);
+const childStdio = ['ignore', 2, 2];
 
 const sha256 = async path => createHash('sha256').update(await readFile(path)).digest('hex');
 
@@ -45,6 +47,7 @@ const bazelisk = async () => {
 
   let valid = await exists(path) && await sha256(path) === expected;
   if (!valid) {
+    stage(`downloading Bazelisk ${bazeliskVersion} for ${key}…`);
     const url = `https://github.com/bazelbuild/bazelisk/releases/download/v${bazeliskVersion}/${name}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Bazelisk download failed: HTTP ${response.status}`);
@@ -77,20 +80,26 @@ const installRuntimeDependencies = async () => {
   const args = isBun
     ? ['install', '--ignore-scripts']
     : ['install', '--ignore-scripts', '--omit=dev', '--no-audit', '--no-fund', '--package-lock=false'];
-  const result = spawnSync(command, args, { cwd: runtime, stdio: 'inherit' });
+  stage('installing prepared runtime dependencies…');
+  const result = spawnSync(command, args, { cwd: runtime, stdio: childStdio });
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) throw new Error(`Runtime dependency install failed with exit ${result.status ?? 'unknown'}`);
 };
 
 export const prepareRuntime = async () => {
   const head = gitHead();
-  if (await staged(head)) return runtime;
+  if (await staged(head)) {
+    stage('using cached prepared runtime.');
+    return runtime;
+  }
 
+  stage('building TensorFlow.js core, CPU backend, converter and layers…');
   const bin = await bazelisk();
-  const result = spawnSync(bin, ['build', ...targets], { cwd: repo, stdio: 'inherit' });
+  const result = spawnSync(bin, ['build', ...targets], { cwd: repo, stdio: childStdio });
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) throw new Error(`Bazel runtime build failed with exit ${result.status ?? 'unknown'}`);
 
+  stage('staging built TensorFlow.js packages…');
   await rm(resolve(runtime, 'node_modules'), { recursive: true, force: true });
   await mkdir(tfDst, { recursive: true });
   for (const name of packages) {
@@ -100,6 +109,7 @@ export const prepareRuntime = async () => {
   }
   await installRuntimeDependencies();
   await writeFile(stamp, `${head}\n`);
+  stage('prepared runtime is ready.');
   return runtime;
 };
 
