@@ -5,7 +5,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   graph-model:
@@ -21,6 +21,21 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn install --frozen-lockfile
         working-directory: link-package
+      - name: Sync converter operation snapshots
+        run: node scripts/sync_converter_ops.mjs
+      - name: Commit converter operation snapshots
+        if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- tfjs-converter/src/operations/op_list; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tfjs-converter/src/operations/op_list/*.ts
+          git commit -m 'Embed converter operation mappings'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
       - name: Build CPU GraphModel runtime
         run: >-
           yarn bazel build
