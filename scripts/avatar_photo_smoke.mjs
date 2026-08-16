@@ -39,16 +39,15 @@ const withTimeout = async (promise, ms, label) => {
 let child;
 let lines;
 try {
-  stage: {
-    console.error('[Avatar smoke] downloading pinned photographic model…');
-    await Promise.all([download('model.json'), download('group1-shard1of1')]);
-  }
+  console.error('[Avatar smoke] downloading pinned photographic model…');
+  await Promise.all([download('model.json'), download('group1-shard1of1')]);
 
   console.error(`[Avatar smoke] starting worker with ${node}…`);
   child = spawn(node, [worker, dir], {
     stdio: ['pipe', 'pipe', 'inherit'],
   });
   const spawnError = new Promise((_, reject) => child.once('error', reject));
+  const exitPromise = once(child, 'exit');
   lines = createInterface({ input: child.stdout, crlfDelay: Infinity });
   const it = lines[Symbol.asyncIterator]();
 
@@ -62,14 +61,19 @@ try {
     }
   };
 
+  const writeRequest = async (payload, label) => {
+    await withTimeout(new Promise((resolve, reject) => {
+      child.stdin.write(`${JSON.stringify(payload)}\n`, error => error ? reject(error) : resolve());
+    }), 30_000, `${label} write`);
+  };
+
   const ready = await nextJson('Avatar worker startup', startupTimeoutMs);
   if (ready?.error) throw new Error(`Avatar worker startup failed: ${ready.error}`);
   if (ready?.ready !== true) throw new Error(`Avatar worker did not become ready: ${JSON.stringify(ready)}`);
 
   const send = async (id, width, height, fill) => {
     const rgb = Buffer.alloc(width * height * 3, fill).toString('base64');
-    const payload = `${JSON.stringify({ id, width, height, rgb })}\n`;
-    if (!child.stdin.write(payload)) await once(child.stdin, 'drain');
+    await writeRequest({ id, width, height, rgb }, `Avatar worker inference ${id}`);
     const result = await nextJson(`Avatar worker inference ${id}`, inferenceTimeoutMs);
     if (typeof result?.error === 'string') throw new Error(`Avatar worker inference ${id} failed: ${result.error}`);
     if (result?.id !== id) throw new Error(`Avatar worker inference id mismatch: expected ${id}, got ${result?.id}`);
@@ -85,11 +89,22 @@ try {
     console.error(`[Avatar smoke] ${id} ok: person=${result.person.toFixed(4)} photographic=${result.photographic.toFixed(4)} score=${result.score.toFixed(4)}`);
   };
 
+  const expectError = async () => {
+    const id = 'invalid-rgb';
+    await writeRequest({ id, width: 2, height: 2, rgb: '' }, 'Avatar worker invalid request');
+    const result = await nextJson('Avatar worker invalid request', inferenceTimeoutMs);
+    if (result?.id !== id || typeof result?.error !== 'string' || !result.error.includes('Invalid RGB byte length')) {
+      throw new Error(`Avatar worker invalid-request contract failed: ${JSON.stringify(result)}`);
+    }
+    console.error('[Avatar smoke] invalid request rejected without killing worker.');
+  };
+
   await send('black-256', 256, 256, 0);
+  await expectError();
   await send('white-300', 300, 300, 255);
 
   child.stdin.end();
-  const [code, signal] = await withTimeout(once(child, 'exit'), 30_000, 'Avatar worker shutdown');
+  const [code, signal] = await withTimeout(exitPromise, 30_000, 'Avatar worker shutdown');
   if (code !== 0) throw new Error(`Avatar worker exited ${code ?? `by signal ${signal ?? 'unknown'}`}`);
   child = undefined;
   console.log('Photographic-person worker smoke passed.');
