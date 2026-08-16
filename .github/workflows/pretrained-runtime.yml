@@ -28,6 +28,12 @@ jobs:
           //tfjs-backend-cpu:tfjs-backend-cpu_pkg
           //tfjs-converter:tfjs-converter_pkg
         working-directory: link-package
+      - name: Show generated converter TypeScript config on failure
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          find bazel-out -name '*tfjs-converter_src_lib*tsconfig.json' -print -exec cat {} \; || true
       - name: Stage built packages
         shell: bash
         run: |
