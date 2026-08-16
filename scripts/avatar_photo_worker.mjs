@@ -7,6 +7,7 @@ import { prepareRuntime } from './prepare_pretrained_runtime.mjs';
 const cocoUrl = 'https://storage.googleapis.com/tfjs-models/savedmodel/ssdlite_mobilenet_v2/model.json';
 const photoModelDir = process.argv[2];
 if (!photoModelDir) throw new Error('Usage: node scripts/avatar_photo_worker.mjs <photo-model-dir>');
+const stage = message => console.error(`[Avatar model] ${message}`);
 
 const runtime = await prepareRuntime();
 const require = createRequire(resolve(runtime, 'package.json'));
@@ -14,11 +15,13 @@ const tfPath = resolve(runtime, 'node_modules', '@tensorflow', 'tfjs-core', 'dis
 const cpuPath = resolve(runtime, 'node_modules', '@tensorflow', 'tfjs-backend-cpu', 'dist', 'tf-backend-cpu.node.js');
 const converterPath = resolve(runtime, 'node_modules', '@tensorflow', 'tfjs-converter', 'dist', 'tf-converter.node.js');
 const layersPath = resolve(runtime, 'node_modules', '@tensorflow', 'tfjs-layers', 'dist', 'tf-layers.node.js');
+stage('loading prepared TensorFlow.js Node bundles…');
 const tf = require(tfPath);
 require(cpuPath);
 const { loadGraphModel } = require(converterPath);
 const { loadLayersModel } = require(layersPath);
 
+stage('initialising TensorFlow.js CPU backend…');
 if (!await tf.setBackend('cpu')) throw new Error('TensorFlow.js CPU backend did not initialise');
 await tf.ready();
 
@@ -52,13 +55,17 @@ const layersHandler = async dir => {
   };
 };
 
+stage('loading COCO SSDLite MobileNet V2 person detector…');
 const coco = await loadGraphModel(cocoUrl);
+stage('loading pinned MobileNet V2 photographic-vs-drawing model…');
 const photo = await loadLayersModel(await layersHandler(photoModelDir));
 
+stage('warming person detector…');
 const warmCoco = tf.zeros([1, 300, 300, 3], 'int32');
 const warmOut = await coco.executeAsync(warmCoco);
 tf.dispose(warmOut);
 warmCoco.dispose();
+stage('warming photographic classifier…');
 const warmPhoto = tf.zeros([1, 224, 224, 3]);
 const warmPhotoOut = photo.predict(warmPhoto);
 tf.dispose(warmPhotoOut);
@@ -124,6 +131,7 @@ const classify = async request => {
   };
 };
 
+stage('ready.');
 process.stdout.write(`${JSON.stringify({ ready: true })}\n`);
 
 const lines = createInterface({ input: process.stdin, crlfDelay: Infinity });
