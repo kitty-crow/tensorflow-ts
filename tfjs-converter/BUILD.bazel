@@ -91,12 +91,6 @@ copy_ts_library_to_dist(
 )
 
 copy_to_dist(
-    name = "copy_op_json",
-    srcs = ["//tfjs-converter/src:op_json"],
-    root = "src",
-)
-
-copy_to_dist(
     name = "copy_bundles",
     srcs = [
         ":tf-converter",
@@ -133,7 +127,6 @@ pkg_npm(
         ":copy_bundles",
         ":copy_miniprogram",
         ":copy_miniprogram_map",
-        ":copy_op_json",
         ":copy_src_to_dist",
         "//tfjs-converter/metadata:kernels_to_ops",
     ],
