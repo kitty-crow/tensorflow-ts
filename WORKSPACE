@@ -222,43 +222,11 @@ http_archive(
 
 load("@rules_python//python:repositories.bzl", "python_register_toolchains")
 
-# TODO(mattSoulanille): Change the docker so it doesn't run as root?
-# https://github.com/bazelbuild/rules_python/pull/713
-# https://github.com/GoogleCloudPlatform/cloud-builders/issues/641
+# Retained Bazel rules may use Python as a build tool. The removed Python
+# converter, TensorFlow Lite and Decision Forest packages must not register
+# repositories from paths that no longer exist in this focused fork.
 python_register_toolchains(
     name = "python3_9",
     ignore_root_user_error = True,
-    # Available versions are listed in @rules_python//python:versions.bzl.
     python_version = "3.9",
 )
-
-load("@python3_9//:defs.bzl", "interpreter")
-load("@rules_python//python:pip.bzl", "pip_parse")
-
-pip_parse(
-    name = "tensorflowjs_deps",
-    python_interpreter_target = interpreter,
-    requirements_lock = "@//tfjs-converter/python:requirements_lock.txt",
-)
-
-load("@tensorflowjs_deps//:requirements.bzl", install_tfjs_deps = "install_deps")
-
-install_tfjs_deps()
-
-pip_parse(
-    name = "tensorflowjs_dev_deps",
-    python_interpreter_target = interpreter,
-    requirements_lock = "@//tfjs-converter/python:requirements-dev_lock.txt",
-)
-
-load("@tensorflowjs_dev_deps//:requirements.bzl", install_tfjs_dev_deps = "install_deps")
-
-install_tfjs_dev_deps()
-
-load("//tfjs-tflite:tflite_repositories.bzl", "tflite_repositories")
-
-tflite_repositories()
-
-load("//tfjs-tfdf:tfdf_repositories.bzl", "tfdf_repositories")
-
-tfdf_repositories()
