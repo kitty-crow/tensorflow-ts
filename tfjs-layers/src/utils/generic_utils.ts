@@ -164,20 +164,19 @@ function convertNDArrayScalarsInConfig(config: serialization.ConfigDictValue):
   }
   if (Array.isArray(config)) {
     config.forEach(configItem => convertNDArrayScalarsInConfig(configItem));
-  } else {
-    const fields = Object.keys(config);
-    for (const field of fields) {
-      const value = config[field];
-      if (!(value != null && typeof value === 'object')) continue;
-      {
-        if (!Array.isArray(value) && value['type'] === 'ndarray' &&
-            typeof value['value'] === 'number') {
-          config[field] = value['value'];
-        } else {
-          convertNDArrayScalarsInConfig(value as serialization.ConfigDict);
-        }
-      }
+    return;
+  }
+  for (const field of Object.keys(config)) {
+    const value = config[field];
+    if (value == null || typeof value !== 'object') {
+      continue;
     }
+    if (!Array.isArray(value) && value['type'] === 'ndarray' &&
+        typeof value['value'] === 'number') {
+      config[field] = value['value'];
+      continue;
+    }
+    convertNDArrayScalarsInConfig(value as serialization.ConfigDict);
   }
 }
 
@@ -223,80 +222,80 @@ export function deserializeKerasObject(
       }
     }
     return fn;
-  } else {
-    // In this case we are dealing with a Keras config dictionary.
-    const config = identifier;
-    if (config['className'] == null || config['config'] == null) {
-      throw new ValueError(
-          `${printableModuleName}: Improper config format: ` +
-          `${JSON.stringify(config)}.\n` +
-          `'className' and 'config' must set.`);
-    }
-    const className = config['className'] as string;
-    let cls, fromConfig;
-    if (className in customObjects) {
-      [cls, fromConfig] = customObjects[className];
-    } else if (className in _GLOBAL_CUSTOM_OBJECTS) {
-      [cls, fromConfig] = _GLOBAL_CUSTOM_OBJECTS['className'];
-    } else if (className in moduleObjects) {
-      [cls, fromConfig] = moduleObjects[className];
-    }
-    if (cls == null) {
-      throw new ValueError(
-          `Unknown ${printableModuleName}: ${className}. ` +
-          `This may be due to one of the following reasons:\n` +
-          `1. The ${printableModuleName} is defined in Python, in which ` +
-          `case it needs to be ported to TensorFlow.js or your JavaScript ` +
-          `code.\n` +
-          `2. The custom ${printableModuleName} is defined in JavaScript, ` +
-          `but is not registered properly with ` +
-          `tf.serialization.registerClass().`);
-      // TODO(cais): Add link to tutorial page on custom layers.
-    }
-    if (fromConfig != null) {
-      // Porting notes: Instead of checking to see whether fromConfig accepts
-      // customObjects, we create a customObjects dictionary and tack it on to
-      // config['config'] as config['config'].customObjects. Objects can use it,
-      // if they want.
-
-      // tslint:disable-next-line:no-any
-      const customObjectsCombined = {} as {[objName: string]: any};
-      for (const key of Object.keys(_GLOBAL_CUSTOM_OBJECTS)) {
-        customObjectsCombined[key] = _GLOBAL_CUSTOM_OBJECTS[key];
-      }
-      for (const key of Object.keys(customObjects)) {
-        customObjectsCombined[key] = customObjects[key];
-      }
-      // Add the customObjects to config
-      const nestedConfig = config['config'] as serialization.ConfigDict;
-      nestedConfig['customObjects'] = customObjectsCombined;
-
-      const backupCustomObjects = {..._GLOBAL_CUSTOM_OBJECTS};
-      for (const key of Object.keys(customObjects)) {
-        _GLOBAL_CUSTOM_OBJECTS[key] = customObjects[key];
-      }
-      convertNDArrayScalarsInConfig(config['config']);
-      const returnObj =
-          fromConfig(cls, config['config'], customObjects, fastWeightInit);
-      _GLOBAL_CUSTOM_OBJECTS = {...backupCustomObjects};
-
-      return returnObj;
-    } else {
-      // Then `cls` may be a function returning a class.
-      // In this case by convention `config` holds
-      // the kwargs of the function.
-      const backupCustomObjects = {..._GLOBAL_CUSTOM_OBJECTS};
-      for (const key of Object.keys(customObjects)) {
-        _GLOBAL_CUSTOM_OBJECTS[key] = customObjects[key];
-      }
-      // In python this is **config['config'], for tfjs-layers we require
-      // classes that use this fall-through construction method to take
-      // a config interface that mimics the expansion of named parameters.
-      const returnObj = new cls(config['config']);
-      _GLOBAL_CUSTOM_OBJECTS = {...backupCustomObjects};
-      return returnObj;
-    }
   }
+  // In this case we are dealing with a Keras config dictionary.
+  const config = identifier;
+  if (config['className'] == null || config['config'] == null) {
+    throw new ValueError(
+        `${printableModuleName}: Improper config format: ` +
+        `${JSON.stringify(config)}.\n` +
+        `'className' and 'config' must set.`);
+  }
+  const className = config['className'] as string;
+  let cls, fromConfig;
+  if (className in customObjects) {
+    [cls, fromConfig] = customObjects[className];
+  } else if (className in _GLOBAL_CUSTOM_OBJECTS) {
+    [cls, fromConfig] = _GLOBAL_CUSTOM_OBJECTS['className'];
+  } else if (className in moduleObjects) {
+    [cls, fromConfig] = moduleObjects[className];
+  }
+  if (cls == null) {
+    throw new ValueError(
+        `Unknown ${printableModuleName}: ${className}. ` +
+        `This may be due to one of the following reasons:\n` +
+        `1. The ${printableModuleName} is defined in Python, in which ` +
+        `case it needs to be ported to TensorFlow.js or your JavaScript ` +
+        `code.\n` +
+        `2. The custom ${printableModuleName} is defined in JavaScript, ` +
+        `but is not registered properly with ` +
+        `tf.serialization.registerClass().`);
+    // TODO(cais): Add link to tutorial page on custom layers.
+  }
+  if (fromConfig != null) {
+    // Porting notes: Instead of checking to see whether fromConfig accepts
+    // customObjects, we create a customObjects dictionary and tack it on to
+    // config['config'] as config['config'].customObjects. Objects can use it,
+    // if they want.
+
+    // tslint:disable-next-line:no-any
+    const customObjectsCombined = {} as {[objName: string]: any};
+    for (const key of Object.keys(_GLOBAL_CUSTOM_OBJECTS)) {
+      customObjectsCombined[key] = _GLOBAL_CUSTOM_OBJECTS[key];
+    }
+    for (const key of Object.keys(customObjects)) {
+      customObjectsCombined[key] = customObjects[key];
+    }
+    // Add the customObjects to config
+    const nestedConfig = config['config'] as serialization.ConfigDict;
+    nestedConfig['customObjects'] = customObjectsCombined;
+
+    const backupCustomObjects = {..._GLOBAL_CUSTOM_OBJECTS};
+    for (const key of Object.keys(customObjects)) {
+      _GLOBAL_CUSTOM_OBJECTS[key] = customObjects[key];
+    }
+    convertNDArrayScalarsInConfig(config['config']);
+    const returnObj =
+        fromConfig(cls, config['config'], customObjects, fastWeightInit);
+    _GLOBAL_CUSTOM_OBJECTS = {...backupCustomObjects};
+
+    return returnObj;
+  } else {
+    // Then `cls` may be a function returning a class.
+    // In this case by convention `config` holds
+    // the kwargs of the function.
+    const backupCustomObjects = {..._GLOBAL_CUSTOM_OBJECTS};
+    for (const key of Object.keys(customObjects)) {
+      _GLOBAL_CUSTOM_OBJECTS[key] = customObjects[key];
+    }
+    // In python this is **config['config'], for tfjs-layers we require
+    // classes that use this fall-through construction method to take
+    // a config interface that mimics the expansion of named parameters.
+    const returnObj = new cls(config['config']);
+    _GLOBAL_CUSTOM_OBJECTS = {...backupCustomObjects};
+    return returnObj;
+  }
+
 }
 
 /**
