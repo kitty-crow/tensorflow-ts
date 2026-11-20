@@ -585,14 +585,10 @@ export function isCapableOfRenderingToFloatTexture(webGLVersion: number):
 
   const gl = getWebGLContext(webGLVersion);
 
-  if (webGLVersion === 1) {
-    if (!hasExtension(gl, 'OES_texture_float')) {
-      return false;
-    }
-  } else {
-    if (!hasExtension(gl, 'EXT_color_buffer_float')) {
-      return false;
-    }
+  const floatExtension = webGLVersion === 1 ?
+      'OES_texture_float' : 'EXT_color_buffer_float';
+  if (!hasExtension(gl, floatExtension)) {
+    return false;
   }
 
   const isFrameBufferComplete = createFloatTextureAndBindToFramebuffer(gl);
@@ -608,39 +604,33 @@ export function isCapableOfRenderingToFloatTexture(webGLVersion: number):
  * but if we are unable to bind some kind of float texture to the frameBuffer
  * then we definitely will not be able to read float values from it.
  */
+/** Inspect the two possible colour-buffer extensions on WebGL 2. */
+function downloadFloatTextureWebGL2(gl: WebGLRenderingContext): boolean {
+  if (hasExtension(gl, 'EXT_color_buffer_float')) {
+    return createFloatTextureAndBindToFramebuffer(gl);
+  }
+  const COLOR_BUFFER_HALF_FLOAT = 'EXT_color_buffer_half_float';
+  if (hasExtension(gl, COLOR_BUFFER_HALF_FLOAT)) {
+    const textureHalfFloatExtension = gl.getExtension(COLOR_BUFFER_HALF_FLOAT);
+    return createHalfFloatTextureAndBindToFramebuffer(
+        gl, textureHalfFloatExtension);
+  }
+  return false;
+}
+
 export function isDownloadFloatTextureEnabled(webGLVersion: number): boolean {
   if (webGLVersion === 0) {
     return false;
   }
-
   const gl = getWebGLContext(webGLVersion);
-
-  if (!(webGLVersion === 1)) {
-    if (hasExtension(gl, 'EXT_color_buffer_float')) {
-      return createFloatTextureAndBindToFramebuffer(gl);
-    }
-
-    const COLOR_BUFFER_HALF_FLOAT = 'EXT_color_buffer_half_float';
-    if (hasExtension(gl, COLOR_BUFFER_HALF_FLOAT)) {
-      const textureHalfFloatExtension =
-          gl.getExtension(COLOR_BUFFER_HALF_FLOAT);
-      return createHalfFloatTextureAndBindToFramebuffer(
-          gl, textureHalfFloatExtension);
-    }
-
+  if (webGLVersion !== 1) {
+    return downloadFloatTextureWebGL2(gl);
+  }
+  if (!hasExtension(gl, 'OES_texture_float') ||
+      !hasExtension(gl, 'WEBGL_color_buffer_float')) {
     return false;
   }
-  {
-    if (!hasExtension(gl, 'OES_texture_float')) {
-      return false;
-    }
-    if (!hasExtension(gl, 'WEBGL_color_buffer_float')) {
-      return false;
-    }
-  }
-
-  const isFrameBufferComplete = createFloatTextureAndBindToFramebuffer(gl);
-  return isFrameBufferComplete;
+  return createFloatTextureAndBindToFramebuffer(gl);
 }
 
 function createFloatTextureAndBindToFramebuffer(gl: WebGLRenderingContext):
