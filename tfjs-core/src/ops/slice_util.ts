@@ -621,14 +621,13 @@ function buildDenseSpec(
 
   for (let i = 0; i < sparse.dims; i++) {
     if ((1 << i) & sparse.ellipsisMask) {
-      // Only the bit that has ellipsis will fall in this condition.
-      // Expand the ellipsis into the appropriate indices
-      // Note: this only works because we guaranteed one ellipsis.
+      // Expand the ellipsis into the appropriate indices. We have verified
+      // there is only one ellipsis, so this does not skip a second range.
       const nextIndex = Math.min(
           dense.dims - (sparse.dims - i) + 1 + sparse.numAddAxisAfterEllipsis,
           dense.dims);
       for (; fullIndex < nextIndex; fullIndex++) {
-        // newAxis aren't real axis so you have to skip.
+        // A new axis is not a real axis and is therefore skipped.
         dense.begin[fullIndex] = 0;
         dense.end[fullIndex] = 0;
         dense.strides[fullIndex] = 1;
@@ -638,47 +637,57 @@ function buildDenseSpec(
         dense.finalShapeGatherIndicesSparse.push(-1);
         dense.inputShapeGatherIndicesSparse[fullIndex] = i;
       }
-    } else if ((1 << i) & sparse.newAxisMask) {
-      // Only the bit that has newAxis will fall in this condition.
+      continue;
+    }
+    if ((1 << i) & sparse.newAxisMask) {
+      // A new axis is synthetic, so it does not consume a dense input axis.
       dense.finalShapeGatherIndices.push(NEW_AXIS);
       dense.finalShapeGatherIndicesSparse.push(-1);
-    } else {
-      if (fullIndex === dense.begin.length) {
-        throw Error(
-            `Index out of range using input dim ${fullIndex}; input ` +
-            `has only ${dense.dims} dims, ${dense.begin.length}.`);
-      }
-
-      // Gather slicing spec into appropriate index.
-      if (sparse.begin != null) {
-        dense.begin[fullIndex] = sparse.begin[i];
-      }
-      if (sparse.end != null) {
-        dense.end[fullIndex] = sparse.end[i];
-      }
-      dense.strides[fullIndex] = sparse.strides[i];
-      if (sparse.beginMask & (1 << i)) {
-        dense.beginMask |= (1 << fullIndex);
-      }
-      if (sparse.endMask & (1 << i)) {
-        dense.endMask |= (1 << fullIndex);
-      }
-      // If shrink, record where to get the dimensionality from (i.e. newAxis)
-      // creates a fake 1 size dimension. Also remember shrink axis (now in
-      // dense form) so we can ignore dense.end below.
-      if (sparse.shrinkAxisMask & (1 << i)) {
-        dense.finalShapeGatherIndices.push(SHRINK_AXIS);
-        dense.finalShapeGatherIndicesSparse.push(-1);
-        dense.shrinkAxisMask |= (1 << fullIndex);
-      } else {
-        dense.finalShapeGatherIndices.push(fullIndex);
-        // Remember that where in the sparse shape the dense dim comes from.
-        dense.finalShapeGatherIndicesSparse.push(i);
-      }
-      dense.inputShapeGatherIndicesSparse[fullIndex] = i;
-      fullIndex++;
+      continue;
     }
+    fullIndex = appendDenseSliceAxis(sparse, dense, i, fullIndex);
   }
+}
+
+/**
+ * Append one real sparse slice axis to its dense representation.
+ * The returned index is the next available dense axis.
+ */
+function appendDenseSliceAxis(
+    sparse: StridedSliceSparseSpec, dense: StridedSliceDenseSpec,
+    i: number, fullIndex: number): number {
+  if (fullIndex === dense.begin.length) {
+    throw Error(
+        `Index out of range using input dim ${fullIndex}; input ` +
+        `has only ${dense.dims} dims, ${dense.begin.length}.`);
+  }
+
+  // Gather slicing spec into the appropriate index.
+  if (sparse.begin != null) {
+    dense.begin[fullIndex] = sparse.begin[i];
+  }
+  if (sparse.end != null) {
+    dense.end[fullIndex] = sparse.end[i];
+  }
+  dense.strides[fullIndex] = sparse.strides[i];
+  if (sparse.beginMask & (1 << i)) {
+    dense.beginMask |= (1 << fullIndex);
+  }
+  if (sparse.endMask & (1 << i)) {
+    dense.endMask |= (1 << fullIndex);
+  }
+  // A shrunk axis does not contribute to the final shape.
+  if (sparse.shrinkAxisMask & (1 << i)) {
+    dense.finalShapeGatherIndices.push(SHRINK_AXIS);
+    dense.finalShapeGatherIndicesSparse.push(-1);
+    dense.shrinkAxisMask |= (1 << fullIndex);
+  } else {
+    dense.finalShapeGatherIndices.push(fullIndex);
+    // Remember the sparse dimension from which this dense axis originated.
+    dense.finalShapeGatherIndicesSparse.push(i);
+  }
+  dense.inputShapeGatherIndicesSparse[fullIndex] = i;
+  return fullIndex + 1;
 }
 
 function canonical(
