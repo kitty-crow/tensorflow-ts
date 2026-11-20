@@ -342,11 +342,7 @@ export class Softmax extends Layer {
         x = add(x, adder);
       }
       if (this.axis instanceof Array) {
-        if (this.axis.length > 1) {
-          return exp(sub(x, logSumExp(x, this.axis, true)));
-        } else {
-          return this.softmax(x, this.axis[0]);
-        }
+        return (this.axis.length > 1) ? exp(sub(x, logSumExp(x, this.axis, true))) : this.softmax(x, this.axis[0]);
       }
       return this.softmax(x, this.axis);
     });

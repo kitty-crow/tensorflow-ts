@@ -420,15 +420,11 @@ function getOutputPacked1DCoords(
   const packedTexShape =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
   if (packedTexShape[0] === 1) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       int getOutputCoords() {
         return 2 * int(resultUV.x * ceil(float(outTexShape[1]) / 2.0));
       }
-    `;
-    }
-
-    return `
+    ` : `
       int getOutputCoords() {
         return 2 * int(resultUV.x * ${packedTexShape[1]}.0);
       }
@@ -436,15 +432,11 @@ function getOutputPacked1DCoords(
   }
 
   if (packedTexShape[1] === 1) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       int getOutputCoords() {
         return 2 * int(resultUV.y * ceil(float(outTexShape[0]) / 2.0));
       }
-    `;
-    }
-
-    return `
+    ` : `
       int getOutputCoords() {
         return 2 * int(resultUV.y * ${packedTexShape[0]}.0);
       }
@@ -475,28 +467,22 @@ function getOutput1DCoords(
     shape: [number], texShape: [number, number],
     enableShapeUniforms: boolean): string {
   if (texShape[0] === 1) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       int getOutputCoords() {
         return int(resultUV.x * float(outTexShape[1]));
       }
-    `;
-    }
-    return `
+    ` : `
       int getOutputCoords() {
         return int(resultUV.x * ${texShape[1]}.0);
       }
     `;
   }
   if (texShape[1] === 1) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       int getOutputCoords() {
         return int(resultUV.y * float(outTexShape[0]));
       }
-    `;
-    }
-    return `
+    ` : `
       int getOutputCoords() {
         return int(resultUV.y * ${texShape[0]}.0);
       }
@@ -744,16 +730,12 @@ function getOutputPacked2DCoords(
   const packedTexShape =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
   if (util.arraysEqual(shape, texShape)) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       ivec2 getOutputCoords() {
         ivec2 packedTexShape = ivec2(ceil(float(outTexShape[0]) / 2.0), ceil(float(outTexShape[1]) / 2.0));
         return 2 * ivec2(resultUV.yx * vec2(packedTexShape[0], packedTexShape[1]));
       }
-    `;
-    }
-
-    return `
+    ` : `
       ivec2 getOutputCoords() {
         return 2 * ivec2(resultUV.yx * vec2(${packedTexShape[0]}, ${
         packedTexShape[1]}));
@@ -808,31 +790,25 @@ function getOutput2DCoords(
     shape: [number, number], texShape: [number, number],
     enableShapeUniforms: boolean): string {
   if (util.arraysEqual(shape, texShape)) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       ivec2 getOutputCoords() {
         return ivec2(resultUV.yx * vec2(outTexShape[0], outTexShape[1]));
       }
-    `;
-    }
-    return `
+    ` : `
       ivec2 getOutputCoords() {
         return ivec2(resultUV.yx * vec2(${texShape[0]}, ${texShape[1]}));
       }
     `;
   }
   if (shape[1] === 1) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       ivec2 getOutputCoords() {
         ivec2 resTexRC = ivec2(resultUV.yx *
                                vec2(outTexShape[0], outTexShape[1]));
         int index = resTexRC.x * outTexShape[1] + resTexRC.y;
         return ivec2(index, 0);
       }
-    `;
-    }
-    return `
+    ` : `
       ivec2 getOutputCoords() {
         ivec2 resTexRC = ivec2(resultUV.yx *
                                vec2(${texShape[0]}, ${texShape[1]}));
@@ -842,17 +818,14 @@ function getOutput2DCoords(
     `;
   }
   if (shape[0] === 1) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       ivec2 getOutputCoords() {
         ivec2 resTexRC = ivec2(resultUV.yx *
                                vec2(outTexShape[0], outTexShape[1]));
         int index = resTexRC.x * outTexShape[1] + resTexRC.y;
         return ivec2(0, index);
       }
-    `;
-    }
-    return `
+    ` : `
       ivec2 getOutputCoords() {
         ivec2 resTexRC = ivec2(resultUV.yx *
                                vec2(${texShape[0]}, ${texShape[1]}));
@@ -991,17 +964,13 @@ function getSampler1D(
   }
   const offset = getFlatOffsetUniformName(texName);
   if (tNumC === 1) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       float ${funcName}(int index) {
         vec2 uv = vec2(0.5, (float(index + ${offset}) + 0.5) / float(${
           texName}TexShape[0]));
         return sampleTexture(${texName}, uv);
       }
-    `;
-    }
-
-    return `
+    ` : `
       float ${funcName}(int index) {
         vec2 uv = vec2(0.5, (float(index + ${offset}) + 0.5) / ${tNumR}.0);
         return sampleTexture(${texName}, uv);
@@ -1009,17 +978,13 @@ function getSampler1D(
     `;
   }
   if (tNumR === 1) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       float ${funcName}(int index) {
         vec2 uv = vec2((float(index + ${offset}) + 0.5) / float(${
           texName}TexShape[1]), 0.5);
         return sampleTexture(${texName}, uv);
       }
-    `;
-    }
-
-    return `
+    ` : `
       float ${funcName}(int index) {
         vec2 uv = vec2((float(index + ${offset}) + 0.5) / ${tNumC}.0, 0.5);
         return sampleTexture(${texName}, uv);
@@ -1056,17 +1021,14 @@ function getPackedSampler2D(
   const texNumC = texShape[1];
   const glsl = getGlslDifferences();
   if (texShape != null && util.arraysEqual(shape, texShape)) {
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ? `
       vec4 ${funcName}(int row, int col) {
         vec2 uv = (vec2(col, row) + halfCR) / vec2(${texName}TexShape[1], ${
           texName}TexShape[0]);
 
         return ${glsl.texture2D}(${texName}, uv);
       }
-    `;
-    }
-    return `
+    ` : `
       vec4 ${funcName}(int row, int col) {
         vec2 uv = (vec2(col, row) + halfCR) / vec2(${texNumC}.0, ${texNumR}.0);
 

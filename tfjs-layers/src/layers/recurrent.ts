@@ -712,11 +712,7 @@ export class RNN extends Layer {
 
       inputs = getExactlyOneTensor(inputs);
       if (initialState == null) {
-        if (this.stateful) {
-          initialState = this.states_;
-        } else {
-          initialState = this.getInitialState(inputs);
-        }
+        initialState = (this.stateful) ? this.states_ : this.getInitialState(inputs);
       }
 
       const numStates =

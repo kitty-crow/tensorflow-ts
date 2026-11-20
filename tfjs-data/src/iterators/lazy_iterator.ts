@@ -649,10 +649,7 @@ class RowMajorBatchIterator<T> extends LazyIterator<T[]> {
     while (batch.length < this.batchSize) {
       const item = await this.upstream.next();
       if (item.done) {
-        if (this.enableSmallLastBatch && batch.length > 0) {
-          return {value: batch, done: false};
-        }
-        return {value: null, done: true};
+        return (this.enableSmallLastBatch && batch.length > 0) ? {value: batch, done: false} : {value: null, done: true};
       }
       batch.push(item.value);
     }

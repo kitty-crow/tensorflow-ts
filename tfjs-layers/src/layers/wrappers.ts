@@ -343,10 +343,7 @@ export class Bidirectional extends Wrapper {
     }
 
     if (this.returnState) {
-      if (this.mergeMode == null) {
-        return outputShapes.concat(stateShape).concat(stateShape.slice());
-      }
-      return [outputShape].concat(stateShape).concat(stateShape.slice());
+      return (this.mergeMode == null) ? outputShapes.concat(stateShape).concat(stateShape.slice()) : [outputShape].concat(stateShape).concat(stateShape.slice());
     }
     return generic_utils.singletonOrArray(outputShapes);
   }
@@ -480,10 +477,7 @@ export class Bidirectional extends Wrapper {
 
       // TODO(cais): Properly set learning phase.
       if (this.returnState) {
-        if (this.mergeMode == null) {
-          return (output as Tensor[]).concat(states);
-        }
-        return [output as Tensor].concat(states);
+        return (this.mergeMode == null) ? (output as Tensor[]).concat(states) : [output as Tensor].concat(states);
       }
       return output;
     });

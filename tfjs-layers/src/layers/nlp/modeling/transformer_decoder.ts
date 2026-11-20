@@ -428,11 +428,7 @@ export class TransformerDecoder extends Layer {
       }
 
       if (selfAttentionCache != null) {
-        if (hasCrossAttention) {
-          return [x, selfAttentionCache, kwargs.crossAttentionCache];
-        } else {
-          return [x, selfAttentionCache, null];
-        }
+        return (hasCrossAttention) ? [x, selfAttentionCache, kwargs.crossAttentionCache] : [x, selfAttentionCache, null];
       }
       return [x, null, null];
     });

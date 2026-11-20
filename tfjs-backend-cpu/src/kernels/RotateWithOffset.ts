@@ -64,11 +64,7 @@ export const rotateWithOffsetConfig: KernelConfig = {
 
             let outputValue = fillValue;
             if (typeof fillValue !== 'number') {
-              if (channel === 3) {
-                outputValue = fullOpacityValue;
-              } else {
-                outputValue = fillValue[channel];
-              }
+              outputValue = (channel === 3) ? fullOpacityValue : fillValue[channel];
             }
 
             // If the coordinate position falls within the image boundaries...

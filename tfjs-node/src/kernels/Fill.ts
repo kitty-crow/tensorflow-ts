@@ -31,11 +31,7 @@ export const fillConfig: KernelConfig = {
     // a dtype helper method. The underlying op kernel doesn't accept undefined
     // or null dtype.
     if (dtype == null) {
-      if (typeof value === 'number') {
-        dtype = 'float32';
-      } else {
-        dtype = 'string';
-      }
+      dtype = (typeof value === 'number') ? 'float32' : 'string';
     }
     const shapeTensor = tensor1d(shape, 'int32');
     const valueTensor = scalar(value, dtype);
