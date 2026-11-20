@@ -67,6 +67,41 @@ function liftTerminalFallback(node: ts.IfStatement, source: ts.SourceFile): Edit
   };
 }
 
+/** Flatten a final guarded body when skipping it is equivalent to exiting the scope. */
+function liftFinalGuard(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
+  if (node.elseStatement !== undefined || !nestedConditional(node.thenStatement)) return null;
+  const block = node.parent;
+  if (!ts.isBlock(block) || block.statements.at(-1) !== node) return null;
+  const owner = block.parent;
+  let exit: string | null = null;
+  if (ts.isForStatement(owner) || ts.isForOfStatement(owner) ||
+      ts.isForInStatement(owner) || ts.isWhileStatement(owner) ||
+      ts.isDoStatement(owner)) {
+    if (owner.statement === block) exit = 'continue;';
+  }
+  if (ts.isFunctionLike(owner) && owner.body === block) {
+    const returnType = owner.type === undefined ? '' : owner.type.getText(source);
+    let returnsValue = false;
+    const inspect = (entry: ts.Node): void => {
+      if (ts.isFunctionLike(entry) && entry !== owner) return;
+      if (ts.isReturnStatement(entry) && entry.expression !== undefined) returnsValue = true;
+      ts.forEachChild(entry, inspect);
+    };
+    inspect(block);
+    if ((returnType === '' && !returnsValue) ||
+        returnType === 'void' || returnType === 'Promise<void>') exit = 'return;';
+  }
+  if (exit === null) return null;
+  const pad = indentation(source, node.getStart(source));
+  return {
+    start: node.getStart(source),
+    end: node.end,
+    replacement: 'if (!(' + node.expression.getText(source) + ')) ' + exit +
+      '\n' + pad + node.thenStatement.getText(source),
+    kind: 'final-scope guard'
+  };
+}
+
 function mergeConjunction(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
   if (node.elseStatement !== undefined || !ts.isBlock(node.thenStatement)) return null;
   const outer = node.thenStatement;
@@ -181,6 +216,7 @@ function findEdits(source: ts.SourceFile): Edit[] {
       const replacement = mergeConjunction(node, source) ??
         switchDispatch(node, source) ??
         liftTerminalFallback(node, source) ??
+        liftFinalGuard(node, source) ??
         flattenTerminalElse(node, source);
       if (replacement !== null) options.push(replacement);
     }
