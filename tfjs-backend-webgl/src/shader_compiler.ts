@@ -1117,43 +1117,41 @@ function getSampler2D(
   const offset = getFlatOffsetUniformName(texName);
   if (texNumC === 1) {
     // index is used directly as physical (no risk of float16 overflow).
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ?
+        (`
       float ${funcName}(int row, int col) {
         float index = dot(vec3(row, col, ${offset}), vec3(${
           texName}Shape[1], 1, 1));
         vec2 uv = vec2(0.5, (index + 0.5) / float(${texName}TexShape[0]));
         return sampleTexture(${texName}, uv);
       }
-    `;
-    }
-    return `
+    `) :
+        (`
     float ${funcName}(int row, int col) {
       float index = dot(vec3(row, col, ${offset}), vec3(${shape[1]}, 1, 1));
       vec2 uv = vec2(0.5, (index + 0.5) / ${texNumR}.0);
       return sampleTexture(${texName}, uv);
     }
-  `;
+  `);
   }
   if (texNumR === 1) {
     // index is used directly as physical (no risk of float16 overflow).
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ?
+        (`
       float ${funcName}(int row, int col) {
         float index = dot(vec3(row, col, ${offset}), vec3(${
           texName}Shape[1], 1, 1));
         vec2 uv = vec2((index + 0.5) / float(${texName}TexShape[1]), 0.5);
         return sampleTexture(${texName}, uv);
       }
-    `;
-    }
-    return `
+    `) :
+        (`
     float ${funcName}(int row, int col) {
       float index = dot(vec3(row, col, ${offset}), vec3(${shape[1]}, 1, 1));
       vec2 uv = vec2((index + 0.5) / ${texNumC}.0, 0.5);
       return sampleTexture(${texName}, uv);
     }
-  `;
+  `);
   }
 
   if (enableShapeUniforms) {
@@ -1268,8 +1266,8 @@ function getSampler3D(
   const flatOffset = inputInfo.shapeInfo.flatOffset;
   if (texNumC === stride0 && flatOffset == null) {
     // texC is used directly as physical (no risk of float16 overflow).
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ?
+        (`
       float ${funcName}(int row, int col, int depth) {
         int stride1 = ${texName}Shape[2];
         float texR = float(row);
@@ -1278,9 +1276,8 @@ function getSampler3D(
                    vec2(${texName}TexShape[1], ${texName}TexShape[0]);
         return sampleTexture(${texName}, uv);
       }
-    `;
-    }
-    return `
+    `) :
+        (`
         float ${funcName}(int row, int col, int depth) {
           float texR = float(row);
           float texC = dot(vec2(col, depth), vec2(${stride1}, 1));
@@ -1288,13 +1285,13 @@ function getSampler3D(
                      vec2(${texNumC}.0, ${texNumR}.0);
           return sampleTexture(${texName}, uv);
         }
-      `;
+      `);
   }
 
   if (texNumC === stride1 && flatOffset == null) {
     // texR is used directly as physical (no risk of float16 overflow).
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ?
+        (`
       float ${funcName}(int row, int col, int depth) {
         float texR = dot(vec2(row, col), vec2(${texName}Shape[1], 1));
         float texC = float(depth);
@@ -1302,16 +1299,15 @@ function getSampler3D(
           texName}TexShape[0]);
         return sampleTexture(${texName}, uv);
       }
-    `;
-    }
-    return `
+    `) :
+        (`
     float ${funcName}(int row, int col, int depth) {
       float texR = dot(vec2(row, col), vec2(${shape[1]}, 1));
       float texC = float(depth);
       vec2 uv = (vec2(texC, texR) + halfCR) / vec2(${texNumC}.0, ${texNumR}.0);
       return sampleTexture(${texName}, uv);
     }
-  `;
+  `);
   }
 
   const offset = getFlatOffsetUniformName(texName);
@@ -1431,8 +1427,8 @@ function getSampler4D(
   const stride0Str = `int stride0 = ${texName}Shape[1] * stride1;`;
   if (texNumC === stride0 && flatOffset == null) {
     // texC is used directly as physical (no risk of float16 overflow).
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ?
+        (`
       float ${funcName}(int row, int col, int depth, int depth2) {
         ${stride2Str}
         ${stride1Str}
@@ -1444,9 +1440,8 @@ function getSampler4D(
                    vec2(${texName}TexShape[1], ${texName}TexShape[0]);
         return sampleTexture(${texName}, uv);
       }
-    `;
-    }
-    return `
+    `) :
+        (`
       float ${funcName}(int row, int col, int depth, int depth2) {
         float texR = float(row);
         float texC =
@@ -1456,12 +1451,12 @@ function getSampler4D(
                    vec2(${texNumC}.0, ${texNumR}.0);
         return sampleTexture(${texName}, uv);
       }
-    `;
+    `);
   }
   if (texNumC === stride2 && flatOffset == null) {
     // texR is used directly as physical (no risk of float16 overflow).
-    if (enableShapeUniforms) {
-      return `
+    return (enableShapeUniforms) ?
+        (`
       float ${funcName}(int row, int col, int depth, int depth2) {
         float texR = dot(vec3(row, col, depth),
                          vec3(${texName}Shape[1] * ${texName}Shape[2], ${
@@ -1471,9 +1466,8 @@ function getSampler4D(
                   vec2(${texName}TexShape[1], ${texName}TexShape[0]);
         return sampleTexture(${texName}, uv);
       }
-    `;
-    }
-    return `
+    `) :
+        (`
       float ${funcName}(int row, int col, int depth, int depth2) {
         float texR = dot(vec3(row, col, depth),
                          vec3(${shape[1] * shape[2]}, ${shape[2]}, 1));
@@ -1482,7 +1476,7 @@ function getSampler4D(
                   vec2(${texNumC}.0, ${texNumR}.0);
         return sampleTexture(${texName}, uv);
       }
-    `;
+    `);
   }
 
   const offset = getFlatOffsetUniformName(texName);
