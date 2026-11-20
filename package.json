@@ -78,13 +78,13 @@
     "verdaccio": "^5.9.0"
   },
   "scripts": {
-    "check:source-policy": "node scripts/check-source-policy.mjs",
+    "check:source-policy": "bun scripts/check-source-policy.mjs",
     "lint": "tslint -p tsconfig_tslint.json",
-    "test": "node scripts/check-source-policy.mjs && bazel test //:tests",
+    "test": "bun run check:source-policy && bazel test //:tests",
     "test-cpu": "bazel test --test_output=all //:tests_cpu",
     "test-gpu": "bazel test --test_output=all //:tests_gpu",
     "test-non-bazel": "cd link-package && yarn build-deps-for --all",
-    "build": "node scripts/check-source-policy.mjs && cd link-package && yarn build",
+    "build": "bun run check:source-policy && cd link-package && yarn build",
     "test-packages-ci": "yarn generate-cloudbuild-for-packages && ./scripts/run-build.sh",
     "nightly-cloudbuild": "NIGHTLY=true yarn generate-cloudbuild-for-packages && gcloud builds submit . --config=cloudbuild_generated.yml --substitutions=_NIGHTLY=true",
     "generate-cloudbuild-for-packages": "ts-node -s ./scripts/generate_cloudbuild_for_packages.ts",
@@ -105,7 +105,7 @@
     "bazel:lint-check": "yarn bazel:format --lint=warn --mode=check",
     "buildifier-ci": "./scripts/buildifier-ci.sh",
     "start-local-debugger-server": "node ./scripts/start_local_debugger_server.js",
-    "guards:strict": "node vendor/code-guards/dist/src/cli.js --project tsconfig.code-guards.json --strict --include-tests"
+    "guards:strict": "bun vendor/code-guards/dist/src/cli.js --project tsconfig.code-guards.json --strict --include-tests"
   },
   "dependencies": {
     "node-fetch": "^2.6.7"

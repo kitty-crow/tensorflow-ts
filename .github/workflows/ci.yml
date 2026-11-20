@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   code-guards:
-    name: Strict full Code Guards
+    name: Strict full Code Guards (Bun)
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -20,27 +20,22 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
-      - name: Set up Yarn Classic
-        run: |
-          corepack enable
-          corepack prepare yarn@1.22.22 --activate
+      - name: Install TensorFlow TypeScript dependencies with Bun
+        run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Install TensorFlow dependencies
-        run: yarn install --frozen-lockfile --ignore-scripts --non-interactive
+      - name: Install pinned Code Guards dependencies with Bun
+        working-directory: vendor/code-guards
+        run: bun install --ignore-scripts
 
-      - name: Install pinned Code Guards
-        run: npm install --prefix vendor/code-guards --no-audit --no-fund
+      - name: Build pinned Code Guards with Bun
+        working-directory: vendor/code-guards
+        run: bun run build
 
-      - name: Build pinned Code Guards
-        run: npm run build --prefix vendor/code-guards
+      - name: Check TensorFlow source policy with Bun
+        run: bun run check:source-policy
 
-      - name: Check TensorFlow source policy
-        run: npm run check:source-policy
-
-      - name: Strict full source and test scan
-        run: npm run guards:strict -- --format github
+      - name: Strict full source and test scan with Bun
+        run: bun run guards:strict --format github

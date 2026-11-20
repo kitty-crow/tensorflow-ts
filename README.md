@@ -27,15 +27,17 @@ Apache License 2.0. Original TensorFlow.js copyright and licence notices are ret
 
 ## Strict source review
 
-The [Code Guards](https://github.com/kitty-crow/code-guards) analyser is a pinned Git submodule at `vendor/code-guards`. It checks the TypeScript sources and tests across the maintained TensorFlow packages. CI runs every available guard in strict mode: **both warnings and errors fail the check**. The analyser is independent of TensorFlow's source and does not modify it.
+The [Code Guards](https://github.com/kitty-crow/code-guards) analyser is a pinned Git submodule at `vendor/code-guards`. It checks the TypeScript sources and tests across the maintained TensorFlow packages. Bun installs, compiles and executes Code Guards. CI runs every available guard in strict mode: **both warnings and errors fail the check**. The analyser is independent of TensorFlow's source and does not modify it.
 
 To reproduce the CI scan locally:
 
 ```sh
 git submodule update --init --recursive
-npm install --prefix vendor/code-guards --no-audit --no-fund
-npm run build --prefix vendor/code-guards
-npm run guards:strict
+bun install --frozen-lockfile --ignore-scripts
+(cd vendor/code-guards && bun install --ignore-scripts && bun run build)
+bun run guards:strict
 ```
 
 The scan uses `tsconfig.code-guards.json` to include sources omitted by the upstream root TypeScript configuration, including Node, WebGL and WebGPU modules. Existing violations must be fixed in source; no guards are disabled. Generated output, installed dependencies and the vendored analyser are excluded from the target scan.
+
+The Code Guards and source-policy CI steps run on Bun. The remaining legacy TensorFlow build, native addon and Bazel paths still use their original Yarn/Node.js tooling where compatibility has not been verified. The root `build` and `test` scripts invoke the Bun source-policy check before handing off to those existing paths.
