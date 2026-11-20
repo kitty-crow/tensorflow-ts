@@ -78,7 +78,8 @@ const coords = ['x', 'y', 'z', 'w', 'u', 'v'];
 function getCoords(rank: number): string {
   if (rank === 1) {
     return 'sourceLoc';
-  } else if (rank <= 6) {
+  }
+  if (rank <= 6) {
     return coords.slice(0, rank).map(coord => `sourceLoc.${coord}`).join(',');
   } else {
     throw Error(`Slicing for rank ${rank} is not yet supported`);

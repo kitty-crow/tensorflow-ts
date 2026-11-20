@@ -506,14 +506,20 @@ function createStagingGPUBufferFromData(
     usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC
   });
   const arrayBuffer = gpuWriteBuffer.getMappedRange();
-  if (dtype === 'float32') {
-    new Float32Array(arrayBuffer).set(data);
-  } else if (dtype === 'int32') {
-    new Int32Array(arrayBuffer).set(data);
-  } else {
-    throw new Error(
-        `Creating tensor from GPUBuffer only supports` +
-        `'float32'|'int32' dtype, while the dtype is ${dtype}.`);
+  switch (dtype) {
+    case 'float32': {
+      new Float32Array(arrayBuffer).set(data);
+      break;
+    }
+    case 'int32': {
+      new Int32Array(arrayBuffer).set(data);
+      break;
+    }
+    default: {
+      throw new Error(
+          `Creating tensor from GPUBuffer only supports` +
+          `'float32'|'int32' dtype, while the dtype is ${dtype}.`);
+    }
   }
   gpuWriteBuffer.unmap();
   return gpuWriteBuffer;

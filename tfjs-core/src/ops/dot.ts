@@ -63,12 +63,14 @@ function dot_(t1: Tensor|TensorLike, t2: Tensor|TensorLike): Tensor {
     const t22D = reshape($t2, [-1, 1]);
     const t1t2 = matMul(t12D, t22D);
     return reshape(t1t2, []);
-  } else if ($t1.rank === 1 && $t2.rank === 2) {
+  }
+  if ($t1.rank === 1 && $t2.rank === 2) {
     const t12D = reshape($t1, [1, -1]);
     const t22D = reshape($t2, [$t2.shape[0], $t2.shape[1]]);
     const t1t2 = matMul(t12D, t22D);
     return reshape(t1t2, [t1t2.size]);
-  } else if ($t1.rank === 2 && $t2.rank === 1) {
+  }
+  if ($t1.rank === 2 && $t2.rank === 1) {
     const t22D = reshape($t2, [-1, 1]);
     const t1t2 = matMul($t1, t22D);
     return reshape(t1t2, [t1t2.size]);

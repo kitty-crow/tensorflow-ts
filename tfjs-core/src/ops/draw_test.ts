@@ -52,17 +52,22 @@ function convertToRGBA(
     for (let d = 0; d < depth; d++) {
       const value = data[i * depth + d];
 
-      if (dtype === 'float32') {
-        if (value < 0 || value > 1) {
-          throw new Error(
-              `Tensor values for a float32 Tensor must be in the ` +
-              `range [0 - 1] but encountered ${value}.`);
+      switch (dtype) {
+        case 'float32': {
+          if (value < 0 || value > 1) {
+            throw new Error(
+                `Tensor values for a float32 Tensor must be in the ` +
+                `range [0 - 1] but encountered ${value}.`);
+          }
+          break;
         }
-      } else if (dtype === 'int32') {
-        if (value < 0 || value > 255) {
-          throw new Error(
-              `Tensor values for a int32 Tensor must be in the ` +
-              `range [0 - 255] but encountered ${value}.`);
+        case 'int32': {
+          if (value < 0 || value > 255) {
+            throw new Error(
+                `Tensor values for a int32 Tensor must be in the ` +
+                `range [0 - 255] but encountered ${value}.`);
+          }
+          break;
         }
       }
 

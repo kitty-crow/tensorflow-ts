@@ -58,20 +58,28 @@ export function getFusedBiasGradient(
 export function applyActivation(
     x: Tensor, activation: Activation, preluActivationWeights?: Tensor,
     leakyreluAlpha?: number): Tensor {
-  if (activation === 'linear') {
-    return x;
-  } else if (activation === 'relu') {
-    return relu(x);
-  } else if (activation === 'elu') {
-    return elu(x);
-  } else if (activation === 'relu6') {
-    return relu6(x);
-  } else if (activation === 'prelu') {
-    return prelu(x, preluActivationWeights);
-  } else if (activation === 'leakyrelu') {
-    return leakyRelu(x, leakyreluAlpha);
-  } else if (activation === 'sigmoid') {
-    return sigmoid(x);
+  switch (activation) {
+    case 'linear': {
+      return x;
+    }
+    case 'relu': {
+      return relu(x);
+    }
+    case 'elu': {
+      return elu(x);
+    }
+    case 'relu6': {
+      return relu6(x);
+    }
+    case 'prelu': {
+      return prelu(x, preluActivationWeights);
+    }
+    case 'leakyrelu': {
+      return leakyRelu(x, leakyreluAlpha);
+    }
+    case 'sigmoid': {
+      return sigmoid(x);
+    }
   }
   throw new Error(`Unknown fused activation ${activation}.`);
 }

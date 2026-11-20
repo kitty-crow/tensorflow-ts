@@ -179,7 +179,8 @@ export function sliceArrays(
     arrays: Tensor|Tensor[], start: number, stop: number): Tensor|Tensor[] {
   if (arrays == null) {
     return [null];
-  } else if (Array.isArray(arrays)) {
+  }
+  if (Array.isArray(arrays)) {
     return arrays.map(array => sliceAlongFirstAxis(array, start, stop - start));
   } else {  // Tensor.
     return sliceAlongFirstAxis(arrays, start, stop - start);
@@ -204,7 +205,8 @@ export function sliceArraysByIndices(
   return tfc.tidy(() => {
     if (arrays == null) {
       return null;
-    } else if (Array.isArray(arrays)) {
+    }
+    if (Array.isArray(arrays)) {
       return arrays.map(
           array => (sliceArraysByIndices(array, indices) as Tensor));
     } else {

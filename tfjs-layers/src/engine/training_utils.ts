@@ -41,7 +41,8 @@ function standardizeSampleOrClassWeights(
   if (numOutputs === 1) {
     if (Array.isArray(xWeight) && xWeight.length === 1) {
       return xWeight;
-    } else if (typeof xWeight === 'object' && outputNames[0] in xWeight) {
+    }
+    if (typeof xWeight === 'object' && outputNames[0] in xWeight) {
       return [(xWeight as ClassWeightMap)[outputNames[0]]];
     } else {
       return [xWeight as ClassWeight];
@@ -55,7 +56,8 @@ function standardizeSampleOrClassWeights(
           `Make sure a set of weights is provided for each model output.`);
     }
     return xWeight;
-  } else if (
+  }
+  if (
       typeof xWeight === 'object' && Object.keys(xWeight).length > 0 &&
       typeof (xWeight as ClassWeightMap)[Object.keys(xWeight)[0]] ===
           'object') {
@@ -137,12 +139,14 @@ export async function standardizeWeights(
       if (y.shape.length === 1) {
         // Assume class indices.
         return clone(y) as Tensor1D;
-      } else if (y.shape.length === 2) {
+      }
+      if (y.shape.length === 2) {
         if (y.shape[1] > 1) {
           // Assume one-hot encoding of classes.
           const axis = 1;
           return argMax(y, axis);
-        } else if (y.shape[1] === 1) {
+        }
+        if (y.shape[1] === 1) {
           // Class index.
           return reshape(y, [y.shape[0]]);
         } else {

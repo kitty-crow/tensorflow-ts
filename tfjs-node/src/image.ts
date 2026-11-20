@@ -276,19 +276,20 @@ export function getImageType(content: Uint8Array): string {
       content[2] === 255) {
     // JPEG byte chunk starts with `ff d8 ff`
     return ImageType.JPEG;
-  } else if (
-      content.length > 4 && content[0] === 71 && content[1] === 73 &&
+  }
+  if (content.length > 4 && content[0] === 71 && content[1] === 73 &&
       content[2] === 70 && content[3] === 56) {
     // GIF byte chunk starts with `47 49 46 38`
     return ImageType.GIF;
-  } else if (
-      content.length > 8 && content[0] === 137 && content[1] === 80 &&
+  }
+  if (content.length > 8 && content[0] === 137 && content[1] === 80 &&
       content[2] === 78 && content[3] === 71 && content[4] === 13 &&
       content[5] === 10 && content[6] === 26 && content[7] === 10) {
     // PNG byte chunk starts with `\211 P N G \r \n \032 \n (89 50 4E 47 0D 0A
     // 1A 0A)`
     return ImageType.PNG;
-  } else if (content.length > 3 && content[0] === 66 && content[1] === 77) {
+  }
+  if (content.length > 3 && content[0] === 66 && content[1] === 77) {
     // BMP byte chunk starts with `42 4d`
     return ImageType.BMP;
   } else {

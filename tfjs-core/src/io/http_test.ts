@@ -884,21 +884,25 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
       fetchInputs.push(input);
       fetchInits.push(init);
 
-      if (input === './model.json') {
-        return new Response(
-            JSON.stringify({
-              modelTopology: modelTopology1,
-              weightsManifest: weightManifest1,
-              trainingConfig: trainingConfig1
-            }),
-            {status: 200, headers: {'content-type': 'application/json'}});
-      } else if (input === './weightfile0') {
-        return new Response(floatData, {
-          status: 200,
-          headers: {'content-type': 'application/octet-stream'}
-        });
-      } else {
-        return new Response(null, {status: 404});
+      switch (input) {
+        case './model.json': {
+          return new Response(
+              JSON.stringify({
+                modelTopology: modelTopology1,
+                weightsManifest: weightManifest1,
+                trainingConfig: trainingConfig1
+              }),
+              {status: 200, headers: {'content-type': 'application/json'}});
+        }
+        case './weightfile0': {
+          return new Response(floatData, {
+            status: 200,
+            headers: {'content-type': 'application/octet-stream'}
+          });
+        }
+        default: {
+          return new Response(null, {status: 404});
+        }
       }
     }
 

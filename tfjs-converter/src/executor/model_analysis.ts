@@ -59,13 +59,11 @@ export function getExecutionSubgraph(
   const frontier = [...outputs];
   while (frontier.length > 0) {
     const node = frontier.pop();
-    if (isControlFlow(node) || isDynamicShape(node) || isHashTable(node)) {
-      if (dynamicNode == null) {
+    if ((isControlFlow(node) || isDynamicShape(node) || isHashTable(node)) && (dynamicNode == null)) {
         dynamicNode = node;
         syncInputs = dynamicNode.children.map(child => child.name)
                          .filter(name => usedNodes.has(name));
       }
-    }
     usedNodes.add(node.name);
 
     // Weights are dead end since we already have their values.

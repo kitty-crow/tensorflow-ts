@@ -75,12 +75,18 @@ export function deconvLength(
     return null;
   }
 
-  if (padding === 'valid') {
-    dimSize = dimSize * strideSize + max([kernelSize - strideSize, 0]);
-  } else if (padding === 'same') {
-    dimSize = dimSize * strideSize;
-  } else {
-    throw new ValueError(`Unsupport padding mode: ${padding}.`);
+  switch (padding) {
+    case 'valid': {
+      dimSize = dimSize * strideSize + max([kernelSize - strideSize, 0]);
+      break;
+    }
+    case 'same': {
+      dimSize = dimSize * strideSize;
+      break;
+    }
+    default: {
+      throw new ValueError(`Unsupport padding mode: ${padding}.`);
+    }
   }
   return dimSize;
 }

@@ -161,7 +161,8 @@ function convertNDArrayScalarsInConfig(config: serialization.ConfigDictValue):
     void {
   if (config == null || typeof config !== 'object') {
     return;
-  } else if (Array.isArray(config)) {
+  }
+  if (Array.isArray(config)) {
     config.forEach(configItem => convertNDArrayScalarsInConfig(configItem));
   } else {
     const fields = Object.keys(config);
@@ -466,9 +467,11 @@ export function assertPositiveInteger(value: number|number[], name: string) {
 export function formatAsFriendlyString(value: any): string {
   if (value === null) {
     return 'null';
-  } else if (Array.isArray(value)) {
+  }
+  if (Array.isArray(value)) {
     return '[' + value.map(v => formatAsFriendlyString(v)).join(',') + ']';
-  } else if (typeof value === 'string') {
+  }
+  if (typeof value === 'string') {
     return `"${value}"`;
   } else {
     return `${value}`;

@@ -33,13 +33,19 @@ export class FFTProgram implements GPGPUProgram {
     const resultDenominator = inverse ? `${innerDim}.0` : '1.0';
 
     let opString: string;
-    if (component === 'real') {
-      opString = 'return real * expR - imag * expI;';
-    } else if (component === 'imag') {
-      opString = 'return real * expI + imag * expR;';
-    } else {
-      throw new Error(
-          `FFT component must be either "real" or "imag", got ${component}.`);
+    switch (component) {
+      case 'real': {
+        opString = 'return real * expR - imag * expI;';
+        break;
+      }
+      case 'imag': {
+        opString = 'return real * expI + imag * expR;';
+        break;
+      }
+      default: {
+        throw new Error(
+            `FFT component must be either "real" or "imag", got ${component}.`);
+      }
     }
 
     this.userCode = `

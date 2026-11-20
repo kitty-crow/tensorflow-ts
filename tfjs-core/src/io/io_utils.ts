@@ -218,35 +218,41 @@ function decodeWeight(
     const quantizedArray = (quantization.dtype === 'uint8') ?
       new Uint8Array(byteBuffer) :
       new Uint16Array(byteBuffer);
-    if (dtype === 'float32') {
-      if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
-        values = new Float32Array(quantizedArray.length);
+    switch (dtype) {
+      case 'float32': {
+        if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
+          values = new Float32Array(quantizedArray.length);
+          for (let i = 0; i < quantizedArray.length; i++) {
+            const v = quantizedArray[i];
+            values[i] = v * quantization.scale + quantization.min;
+          }
+        } else if (quantization.dtype === 'float16') {
+          // TODO: This is inefficient. Make getFloat16Decoder efficient.
+          const float16Decode = getFloat16Decoder();
+          values = float16Decode(quantizedArray as Uint16Array);
+        } else {
+          throw new Error(
+            `Unsupported quantization type ${quantization.dtype} ` +
+            `for weight type float32.`);
+        }
+        break;
+      }
+      case 'int32': {
+        if (quantization.dtype !== 'uint8' && quantization.dtype !== 'uint16') {
+          throw new Error(
+            `Unsupported quantization type ${quantization.dtype} ` +
+            `for weight type int32.`);
+        }
+        values = new Int32Array(quantizedArray.length);
         for (let i = 0; i < quantizedArray.length; i++) {
           const v = quantizedArray[i];
-          values[i] = v * quantization.scale + quantization.min;
+          values[i] = Math.round(v * quantization.scale + quantization.min);
         }
-      } else if (quantization.dtype === 'float16') {
-        // TODO: This is inefficient. Make getFloat16Decoder efficient.
-        const float16Decode = getFloat16Decoder();
-        values = float16Decode(quantizedArray as Uint16Array);
-      } else {
-        throw new Error(
-          `Unsupported quantization type ${quantization.dtype} ` +
-          `for weight type float32.`);
+        break;
       }
-    } else if (dtype === 'int32') {
-      if (quantization.dtype !== 'uint8' && quantization.dtype !== 'uint16') {
-        throw new Error(
-          `Unsupported quantization type ${quantization.dtype} ` +
-          `for weight type int32.`);
+      default: {
+        throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
       }
-      values = new Int32Array(quantizedArray.length);
-      for (let i = 0; i < quantizedArray.length; i++) {
-        const v = quantizedArray[i];
-        values[i] = Math.round(v * quantization.scale + quantization.min);
-      }
-    } else {
-      throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
     }
     offset += size * quantizationSizeFactor;
   } else if (dtype === 'string') {
@@ -263,28 +269,37 @@ function decodeWeight(
     }
   } else {
     const dtypeFactor = DTYPE_VALUE_SIZE_MAP[dtype];
-    if (dtype === 'float32') {
-      values = new Float32Array(byteBuffer);
-    } else if (dtype === 'int32') {
-      values = new Int32Array(byteBuffer);
-    } else if (dtype === 'bool') {
-      values = new Uint8Array(byteBuffer);
-    } else if (dtype === 'complex64') {
-      values = new Float32Array(byteBuffer);
-      const real = new Float32Array(values.length / 2);
-      const image = new Float32Array(values.length / 2);
-      for (let i = 0; i < real.length; i++) {
-        real[i] = values[i * 2];
-        image[i] = values[i * 2 + 1];
+    switch (dtype) {
+      case 'float32': {
+        values = new Float32Array(byteBuffer);
+        break;
       }
-      const realTensor = tensor(real, shape, 'float32');
-      const imageTensor = tensor(image, shape, 'float32');
-      const complexTensor = complex(realTensor, imageTensor);
-      realTensor.dispose();
-      imageTensor.dispose();
-      return complexTensor;
-    } else {
-      throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
+      case 'int32': {
+        values = new Int32Array(byteBuffer);
+        break;
+      }
+      case 'bool': {
+        values = new Uint8Array(byteBuffer);
+        break;
+      }
+      case 'complex64': {
+        values = new Float32Array(byteBuffer);
+        const real = new Float32Array(values.length / 2);
+        const image = new Float32Array(values.length / 2);
+        for (let i = 0; i < real.length; i++) {
+          real[i] = values[i * 2];
+          image[i] = values[i * 2 + 1];
+        }
+        const realTensor = tensor(real, shape, 'float32');
+        const imageTensor = tensor(image, shape, 'float32');
+        const complexTensor = complex(realTensor, imageTensor);
+        realTensor.dispose();
+        imageTensor.dispose();
+        return complexTensor;
+      }
+      default: {
+        throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
+      }
     }
     offset += size * dtypeFactor;
   }

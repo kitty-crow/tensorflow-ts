@@ -630,23 +630,31 @@ describeMathCPU('loadLayersModel from URL', () => {
 
     spyOn(env().platform, 'fetch').and.callFake((path: string) => {
       return new Promise((resolve, reject) => {
-        if (path === 'model/model.json') {
-          resolve(new Response(
-              JSON.stringify({
-                modelTopology,
-                weightsManifest,
-              }),
-              {'headers': {'Content-Type': JSON_TYPE}}));
-        } else if (path === 'model/weight_0') {
-          resolve(new Response(
-              ones([32, 32], 'float32').dataSync() as Float32Array,
-              {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else if (path === 'model/weight_1') {
-          resolve(new Response(
-              zeros([32], 'float32').dataSync() as Float32Array,
-              {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else {
-          reject(new Error(`Invalid path: ${path}`));
+        switch (path) {
+          case 'model/model.json': {
+            resolve(new Response(
+                JSON.stringify({
+                  modelTopology,
+                  weightsManifest,
+                }),
+                {'headers': {'Content-Type': JSON_TYPE}}));
+            break;
+          }
+          case 'model/weight_0': {
+            resolve(new Response(
+                ones([32, 32], 'float32').dataSync() as Float32Array,
+                {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          case 'model/weight_1': {
+            resolve(new Response(
+                zeros([32], 'float32').dataSync() as Float32Array,
+                {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          default: {
+            reject(new Error(`Invalid path: ${path}`));
+          }
         }
       });
     });
@@ -683,23 +691,31 @@ describeMathCPU('loadLayersModel from URL', () => {
 
        spyOn(env().platform, 'fetch').and.callFake((path: string) => {
          return new Promise((resolve, reject) => {
-           if (path === 'model/model.json') {
-             resolve(new Response(
-                 JSON.stringify({
-                   modelTopology,
-                   weightsManifest,
-                 }),
-                 {'headers': {'Content-Type': JSON_TYPE}}));
-           } else if (path === 'model/weight_0') {
-             resolve(new Response(
-                 ones([32, 32], 'float32').dataSync() as Float32Array,
-                 {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-           } else if (path === 'model/weight_1') {
-             resolve(new Response(
-                 zeros([32], 'float32').dataSync() as Float32Array,
-                 {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-           } else {
-             reject(new Error(`Invalid path: ${path}`));
+           switch (path) {
+             case 'model/model.json': {
+               resolve(new Response(
+                   JSON.stringify({
+                     modelTopology,
+                     weightsManifest,
+                   }),
+                   {'headers': {'Content-Type': JSON_TYPE}}));
+               break;
+             }
+             case 'model/weight_0': {
+               resolve(new Response(
+                   ones([32, 32], 'float32').dataSync() as Float32Array,
+                   {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+               break;
+             }
+             case 'model/weight_1': {
+               resolve(new Response(
+                   zeros([32], 'float32').dataSync() as Float32Array,
+                   {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+               break;
+             }
+             default: {
+               reject(new Error(`Invalid path: ${path}`));
+             }
            }
          });
        });
@@ -743,23 +759,31 @@ describeMathCPU('loadLayersModel from URL', () => {
 
     spyOn(env().platform, 'fetch').and.callFake((path: string) => {
       return new Promise((resolve, reject) => {
-        if (path === 'https://url/to/model/model.json') {
-          resolve(new Response(
-              JSON.stringify({
-                modelTopology,
-                weightsManifest,
-              }),
-              {'headers': {'Content-Type': JSON_TYPE}}));
-        } else if (path === 'https://url/to/model/weight_0') {
-          resolve(new Response(
-              ones([32, 32], 'float32').dataSync() as Float32Array,
-              {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else if (path === 'https://url/to/model/weight_1') {
-          resolve(new Response(
-              zeros([32], 'float32').dataSync() as Float32Array,
-              {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else {
-          reject(new Error(`Invalid path: ${path}`));
+        switch (path) {
+          case 'https://url/to/model/model.json': {
+            resolve(new Response(
+                JSON.stringify({
+                  modelTopology,
+                  weightsManifest,
+                }),
+                {'headers': {'Content-Type': JSON_TYPE}}));
+            break;
+          }
+          case 'https://url/to/model/weight_0': {
+            resolve(new Response(
+                ones([32, 32], 'float32').dataSync() as Float32Array,
+                {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          case 'https://url/to/model/weight_1': {
+            resolve(new Response(
+                zeros([32], 'float32').dataSync() as Float32Array,
+                {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          default: {
+            reject(new Error(`Invalid path: ${path}`));
+          }
         }
       });
     });
@@ -805,21 +829,29 @@ describeMathCPU('loadLayersModel from URL', () => {
     const biasData = zeros([32], 'float32').dataSync() as Float32Array;
     spyOn(env().platform, 'fetch').and.callFake((path: string) => {
       return new Promise((resolve, reject) => {
-        if (path === 'model/model.json') {
-          resolve(new Response(
-              JSON.stringify({
-                modelTopology,
-                weightsManifest,
-              }),
-              {'headers': {'Content-Type': JSON_TYPE}}));
-        } else if (path === 'model/weight_0') {
-          resolve(new Response(
-              kernelData, {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else if (path === 'model/weight_1') {
-          resolve(new Response(
-              biasData, {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else {
-          reject(new Error(`Invalid path: ${path}`));
+        switch (path) {
+          case 'model/model.json': {
+            resolve(new Response(
+                JSON.stringify({
+                  modelTopology,
+                  weightsManifest,
+                }),
+                {'headers': {'Content-Type': JSON_TYPE}}));
+            break;
+          }
+          case 'model/weight_0': {
+            resolve(new Response(
+                kernelData, {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          case 'model/weight_1': {
+            resolve(new Response(
+                biasData, {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          default: {
+            reject(new Error(`Invalid path: ${path}`));
+          }
         }
       });
     });
@@ -857,19 +889,25 @@ describeMathCPU('loadLayersModel from URL', () => {
 
        spyOn(env().platform, 'fetch').and.callFake((path: string) => {
          return new Promise((resolve, reject) => {
-           if (path === 'model/model.json') {
-             resolve(new Response(
-                 JSON.stringify({
-                   modelTopology,
-                   weightsManifest,
-                 }),
-                 {'headers': {'Content-Type': JSON_TYPE}}));
-           } else if (path === 'model/weight_0') {
-             resolve(new Response(
-                 new Float32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-                 {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-           } else {
-             reject(new Error(`Invalid path: ${path}`));
+           switch (path) {
+             case 'model/model.json': {
+               resolve(new Response(
+                   JSON.stringify({
+                     modelTopology,
+                     weightsManifest,
+                   }),
+                   {'headers': {'Content-Type': JSON_TYPE}}));
+               break;
+             }
+             case 'model/weight_0': {
+               resolve(new Response(
+                   new Float32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+                   {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+               break;
+             }
+             default: {
+               reject(new Error(`Invalid path: ${path}`));
+             }
            }
          });
        });
@@ -917,31 +955,43 @@ describeMathCPU('loadLayersModel from URL', () => {
        ];
        spyOn(env().platform, 'fetch').and.callFake((path: string) => {
          return new Promise((resolve, reject) => {
-           if (path === 'model/model.json') {
-             resolve(new Response(
-                 JSON.stringify({
-                   modelTopology,
-                   weightsManifest,
-                 }),
-                 {'headers': {'Content-Type': JSON_TYPE}}));
-           } else if (path === 'model/weight_0') {
-             resolve(new Response(
-                 ones([10, 2], 'float32').dataSync() as Float32Array,
-                 {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-           } else if (path === 'model/weight_1') {
-             resolve(new Response(
-                 zeros([2], 'float32').dataSync() as Float32Array,
-                 {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-           } else if (path === 'model/weight_2') {
-             resolve(new Response(
-                 zeros([2, 1], 'float32').dataSync() as Float32Array,
-                 {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-           } else if (path === 'model/weight_3') {
-             resolve(new Response(
-                 ones([1], 'float32').dataSync() as Float32Array,
-                 {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-           } else {
-             reject(new Error(`Invalid path: ${path}`));
+           switch (path) {
+             case 'model/model.json': {
+               resolve(new Response(
+                   JSON.stringify({
+                     modelTopology,
+                     weightsManifest,
+                   }),
+                   {'headers': {'Content-Type': JSON_TYPE}}));
+               break;
+             }
+             case 'model/weight_0': {
+               resolve(new Response(
+                   ones([10, 2], 'float32').dataSync() as Float32Array,
+                   {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+               break;
+             }
+             case 'model/weight_1': {
+               resolve(new Response(
+                   zeros([2], 'float32').dataSync() as Float32Array,
+                   {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+               break;
+             }
+             case 'model/weight_2': {
+               resolve(new Response(
+                   zeros([2, 1], 'float32').dataSync() as Float32Array,
+                   {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+               break;
+             }
+             case 'model/weight_3': {
+               resolve(new Response(
+                   ones([1], 'float32').dataSync() as Float32Array,
+                   {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+               break;
+             }
+             default: {
+               reject(new Error(`Invalid path: ${path}`));
+             }
            }
          });
        });
@@ -986,31 +1036,43 @@ describeMathCPU('loadLayersModel from URL', () => {
     ];
     spyOn(env().platform, 'fetch').and.callFake((path: string) => {
       return new Promise((resolve, reject) => {
-        if (path === 'model/model.json') {
-          resolve(new Response(
-              JSON.stringify({
-                modelTopology,
-                weightsManifest,
-              }),
-              {'headers': {'Content-Type': JSON_TYPE}}));
-        } else if (path === 'model/weight_0') {
-          resolve(new Response(
-              ones([10, 2], 'float32').dataSync() as Float32Array,
-              {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else if (path === 'model/weight_1') {
-          resolve(new Response(
-              zeros([2], 'float32').dataSync() as Float32Array,
-              {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else if (path === 'model/weight_2') {
-          resolve(new Response(
-              zeros([2, 1], 'float32').dataSync() as Float32Array,
-              {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else if (path === 'model/weight_3') {
-          resolve(new Response(
-              ones([1], 'float32').dataSync() as Float32Array,
-              {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-        } else {
-          reject(new Error(`Invalid path: ${path}`));
+        switch (path) {
+          case 'model/model.json': {
+            resolve(new Response(
+                JSON.stringify({
+                  modelTopology,
+                  weightsManifest,
+                }),
+                {'headers': {'Content-Type': JSON_TYPE}}));
+            break;
+          }
+          case 'model/weight_0': {
+            resolve(new Response(
+                ones([10, 2], 'float32').dataSync() as Float32Array,
+                {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          case 'model/weight_1': {
+            resolve(new Response(
+                zeros([2], 'float32').dataSync() as Float32Array,
+                {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          case 'model/weight_2': {
+            resolve(new Response(
+                zeros([2, 1], 'float32').dataSync() as Float32Array,
+                {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          case 'model/weight_3': {
+            resolve(new Response(
+                ones([1], 'float32').dataSync() as Float32Array,
+                {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+            break;
+          }
+          default: {
+            reject(new Error(`Invalid path: ${path}`));
+          }
         }
       });
     });
@@ -1057,23 +1119,31 @@ describeMathCPU('loadLayersModel from URL', () => {
                requestCredentials.push(requestInit.credentials);
              }
              return new Promise((resolve, reject) => {
-               if (path === 'model/model.json') {
-                 resolve(new Response(
-                     JSON.stringify({
-                       modelTopology,
-                       weightsManifest,
-                     }),
-                     {'headers': {'Content-Type': JSON_TYPE}}));
-               } else if (path === 'model/weight_0') {
-                 resolve(new Response(
-                     ones([32, 32], 'float32').dataSync() as Float32Array,
-                     {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-               } else if (path === 'model/weight_1') {
-                 resolve(new Response(
-                     zeros([32], 'float32').dataSync() as Float32Array,
-                     {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
-               } else {
-                 reject(new Error(`Invalid path: ${path}`));
+               switch (path) {
+                 case 'model/model.json': {
+                   resolve(new Response(
+                       JSON.stringify({
+                         modelTopology,
+                         weightsManifest,
+                       }),
+                       {'headers': {'Content-Type': JSON_TYPE}}));
+                   break;
+                 }
+                 case 'model/weight_0': {
+                   resolve(new Response(
+                       ones([32, 32], 'float32').dataSync() as Float32Array,
+                       {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+                   break;
+                 }
+                 case 'model/weight_1': {
+                   resolve(new Response(
+                       zeros([32], 'float32').dataSync() as Float32Array,
+                       {'headers': {'Content-Type': OCTET_STREAM_TYPE}}));
+                   break;
+                 }
+                 default: {
+                   reject(new Error(`Invalid path: ${path}`));
+                 }
                }
              });
            });

@@ -284,7 +284,8 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
       if (handlers.length === 0) {
         throw new Error(
             `Cannot find any save handlers for URL '${handlerOrURL}'`);
-      } else if (handlers.length > 1) {
+      }
+      if (handlers.length > 1) {
         throw new Error(
             `Found more than one (${handlers.length}) save handlers for ` +
             `URL '${handlerOrURL}'`);

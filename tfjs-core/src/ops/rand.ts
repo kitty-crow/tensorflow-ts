@@ -42,13 +42,19 @@ function rand_<R extends Rank>(
   let values = null;
   if (dtype == null || dtype === 'float32') {
     values = new Float32Array(size);
-  } else if (dtype === 'int32') {
+  } else switch (dtype) {
+  case 'int32': {
     values = new Int32Array(size);
-  } else if (dtype === 'bool') {
+    break;
+  }
+  case 'bool': {
     values = new Uint8Array(size);
-  } else {
+    break;
+  }
+  default: {
     throw new Error(`Unknown data type ${dtype}`);
   }
+}
   for (let i = 0; i < size; i++) {
     values[i] = randFunction();
   }

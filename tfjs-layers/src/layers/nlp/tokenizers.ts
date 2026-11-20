@@ -550,7 +550,8 @@ export class BytePairTokenizer extends Tokenizer {
         tokens2D = tokens2D.map(t => {
           if (t.size === this.sequenceLength) {
             return t;
-          } else if (t.size > this.sequenceLength) {
+          }
+          if (t.size > this.sequenceLength) {
             return t.slice(0, this.sequenceLength);
           } else {
             return t.pad([[0, this.sequenceLength - t.size]]);

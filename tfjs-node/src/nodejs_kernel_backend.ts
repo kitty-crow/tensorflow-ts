@@ -284,23 +284,39 @@ export class NodeJSKernelBackend extends KernelBackend {
       leakyreluAlpha?: number): T {
     let result = input;
     if (activation != null) {
-      if (activation === 'linear') {
-        // No-op
-      } else if (activation === 'relu') {
-        result = tf.relu(result);
-      } else if (activation === 'prelu') {
-        result = tf.prelu(result, preluActivationWeights) as T;
-      } else if (activation === 'leakyrelu') {
-        result = tf.leakyRelu(result, leakyreluAlpha);
-      } else if (activation === 'elu') {
-        result = tf.elu(result);
-      } else if (activation === 'relu6') {
-        result = tf.relu6(result);
-      } else if (activation === 'sigmoid') {
-        result = tf.sigmoid(result);
-      } else {
-        throw new Error(`Activation: ${
-            activation} has not been implemented for the Node.js backend`);
+      switch (activation) {
+        case 'linear': {
+          // No-op
+          break;
+        }
+        case 'relu': {
+          result = tf.relu(result);
+          break;
+        }
+        case 'prelu': {
+          result = tf.prelu(result, preluActivationWeights) as T;
+          break;
+        }
+        case 'leakyrelu': {
+          result = tf.leakyRelu(result, leakyreluAlpha);
+          break;
+        }
+        case 'elu': {
+          result = tf.elu(result);
+          break;
+        }
+        case 'relu6': {
+          result = tf.relu6(result);
+          break;
+        }
+        case 'sigmoid': {
+          result = tf.sigmoid(result);
+          break;
+        }
+        default: {
+          throw new Error(`Activation: ${
+              activation} has not been implemented for the Node.js backend`);
+        }
       }
     }
     return result;

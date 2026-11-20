@@ -48,37 +48,57 @@ describeMathCPUAndGPU('depthwiseConv2d', () => {
             }
 
             let kernel: Tensor4D;
-            if (depthMultiplier === 1) {
-              kernel = tensor4d([1, 0, 0, -1], [2, 2, 1, 1]);
-            } else if (depthMultiplier === 2) {
-              // Two kernels of the same absolute values but opposite signs:
-              //   [[1, 0], [0, -1]] and [[-1, 0], [0, 1]].
-              kernel = tensor4d([1, -1, 0, 0, 0, 0, -1, 1], [2, 2, 1, 2]);
+            switch (depthMultiplier) {
+              case 1: {
+                kernel = tensor4d([1, 0, 0, -1], [2, 2, 1, 1]);
+                break;
+              }
+              case 2: {
+                // Two kernels of the same absolute values but opposite signs:
+                //   [[1, 0], [0, -1]] and [[-1, 0], [0, 1]].
+                kernel = tensor4d([1, -1, 0, 0, 0, 0, -1, 1], [2, 2, 1, 2]);
+                break;
+              }
             }
             const y = depthwiseConv2d(
                 x, kernel, [stride, stride], 'valid', dataFormat);
 
             let yExpected: Tensor;
-            if (stride === 1) {
-              if (depthMultiplier === 1) {
-                yExpected = tensor4d(
-                    [[[[-30, -30, -30], [50, 90, 130], [30, 30, 30]]]],
-                    [1, 1, 3, 3]);
-              } else if (depthMultiplier === 2) {
-                yExpected = tensor4d(
-                    [[
-                      [[-30, -30, -30], [50, 90, 130], [30, 30, 30]],
-                      [[30, 30, 30], [-50, -90, -130], [-30, -30, -30]]
-                    ]],
-                    [1, 2, 3, 3]);
+            switch (stride) {
+              case 1: {
+                switch (depthMultiplier) {
+                  case 1: {
+                    yExpected = tensor4d(
+                        [[[[-30, -30, -30], [50, 90, 130], [30, 30, 30]]]],
+                        [1, 1, 3, 3]);
+                    break;
+                  }
+                  case 2: {
+                    yExpected = tensor4d(
+                        [[
+                          [[-30, -30, -30], [50, 90, 130], [30, 30, 30]],
+                          [[30, 30, 30], [-50, -90, -130], [-30, -30, -30]]
+                        ]],
+                        [1, 2, 3, 3]);
+                    break;
+                  }
+                }
+                break;
               }
-            } else if (stride === 2) {
-              if (depthMultiplier === 1) {
-                yExpected = tensor4d([[[[-30, -30], [30, 30]]]], [1, 1, 2, 2]);
-              } else if (depthMultiplier === 2) {
-                yExpected = tensor4d(
-                    [[[[-30, -30], [30, 30]], [[30, 30], [-30, -30]]]],
-                    [1, 2, 2, 2]);
+              case 2: {
+                switch (depthMultiplier) {
+                  case 1: {
+                    yExpected = tensor4d([[[[-30, -30], [30, 30]]]], [1, 1, 2, 2]);
+                    break;
+                  }
+                  case 2: {
+                    yExpected = tensor4d(
+                        [[[[-30, -30], [30, 30]], [[30, 30], [-30, -30]]]],
+                        [1, 2, 2, 2]);
+                    break;
+                  }
+                }
+                break;
               }
             }
             if (dataFormat !== 'channelsFirst') {
@@ -194,12 +214,17 @@ describeMathCPUAndGPU('DepthwiseConv2D-Tensor:', () => {
 
           let yExpectedShape: [number, number, number, number];
           let yExpectedData: number[];
-          if (depthMultiplier === 1) {
-            yExpectedShape = [1, 1, 2, 2];
-            yExpectedData = [100, 260, -100, -260];
-          } else if (depthMultiplier === 2) {
-            yExpectedShape = [1, 2, 2, 2];
-            yExpectedData = [100, 260, -100, -260, 100, 260, -100, -260];
+          switch (depthMultiplier) {
+            case 1: {
+              yExpectedShape = [1, 1, 2, 2];
+              yExpectedData = [100, 260, -100, -260];
+              break;
+            }
+            case 2: {
+              yExpectedShape = [1, 2, 2, 2];
+              yExpectedData = [100, 260, -100, -260, 100, 260, -100, -260];
+              break;
+            }
           }
           if (useBias && biasInitializer === 'ones') {
             yExpectedData = yExpectedData.map(element => element + 1);

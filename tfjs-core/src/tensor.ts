@@ -120,7 +120,8 @@ export class TensorBuffer<R extends Rank, D extends DataType = 'float32'> {
   locToIndex(locs: number[]): number {
     if (this.rank === 0) {
       return 0;
-    } else if (this.rank === 1) {
+    }
+    if (this.rank === 1) {
       return locs[0];
     }
     let index = locs[locs.length - 1];
@@ -133,7 +134,8 @@ export class TensorBuffer<R extends Rank, D extends DataType = 'float32'> {
   indexToLoc(index: number): number[] {
     if (this.rank === 0) {
       return [];
-    } else if (this.rank === 1) {
+    }
+    if (this.rank === 1) {
       return [index];
     }
     const locs: number[] = new Array(this.shape.length);

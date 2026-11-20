@@ -374,11 +374,9 @@ export class GPGPUContext {
     this.throwIfDisposed();
     this.program = program;
 
-    if (this.program != null) {
-      if (this.debug) {
+    if ((this.program != null) && (this.debug)) {
         webgl_util.validateProgram(this.gl, this.program);
       }
-    }
     webgl_util.callAndCheck(this.gl, () => this.gl.useProgram(program));
   }
 

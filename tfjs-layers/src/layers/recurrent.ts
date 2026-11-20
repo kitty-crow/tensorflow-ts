@@ -369,7 +369,8 @@ export class RNN extends Layer {
     if (args.cell == null) {
       throw new ValueError(
           'cell property is missing for the constructor of RNN.');
-    } else if (Array.isArray(args.cell)) {
+    }
+    if (Array.isArray(args.cell)) {
       cell = new StackedRNNCells({cells: args.cell});
     } else {
       cell = args.cell;

@@ -60,12 +60,14 @@ function eye_(
   } else {
     if (batchShape.length === 1) {
       return tile(expandDims(out, 0), [batchShape[0], 1, 1]) as Tensor2D;
-    } else if (batchShape.length === 2) {
+    }
+    if (batchShape.length === 2) {
       // tslint:disable-next-line:no-unnecessary-type-assertion
       return tile(
                  expandDims(expandDims(out, 0), 0),
                  [batchShape[0], batchShape[1], 1, 1]) as Tensor2D;
-    } else if (batchShape.length === 3) {
+    }
+    if (batchShape.length === 3) {
       // tslint:disable-next-line:no-unnecessary-type-assertion
       return tile(expandDims(expandDims(expandDims(out, 0), 0), 0), [
                batchShape[0], batchShape[1], batchShape[2], 1, 1

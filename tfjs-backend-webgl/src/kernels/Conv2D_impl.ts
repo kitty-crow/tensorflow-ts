@@ -66,7 +66,8 @@ function getShapeForBatchMatMul(
           ...shape.slice(0, -3) /* batch */, shape[length - 3] /* channel */,
           shape[length - 2] * shape[length - 1] /* height * width */
         ];
-  } else if (!isChannelsLast && length === 1 && shape[0] > 1) {
+  }
+  if (!isChannelsLast && length === 1 && shape[0] > 1) {
     return [shape[0], 1];
   } else {
     return null;

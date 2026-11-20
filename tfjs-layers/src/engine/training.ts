@@ -241,8 +241,7 @@ function checkLossAndTargetCompatibility(
     if (loss == null) {
       continue;
     }
-    if (loss === losses.categoricalCrossentropy) {
-      if (y.shape[y.shape.length - 1] === 1) {
+    if ((loss === losses.categoricalCrossentropy) && (y.shape[y.shape.length - 1] === 1)) {
         throw new ValueError(
             `You are passing a target array of shape ${y.shape} while using ` +
             `a loss 'categorical_crossentropy'. 'categorical_crossentropy'` +
@@ -250,7 +249,6 @@ function checkLossAndTargetCompatibility(
             `[samples, classes].`);
         // TODO(cais): Example code in error message.
       }
-    }
     if (keyLosses.indexOf(loss) !== -1) {
       const slicedYShape = y.shape.slice(1);
       const slicedShape = shape.slice(1);
@@ -335,14 +333,12 @@ function checkInputData(
         }
         const dim = array.shape[j];
         const refDim = shapes[i][j];
-        if (refDim != null) {
-          if (refDim !== dim) {
+        if ((refDim != null) && (refDim !== dim)) {
             throw new ValueError(
                 `Error when checking ${exceptionPrefix}: expected ` +
                 `${names[i]} to have shape ${JSON.stringify(shapes[i])} but ` +
                 `got array with shape ${JSON.stringify(array.shape)}.`);
           }
-        }
       }
     }
   }
@@ -1261,14 +1257,12 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     checkArrayLengths(x, y, null);
     // TODO(cais): Check sampleWeights as well.
     checkLossAndTargetCompatibility(y, this.feedLossFns, this.feedOutputShapes);
-    if (this.stateful && batchSize != null && batchSize > 0) {
-      if (x[0].shape[0] % batchSize !== 0) {
+    if ((this.stateful && batchSize != null && batchSize > 0) && (x[0].shape[0] % batchSize !== 0)) {
         throw new ValueError(
             `In a stateful network, you should only pass inputs with a ` +
             `number of samples that is divisible by the batch size ` +
             `${batchSize}. Found: ${x[0].shape[0]} sample(s).`);
       }
-    }
     return [x, y];
   }
 
@@ -1801,7 +1795,8 @@ export class LayersModel extends Container implements tfc.InferenceModel {
         if (shuffle === 'batch') {
           throw new NotImplementedError('batch shuffling is not implemneted'
                                         + ' yet');
-        } else if (shuffle) {
+        }
+        if (shuffle) {
           util.shuffle(indexArray);
         }
         // Convert the potentially shuffled indices to Tensor1D, to avoid the
@@ -2068,7 +2063,8 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     if (typeof this.metrics === 'string' ||
         typeof this.metrics === 'function') {
       return [toSnakeCase(Metrics.getLossOrMetricName(this.metrics))];
-    } else if (Array.isArray(this.metrics)) {
+    }
+    if (Array.isArray(this.metrics)) {
       return this.metrics.map(
           metric => toSnakeCase(Metrics.getLossOrMetricName(metric)));
     } else {
@@ -2225,7 +2221,8 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       if (handlers.length === 0) {
         throw new ValueError(
             `Cannot find any save handlers for URL '${handlerOrURL}'`);
-      } else if (handlers.length > 1) {
+      }
+      if (handlers.length > 1) {
         throw new ValueError(
             `Found more than one (${handlers.length}) save handlers for ` +
             `URL '${handlerOrURL}'`);

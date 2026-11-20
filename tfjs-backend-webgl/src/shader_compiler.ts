@@ -1872,18 +1872,26 @@ function getSamplerAtOutputCoords(
 export function getCoordsDataType(rank: number): string {
   if (rank <= 1) {
     return 'int';
-  } else if (rank === 2) {
-    return 'ivec2';
-  } else if (rank === 3) {
-    return 'ivec3';
-  } else if (rank === 4) {
-    return 'ivec4';
-  } else if (rank === 5) {
-    return 'ivec5';
-  } else if (rank === 6) {
-    return 'ivec6';
-  } else {
-    throw Error(`GPU for rank ${rank} is not yet supported`);
+  }
+  switch (rank) {
+    case 2: {
+      return 'ivec2';
+    }
+    case 3: {
+      return 'ivec3';
+    }
+    case 4: {
+      return 'ivec4';
+    }
+    case 5: {
+      return 'ivec5';
+    }
+    case 6: {
+      return 'ivec6';
+    }
+    default: {
+      throw Error(`GPU for rank ${rank} is not yet supported`);
+    }
   }
 }
 

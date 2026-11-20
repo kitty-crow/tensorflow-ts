@@ -77,12 +77,10 @@ export function collectGatherOpShapeInfo(
   const indicesRank = indices.shape.length;
   const xRank = x.shape.length;
 
-  if (batchDims !== 0) {
-    if (batchDims < -indicesRank || batchDims > indicesRank) {
+  if ((batchDims !== 0) && (batchDims < -indicesRank || batchDims > indicesRank)) {
       throw new Error(`Expect batchDims in the range of [-${indicesRank}, ${
           indicesRank}], but got ${batchDims}`);
     }
-  }
 
   if (batchDims < 0) {
     batchDims += indicesRank;

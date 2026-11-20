@@ -32,7 +32,8 @@ export class AdapterInfo {
     if (this.isIntel()) {
       if (this.architecture.startsWith('gen')) {
         return Number(this.architecture.match(/\d+/));
-      } else if (this.architecture.startsWith('xe')) {
+      }
+      if (this.architecture.startsWith('xe')) {
         return 12;
       }
     }

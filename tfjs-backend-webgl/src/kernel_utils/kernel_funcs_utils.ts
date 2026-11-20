@@ -183,41 +183,49 @@ export function binaryKernelFunc({
 
 export function mapActivationToShaderProgram(
     activation: backend_util.Activation, packed = false): string {
-  if (activation === 'linear') {
-    if (packed) {
-      return unary_packed_op.LINEAR;
+  switch (activation) {
+    case 'linear': {
+      if (packed) {
+        return unary_packed_op.LINEAR;
+      }
+      return unary_op.LINEAR;
     }
-    return unary_op.LINEAR;
-  } else if (activation === 'relu') {
-    if (packed) {
-      return unary_packed_op.RELU;
+    case 'relu': {
+      if (packed) {
+        return unary_packed_op.RELU;
+      }
+      return unary_op.RELU;
     }
-    return unary_op.RELU;
-  } else if (activation === 'elu') {
-    if (packed) {
-      return unary_packed_op.ELU;
+    case 'elu': {
+      if (packed) {
+        return unary_packed_op.ELU;
+      }
+      return unary_op.ELU;
     }
-    return unary_op.ELU;
-  } else if (activation === 'relu6') {
-    if (packed) {
-      return unary_packed_op.RELU6;
+    case 'relu6': {
+      if (packed) {
+        return unary_packed_op.RELU6;
+      }
+      return unary_op.RELU6;
     }
-    return unary_op.RELU6;
-  } else if (activation === 'prelu') {
-    if (packed) {
-      return PRELU_PACKED;
+    case 'prelu': {
+      if (packed) {
+        return PRELU_PACKED;
+      }
+      return PRELU;
     }
-    return PRELU;
-  } else if (activation === 'leakyrelu') {
-    if (packed) {
-      return LEAKYRELU_PACKED;
+    case 'leakyrelu': {
+      if (packed) {
+        return LEAKYRELU_PACKED;
+      }
+      return LEAKYRELU;
     }
-    return LEAKYRELU;
-  } else if (activation === 'sigmoid') {
-    if (packed) {
-      return unary_packed_op.SIGMOID;
+    case 'sigmoid': {
+      if (packed) {
+        return unary_packed_op.SIGMOID;
+      }
+      return unary_op.SIGMOID;
     }
-    return unary_op.SIGMOID;
   }
   throw new Error(`Activation ${
       activation} has not been implemented for the WebGL backend.`);

@@ -126,12 +126,18 @@ export function computePool2DInfo(
   const [filterHeight, filterWidth] = parseTupleParam(filterSize);
 
   let filterShape: [number, number, number, number];
-  if (dataFormat === 'channelsLast') {
-    filterShape = [filterHeight, filterWidth, inShape[3], inShape[3]];
-  } else if (dataFormat === 'channelsFirst') {
-    filterShape = [filterHeight, filterWidth, inShape[1], inShape[1]];
-  } else {
-    throw new Error(`Unknown dataFormat ${dataFormat}`);
+  switch (dataFormat) {
+    case 'channelsLast': {
+      filterShape = [filterHeight, filterWidth, inShape[3], inShape[3]];
+      break;
+    }
+    case 'channelsFirst': {
+      filterShape = [filterHeight, filterWidth, inShape[1], inShape[1]];
+      break;
+    }
+    default: {
+      throw new Error(`Unknown dataFormat ${dataFormat}`);
+    }
   }
 
   return computeConv2DInfo(
@@ -153,16 +159,22 @@ export function computePool3DInfo(
 
   let filterShape: [number, number, number, number, number];
   let $dataFormat: 'channelsFirst'|'channelsLast';
-  if (dataFormat === 'NDHWC') {
-    $dataFormat = 'channelsLast';
-    filterShape =
-        [filterDepth, filterHeight, filterWidth, inShape[4], inShape[4]];
-  } else if (dataFormat === 'NCDHW') {
-    $dataFormat = 'channelsFirst';
-    filterShape =
-        [filterDepth, filterHeight, filterWidth, inShape[1], inShape[1]];
-  } else {
-    throw new Error(`Unknown dataFormat ${dataFormat}`);
+  switch (dataFormat) {
+    case 'NDHWC': {
+      $dataFormat = 'channelsLast';
+      filterShape =
+          [filterDepth, filterHeight, filterWidth, inShape[4], inShape[4]];
+      break;
+    }
+    case 'NCDHW': {
+      $dataFormat = 'channelsFirst';
+      filterShape =
+          [filterDepth, filterHeight, filterWidth, inShape[1], inShape[1]];
+      break;
+    }
+    default: {
+      throw new Error(`Unknown dataFormat ${dataFormat}`);
+    }
   }
 
   return computeConv3DInfo(
@@ -182,12 +194,18 @@ export function computeConv2DInfo(
     roundingMode?: 'floor'|'round'|'ceil', depthwise = false,
     dataFormat: 'channelsFirst'|'channelsLast' = 'channelsLast'): Conv2DInfo {
   let [batchSize, inHeight, inWidth, inChannels] = [-1, -1, -1, -1];
-  if (dataFormat === 'channelsLast') {
-    [batchSize, inHeight, inWidth, inChannels] = inShape;
-  } else if (dataFormat === 'channelsFirst') {
-    [batchSize, inChannels, inHeight, inWidth] = inShape;
-  } else {
-    throw new Error(`Unknown dataFormat ${dataFormat}`);
+  switch (dataFormat) {
+    case 'channelsLast': {
+      [batchSize, inHeight, inWidth, inChannels] = inShape;
+      break;
+    }
+    case 'channelsFirst': {
+      [batchSize, inChannels, inHeight, inWidth] = inShape;
+      break;
+    }
+    default: {
+      throw new Error(`Unknown dataFormat ${dataFormat}`);
+    }
   }
 
   const [filterHeight, filterWidth, , filterChannels] = filterShape;
@@ -205,10 +223,15 @@ export function computeConv2DInfo(
   const outChannels = depthwise ? filterChannels * inChannels : filterChannels;
 
   let outShape: [number, number, number, number];
-  if (dataFormat === 'channelsFirst') {
-    outShape = [batchSize, outChannels, outHeight, outWidth];
-  } else if (dataFormat === 'channelsLast') {
-    outShape = [batchSize, outHeight, outWidth, outChannels];
+  switch (dataFormat) {
+    case 'channelsFirst': {
+      outShape = [batchSize, outChannels, outHeight, outWidth];
+      break;
+    }
+    case 'channelsLast': {
+      outShape = [batchSize, outHeight, outWidth, outChannels];
+      break;
+    }
   }
 
   return {
@@ -283,12 +306,18 @@ export function computeConv3DInfo(
     roundingMode?: 'floor'|'round'|'ceil'): Conv3DInfo {
   let [batchSize, inDepth, inHeight, inWidth, inChannels] =
       [-1, -1, -1, -1, -1];
-  if (dataFormat === 'channelsLast') {
-    [batchSize, inDepth, inHeight, inWidth, inChannels] = inShape;
-  } else if (dataFormat === 'channelsFirst') {
-    [batchSize, inChannels, inDepth, inHeight, inWidth] = inShape;
-  } else {
-    throw new Error(`Unknown dataFormat ${dataFormat}`);
+  switch (dataFormat) {
+    case 'channelsLast': {
+      [batchSize, inDepth, inHeight, inWidth, inChannels] = inShape;
+      break;
+    }
+    case 'channelsFirst': {
+      [batchSize, inChannels, inDepth, inHeight, inWidth] = inShape;
+      break;
+    }
+    default: {
+      throw new Error(`Unknown dataFormat ${dataFormat}`);
+    }
   }
 
   const [filterDepth, filterHeight, filterWidth, , filterChannels] =
@@ -311,10 +340,15 @@ export function computeConv3DInfo(
   const outChannels = depthwise ? filterChannels * inChannels : filterChannels;
 
   let outShape: [number, number, number, number, number];
-  if (dataFormat === 'channelsFirst') {
-    outShape = [batchSize, outChannels, outDepth, outHeight, outWidth];
-  } else if (dataFormat === 'channelsLast') {
-    outShape = [batchSize, outDepth, outHeight, outWidth, outChannels];
+  switch (dataFormat) {
+    case 'channelsFirst': {
+      outShape = [batchSize, outChannels, outDepth, outHeight, outWidth];
+      break;
+    }
+    case 'channelsLast': {
+      outShape = [batchSize, outDepth, outHeight, outWidth, outChannels];
+      break;
+    }
   }
 
   return {
@@ -587,12 +621,16 @@ export function stridesOrDilationsArePositive(values: number|
  */
 export function convertConv2DDataFormat(dataFormat: 'NHWC'|'NCHW'):
     'channelsLast'|'channelsFirst' {
-  if (dataFormat === 'NHWC') {
-    return 'channelsLast';
-  } else if (dataFormat === 'NCHW') {
-    return 'channelsFirst';
-  } else {
-    throw new Error(`Unknown dataFormat ${dataFormat}`);
+  switch (dataFormat) {
+    case 'NHWC': {
+      return 'channelsLast';
+    }
+    case 'NCHW': {
+      return 'channelsFirst';
+    }
+    default: {
+      throw new Error(`Unknown dataFormat ${dataFormat}`);
+    }
   }
 }
 
@@ -619,7 +657,8 @@ export function checkPadOnDimRoundingMode(
       throw Error(
           `Error in ${opDesc}: pad must be an integer when using ` +
           `dimRoundingMode ${dimRoundingMode} but got pad ${pad}.`);
-    } else if (typeof pad === 'number') {
+    }
+    if (typeof pad === 'number') {
       util.assert(
           util.isInt(pad),
           () => `Error in ${opDesc}: pad must be an integer when using ` +

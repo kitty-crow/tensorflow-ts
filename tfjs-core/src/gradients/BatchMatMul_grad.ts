@@ -33,12 +33,14 @@ export const batchMatMulGradConfig: GradConfig = {
         a: () => matMul(dy, b, false, true),
         b: () => matMul(a, dy, true, false)
       };
-    } else if (!transposeA && transposeB) {
+    }
+    if (!transposeA && transposeB) {
       return {
         a: () => matMul(dy, b, false, false),
         b: () => matMul(dy, a, true, false)
       };
-    } else if (transposeA && !transposeB) {
+    }
+    if (transposeA && !transposeB) {
       return {
         a: () => matMul(b, dy, false, true),
         b: () => matMul(a, dy, false, false)

@@ -29,23 +29,39 @@ export function activationFnSnippet(
   }
 
   let activationOpSnippet = '';
-  if (activation === 'linear') {
-    activationOpSnippet = getUnaryOpString(UnaryOpType.LINEAR);
-  } else if (activation === 'relu') {
-    activationOpSnippet = getUnaryOpString(UnaryOpType.RELU, packed);
-  } else if (activation === 'elu') {
-    activationOpSnippet = getUnaryOpString(UnaryOpType.ELU, packed);
-  } else if (activation === 'relu6') {
-    activationOpSnippet = getUnaryOpString(UnaryOpType.RELU6, packed);
-  } else if (activation === 'prelu') {
-    activationOpSnippet = getBinaryOpString(BinaryOpType.PRELU, packed);
-  } else if (activation === 'sigmoid') {
-    activationOpSnippet = getUnaryOpString(UnaryOpType.SIGMOID, packed);
-  } else if (activation === 'leakyrelu') {
-    activationOpSnippet = getUnaryOpString(UnaryOpType.LEAKYRELU, packed);
-  } else {
-    throw new Error(`Activation ${
-        activation} has not been implemented for the WebGPU backend.`);
+  switch (activation) {
+    case 'linear': {
+      activationOpSnippet = getUnaryOpString(UnaryOpType.LINEAR);
+      break;
+    }
+    case 'relu': {
+      activationOpSnippet = getUnaryOpString(UnaryOpType.RELU, packed);
+      break;
+    }
+    case 'elu': {
+      activationOpSnippet = getUnaryOpString(UnaryOpType.ELU, packed);
+      break;
+    }
+    case 'relu6': {
+      activationOpSnippet = getUnaryOpString(UnaryOpType.RELU6, packed);
+      break;
+    }
+    case 'prelu': {
+      activationOpSnippet = getBinaryOpString(BinaryOpType.PRELU, packed);
+      break;
+    }
+    case 'sigmoid': {
+      activationOpSnippet = getUnaryOpString(UnaryOpType.SIGMOID, packed);
+      break;
+    }
+    case 'leakyrelu': {
+      activationOpSnippet = getUnaryOpString(UnaryOpType.LEAKYRELU, packed);
+      break;
+    }
+    default: {
+      throw new Error(`Activation ${
+          activation} has not been implemented for the WebGPU backend.`);
+    }
   }
   const elementSize = packed ? 4 : 1;
   const dataType = typeSnippet(elementSize);

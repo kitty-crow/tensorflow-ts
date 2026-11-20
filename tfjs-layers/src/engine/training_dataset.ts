@@ -263,7 +263,8 @@ function flattenTensorOrArrayOrMap(
     inputOrOutput: string, names: string[], values: TensorOrArrayOrMap) {
   if (values instanceof tfc.Tensor) {
     return [values];
-  } else if (Array.isArray(values)) {
+  }
+  if (Array.isArray(values)) {
     tfc.util.assert(
         values.length === names.length,
         () => `Received an array of ${values.length} Tensors, but expected ${

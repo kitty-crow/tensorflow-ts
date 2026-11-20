@@ -352,7 +352,8 @@ export class TransformerDecoder extends Layer {
           'This layer has been built without cross attention, but ' +
           'you are trying to call it with encoderSequence.'
         );
-      } else if (hasCrossAttention && !hasEncoderSequence) {
+      }
+      if (hasCrossAttention && !hasEncoderSequence) {
         throw new ValueError(
           'The number of call arguments to `TransformerDecoder` should not ' +
           'change. Use `layer.apply(decoderSequence, {encoderSequence})` ' +

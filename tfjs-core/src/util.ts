@@ -56,18 +56,23 @@ export function toTypedArray(a: TensorLike, dtype: DataType): TypedArray {
   }
   if (dtype == null || dtype === 'float32' || dtype === 'complex64') {
     return new Float32Array(a as number[]);
-  } else if (dtype === 'int32') {
-    return new Int32Array(a as number[]);
-  } else if (dtype === 'bool') {
-    const bool = new Uint8Array((a as number[]).length);
-    for (let i = 0; i < bool.length; ++i) {
-      if (Math.round((a as number[])[i]) !== 0) {
-        bool[i] = 1;
-      }
+  }
+  switch (dtype) {
+    case 'int32': {
+      return new Int32Array(a as number[]);
     }
-    return bool;
-  } else {
-    throw new Error(`Unknown data type ${dtype}`);
+    case 'bool': {
+      const bool = new Uint8Array((a as number[]).length);
+      for (let i = 0; i < bool.length; ++i) {
+        if (Math.round((a as number[])[i]) !== 0) {
+          bool[i] = 1;
+        }
+      }
+      return bool;
+    }
+    default: {
+      throw new Error(`Unknown data type ${dtype}`);
+    }
   }
 }
 

@@ -170,10 +170,15 @@ export function parseTestEnvFromKarmaFlags(
   let testEnvName: string;
 
   args.forEach((arg, i) => {
-    if (arg === '--flags') {
-      flags = JSON.parse(args[i + 1]);
-    } else if (arg === '--testEnv') {
-      testEnvName = args[i + 1];
+    switch (arg) {
+      case '--flags': {
+        flags = JSON.parse(args[i + 1]);
+        break;
+      }
+      case '--testEnv': {
+        testEnvName = args[i + 1];
+        break;
+      }
     }
   });
 

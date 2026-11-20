@@ -29,20 +29,28 @@ import {sigmoid} from '../kernels/Sigmoid';
 export function applyActivation(
     backend: MathBackendCPU, x: TensorInfo, activation: backend_util.Activation,
     preluActivationWeights?: TensorInfo, leakyreluAlpha?: number): TensorInfo {
-  if (activation === 'linear') {
-    return identity({inputs: {x}, backend});
-  } else if (activation === 'relu') {
-    return relu({inputs: {x}, backend}) as TensorInfo;
-  } else if (activation === 'elu') {
-    return elu({inputs: {x}, backend}) as TensorInfo;
-  } else if (activation === 'relu6') {
-    return relu6({inputs: {x}, backend}) as TensorInfo;
-  } else if (activation === 'prelu') {
-    return prelu({inputs: {x, alpha: preluActivationWeights}, backend});
-  } else if (activation === 'leakyrelu') {
-    return leakyRelu({inputs: {x}, backend, attrs: {alpha: leakyreluAlpha}});
-  } else if (activation === 'sigmoid') {
-    return sigmoid({inputs: {x}, backend}) as TensorInfo;
+  switch (activation) {
+    case 'linear': {
+      return identity({inputs: {x}, backend});
+    }
+    case 'relu': {
+      return relu({inputs: {x}, backend}) as TensorInfo;
+    }
+    case 'elu': {
+      return elu({inputs: {x}, backend}) as TensorInfo;
+    }
+    case 'relu6': {
+      return relu6({inputs: {x}, backend}) as TensorInfo;
+    }
+    case 'prelu': {
+      return prelu({inputs: {x, alpha: preluActivationWeights}, backend});
+    }
+    case 'leakyrelu': {
+      return leakyRelu({inputs: {x}, backend, attrs: {alpha: leakyreluAlpha}});
+    }
+    case 'sigmoid': {
+      return sigmoid({inputs: {x}, backend}) as TensorInfo;
+    }
   }
   throw new Error(
       `Activation ${activation} has not been implemented for the CPU backend.`);

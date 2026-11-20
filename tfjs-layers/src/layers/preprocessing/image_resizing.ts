@@ -89,7 +89,8 @@ export class Resizing extends Layer {
       const size: [number, number] = [this.height, this.width];
       if (this.interpolation === 'bilinear') {
         return image.resizeBilinear(inputs, size, !this.cropToAspectRatio);
-      } else if (this.interpolation === 'nearest') {
+      }
+      if (this.interpolation === 'nearest') {
         return image.resizeNearestNeighbor(
             inputs, size, !this.cropToAspectRatio);
       } else {

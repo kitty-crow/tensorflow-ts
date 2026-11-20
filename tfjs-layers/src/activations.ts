@@ -330,7 +330,8 @@ export function getActivation(identifier: ActivationIdentifier|
     config['className'] = identifier;
     config['config'] = {};
     return deserializeActivation(config);
-  } else if (identifier instanceof Activation) {
+  }
+  if (identifier instanceof Activation) {
     return identifier;
   } else {
     return deserializeActivation(identifier);

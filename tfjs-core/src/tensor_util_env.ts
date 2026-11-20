@@ -33,7 +33,8 @@ export function inferShape(
   if (isWebGLData(val)) {
     const usedChannels = val.channels || 'RGBA';
     return [val.height, val.width * usedChannels.length];
-  } else if (isWebGPUData(val)) {
+  }
+  if (isWebGPUData(val)) {
     return [val.buffer.size / (dtype == null ? 4 : bytesPerElement(dtype))];
   }
   if (!Array.isArray(val)) {

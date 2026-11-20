@@ -37,7 +37,8 @@ export function denseBincount(args: {
         bincountImpl(xVals, weightsVals, weights.dtype, weights.shape, size);
 
     return backend.makeTensorInfo([size], weights.dtype, outVals);
-  } else if (x.shape.length === 2) {
+  }
+  if (x.shape.length === 2) {
     const xBuf = backend.bufferSync<Rank, 'float32'>(x);
     const weightsBuf = backend.bufferSync<Rank, 'float32'>(weights);
 

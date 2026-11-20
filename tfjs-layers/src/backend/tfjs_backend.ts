@@ -437,7 +437,8 @@ export function dot(
     const perm = Array.from({length: b.rank}, (_, i) => {
       if (i === 0) {
         return b.rank - 2;
-      } else if (i <= b.rank - 2) {
+      }
+      if (i <= b.rank - 2) {
         return i - 1;
       }
       return i;
@@ -572,46 +573,61 @@ function reshapeBias(xRank: number, bias: Tensor, dataFormat: string) {
   }
 
   if (xRank === 5) {
-    if (dataFormat === 'channelsFirst') {
-      if (biasShape.length === 1) {
-        return tfc.reshape(bias, [1, biasShape[0], 1, 1, 1]);
-      } else {
-        return tfc.reshape(
-            bias, [1, biasShape[3], biasShape[0], biasShape[1], biasShape[2]]);
+    switch (dataFormat) {
+      case 'channelsFirst': {
+        if (biasShape.length === 1) {
+          return tfc.reshape(bias, [1, biasShape[0], 1, 1, 1]);
+        } else {
+          return tfc.reshape(
+              bias, [1, biasShape[3], biasShape[0], biasShape[1], biasShape[2]]);
+        }
+        break;
       }
-    } else if (dataFormat === 'channelsLast') {
-      if (biasShape.length === 1) {
-        return tfc.reshape(bias, [1, 1, 1, 1, biasShape[0]]);
-      } else {
-        return tfc.reshape(bias, [1].concat(biasShape));
+      case 'channelsLast': {
+        if (biasShape.length === 1) {
+          return tfc.reshape(bias, [1, 1, 1, 1, biasShape[0]]);
+        } else {
+          return tfc.reshape(bias, [1].concat(biasShape));
+        }
+        break;
       }
     }
   } else if (xRank === 4) {
-    if (dataFormat === 'channelsFirst') {
-      if (biasShape.length === 1) {
-        return tfc.reshape(bias, [1, biasShape[0], 1, 1]);
-      } else {
-        return tfc.reshape(bias, [1, biasShape[2], biasShape[0], biasShape[1]]);
+    switch (dataFormat) {
+      case 'channelsFirst': {
+        if (biasShape.length === 1) {
+          return tfc.reshape(bias, [1, biasShape[0], 1, 1]);
+        } else {
+          return tfc.reshape(bias, [1, biasShape[2], biasShape[0], biasShape[1]]);
+        }
+        break;
       }
-    } else if (dataFormat === 'channelsLast') {
-      if (biasShape.length === 1) {
-        return tfc.reshape(bias, [1, 1, 1, biasShape[0]]);
-      } else {
-        return tfc.reshape(bias, [1].concat(biasShape));
+      case 'channelsLast': {
+        if (biasShape.length === 1) {
+          return tfc.reshape(bias, [1, 1, 1, biasShape[0]]);
+        } else {
+          return tfc.reshape(bias, [1].concat(biasShape));
+        }
+        break;
       }
     }
   } else if (xRank === 3) {
-    if (dataFormat === 'channelsFirst') {
-      if (biasShape.length === 1) {
-        return tfc.reshape(bias, [1, biasShape[0], 1]);
-      } else {
-        return tfc.reshape(bias, [1, biasShape[1], biasShape[0]]);
+    switch (dataFormat) {
+      case 'channelsFirst': {
+        if (biasShape.length === 1) {
+          return tfc.reshape(bias, [1, biasShape[0], 1]);
+        } else {
+          return tfc.reshape(bias, [1, biasShape[1], biasShape[0]]);
+        }
+        break;
       }
-    } else if (dataFormat === 'channelsLast') {
-      if (biasShape.length === 1) {
-        return tfc.reshape(bias, [1, 1, biasShape[0]]);
-      } else {
-        return tfc.reshape(bias, [1].concat(biasShape));
+      case 'channelsLast': {
+        if (biasShape.length === 1) {
+          return tfc.reshape(bias, [1, 1, biasShape[0]]);
+        } else {
+          return tfc.reshape(bias, [1].concat(biasShape));
+        }
+        break;
       }
     }
   } else if (xRank < 3) {

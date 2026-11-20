@@ -646,7 +646,8 @@ export function zip<O extends tf.TensorContainer>(datasets: DatasetContainer):
     const streams = await deepMapAndAwaitAll(datasets, d => {
       if (d instanceof Dataset) {
         return {value: d.iterator(), recurse: false};
-      } else if (isIterable(d)) {
+      }
+      if (isIterable(d)) {
         return {value: null, recurse: true};
       } else {
         throw new Error(

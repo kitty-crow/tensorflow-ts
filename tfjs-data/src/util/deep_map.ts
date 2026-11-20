@@ -86,7 +86,8 @@ function deepMapInternal(
   if (!result.recurse) {
     seen.set(input, result.value);
     return result.value;
-  } else if (isIterable(input)) {
+  }
+  if (isIterable(input)) {
     // tslint:disable-next-line:no-any
     const mappedIterable: any|any[] = Array.isArray(input) ? [] : {};
     containedIn.add(input);
@@ -157,7 +158,8 @@ function deepZipInternal(
 
   if (!result.recurse) {
     return result.value;
-  } else if (isIterable(input)) {
+  }
+  if (isIterable(input)) {
     // tslint:disable-next-line:no-any
     const mappedIterable: any|any[] = Array.isArray(input) ? [] : {};
     containedIn.add(input);

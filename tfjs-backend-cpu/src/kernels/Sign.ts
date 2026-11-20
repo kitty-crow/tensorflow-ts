@@ -22,7 +22,8 @@ import {unaryKernelFunc} from '../utils/unary_utils';
 export const sign = unaryKernelFunc(Sign, (xi) => {
   if (xi < 0) {
     return -1;
-  } else if (xi > 0) {
+  }
+  if (xi > 0) {
     return 1;
   } else {
     return 0;

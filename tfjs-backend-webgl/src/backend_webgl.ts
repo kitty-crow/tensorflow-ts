@@ -1333,7 +1333,8 @@ function float32ToTypedArray<D extends NumericDataType>(
     a: Float32Array, dtype: D): tf.DataTypeMap[D] {
   if (dtype === 'float32' || dtype === 'complex64') {
     return a as tf.DataTypeMap[D];
-  } else if (dtype === 'int32' || dtype === 'bool') {
+  }
+  if (dtype === 'int32' || dtype === 'bool') {
     const result = (dtype === 'int32') ? new Int32Array(a.length) :
                                          new Uint8Array(a.length);
     for (let i = 0; i < result.length; ++i) {

@@ -141,7 +141,8 @@ export function getRegularizer(identifier: RegularizerIdentifier|
         identifier;
     const config = {className, config: {}};
     return deserializeRegularizer(config);
-  } else if (identifier instanceof Regularizer) {
+  }
+  if (identifier instanceof Regularizer) {
     return identifier;
   } else {
     return deserializeRegularizer(identifier);

@@ -34,7 +34,8 @@ ENV.registerFlag('HAS_WEBGL', () => ENV.getNumber('WEBGL_VERSION') > 0);
 ENV.registerFlag('WEBGL_VERSION', () => {
   if (isWebGLVersionEnabled(2)) {
     return 2;
-  } else if (isWebGLVersionEnabled(1)) {
+  }
+  if (isWebGLVersionEnabled(1)) {
     return 1;
   }
   return 0;

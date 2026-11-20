@@ -159,7 +159,8 @@ describeMathCPUAndGPU('hardSigmoid activation', () => {
       const y = 0.2 * v + 0.5;
       if (y > 1) {
         return 1;
-      } else if (y < 0) {
+      }
+      if (y < 0) {
         return 0;
       } else {
         return y;

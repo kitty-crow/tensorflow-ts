@@ -246,7 +246,8 @@ export function tanh(x: number): number {
   }
   if (x === Infinity) {
     return 1;
-  } else if (x === -Infinity) {
+  }
+  if (x === -Infinity) {
     return -1;
   } else {
     const e2x = Math.exp(2 * x);
@@ -441,15 +442,23 @@ export function getArrayFromDType<D extends DataType>(
   let values = null;
   if (dtype == null || dtype === 'float32') {
     values = new Float32Array(size);
-  } else if (dtype === 'int32') {
+  } else switch (dtype) {
+  case 'int32': {
     values = new Int32Array(size);
-  } else if (dtype === 'bool') {
+    break;
+  }
+  case 'bool': {
     values = new Uint8Array(size);
-  } else if (dtype === 'string') {
+    break;
+  }
+  case 'string': {
     values = new Array<string>(size);
-  } else {
+    break;
+  }
+  default: {
     throw new Error(`Unknown data type ${dtype}`);
   }
+}
   return values as DataTypeMap[D];
 }
 
@@ -492,12 +501,17 @@ export function hasEncodingLoss(oldType: DataType, newType: DataType): boolean {
 export function bytesPerElement(dtype: DataType): number {
   if (dtype === 'float32' || dtype === 'int32') {
     return 4;
-  } else if (dtype === 'complex64') {
-    return 8;
-  } else if (dtype === 'bool') {
-    return 1;
-  } else {
-    throw new Error(`Unknown dtype ${dtype}`);
+  }
+  switch (dtype) {
+    case 'complex64': {
+      return 8;
+    }
+    case 'bool': {
+      return 1;
+    }
+    default: {
+      throw new Error(`Unknown dtype ${dtype}`);
+    }
   }
 }
 
@@ -535,15 +549,18 @@ export function inferDtype(values: TensorLike|WebGLData|WebGPUData): DataType {
   }
   if (values instanceof Float32Array) {
     return 'float32';
-  } else if (
-      values instanceof Int32Array || values instanceof Uint8Array ||
+  }
+  if (values instanceof Int32Array || values instanceof Uint8Array ||
       values instanceof Uint8ClampedArray) {
     return 'int32';
-  } else if (isNumber(values)) {
+  }
+  if (isNumber(values)) {
     return 'float32';
-  } else if (isString(values)) {
+  }
+  if (isString(values)) {
     return 'string';
-  } else if (isBoolean(values)) {
+  }
+  if (isBoolean(values)) {
     return 'bool';
   }
   return 'float32';
@@ -625,9 +642,11 @@ export function convertBackendValuesAndArrayBuffer(
   }
   if (dtype === 'float32') {
     return data instanceof Float32Array ? data : new Float32Array(data);
-  } else if (dtype === 'int32') {
+  }
+  if (dtype === 'int32') {
     return data instanceof Int32Array ? data : new Int32Array(data);
-  } else if (dtype === 'bool' || dtype === 'string') {
+  }
+  if (dtype === 'bool' || dtype === 'string') {
     return Uint8Array.from(new Int32Array(data));
   } else {
     throw new Error(`Unknown dtype ${dtype}`);
@@ -647,12 +666,17 @@ export function makeZerosTypedArray<D extends DataType>(
     size: number, dtype: D): DataTypeMap[D] {
   if (dtype == null || dtype === 'float32' || dtype === 'complex64') {
     return new Float32Array(size) as DataTypeMap[D];
-  } else if (dtype === 'int32') {
-    return new Int32Array(size) as DataTypeMap[D];
-  } else if (dtype === 'bool') {
-    return new Uint8Array(size) as DataTypeMap[D];
-  } else {
-    throw new Error(`Unknown data type ${dtype}`);
+  }
+  switch (dtype) {
+    case 'int32': {
+      return new Int32Array(size) as DataTypeMap[D];
+    }
+    case 'bool': {
+      return new Uint8Array(size) as DataTypeMap[D];
+    }
+    default: {
+      throw new Error(`Unknown data type ${dtype}`);
+    }
   }
 }
 
@@ -666,12 +690,17 @@ export function makeZerosNestedTypedArray<D extends DataType>(
   const size = shape.reduce((prev, curr) => prev * curr, 1);
   if (dtype == null || dtype === 'float32') {
     return toNestedArray(shape, new Float32Array(size));
-  } else if (dtype === 'int32') {
-    return toNestedArray(shape, new Int32Array(size));
-  } else if (dtype === 'bool') {
-    return toNestedArray(shape, new Uint8Array(size));
-  } else {
-    throw new Error(`Unknown data type ${dtype}`);
+  }
+  switch (dtype) {
+    case 'int32': {
+      return toNestedArray(shape, new Int32Array(size));
+    }
+    case 'bool': {
+      return toNestedArray(shape, new Uint8Array(size));
+    }
+    default: {
+      throw new Error(`Unknown data type ${dtype}`);
+    }
   }
 }
 
@@ -695,10 +724,13 @@ export function assertNonNegativeIntegerDimensions(shape: number[]) {
  */
 export function locToIndex(
     locs: number[], rank: number, strides: number[]): number {
-  if (rank === 0) {
-    return 0;
-  } else if (rank === 1) {
-    return locs[0];
+  switch (rank) {
+    case 0: {
+      return 0;
+    }
+    case 1: {
+      return locs[0];
+    }
   }
   let index = locs[locs.length - 1];
   for (let i = 0; i < locs.length - 1; ++i) {
@@ -717,10 +749,13 @@ export function locToIndex(
  */
 export function indexToLoc(
     index: number, rank: number, strides: number[]): number[] {
-  if (rank === 0) {
-    return [];
-  } else if (rank === 1) {
-    return [index];
+  switch (rank) {
+    case 0: {
+      return [];
+    }
+    case 1: {
+      return [index];
+    }
   }
   const locs: number[] = new Array(rank);
   for (let i = 0; i < locs.length - 1; ++i) {

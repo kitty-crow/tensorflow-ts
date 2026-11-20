@@ -65,7 +65,8 @@ export function plainObjectCheck(x: any): boolean {
   if (x === null) {
     // Note: typeof `null` is 'object', and `null` is valid in JSON.
     return true;
-  } else if (typeof x === 'object') {
+  }
+  if (typeof x === 'object') {
     if (Object.getPrototypeOf(x) === Object.prototype) {
       // `x` is a JavaScript object and its prototype is Object.
       const keys = Object.keys(x);

@@ -37,12 +37,18 @@ export class LRNPackedProgram implements GPGPUProgram {
     // tensorflow/core/kernels/mkl_lrn_op.cc#L320
     let powOperator;
     const basis = `float(${bias}) + float(${alpha}) * sum`;
-    if (beta === 0.5) {
-      powOperator = `inversesqrt(${basis})`;
-    } else if (beta === 1.0) {
-      powOperator = `1.0/(${basis})`;
-    } else {
-      powOperator = `exp(log(${basis}) * float(-${beta}));`;
+    switch (beta) {
+      case 0.5: {
+        powOperator = `inversesqrt(${basis})`;
+        break;
+      }
+      case 1.0: {
+        powOperator = `1.0/(${basis})`;
+        break;
+      }
+      default: {
+        powOperator = `exp(log(${basis}) * float(-${beta}));`;
+      }
     }
 
     this.userCode = `

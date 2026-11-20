@@ -82,7 +82,8 @@ export function scaleTo01(min: number, max: number): (value: ElementArray) =>
       if (value instanceof tf.Tensor) {
         const result = div(sub(value, minTensor), rangeTensor);
         return result;
-      } else if (value instanceof Array) {
+      }
+      if (value instanceof Array) {
         return value.map(v => (v - min) / range);
       } else {
         return (value - min) / range;

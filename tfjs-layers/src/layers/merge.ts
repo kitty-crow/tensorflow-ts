@@ -58,9 +58,11 @@ export abstract class Merge extends Layer {
   private computeElementwiseOpOutputShape(shape1: Shape, shape2: Shape): Shape {
     if (shape1 == null || shape2 == null) {
       return null;
-    } else if (shape1.length < shape2.length) {
+    }
+    if (shape1.length < shape2.length) {
       return this.computeElementwiseOpOutputShape(shape2, shape1);
-    } else if (shape2.length === 0) {
+    }
+    if (shape2.length === 0) {
       return shape1;
     }
     const outputShape: Shape = shape1.slice(0, shape1.length - shape2.length);

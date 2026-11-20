@@ -255,7 +255,8 @@ export function getConstraint(identifier: ConstraintIdentifier|
         identifier;
     const config = {className, config: {}};
     return deserializeConstraint(config);
-  } else if (identifier instanceof Constraint) {
+  }
+  if (identifier instanceof Constraint) {
     return identifier;
   } else {
     return deserializeConstraint(identifier);

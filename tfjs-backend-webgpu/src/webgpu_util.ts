@@ -147,7 +147,8 @@ export function GPUBytesPerElement(dtype: DataType): number {
   if (dtype === 'float32' || dtype === 'int32' || dtype === 'bool' ||
       dtype === 'string') {
     return 4;
-  } else if (dtype === 'complex64') {
+  }
+  if (dtype === 'complex64') {
     return 8;
   } else {
     throw new Error(`Unknown dtype ${dtype}`);

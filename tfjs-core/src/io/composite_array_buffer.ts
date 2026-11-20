@@ -216,7 +216,8 @@ export function search<T>(sortedArray: T[], compare: (t: T) => number): number {
 
     if (side === 0) {
       return middle;
-    } else if (side < 0) {
+    }
+    if (side < 0) {
       max = middle;
     } else {
       min = middle + 1;

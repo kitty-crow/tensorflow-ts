@@ -257,11 +257,9 @@ export function runProgram<T extends Tensor, K extends Tensor>(
   gpgpu.bindVertexArray(binary.webGLProgram.vao);
 
   // Set special uniforms (NAN, INFINITY)
-  if (env().getNumber('WEBGL_VERSION') === 1) {
-    if (binary.infLoc !== null) {
+  if ((env().getNumber('WEBGL_VERSION') === 1) && (binary.infLoc !== null)) {
       gpgpu.gl.uniform1f(binary.infLoc, Infinity);
     }
-  }
   if (binary.nanLoc !== null) {
     gpgpu.gl.uniform1f(binary.nanLoc, NaN);
   }

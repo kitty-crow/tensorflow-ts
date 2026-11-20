@@ -609,7 +609,8 @@ export abstract class Layer extends serialization.Serializable {
           'hence the notion of "layer input" ' +
           'is ill-defined. ' +
           'Use `getInputAt(nodeIndex)` instead.');
-    } else if (this.inboundNodes.length === 0) {
+    }
+    if (this.inboundNodes.length === 0) {
       throw new AttributeError(
           `Layer ${this.name}` +
           ' is not connected, no input to return.');
@@ -771,36 +772,28 @@ export abstract class Layer extends serialization.Serializable {
 
       // Check ndim.
       const ndim = x.rank;
-      if (spec.ndim != null) {
-        if (ndim !== spec.ndim) {
+      if ((spec.ndim != null) && (ndim !== spec.ndim)) {
           throw new ValueError(
               `Input ${inputIndex} is incompatible with layer ${this.name}: ` +
               `expected ndim=${spec.ndim}, found ndim=${ndim}`);
         }
-      }
-      if (spec.maxNDim != null) {
-        if (ndim > spec.maxNDim) {
+      if ((spec.maxNDim != null) && (ndim > spec.maxNDim)) {
           throw new ValueError(
               `Input ${inputIndex} is incompatible with layer ${this.name}` +
               `: expected max_ndim=${spec.maxNDim}, found ndim=${ndim}`);
         }
-      }
-      if (spec.minNDim != null) {
-        if (ndim < spec.minNDim) {
+      if ((spec.minNDim != null) && (ndim < spec.minNDim)) {
           throw new ValueError(
               `Input ${inputIndex} is incompatible with layer ${this.name}` +
               `: expected min_ndim=${spec.minNDim}, found ndim=${ndim}.`);
         }
-      }
 
       // Check dtype.
-      if (spec.dtype != null) {
-        if (x.dtype !== spec.dtype) {
+      if ((spec.dtype != null) && (x.dtype !== spec.dtype)) {
           throw new ValueError(
               `Input ${inputIndex} is incompatible with layer ${this.name} ` +
               `: expected dtype=${spec.dtype}, found dtype=${x.dtype}.`);
         }
-      }
 
       // Check specific shape axes.
       if (spec.axes) {
@@ -827,14 +820,12 @@ export abstract class Layer extends serialization.Serializable {
         for (let i = 0; i < spec.shape.length; ++i) {
           const specDim = spec.shape[i];
           const dim = x.shape[i];
-          if (specDim != null && dim != null) {
-            if (specDim !== dim) {
+          if ((specDim != null && dim != null) && (specDim !== dim)) {
               throw new ValueError(
                   `Input ${inputIndex} is incompatible with layer ` +
                   `${this.name}: expected shape=${spec.shape}, ` +
                   `found shape=${x.shape}.`);
             }
-          }
         }
       }
     }
@@ -1091,7 +1082,8 @@ export abstract class Layer extends serialization.Serializable {
   protected warnOnIncompatibleInputShape(inputShape: Shape) {
     if (this.batchInputShape == null) {
       return;
-    } else if (inputShape.length !== this.batchInputShape.length) {
+    }
+    if (inputShape.length !== this.batchInputShape.length) {
       console.warn(
           `The rank of the input tensor provided (shape: ` +
           `${JSON.stringify(inputShape)}) does not match that of the ` +

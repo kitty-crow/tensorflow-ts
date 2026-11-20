@@ -169,7 +169,8 @@ export class Embedding extends Layer {
           throw new ValueError(
               `"inputLength" is ${this.inputLength}, but received ` +
               `input shape has shape ${inputShape}`);
-        } else if (s1 == null) {
+        }
+        if (s1 == null) {
           inLens[i] = s2;
         }
         i++;

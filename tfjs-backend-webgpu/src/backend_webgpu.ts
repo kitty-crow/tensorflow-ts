@@ -573,7 +573,8 @@ export class WebGPUBackend extends KernelBackend {
     if (webGPUData.buffer.size < size) {
       throw new Error(`GPUBuffer size(${
           webGPUData.buffer.size}) is smaller than tensor size(${size})!`);
-    } else if (
+    }
+    if (
         (webGPUData.buffer.usage &
          (GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC)) !==
         (GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC)) {

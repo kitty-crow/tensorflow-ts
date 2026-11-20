@@ -52,7 +52,8 @@ export function decodeEinsumEquation(equation: string, numTensors: number): {
       ARROW.length;
   if (numArrows < 1) {
     throw new Error('Equations without an arrow are not supported.');
-  } else if (numArrows > 1) {
+  }
+  if (numArrows > 1) {
     throw new Error(`Equation must contain exactly one arrow ("${ARROW}").`);
   }
   const [inputString, outputString] = equation.split(ARROW);

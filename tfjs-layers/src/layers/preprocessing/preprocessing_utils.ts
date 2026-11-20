@@ -38,11 +38,9 @@ export function encodeCategoricalInputs(inputs: Tensor|Tensor[],
     input = expandDims(input, -1);
   }
 
-  if(outputMode === 'oneHot') {
-    if(input.shape[input.shape.length - 1] !== 1) {
+  if ((outputMode === 'oneHot') && (input.shape[input.shape.length - 1] !== 1)) {
       input = expandDims(input, -1);
     }
-  }
 
   if(input.rank > 2) {
     throw new ValueError(`When outputMode is not int, maximum output rank is 2`

@@ -32,7 +32,8 @@ export function onesLike(
 
   if (x.dtype === 'string') {
     throw new Error('onesLike is not supported under string dtype');
-  } else if (x.dtype === 'complex64') {
+  }
+  if (x.dtype === 'complex64') {
     const realPart = real({inputs: {input: x}, backend});
     const r = onesLike({inputs: {x: realPart}, backend});
     const imagPart = imag({inputs: {input: x}, backend});

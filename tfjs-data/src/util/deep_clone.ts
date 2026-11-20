@@ -27,7 +27,8 @@ export function deepClone<T>(container: T): T {
 function cloneIfTensor(item: any): DeepMapResult {
   if (item instanceof tf.Tensor) {
     return ({value: item.clone(), recurse: false});
-  } else if (isIterable(item)) {
+  }
+  if (isIterable(item)) {
     return {value: null, recurse: true};
   } else {
     return {value: item, recurse: false};

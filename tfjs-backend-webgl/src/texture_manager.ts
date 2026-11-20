@@ -190,15 +190,20 @@ function numBytesForInternalFormat(
   const glany = gl as any;
   if (internalFormat === glany.R32F) {
     return 4;
-  } else if (internalFormat === glany.R16F) {
+  }
+  if (internalFormat === glany.R16F) {
     return 2;
-  } else if (internalFormat === glany.RGBA32F) {
+  }
+  if (internalFormat === glany.RGBA32F) {
     return 16;
-  } else if (internalFormat === gl.RGBA) {
+  }
+  if (internalFormat === gl.RGBA) {
     return 16;
-  } else if (internalFormat === glany.RGBA16F) {
+  }
+  if (internalFormat === glany.RGBA16F) {
     return 8;
-  } else if (internalFormat === glany.RGBA8) {
+  }
+  if (internalFormat === glany.RGBA8) {
     return 4;
   }
   throw new Error(`Unknown internal format ${internalFormat}`);
@@ -270,9 +275,11 @@ function getPhysicalFromLogicalTextureType(
     logicalTexType: TextureUsage, isPacked: boolean): PhysicalTextureType {
   if (logicalTexType === TextureUsage.UPLOAD) {
     return PhysicalTextureType.PACKED_2X2_FLOAT32;
-  } else if (logicalTexType === TextureUsage.RENDER || logicalTexType == null) {
+  }
+  if (logicalTexType === TextureUsage.RENDER || logicalTexType == null) {
     return getPhysicalTextureForRendering(isPacked);
-  } else if (
+  }
+  if (
       logicalTexType === TextureUsage.DOWNLOAD ||
       logicalTexType === TextureUsage.PIXELS) {
     return PhysicalTextureType.PACKED_4X1_UNSIGNED_BYTE;

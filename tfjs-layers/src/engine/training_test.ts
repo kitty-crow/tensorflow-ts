@@ -1073,10 +1073,15 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
               model.layers[1].getWeights()[0].dataSync() as Float32Array);
           // Freeze the first dense layer after the 2nd epoch and unfreeze it
           // after the 3rd epoch.
-          if (epoch === 1) {
-            model.layers[0].trainable = false;
-          } else if (epoch === 2) {
-            model.layers[0].trainable = true;
+          switch (epoch) {
+            case 1: {
+              model.layers[0].trainable = false;
+              break;
+            }
+            case 2: {
+              model.layers[0].trainable = true;
+              break;
+            }
           }
           if (epoch > 0) {
             // The 2nd dense layer is never frozen. So its kernel should
@@ -2638,12 +2643,18 @@ describeMathCPUAndWebGL2('LayersModel.trainOnBatch', () => {
     for (let i = 0; i < 3; ++i) {
       const loss = await model.trainOnBatch(xs, ys);
       tfc.tidy(() => {
-        if (i === 0) {
-          expect(loss).toBeCloseTo(1.0986123);
-        } else if (i === 1) {
-          expect(loss).toBeCloseTo(1.0978721);
-        } else {
-          expect(loss).toBeCloseTo(1.0971345);
+        switch (i) {
+          case 0: {
+            expect(loss).toBeCloseTo(1.0986123);
+            break;
+          }
+          case 1: {
+            expect(loss).toBeCloseTo(1.0978721);
+            break;
+          }
+          default: {
+            expect(loss).toBeCloseTo(1.0971345);
+          }
         }
       });
       // Assert no tensor memory leak.
@@ -2694,15 +2705,22 @@ describeMathCPUAndWebGL2('LayersModel.trainOnBatch', () => {
 
     for (let i = 0; i < 3; ++i) {
       const [loss, acc] = await model.trainOnBatch(xs, ys) as number[];
-      if (i === 0) {
-        expect(loss).toBeCloseTo(1.0986123);
-        expect(acc).toBeCloseTo(0.3333333);
-      } else if (i === 1) {
-        expect(loss).toBeCloseTo(1.0982422);
-        expect(acc).toBeCloseTo(0.6666667);
-      } else if (i === 2) {
-        expect(loss).toBeCloseTo(1.0978734);
-        expect(acc).toBeCloseTo(0.6666667);
+      switch (i) {
+        case 0: {
+          expect(loss).toBeCloseTo(1.0986123);
+          expect(acc).toBeCloseTo(0.3333333);
+          break;
+        }
+        case 1: {
+          expect(loss).toBeCloseTo(1.0982422);
+          expect(acc).toBeCloseTo(0.6666667);
+          break;
+        }
+        case 2: {
+          expect(loss).toBeCloseTo(1.0978734);
+          expect(acc).toBeCloseTo(0.6666667);
+          break;
+        }
       }
     }
   });

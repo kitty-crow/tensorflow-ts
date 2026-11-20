@@ -31,18 +31,28 @@ export class ScatterProgram implements GPGPUProgram {
     const stridesType = getCoordsDataType(strides.length);
     const dtype = getCoordsDataType(shape.length);
     let indicesString = '';
-    if (indicesRank === 1) {
-      indicesString = 'i';
-    } else if (indicesRank === 2) {
-      indicesString = 'i, j';
+    switch (indicesRank) {
+      case 1: {
+        indicesString = 'i';
+        break;
+      }
+      case 2: {
+        indicesString = 'i, j';
+        break;
+      }
     }
     const indicesSnippet = `getIndices(${indicesString})`;
 
     let updatesString = '';
-    if (updatesRank === 1) {
-      updatesString = 'i';
-    } else if (updatesRank === 2) {
-      updatesString = 'i, coords[1]';
+    switch (updatesRank) {
+      case 1: {
+        updatesString = 'i';
+        break;
+      }
+      case 2: {
+        updatesString = 'i, coords[1]';
+        break;
+      }
     }
     const updatesSnippet = `getUpdates(${updatesString})`;
 

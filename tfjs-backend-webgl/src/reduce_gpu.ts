@@ -32,29 +32,45 @@ export class ReduceProgram implements GPGPUProgram {
     let initializationValue = '0.0';
     let compareOp = ``;
 
-    if (reduceType === 'prod') {
-      initializationValue = '1.0';
-    } else if (reduceType === 'min') {
-      // WebGL on Firefox Linux can't compile 1/0 so we do 1/eps.
-      initializationValue = '1.0 / 1e-20';
-      compareOp = `min`;
-    } else if (reduceType === 'max') {
-      // WebGL on Firefox Linux can't compile 1/0 so we do 1/eps.
-      initializationValue = '-1.0 / 1e-20';
-      compareOp = `max`;
+    switch (reduceType) {
+      case 'prod': {
+        initializationValue = '1.0';
+        break;
+      }
+      case 'min': {
+        // WebGL on Firefox Linux can't compile 1/0 so we do 1/eps.
+        initializationValue = '1.0 / 1e-20';
+        compareOp = `min`;
+        break;
+      }
+      case 'max': {
+        // WebGL on Firefox Linux can't compile 1/0 so we do 1/eps.
+        initializationValue = '-1.0 / 1e-20';
+        compareOp = `max`;
+        break;
+      }
     }
 
     let returnValue = `${reduceType}(${reduceType}(${reduceType}(` +
         'minMaxValue[0], minMaxValue[1]), minMaxValue[2]), minMaxValue[3])';
 
-    if (reduceType === 'sum') {
-      returnValue = `sumValue`;
-    } else if (reduceType === 'prod') {
-      returnValue = `prodValue`;
-    } else if (reduceType === 'all') {
-      returnValue = `allValue`;
-    } else if (reduceType === 'any') {
-      returnValue = `anyValue`;
+    switch (reduceType) {
+      case 'sum': {
+        returnValue = `sumValue`;
+        break;
+      }
+      case 'prod': {
+        returnValue = `prodValue`;
+        break;
+      }
+      case 'all': {
+        returnValue = `allValue`;
+        break;
+      }
+      case 'any': {
+        returnValue = `anyValue`;
+        break;
+      }
     }
 
     const windowSizeNearestVec4 = Math.floor(windowSize / 4) * 4;
@@ -80,22 +96,27 @@ export class ReduceProgram implements GPGPUProgram {
 
     let vecType = `vec4`;
 
-    if (reduceType === 'all') {
-      initializationValue = '1.0';
-      updateSnippet = `
-        bool reducedAllValue = all(values);
-        float floatedReducedAllValue = float(reducedAllValue);
-        allValue = float(allValue >= 1.0 && floatedReducedAllValue >= 1.0);
-      `;
-      vecType = `bvec4`;
-    } else if (reduceType === 'any') {
-      initializationValue = '0.0';
-      updateSnippet = `
-        bool reducedAnyValue = any(values);
-        float floatedReducedAnyValue = float(reducedAnyValue);
-        anyValue = float(anyValue >= 1.0 || floatedReducedAnyValue >= 1.0);
-      `;
-      vecType = `bvec4`;
+    switch (reduceType) {
+      case 'all': {
+        initializationValue = '1.0';
+        updateSnippet = `
+          bool reducedAllValue = all(values);
+          float floatedReducedAllValue = float(reducedAllValue);
+          allValue = float(allValue >= 1.0 && floatedReducedAllValue >= 1.0);
+        `;
+        vecType = `bvec4`;
+        break;
+      }
+      case 'any': {
+        initializationValue = '0.0';
+        updateSnippet = `
+          bool reducedAnyValue = any(values);
+          float floatedReducedAnyValue = float(reducedAnyValue);
+          anyValue = float(anyValue >= 1.0 || floatedReducedAnyValue >= 1.0);
+        `;
+        vecType = `bvec4`;
+        break;
+      }
     }
 
     let checkOutOfBounds = '';

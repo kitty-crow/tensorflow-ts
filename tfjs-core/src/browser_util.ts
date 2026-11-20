@@ -18,7 +18,8 @@
 const delayCallback: Function = (() => {
   if (typeof requestAnimationFrame !== 'undefined') {
     return requestAnimationFrame;
-  } else if (typeof setImmediate !== 'undefined') {
+  }
+  if (typeof setImmediate !== 'undefined') {
     return setImmediate;
   }
   return (f: Function) => f();  // no delays

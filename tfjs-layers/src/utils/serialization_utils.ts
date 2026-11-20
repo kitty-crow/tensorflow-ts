@@ -45,13 +45,15 @@ export function convertPythonicToTs(
     pythonicConfig: PyJsonValue, key?: string): serialization.ConfigDictValue {
   if (pythonicConfig === null) {
     return null;
-  } else if (typeof pythonicConfig === 'string') {
+  }
+  if (typeof pythonicConfig === 'string') {
     return generic_utils.toCamelCase(pythonicConfig);
-  } else if (
-      (typeof pythonicConfig === 'number') ||
+  }
+  if ((typeof pythonicConfig === 'number') ||
       (typeof pythonicConfig === 'boolean')) {
     return pythonicConfig;
-  } else if (pythonicConfig instanceof Array) {
+  }
+  if (pythonicConfig instanceof Array) {
     const tsArray = [];
     const arrayLength = pythonicConfig.length;
     for (let i = 0; i < arrayLength; ++i) {
@@ -91,12 +93,14 @@ export function convertTsToPythonic(
     tsConfig: serialization.ConfigDictValue, key?: string): PyJsonValue {
   if (tsConfig === null || tsConfig === undefined) {
     return null;
-  } else if (typeof tsConfig === 'string') {
+  }
+  if (typeof tsConfig === 'string') {
     return generic_utils.toSnakeCase(tsConfig);
-  } else if (
-      (typeof tsConfig === 'number') || (typeof tsConfig === 'boolean')) {
+  }
+  if ((typeof tsConfig === 'number') || (typeof tsConfig === 'boolean')) {
     return tsConfig;
-  } else if (tsConfig instanceof Array) {
+  }
+  if (tsConfig instanceof Array) {
     const pyArray = [];
     const arrayLength = tsConfig.length;
     for (let i = 0; i < arrayLength; ++i) {

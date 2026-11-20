@@ -438,7 +438,8 @@ export function decodeBase64(text: string): string {
   const global = env().global;
   if (typeof global.atob !== 'undefined') {
     return global.atob(text);
-  } else if (typeof Buffer !== 'undefined') {
+  }
+  if (typeof Buffer !== 'undefined') {
     return new Buffer(text, 'base64').toString();
   } else {
     throw new Error(

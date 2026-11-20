@@ -301,7 +301,8 @@ export class TFSavedModel implements InferenceModel {
             this.sessionId, inputTensors, Object.values(this.signature.inputs),
             Object.values(this.outputNodeNames));
         return result.length > 1 ? result : result[0];
-      } else if (Array.isArray(inputs)) {
+      }
+      if (Array.isArray(inputs)) {
         inputTensors = inputs;
         return this.backend.runSavedModel(
             this.sessionId, inputTensors, Object.values(this.signature.inputs),

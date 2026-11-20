@@ -330,17 +330,24 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
       it(testTitle, () => {
         const layer = tfl.layers.batchNormalization({axis});
         let x: Tensor;
-        if (dim === 2) {
-          x = tensor2d([[1, 2], [3, 4]], [2, 2]);
-        } else if (dim === 3) {
-          x = tensor3d([[[1, 2], [3, 4]], [[-1, -2], [-3, -4]]], [2, 2, 2]);
-        } else if (dim === 4) {
-          x = tensor4d(
-              [
-                [[[1, 2], [3, 4]], [[-1, -2], [-3, -4]]],
-                [[[-1, -2], [-3, -4]], [[1, 2], [3, 4]]]
-              ],
-              [2, 2, 2, 2]);
+        switch (dim) {
+          case 2: {
+            x = tensor2d([[1, 2], [3, 4]], [2, 2]);
+            break;
+          }
+          case 3: {
+            x = tensor3d([[[1, 2], [3, 4]], [[-1, -2], [-3, -4]]], [2, 2, 2]);
+            break;
+          }
+          case 4: {
+            x = tensor4d(
+                [
+                  [[[1, 2], [3, 4]], [[-1, -2], [-3, -4]]],
+                  [[[-1, -2], [-3, -4]], [[1, 2], [3, 4]]]
+                ],
+                [2, 2, 2, 2]);
+            break;
+          }
         }
         const y = layer.apply(x, {training: false}) as Tensor;
         expectTensorsClose(y, x, 0.01);

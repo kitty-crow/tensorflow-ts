@@ -65,21 +65,31 @@ describeMathCPUAndGPU('conv1dWithBias', () => {
           let yExpectedShape: [number, number, number];
           let yExpectedData: number[];
           if (paddingMode === 'valid' || paddingMode === undefined) {
-            if (outChannels === 1) {
-              yExpectedShape = [1, 3, 1];
-              yExpectedData = [-7.8, -17.8, -37.8];
-            } else if (outChannels === 2) {
-              yExpectedShape = [1, 3, 2];
-              yExpectedData = [-7.8, -6.8, -17.8, -16.8, -37.8, -36.8];
+            switch (outChannels) {
+              case 1: {
+                yExpectedShape = [1, 3, 1];
+                yExpectedData = [-7.8, -17.8, -37.8];
+                break;
+              }
+              case 2: {
+                yExpectedShape = [1, 3, 2];
+                yExpectedData = [-7.8, -6.8, -17.8, -16.8, -37.8, -36.8];
+                break;
+              }
             }
           } else if (paddingMode === 'same') {
-            if (outChannels === 1) {
-              yExpectedShape = [1, 4, 1];
-              yExpectedData = [-7.8, -17.8, -37.8, 82.2];
-            } else if (outChannels === 2) {
-              yExpectedShape = [1, 4, 2];
-              yExpectedData =
-                  [-7.8, -6.8, -17.8, -16.8, -37.8, -36.8, 82.2, 83.2];
+            switch (outChannels) {
+              case 1: {
+                yExpectedShape = [1, 4, 1];
+                yExpectedData = [-7.8, -17.8, -37.8, 82.2];
+                break;
+              }
+              case 2: {
+                yExpectedShape = [1, 4, 2];
+                yExpectedData =
+                    [-7.8, -6.8, -17.8, -16.8, -37.8, -36.8, 82.2, 83.2];
+                break;
+              }
             }
           }
           expectTensorsClose(y, tensor3d(yExpectedData, yExpectedShape));
@@ -147,12 +157,17 @@ describeMathCPUAndGPU('conv2d', () => {
           const y = conv2d(x, kernel, [stride, stride], 'valid', dataFormat);
 
           let yExpected: Tensor;
-          if (stride === 1) {
-            yExpected = tensor4d(
-                [[[[-30, -30, -30], [50, 90, 130], [30, 30, 30]]]],
-                [1, 1, 3, 3]);
-          } else if (stride === 2) {
-            yExpected = tensor4d([[[[-30, -30], [30, 30]]]], [1, 1, 2, 2]);
+          switch (stride) {
+            case 1: {
+              yExpected = tensor4d(
+                  [[[[-30, -30, -30], [50, 90, 130], [30, 30, 30]]]],
+                  [1, 1, 3, 3]);
+              break;
+            }
+            case 2: {
+              yExpected = tensor4d([[[[-30, -30], [30, 30]]]], [1, 1, 2, 2]);
+              break;
+            }
           }
           if (dataFormat !== 'channelsFirst') {
             yExpected = tfc.transpose(yExpected, [0, 2, 3, 1]);
@@ -210,13 +225,18 @@ describeMathCPUAndGPU('conv2dWithBiasActivation', () => {
 
             let yExpectedShape: [number, number, number, number];
             let yExpectedDataPerChannel: number[];
-            if (stride === 1) {
-              yExpectedShape = [1, outChannels, 3, 3];
-              yExpectedDataPerChannel =
-                  [-30, -30, -30, 50, 90, 130, 30, 30, 30];
-            } else if (stride === 2) {
-              yExpectedShape = [1, outChannels, 2, 2];
-              yExpectedDataPerChannel = [-30, -30, 30, 30];
+            switch (stride) {
+              case 1: {
+                yExpectedShape = [1, outChannels, 3, 3];
+                yExpectedDataPerChannel =
+                    [-30, -30, -30, 50, 90, 130, 30, 30, 30];
+                break;
+              }
+              case 2: {
+                yExpectedShape = [1, outChannels, 2, 2];
+                yExpectedDataPerChannel = [-30, -30, 30, 30];
+                break;
+              }
             }
             for (let i = 0; i < yExpectedDataPerChannel.length; ++i) {
               yExpectedDataPerChannel[i] += biasScalarData[0];
@@ -538,19 +558,24 @@ describeMathCPUAndGPU('conv3d', () => {
               conv3d(x, kernel, [stride, stride, stride], 'valid', dataFormat);
 
           let yExpected: Tensor;
-          if (stride === 1) {
-            // See validation Python code in comment above.
-            yExpected = tensor5d(
-                [
-                  42.,  46.,  50.,  58.,  62.,  66.,  74.,  78.,  82.,
-                  106., 110., 114., 122., 126., 130., 138., 142., 146.,
-                  170., 174., 178., 186., 190., 194., 202., 206., 210.
-                ],
-                [1, 1, 3, 3, 3]);
-          } else if (stride === 2) {
-            // See validation Python code in comment above.
-            yExpected = tensor5d(
-                [42., 50., 74., 82., 170., 178., 202., 210.], [1, 1, 2, 2, 2]);
+          switch (stride) {
+            case 1: {
+              // See validation Python code in comment above.
+              yExpected = tensor5d(
+                  [
+                    42.,  46.,  50.,  58.,  62.,  66.,  74.,  78.,  82.,
+                    106., 110., 114., 122., 126., 130., 138., 142., 146.,
+                    170., 174., 178., 186., 190., 194., 202., 206., 210.
+                  ],
+                  [1, 1, 3, 3, 3]);
+              break;
+            }
+            case 2: {
+              // See validation Python code in comment above.
+              yExpected = tensor5d(
+                  [42., 50., 74., 82., 170., 178., 202., 210.], [1, 1, 2, 2, 2]);
+              break;
+            }
           }
           if (dataFormat !== 'channelsFirst') {
             yExpected = tfc.transpose(yExpected, [0, 2, 3, 4, 1]);
@@ -592,19 +617,24 @@ describeMathCPUAndGPU('conv3d', () => {
 
             let yExpectedShape: [number, number, number, number, number];
             let yExpectedDataPerChannel: number[];
-            if (stride === 1) {
-              yExpectedShape = [1, outChannels, 3, 3, 3];
-              // See validation Python code above.
-              yExpectedDataPerChannel = [
-                42.,  46.,  50.,  58.,  62.,  66.,  74.,  78.,  82.,
-                106., 110., 114., 122., 126., 130., 138., 142., 146.,
-                170., 174., 178., 186., 190., 194., 202., 206., 210.
-              ];
-            } else if (stride === 2) {
-              yExpectedShape = [1, outChannels, 2, 2, 2];
-              // See validation Python code above.
-              yExpectedDataPerChannel =
-                  [42., 50., 74., 82., 170., 178., 202., 210.];
+            switch (stride) {
+              case 1: {
+                yExpectedShape = [1, outChannels, 3, 3, 3];
+                // See validation Python code above.
+                yExpectedDataPerChannel = [
+                  42.,  46.,  50.,  58.,  62.,  66.,  74.,  78.,  82.,
+                  106., 110., 114., 122., 126., 130., 138., 142., 146.,
+                  170., 174., 178., 186., 190., 194., 202., 206., 210.
+                ];
+                break;
+              }
+              case 2: {
+                yExpectedShape = [1, outChannels, 2, 2, 2];
+                // See validation Python code above.
+                yExpectedDataPerChannel =
+                    [42., 50., 74., 82., 170., 178., 202., 210.];
+                break;
+              }
             }
             for (let i = 0; i < yExpectedDataPerChannel.length; ++i) {
               yExpectedDataPerChannel[i] += biasScalarData[0];
@@ -1462,14 +1492,19 @@ describeMathCPU('UpSampling2D Layer: Symbolic', () => {
             if (undeterminedDimension == null) {
               inputShape = dataFormat === 'channelsFirst' ? [2, 16, 11, 9] :
                                                             [2, 11, 9, 16];
-            } else if (undeterminedDimension === 'height') {
-              inputShape = dataFormat === 'channelsFirst' ? [2, 16, null, 9] :
-                                                            [2, null, 9, 16];
-            } else if (undeterminedDimension === 'both') {
-              inputShape = dataFormat === 'channelsFirst' ?
-                  [2, 16, null, null] :
-                  [2, null, null, 16];
-            }
+            } else switch (undeterminedDimension) {
+  case 'height': {
+    inputShape = dataFormat === 'channelsFirst' ? [2, 16, null, 9] :
+                                                  [2, null, 9, 16];
+    break;
+  }
+  case 'both': {
+    inputShape = dataFormat === 'channelsFirst' ?
+        [2, 16, null, null] :
+        [2, null, null, 16];
+    break;
+  }
+}
             const symbolicInput =
                 new tfl.SymbolicTensor('float32', inputShape, null, [], null);
 
@@ -1502,22 +1537,27 @@ describeMathCPU('UpSampling2D Layer: Symbolic', () => {
                 outputCols *= inputShape[2];
                 expectedShape = [2, outputRows, outputCols, 16];
               }
-            } else if (undeterminedDimension === 'height') {
-              if (dataFormat === 'channelsFirst') {
-                outputCols *= inputShape[3];
-                expectedShape = [2, 16, null, outputCols];
-              } else {
-                outputCols *= inputShape[2];
-                expectedShape = [2, null, outputCols, 16];
-              }
-            } else if (undeterminedDimension === 'both') {
-              if (dataFormat === 'channelsFirst') {
-                expectedShape = [2, 16, null, null];
-              } else {
-                outputCols *= inputShape[2];
-                expectedShape = [2, null, null, 16];
-              }
-            }
+            } else switch (undeterminedDimension) {
+  case 'height': {
+    if (dataFormat === 'channelsFirst') {
+      outputCols *= inputShape[3];
+      expectedShape = [2, 16, null, outputCols];
+    } else {
+      outputCols *= inputShape[2];
+      expectedShape = [2, null, outputCols, 16];
+    }
+    break;
+  }
+  case 'both': {
+    if (dataFormat === 'channelsFirst') {
+      expectedShape = [2, 16, null, null];
+    } else {
+      outputCols *= inputShape[2];
+      expectedShape = [2, null, null, 16];
+    }
+    break;
+  }
+}
 
             expect(output.shape).toEqual(expectedShape);
           });
@@ -1681,25 +1721,30 @@ describeMathCPU('Conv3DTranspose: Symbolic', () => {
             const y = layer.apply(x) as tfl.SymbolicTensor;
 
             let expectedShape: [number, number, number, number, number];
-            if (strides === 1) {
-              if (padding === 'same') {
-                expectedShape = [1, 2, 11, 9, filters];
-              } else {
-                if (kernelSize[0] === 2) {
-                  expectedShape = [1, 3, 12, 10, filters];
+            switch (strides) {
+              case 1: {
+                if (padding === 'same') {
+                  expectedShape = [1, 2, 11, 9, filters];
                 } else {
-                  expectedShape = [1, 4, 14, 12, filters];
+                  if (kernelSize[0] === 2) {
+                    expectedShape = [1, 3, 12, 10, filters];
+                  } else {
+                    expectedShape = [1, 4, 14, 12, filters];
+                  }
                 }
+                break;
               }
-            } else if (strides === 3) {
-              if (padding === 'same') {
-                expectedShape = [1, 6, 33, 27, filters];
-              } else {
-                if (kernelSize[0] === 2) {
+              case 3: {
+                if (padding === 'same') {
                   expectedShape = [1, 6, 33, 27, filters];
                 } else {
-                  expectedShape = [1, 6, 34, 28, filters];
+                  if (kernelSize[0] === 2) {
+                    expectedShape = [1, 6, 33, 27, filters];
+                  } else {
+                    expectedShape = [1, 6, 34, 28, filters];
+                  }
                 }
+                break;
               }
             }
             expect(y.shape).toEqual(expectedShape);

@@ -24,7 +24,8 @@ export const round = unaryKernelFunc(Round, (xi) => {
   const base = Math.floor(xi);
   if (xi - base < 0.5) {
     return Math.floor(xi);
-  } else if (xi - base > 0.5) {
+  }
+  if (xi - base > 0.5) {
     return Math.ceil(xi);
   } else {
     if (base % 2.0 === 0.0) {

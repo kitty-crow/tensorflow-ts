@@ -31,7 +31,8 @@ export function zerosLike(
 
   if (x.dtype === 'string') {
     throw new Error('zerosLike is not supported for string tensors');
-  } else if (x.dtype === 'complex64') {
+  }
+  if (x.dtype === 'complex64') {
     const realPart = real({inputs: {input: x}, backend});
     const r = zerosLike({inputs: {x: realPart}, backend});
     const imagPart = imag({inputs: {input: x}, backend});

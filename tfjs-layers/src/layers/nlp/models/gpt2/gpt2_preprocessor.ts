@@ -80,7 +80,8 @@ export function packXYSampleWeight(
 
   if (y === undefined) {
     return x;
-  } else if (sampleWeight === undefined) {
+  }
+  if (sampleWeight === undefined) {
     return [x, y];
   } else {
     return [x, y, sampleWeight];

@@ -449,7 +449,8 @@ export abstract class BaseConv extends Layer {
           `dilationRate must be a number or an array of a single number ` +
           `for 1D convolution, but received ` +
           `${JSON.stringify(this.dilationRate)}`);
-    } else if (this.rank === 2) {
+    }
+    if (this.rank === 2) {
       if (typeof this.dilationRate === 'number') {
         this.dilationRate = [this.dilationRate, this.dilationRate];
       } else if (this.dilationRate.length !== 2) {
@@ -690,15 +691,13 @@ export class Conv3D extends Conv {
 
   protected static override verifyArgs(args: ConvLayerArgs) {
     // config.kernelSize must be a number or array of numbers.
-    if (typeof args.kernelSize !== 'number') {
-      if (!(Array.isArray(args.kernelSize) &&
-            (args.kernelSize.length === 1 || args.kernelSize.length === 3))) {
+    if ((typeof args.kernelSize !== 'number') && (!(Array.isArray(args.kernelSize) &&
+            (args.kernelSize.length === 1 || args.kernelSize.length === 3)))) {
         throw new ValueError(
             `Conv3D expects config.kernelSize to be number or` +
             ` [number, number, number], but received ${
                 JSON.stringify(args.kernelSize)}.`);
       }
-    }
   }
 }
 serialization.registerClass(Conv3D);
@@ -1162,7 +1161,8 @@ export class SeparableConv extends Conv {
       if (this.rank === 1) {
         throw new NotImplementedError(
             '1D separable convolution is not implemented yet.');
-      } else if (this.rank === 2) {
+      }
+      if (this.rank === 2) {
         if (this.dataFormat === 'channelsFirst') {
           inputs = tfc.transpose(inputs, [0, 2, 3, 1]);  // NCHW -> NHWC.
         }

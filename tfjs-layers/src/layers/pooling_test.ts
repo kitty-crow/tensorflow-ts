@@ -60,15 +60,20 @@ describeMathCPUAndGPU('pool2d', () => {
               yExpected = tensor4d([[[[25, 65], [-25, -65]]]], [1, 1, 2, 2]);
             }
           } else {
-            if (stride === 1) {
-              yExpected = tensor4d(
-                  [[[
-                    [40, 60, 80, 80], [40, 60, 80, 80], [-10, -30, -50, -70],
-                    [-20, -40, -60, -80]
-                  ]]],
-                  [1, 1, 4, 4]);
-            } else if (stride === 2) {
-              yExpected = tensor4d([[[[40, 80], [-10, -50]]]], [1, 1, 2, 2]);
+            switch (stride) {
+              case 1: {
+                yExpected = tensor4d(
+                    [[[
+                      [40, 60, 80, 80], [40, 60, 80, 80], [-10, -30, -50, -70],
+                      [-20, -40, -60, -80]
+                    ]]],
+                    [1, 1, 4, 4]);
+                break;
+              }
+              case 2: {
+                yExpected = tensor4d([[[[40, 80], [-10, -50]]]], [1, 1, 2, 2]);
+                break;
+              }
             }
           }
           if (dataFormat !== 'channelsFirst') {
@@ -182,26 +187,31 @@ describeMathCPUAndGPU('pool3d', () => {
                     [[43.5, 45.5], [51.5, 53.5]]]]], [1, 1, 2, 2, 2]);
             }
           } else {
-            if (stride === 1) {
-              yExpected = tensor5d(
-                  [[[
-                    [
-                      [22, 23, 24, 24], [26, 27, 28, 28],
-                      [30, 31, 32, 32], [30, 31, 32, 32]
-                    ], [
-                      [38, 39, 40, 40], [42, 43, 44, 44],
-                      [46, 47, 48, 48], [46, 47, 48, 48]
-                    ], [
-                      [54, 55, 56, 56], [58, 59, 60, 60],
-                      [62, 63, 64, 64], [62, 63, 64, 64]
-                    ], [
-                      [54, 55, 56, 56], [58, 59, 60, 60],
-                      [62, 63, 64, 64], [62, 63, 64, 64]]
-                  ]]], [1, 1, 4, 4, 4]);
-            } else if (stride === 2) {
-              yExpected =
-                  tensor5d([[[[[22, 24], [30, 32]], [[54, 56], [62, 64]]]]],
-                      [1, 1, 2, 2, 2]);
+            switch (stride) {
+              case 1: {
+                yExpected = tensor5d(
+                    [[[
+                      [
+                        [22, 23, 24, 24], [26, 27, 28, 28],
+                        [30, 31, 32, 32], [30, 31, 32, 32]
+                      ], [
+                        [38, 39, 40, 40], [42, 43, 44, 44],
+                        [46, 47, 48, 48], [46, 47, 48, 48]
+                      ], [
+                        [54, 55, 56, 56], [58, 59, 60, 60],
+                        [62, 63, 64, 64], [62, 63, 64, 64]
+                      ], [
+                        [54, 55, 56, 56], [58, 59, 60, 60],
+                        [62, 63, 64, 64], [62, 63, 64, 64]]
+                    ]]], [1, 1, 4, 4, 4]);
+                break;
+              }
+              case 2: {
+                yExpected =
+                    tensor5d([[[[[22, 24], [30, 32]], [[54, 56], [62, 64]]]]],
+                        [1, 1, 2, 2, 2]);
+                break;
+              }
             }
           }
           if (dataFormat !== 'channelsFirst') {
@@ -329,41 +339,56 @@ describeMathCPUAndGPU('Pooling Layers 1D: Tensor', () => {
           const output = poolingLayer.apply(x2by8by1) as Tensor;
           let outputLength: number;
           let expectedOutputVals: number[][][];
-          if (poolSize === 2) {
-            if (stride === 2) {
-              outputLength = 4;
-              if (poolMode === 'avg') {
-                expectedOutputVals =
-                    [[[20], [60], [30], [70]], [[-20], [-60], [-30], [-70]]];
-              } else {
-                expectedOutputVals =
-                    [[[30], [70], [40], [80]], [[-10], [-50], [-20], [-60]]];
+          switch (poolSize) {
+            case 2: {
+              switch (stride) {
+                case 2: {
+                  outputLength = 4;
+                  if (poolMode === 'avg') {
+                    expectedOutputVals =
+                        [[[20], [60], [30], [70]], [[-20], [-60], [-30], [-70]]];
+                  } else {
+                    expectedOutputVals =
+                        [[[30], [70], [40], [80]], [[-10], [-50], [-20], [-60]]];
+                  }
+                  break;
+                }
+                case 4: {
+                  outputLength = 2;
+                  if (poolMode === 'avg') {
+                    expectedOutputVals = [[[20], [30]], [[-20], [-30]]];
+                  } else {
+                    expectedOutputVals = [[[30], [40]], [[-10], [-20]]];
+                  }
+                  break;
+                }
               }
-            } else if (stride === 4) {
-              outputLength = 2;
-              if (poolMode === 'avg') {
-                expectedOutputVals = [[[20], [30]], [[-20], [-30]]];
-              } else {
-                expectedOutputVals = [[[30], [40]], [[-10], [-20]]];
-              }
+              break;
             }
-          } else if (poolSize === 4) {
-            if (stride === 2) {
-              outputLength = 3;
-              if (poolMode === 'avg') {
-                expectedOutputVals =
-                    [[[40], [45], [50]], [[-40], [-45], [-50]]];
-              } else {
-                expectedOutputVals =
-                    [[[70], [70], [80]], [[-10], [-20], [-20]]];
+            case 4: {
+              switch (stride) {
+                case 2: {
+                  outputLength = 3;
+                  if (poolMode === 'avg') {
+                    expectedOutputVals =
+                        [[[40], [45], [50]], [[-40], [-45], [-50]]];
+                  } else {
+                    expectedOutputVals =
+                        [[[70], [70], [80]], [[-10], [-20], [-20]]];
+                  }
+                  break;
+                }
+                case 4: {
+                  outputLength = 2;
+                  if (poolMode === 'avg') {
+                    expectedOutputVals = [[[40], [50]], [[-40], [-50]]];
+                  } else {
+                    expectedOutputVals = [[[70], [80]], [[-10], [-20]]];
+                  }
+                  break;
+                }
               }
-            } else if (stride === 4) {
-              outputLength = 2;
-              if (poolMode === 'avg') {
-                expectedOutputVals = [[[40], [50]], [[-40], [-50]]];
-              } else {
-                expectedOutputVals = [[[70], [80]], [[-10], [-20]]];
-              }
+              break;
             }
           }
           const expectedShape: [number, number, number] =
@@ -536,20 +561,30 @@ describeMathCPUAndGPU('Pooling Layers 2D: Tensor', () => {
             let expectedShape: [number, number, number, number];
             let expectedOutputSlice: number[];
             if (poolMode === 'avg') {
-              if (stride === 1) {
-                expectedShape = [batchSize, channels, 3, 3];
-                expectedOutputSlice = [25, 45, 65, 5, 5, 5, -25, -45, -65];
-              } else if (stride === 2) {
-                expectedShape = [batchSize, channels, 2, 2];
-                expectedOutputSlice = [25, 65, -25, -65];
+              switch (stride) {
+                case 1: {
+                  expectedShape = [batchSize, channels, 3, 3];
+                  expectedOutputSlice = [25, 45, 65, 5, 5, 5, -25, -45, -65];
+                  break;
+                }
+                case 2: {
+                  expectedShape = [batchSize, channels, 2, 2];
+                  expectedOutputSlice = [25, 65, -25, -65];
+                  break;
+                }
               }
             } else {
-              if (stride === 1) {
-                expectedShape = [batchSize, channels, 3, 3];
-                expectedOutputSlice = [40, 60, 80, 40, 60, 80, -10, -30, -50];
-              } else if (stride === 2) {
-                expectedShape = [batchSize, channels, 2, 2];
-                expectedOutputSlice = [40, 80, -10, -50];
+              switch (stride) {
+                case 1: {
+                  expectedShape = [batchSize, channels, 3, 3];
+                  expectedOutputSlice = [40, 60, 80, 40, 60, 80, -10, -30, -50];
+                  break;
+                }
+                case 2: {
+                  expectedShape = [batchSize, channels, 2, 2];
+                  expectedOutputSlice = [40, 80, -10, -50];
+                  break;
+                }
               }
             }
             let expectedOutputArray: number[] = [];
@@ -759,26 +794,36 @@ describeMathCPUAndGPU('Pooling Layers 3D: Tensor', () => {
             let expectedShape: [number, number, number, number, number];
             let expectedOutputSlice: number[];
             if (poolMode === 'avg') {
-              if (stride === 1) {
-                expectedShape = [batchSize, channels, 3, 3, 3];
-                expectedOutputSlice = [11.5, 12.5, 13.5, 15.5, 16.5, 17.5,
-                  19.5, 20.5, 21.5, 27.5, 28.5, 29.5, 31.5, 32.5, 33.5, 35.5,
-                  36.5, 37.5, 43.5, 44.5, 45.5, 47.5, 48.5, 49.5, 51.5, 52.5,
-                  53.5];
-              } else if (stride === 2) {
-                expectedShape = [batchSize, channels, 2, 2, 2];
-                expectedOutputSlice =
-                    [11.5, 13.5, 19.5, 21.5, 43.5, 45.5, 51.5, 53.5];
+              switch (stride) {
+                case 1: {
+                  expectedShape = [batchSize, channels, 3, 3, 3];
+                  expectedOutputSlice = [11.5, 12.5, 13.5, 15.5, 16.5, 17.5,
+                    19.5, 20.5, 21.5, 27.5, 28.5, 29.5, 31.5, 32.5, 33.5, 35.5,
+                    36.5, 37.5, 43.5, 44.5, 45.5, 47.5, 48.5, 49.5, 51.5, 52.5,
+                    53.5];
+                  break;
+                }
+                case 2: {
+                  expectedShape = [batchSize, channels, 2, 2, 2];
+                  expectedOutputSlice =
+                      [11.5, 13.5, 19.5, 21.5, 43.5, 45.5, 51.5, 53.5];
+                  break;
+                }
               }
             } else {
-              if (stride === 1) {
-                expectedShape = [batchSize, channels, 3, 3, 3];
-                expectedOutputSlice = [22, 23, 24, 26, 27, 28, 30, 31, 32, 38,
-                  39, 40, 42, 43, 44, 46, 47, 48, 54, 55, 56, 58, 59, 60, 62,
-                  63, 64];
-              } else if (stride === 2) {
-                expectedShape = [batchSize, channels, 2, 2, 2];
-                expectedOutputSlice = [22, 24, 30, 32, 54, 56, 62, 64];
+              switch (stride) {
+                case 1: {
+                  expectedShape = [batchSize, channels, 3, 3, 3];
+                  expectedOutputSlice = [22, 23, 24, 26, 27, 28, 30, 31, 32, 38,
+                    39, 40, 42, 43, 44, 46, 47, 48, 54, 55, 56, 58, 59, 60, 62,
+                    63, 64];
+                  break;
+                }
+                case 2: {
+                  expectedShape = [batchSize, channels, 2, 2, 2];
+                  expectedOutputSlice = [22, 24, 30, 32, 54, 56, 62, 64];
+                  break;
+                }
               }
             }
             let expectedOutputArray: number[] = [];

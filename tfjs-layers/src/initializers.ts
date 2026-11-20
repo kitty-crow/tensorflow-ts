@@ -270,14 +270,19 @@ function computeFans(
     fanIn = shape[0];
     fanOut = shape[1];
   } else if ([3, 4, 5].indexOf(shape.length) !== -1) {
-    if (dataFormat === 'channelsFirst') {
-      const receptiveFieldSize = arrayProd(shape, 2);
-      fanIn = shape[1] * receptiveFieldSize;
-      fanOut = shape[0] * receptiveFieldSize;
-    } else if (dataFormat === 'channelsLast') {
-      const receptiveFieldSize = arrayProd(shape, 0, shape.length - 2);
-      fanIn = shape[shape.length - 2] * receptiveFieldSize;
-      fanOut = shape[shape.length - 1] * receptiveFieldSize;
+    switch (dataFormat) {
+      case 'channelsFirst': {
+        const receptiveFieldSize = arrayProd(shape, 2);
+        fanIn = shape[1] * receptiveFieldSize;
+        fanOut = shape[0] * receptiveFieldSize;
+        break;
+      }
+      case 'channelsLast': {
+        const receptiveFieldSize = arrayProd(shape, 0, shape.length - 2);
+        fanIn = shape[shape.length - 2] * receptiveFieldSize;
+        fanOut = shape[shape.length - 1] * receptiveFieldSize;
+        break;
+      }
     }
   } else {
     const shapeProd = arrayProd(shape);
@@ -642,23 +647,31 @@ export function getInitializer(identifier: InitializerIdentifier|Initializer|
     /* We have four 'helper' classes for common initializers that
     all get serialized as 'VarianceScaling' and shouldn't go through
     the deserializeInitializer pathway. */
-    if (className === 'GlorotNormal') {
-      return new GlorotNormal();
-    } else if (className === 'GlorotUniform') {
-      return new GlorotUniform();
-    } else if (className === 'HeNormal') {
-      return new HeNormal();
-    } else if (className === 'HeUniform') {
-      return new HeUniform();
-    } else if (className === 'LeCunNormal') {
-      return new LeCunNormal();
-    } else if (className === 'LeCunUniform') {
-      return new LeCunUniform();
-    } else {
-      const config: serialization.ConfigDict = {};
-      config['className'] = className;
-      config['config'] = {};
-      return deserializeInitializer(config);
+    switch (className) {
+      case 'GlorotNormal': {
+        return new GlorotNormal();
+      }
+      case 'GlorotUniform': {
+        return new GlorotUniform();
+      }
+      case 'HeNormal': {
+        return new HeNormal();
+      }
+      case 'HeUniform': {
+        return new HeUniform();
+      }
+      case 'LeCunNormal': {
+        return new LeCunNormal();
+      }
+      case 'LeCunUniform': {
+        return new LeCunUniform();
+      }
+      default: {
+        const config: serialization.ConfigDict = {};
+        config['className'] = className;
+        config['config'] = {};
+        return deserializeInitializer(config);
+      }
     }
   } else if (identifier instanceof Initializer) {
     return identifier;

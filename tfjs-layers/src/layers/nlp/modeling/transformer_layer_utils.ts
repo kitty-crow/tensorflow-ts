@@ -26,23 +26,19 @@ import { ValueError } from '../../../errors';
 
 function checkMasksShapes(
     inputs: Tensor, paddingMask: Tensor, attentionMask: Tensor): void {
-  if (paddingMask != null) {
-    if (paddingMask.shape.length !==2) {
+  if ((paddingMask != null) && (paddingMask.shape.length !==2)) {
       throw new ValueError(
         '`paddingMask` should have shape ' +
         `[batchSize, targetLength]. Received shape ${paddingMask.shape}.`
       );
     }
-  }
-  if (attentionMask != null) {
-    if (attentionMask.shape.length !== 3) {
+  if ((attentionMask != null) && (attentionMask.shape.length !== 3)) {
       throw new ValueError(
         '`attentionMask` should have shape ' +
         `[batchSize, targetLength, sourceLength]. ` +
         `Received shape ${attentionMask.shape}.`
       );
     }
-  }
 }
 
 /**

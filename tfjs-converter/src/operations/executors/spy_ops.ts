@@ -34,9 +34,11 @@ export function spyOnAllFunctions<T>(obj: T): RecursiveSpy<T> {
     }
     if (val instanceof Function) {
       return [key, jasmine.createSpy(`${key} spy`, val).and.callThrough()];
-    } else if (val instanceof Array) {
+    }
+    if (val instanceof Array) {
       return [key, val];
-    } else if (val instanceof Object) {
+    }
+    if (val instanceof Object) {
       return [key, spyOnAllFunctions(val)];
     }
     return [key, val];

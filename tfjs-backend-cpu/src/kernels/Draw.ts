@@ -58,13 +58,11 @@ export function draw(
               `Tensor values for a float32 Tensor must be in the ` +
               `range [0 - 1] but encountered ${value}.`);
         }
-      } else if (image.dtype === 'int32') {
-        if (value < 0 || value > 255) {
+      } else if ((image.dtype === 'int32') && (value < 0 || value > 255)) {
           throw new Error(
               `Tensor values for a int32 Tensor must be in the ` +
               `range [0 - 255] but encountered ${value}.`);
         }
-      }
 
       if (depth === 1) {
         rgba[0] = value * multiplier;

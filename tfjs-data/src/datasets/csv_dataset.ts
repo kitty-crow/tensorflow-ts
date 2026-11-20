@@ -85,7 +85,8 @@ export class CSVDataset extends Dataset<TensorContainer> {
       // Throw an error if columnNames is not provided and no header line.
       throw new Error(
           'Column names must be provided if there is no header line.');
-    } else if (this.fullColumnNames && columnNamesFromFile) {
+    }
+    if (this.fullColumnNames && columnNamesFromFile) {
       // Check provided columnNames match header line.
       util.assert(
           columnNamesFromFile.length === this.fullColumnNames.length,

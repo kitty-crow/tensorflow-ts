@@ -113,36 +113,52 @@ export const typeSnippet = (component: number, type = 'f32') => {
 export function getCoordsDataType(rank: number): string {
   if (rank <= 1) {
     return 'i32';
-  } else if (rank === 2) {
-    return `vec2<i32>`;
-  } else if (rank === 3) {
-    return `vec3<i32>`;
-  } else if (rank === 4) {
-    return `vec4<i32>`;
-  } else if (rank === 5) {
-    return `vec5`;
-  } else if (rank === 6) {
-    return `vec6`;
-  } else {
-    throw Error(`GPU for rank ${rank} is not yet supported`);
+  }
+  switch (rank) {
+    case 2: {
+      return `vec2<i32>`;
+    }
+    case 3: {
+      return `vec3<i32>`;
+    }
+    case 4: {
+      return `vec4<i32>`;
+    }
+    case 5: {
+      return `vec5`;
+    }
+    case 6: {
+      return `vec6`;
+    }
+    default: {
+      throw Error(`GPU for rank ${rank} is not yet supported`);
+    }
   }
 }
 
 export function getCoordsXYZ(index: number): string {
-  if (index === 0) {
-    return 'x';
-  } else if (index === 1) {
-    return 'y';
-  } else if (index === 2) {
-    return 'z';
-  } else if (index === 3) {
-    return 'w';
-  } else if (index === 4) {
-    return 'u';
-  } else if (index === 5) {
-    return 'v';
-  } else {
-    throw Error(`Index ${index} is not yet supported`);
+  switch (index) {
+    case 0: {
+      return 'x';
+    }
+    case 1: {
+      return 'y';
+    }
+    case 2: {
+      return 'z';
+    }
+    case 3: {
+      return 'w';
+    }
+    case 4: {
+      return 'u';
+    }
+    case 5: {
+      return 'v';
+    }
+    default: {
+      throw Error(`Index ${index} is not yet supported`);
+    }
   }
 }
 
@@ -782,7 +798,8 @@ function isFlatDispatch(program: WebGPUProgram): boolean {
 export function dataTypeToGPUType(type: DataType, component = 1) {
   if (type === 'float32') {
     return typeSnippet(component, 'f32');
-  } else if (type === 'int32' || type === 'bool') {
+  }
+  if (type === 'int32' || type === 'bool') {
     return typeSnippet(component, 'i32');
   }
   throw new Error(`type ${type} is not supported.`);

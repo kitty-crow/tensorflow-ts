@@ -89,29 +89,41 @@ export class CumProgram implements WebGPUProgram {
 }
 
 function getCoords(rank: number, name: string, op: CumOpType): string {
-  if (rank === 1) {
-    return `${name}`;
-  } else if (rank === 2) {
-    return `${name}.x, ${name}.y`;
-  } else if (rank === 3) {
-    return `${name}.x, ${name}.y, ${name}.z`;
-  } else if (rank === 4) {
-    return `${name}.x, ${name}.y, ${name}.z, ${name}.w`;
-  } else {
-    throw Error(`Cumulative ${op} for rank ${rank} is not yet supported`);
+  switch (rank) {
+    case 1: {
+      return `${name}`;
+    }
+    case 2: {
+      return `${name}.x, ${name}.y`;
+    }
+    case 3: {
+      return `${name}.x, ${name}.y, ${name}.z`;
+    }
+    case 4: {
+      return `${name}.x, ${name}.y, ${name}.z, ${name}.w`;
+    }
+    default: {
+      throw Error(`Cumulative ${op} for rank ${rank} is not yet supported`);
+    }
   }
 }
 
 function getFinalCoord(rank: number, name: string, op: CumOpType): string {
-  if (rank === 1) {
-    return `${name}`;
-  } else if (rank === 2) {
-    return `${name}.y`;
-  } else if (rank === 3) {
-    return `${name}.z`;
-  } else if (rank === 4) {
-    return `${name}.w`;
-  } else {
-    throw Error(`Cumulative ${op} for rank ${rank} is not yet supported`);
+  switch (rank) {
+    case 1: {
+      return `${name}`;
+    }
+    case 2: {
+      return `${name}.y`;
+    }
+    case 3: {
+      return `${name}.z`;
+    }
+    case 4: {
+      return `${name}.w`;
+    }
+    default: {
+      throw Error(`Cumulative ${op} for rank ${rank} is not yet supported`);
+    }
   }
 }
