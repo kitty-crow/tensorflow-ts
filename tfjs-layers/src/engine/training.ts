@@ -425,6 +425,49 @@ export function collectMetrics(
   }
 }
 
+/** Validate a positional loss-weight list without mutating the caller's list. */
+function validateLossWeightsArray(
+    weights: number[], outputNames: string[]): number[] {
+  if (weights.length !== outputNames.length) {
+    throw new ValueError(
+        '`loss_weights` must match the number of model outputs. ' +
+        `Expected ${outputNames.length} weight(s), received ` +
+        `${weights.length}.`);
+  }
+  for (const weight of weights) {
+    if (typeof weight !== 'number') {
+      throw new ValueError(
+          '`loss_weights` list entries must be numeric scalars.');
+    }
+  }
+  return weights.slice();
+}
+
+/** Validate output-name weights while retaining the supplied output order. */
+function validateLossWeightsMap(
+    weights: {[key: string]: number}, outputNames: string[]): number[] {
+  for (const name of Object.keys(weights)) {
+    if (outputNames.indexOf(name) === -1) {
+      throw new ValueError(
+          `Unknown output in \`loss_weights\` dictionary: "${name}". ` +
+          `Expected: ${outputNames}`);
+    }
+  }
+  const missing = outputNames.filter(name => weights[name] == null);
+  if (missing.length > 0) {
+    throw new ValueError(
+        `\`loss_weights\` dictionary is missing output(s): ${missing}.`);
+  }
+  return outputNames.map(name => {
+    const weight = weights[name];
+    if (typeof weight !== 'number') {
+      throw new ValueError(
+          `\`loss_weights\` value for "${name}" must be a numeric scalar.`);
+    }
+    return weight;
+  });
+}
+
 /**
  * Normalizes Keras `loss_weights` to model output order.
  *
@@ -437,52 +480,19 @@ export function standardizeLossWeights(
     return outputNames.map(_ => 1);
   }
 
+  if (typeof lossWeights === 'number' && outputNames.length !== 1) {
+    throw new ValueError(
+        '`loss_weights` may be a scalar only for a single-output model. ' +
+        `Received ${outputNames.length} outputs.`);
+  }
   if (typeof lossWeights === 'number') {
-    if (outputNames.length !== 1) {
-      throw new ValueError(
-          '`loss_weights` may be a scalar only for a single-output model. ' +
-          `Received ${outputNames.length} outputs.`);
-    }
     return [lossWeights];
   }
-
   if (Array.isArray(lossWeights)) {
-    if (lossWeights.length !== outputNames.length) {
-      throw new ValueError(
-          '`loss_weights` must match the number of model outputs. ' +
-          `Expected ${outputNames.length} weight(s), received ` +
-          `${lossWeights.length}.`);
-    }
-    for (const weight of lossWeights) {
-      if (typeof weight !== 'number') {
-        throw new ValueError(
-            '`loss_weights` list entries must be numeric scalars.');
-      }
-    }
-    return lossWeights.slice();
+    return validateLossWeightsArray(lossWeights, outputNames);
   }
-
   if (typeof lossWeights === 'object') {
-    for (const name of Object.keys(lossWeights)) {
-      if (outputNames.indexOf(name) === -1) {
-        throw new ValueError(
-            `Unknown output in \`loss_weights\` dictionary: "${name}". ` +
-            `Expected: ${outputNames}`);
-      }
-    }
-    const missing = outputNames.filter(name => lossWeights[name] == null);
-    if (missing.length > 0) {
-      throw new ValueError(
-          `\`loss_weights\` dictionary is missing output(s): ${missing}.`);
-    }
-    return outputNames.map(name => {
-      const weight = lossWeights[name];
-      if (typeof weight !== 'number') {
-        throw new ValueError(
-            `\`loss_weights\` value for "${name}" must be a numeric scalar.`);
-      }
-      return weight;
-    });
+    return validateLossWeightsMap(lossWeights, outputNames);
   }
 
   throw new ValueError(
