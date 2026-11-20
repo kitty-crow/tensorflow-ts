@@ -370,6 +370,36 @@ export function getShapeAs3D(shape: number[]): [number, number, number] {
   return shapeAs3D;
 }
 
+/** Preserve the first valid physical texture shape in the original priority. */
+function preferredTextureShape(
+    shape: number[], size: number, maxTexSize: number): [number, number]|null {
+  if (shape.length <= 1 && size <= maxTexSize) {
+    return [1, size];
+  }
+  if (shape.length === 2 && shape[0] <= maxTexSize &&
+      shape[1] <= maxTexSize) {
+    return shape as [number, number];
+  }
+  if (shape.length === 3 && shape[0] * shape[1] <= maxTexSize &&
+      shape[2] <= maxTexSize) {
+    return [shape[0] * shape[1], shape[2]];
+  }
+  if (shape.length === 3 && shape[0] <= maxTexSize &&
+      shape[1] * shape[2] <= maxTexSize) {
+    return [shape[0], shape[1] * shape[2]];
+  }
+  if (shape.length === 4 &&
+      shape[0] * shape[1] * shape[2] <= maxTexSize &&
+      shape[3] <= maxTexSize) {
+    return [shape[0] * shape[1] * shape[2], shape[3]];
+  }
+  if (shape.length === 4 && shape[0] <= maxTexSize &&
+      shape[1] * shape[2] * shape[3] <= maxTexSize) {
+    return [shape[0], shape[1] * shape[2] * shape[3]];
+  }
+  return null;
+}
+
 export function getTextureShapeFromLogicalShape(
     logShape: number[], isPacked = false): [number, number] {
   let maxTexSize = env().getNumber('WEBGL_MAX_TEXTURE_SIZE');
@@ -394,11 +424,11 @@ export function getTextureShapeFromLogicalShape(
             util.nearestLargerEven(logShape[i]) :
             logShape[i]);
 
-    // Packed texture height is at least 2 (the channel height of a single
-    // texel).
-    if (logShape.length === 1) {
-      logShape = [2, logShape[0]];
-    }
+  }
+
+  // Packed texture height is at least two channels per texel.
+  if (isPacked && logShape.length === 1) {
+    logShape = [2, logShape[0]];
   }
 
   // If logical shape is 2, we don't squeeze, since we want to match physical.
@@ -408,31 +438,7 @@ export function getTextureShapeFromLogicalShape(
   }
 
   let size = util.sizeFromShape(logShape);
-  let textureShape: [number, number] = null;
-  if (logShape.length <= 1 && size <= maxTexSize) {
-    textureShape = [1, size];
-  } else if (
-      logShape.length === 2 && logShape[0] <= maxTexSize &&
-      logShape[1] <= maxTexSize) {
-    textureShape = logShape as [number, number];
-  } else if (
-      logShape.length === 3 && logShape[0] * logShape[1] <= maxTexSize &&
-      logShape[2] <= maxTexSize) {
-    textureShape = [logShape[0] * logShape[1], logShape[2]];
-  } else if (
-      logShape.length === 3 && logShape[0] <= maxTexSize &&
-      logShape[1] * logShape[2] <= maxTexSize) {
-    textureShape = [logShape[0], logShape[1] * logShape[2]];
-  } else if (
-      logShape.length === 4 &&
-      logShape[0] * logShape[1] * logShape[2] <= maxTexSize &&
-      logShape[3] <= maxTexSize) {
-    textureShape = [logShape[0] * logShape[1] * logShape[2], logShape[3]];
-  } else if (
-      logShape.length === 4 && logShape[0] <= maxTexSize &&
-      logShape[1] * logShape[2] * logShape[3] <= maxTexSize) {
-    textureShape = [logShape[0], logShape[1] * logShape[2] * logShape[3]];
-  }
+  let textureShape = preferredTextureShape(logShape, size, maxTexSize);
 
   // true if one edge length is 1 (1 or 2, if packed), while another edge
   // length exceeds maxSizeForNarrowTex.
@@ -490,17 +496,15 @@ export function isReshapeFree(shape1: number[], shape2: number[]): boolean {
     return true;
   }
 
-  if (shape1.length !== shape2.length) {  // One of the shapes is a vector.
-    const shape1Cols = shape1[shape1.length - 1];
-    const shape2Cols = shape2[shape2.length - 1];
-    if (shape1Cols === shape2Cols) {
-      return true;
-    }
-
-    if (isEven(shape1Cols) && isEven(shape2Cols) &&
-        (shape1[0] === 1 || shape2[0] === 1)) {
-      return true;
-    }
+  // A vector-to-matrix reshape is free when the last dimensions agree,
+  // or the packed dimensions both have an even width.
+  const shape1Cols = shape1[shape1.length - 1];
+  const shape2Cols = shape2[shape2.length - 1];
+  if (shape1.length !== shape2.length &&
+      (shape1Cols === shape2Cols ||
+       (isEven(shape1Cols) && isEven(shape2Cols) &&
+        (shape1[0] === 1 || shape2[0] === 1)))) {
+    return true;
   }
   return shape1[1] === shape2[1] && isEven(shape1[0]) && isEven(shape2[0]);
 }
