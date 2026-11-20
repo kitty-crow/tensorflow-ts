@@ -558,30 +558,30 @@ export class GPGPUContext {
     if (queryTimerVersion === 0) {
       return true;
     }
+    return queryTimerVersion === 2 ?
+        this.isWebGL2QueryAvailable(query) :
+        this.isWebGL1QueryAvailable(query);
+  }
 
-    if (!(queryTimerVersion === 2)) {
-      const ext = this.getQueryTimerExtensionWebGL1();
-
-      const available =
-          ext.getQueryObjectEXT(query, ext.QUERY_RESULT_AVAILABLE_EXT);
-      if (this.disjoint == null) {
-        this.disjoint = this.gl.getParameter(ext.GPU_DISJOINT_EXT);
-      }
-
-      return available && !this.disjoint;
+  private isWebGL1QueryAvailable(query: WebGLQuery): boolean {
+    const ext = this.getQueryTimerExtensionWebGL1();
+    const available = ext.getQueryObjectEXT(
+        query, ext.QUERY_RESULT_AVAILABLE_EXT);
+    if (this.disjoint == null) {
+      this.disjoint = this.gl.getParameter(ext.GPU_DISJOINT_EXT);
     }
-    {
-      const gl2 = this.gl as WebGL2RenderingContext;
-      const ext = this.getQueryTimerExtensionWebGL2();
+    return available && !this.disjoint;
+  }
 
-      const available =
-          gl2.getQueryParameter(query, gl2.QUERY_RESULT_AVAILABLE);
-      if (this.disjoint == null) {
-        this.disjoint = this.gl.getParameter(ext.GPU_DISJOINT_EXT);
-      }
-
-      return available && !this.disjoint;
+  private isWebGL2QueryAvailable(query: WebGLQuery): boolean {
+    const gl2 = this.gl as WebGL2RenderingContext;
+    const ext = this.getQueryTimerExtensionWebGL2();
+    const available = gl2.getQueryParameter(
+        query, gl2.QUERY_RESULT_AVAILABLE);
+    if (this.disjoint == null) {
+      this.disjoint = this.gl.getParameter(ext.GPU_DISJOINT_EXT);
     }
+    return available && !this.disjoint;
   }
 
   pollFence(fenceContext: FenceContext) {
@@ -630,14 +630,14 @@ export class GPGPUContext {
   }
 
   private unbindTextureToFrameBuffer() {
-    if (this.outputTexture != null) {
-      webgl_util.bindColorTextureToFramebuffer(
-          this.gl, this.outputTexture, this.framebuffer);
-      if (this.debug) {
-        webgl_util.validateFramebuffer(this.gl);
-      }
-    } else {
+    if (this.outputTexture == null) {
       webgl_util.unbindColorTextureFromFramebuffer(this.gl, this.framebuffer);
+      return;
+    }
+    webgl_util.bindColorTextureToFramebuffer(
+        this.gl, this.outputTexture, this.framebuffer);
+    if (this.debug) {
+      webgl_util.validateFramebuffer(this.gl);
     }
   }
 
