@@ -1139,16 +1139,10 @@ export abstract class Layer extends serialization.Serializable {
           `for the layer.`);
       // TODO(cais): Implement getOutputShapeAt().
     }
-    {
-      const outputShapes = this.inboundNodes[0].outputShapes;
-      if (Array.isArray(outputShapes) && Array.isArray(outputShapes[0]) &&
-          outputShapes.length === 1) {
-        return (outputShapes as Shape[])[0];
-      } else {
-        return outputShapes;
-      }
-
-    }
+    const outputShapes = this.inboundNodes[0].outputShapes;
+    return Array.isArray(outputShapes) && Array.isArray(outputShapes[0]) &&
+        outputShapes.length === 1 ?
+        (outputShapes as Shape[])[0] : outputShapes;
   }
 
   /**
@@ -1356,28 +1350,19 @@ export abstract class Layer extends serialization.Serializable {
    */
   computeMask(inputs: Tensor|Tensor[], mask?: Tensor|Tensor[]): Tensor
       |Tensor[] {
-    if (!this.supportsMasking) {
-      if (mask != null) {
-        if (Array.isArray(mask)) {
-          mask.forEach(maskElement => {
-            if (maskElement != null) {
-              throw new TypeError(
-                  `Layer ${this.name} does not support masking, ` +
-                  'but was passed an inputMask.');
-            }
-          });
-        } else {
-          throw new TypeError(
-              `Layer ${this.name} does not support masking, ` +
-              'but was passed an inputMask.');
-        }
-      }
-      // masking not explicitly supported: return null as mask
-      return null;
+    if (this.supportsMasking) {
+      // Masking is supported: carry over the input mask by default.
+      return mask;
     }
-    // if masking is explictly supported, by default
-    // carry over the input mask
-    return mask;
+    // Reject supplied input masks, but allow absent or all-null mask lists.
+    const hasMask = mask != null &&
+        (!Array.isArray(mask) || mask.some(element => element != null));
+    if (hasMask) {
+      throw new TypeError(
+          `Layer ${this.name} does not support masking, ` +
+          'but was passed an inputMask.');
+    }
+    return null;
   }
 
   private setMaskMetadata(
