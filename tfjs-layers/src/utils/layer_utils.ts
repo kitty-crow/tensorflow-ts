@@ -119,7 +119,8 @@ function isModelSequentialLike(model: Container): boolean {
     for (const layer of model.layers) {
       let flag = false;
       for (const node of layer.inboundNodes) {
-        if (nodes.indexOf(node) !== -1) {
+        if (!(nodes.indexOf(node) !== -1)) continue;
+        {
           if (flag) {
             sequentialLike = false;
             break;

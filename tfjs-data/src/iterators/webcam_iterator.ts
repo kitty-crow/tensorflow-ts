@@ -36,7 +36,8 @@ export class WebcamIterator extends LazyIterator<Tensor3D> {
       protected readonly webcamVideoElement: HTMLVideoElement,
       protected readonly webcamConfig: WebcamConfig) {
     super();
-    if (this.needToResize()) {
+    if (!(this.needToResize())) return;
+    {
       this.resize = true;
       this.cropSize =
           [this.webcamConfig.resizeHeight, this.webcamConfig.resizeWidth];

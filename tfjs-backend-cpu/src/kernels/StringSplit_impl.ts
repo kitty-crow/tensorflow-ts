@@ -51,7 +51,8 @@ function split(
   // one of the delimiters appears.
   let tokenStart = 0;
   for (let i = 0; i < str.length + 1; i++) {
-    if ((i === str.length) || (delimiters.indexOf(str[i]) !== -1)) {
+    if (!((i === str.length) || (delimiters.indexOf(str[i]) !== -1))) continue;
+    {
       const token = str.subarray(tokenStart, i);
       if (!skipEmpty || token.length !== 0) {
         result.push(token);

@@ -476,7 +476,8 @@ export class NodeJSKernelBackend extends KernelBackend {
     const tensorIds = this.getInputTensorIds(inputs);
     const newTensors = [];
     for (let i = 0; i < inputs.length; i++) {
-      if (inputTensorInfos[i] != null) {
+      if (!(inputTensorInfos[i] != null)) continue;
+      {
         if (inputTensorInfos[i].tfDtype === 'DT_UINT8') {
           const data = Uint8Array.from(inputs[i].dataSync());
           const inputTensorId = this.binding.createTensor(

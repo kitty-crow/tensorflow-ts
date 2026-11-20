@@ -92,10 +92,12 @@ export const dilation2DBackpropFilterConfig: KernelConfig = {
             let wMax = 0;
             for (let h = 0; h < filterHeight; ++h) {
               const hIn = hBeg + h * dilationHeight;
-              if (hIn >= 0 && hIn < inHeight) {
+              if (!(hIn >= 0 && hIn < inHeight)) continue;
+              {
                 for (let w = 0; w < filterWidth; ++w) {
                   const wIn = wBeg + w * dilationWidth;
-                  if (wIn >= 0 && wIn < inWidth) {
+                  if (!(wIn >= 0 && wIn < inWidth)) continue;
+                  {
                     const val = $x[b][hIn][wIn][d] + $filter[h][w][d];
                     if (val > curVal) {
                       curVal = val;

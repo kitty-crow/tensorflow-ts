@@ -194,7 +194,8 @@ class StringNGramsOp {
       // one (nGramSplitsdata). If no ngrams were generated, then they will
       // be equal (since we increment outputStartIdx by numNGrams every
       // time we create a set of ngrams.)
-      if (this.preserveShort && outputStartIdx === nGramsSplits[i]) {
+      if (!(this.preserveShort && outputStartIdx === nGramsSplits[i])) continue;
+      {
         const dataLength = splits[i + 1] - splits[i];
         // One legitimate reason to not have any ngrams when this.preserveShort
         // is true is if the sequence itself is empty. In that case, move on.

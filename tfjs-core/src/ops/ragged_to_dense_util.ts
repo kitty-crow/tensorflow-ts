@@ -60,7 +60,8 @@ export function combineRaggedTensorToTensorShapes(
         outputShape[outputShape.length - valueShape.length + i];
     const outputShapeDim = outputShape[outputShapeDimIndex];
 
-    if (valueDim >= 0) {
+    if (!(valueDim >= 0)) continue;
+    {
       if (outputShapeDim >= 0) {
         if (outputShapeDim !== valueDim) {
           throw new Error(`rt input.shape and shape=${

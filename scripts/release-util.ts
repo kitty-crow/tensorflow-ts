@@ -364,7 +364,8 @@ export function updateTFJSDependencyVersions(
   for (const dependencyMap of dependencyMaps) {
     for (const [name, version] of Object.entries(dependencyMap)) {
       const prefix = '@tensorflow/';
-      if (name.startsWith(prefix) && version.startsWith('link:')) {
+      if (!(name.startsWith(prefix) && version.startsWith('link:'))) continue;
+      {
         const tfjsName = name.slice(prefix.length);
         const newVersion = versions.get(tfjsName);
         if (newVersion == null) {
@@ -690,7 +691,8 @@ export function checkPublishable(packageJsonPath: string): void {
     throw new Error(`${pkg} is private.`);
   }
 
-  if (packageJson.dependencies) {
+  if (!(packageJson.dependencies)) return;
+  {
     for (let [dep, depVersion] of Object.entries(packageJson.dependencies)) {
       const start = depVersion.slice(0,5);
       if (start === 'link:' || start === 'file:') {

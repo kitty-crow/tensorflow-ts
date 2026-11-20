@@ -816,7 +816,8 @@ export abstract class Layer extends serialization.Serializable {
       }
 
       // Check shape.
-      if (spec.shape != null) {
+      if (!(spec.shape != null)) continue;
+      {
         for (let i = 0; i < spec.shape.length; ++i) {
           const specDim = spec.shape[i];
           const dim = x.shape[i];

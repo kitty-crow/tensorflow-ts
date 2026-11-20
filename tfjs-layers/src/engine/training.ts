@@ -249,7 +249,8 @@ function checkLossAndTargetCompatibility(
             `[samples, classes].`);
         // TODO(cais): Example code in error message.
       }
-    if (keyLosses.indexOf(loss) !== -1) {
+    if (!(keyLosses.indexOf(loss) !== -1)) continue;
+    {
       const slicedYShape = y.shape.slice(1);
       const slicedShape = shape.slice(1);
       for (let j = 0; j < slicedYShape.length; ++j) {
@@ -315,7 +316,8 @@ function checkInputData(
     arrays = [data];
   }
 
-  if (shapes != null) {
+  if (!(shapes != null)) return;
+  {
     for (let i = 0; i < names.length; ++i) {
       if (shapes[i] == null) {
         continue;
@@ -1829,7 +1831,8 @@ export class LayersModel extends Container implements tfc.InferenceModel {
               // TODO(cais): Use scope() to avoid ownership.
             }
 
-            if (batchIndex === batches.length - 1) {  // Last batch.
+            if (!(batchIndex === batches.length - 1)) return;
+            {  // Last batch.
               if (doValidation) {
                 const valOuts = this.testLoop(valF, valIns, batchSize);
                 // Porting Notes: In tfjs-layers, valOuts is always an Array.

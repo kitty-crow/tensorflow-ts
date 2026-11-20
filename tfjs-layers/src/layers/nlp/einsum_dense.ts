@@ -138,7 +138,8 @@ export function analyzeSplitString(
 
   for (const dim of inputSpec) {
     const inputShapeAtDim = inputShape[inputDimMap.get(dim)];
-    if (outputDimMap.has(dim)) {
+    if (!(outputDimMap.has(dim))) continue;
+    {
       const outputShapeAtDim = newOutputShape[outputDimMap.get(dim)];
       if (outputShapeAtDim !== null && outputShapeAtDim !== inputShapeAtDim) {
         throw new ValueError(

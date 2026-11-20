@@ -125,7 +125,8 @@ function nonMaxSuppressionImpl_(
     // threshold, we will not add it back to the candidates list.
     candidate.suppressBeginIndex = selectedIndices.length;
 
-    if (!ignoreCandidate) {
+    if (!(!ignoreCandidate)) continue;
+    {
       // Candidate has passed all the tests, and is not suppressed, so
       // select the candidate.
       if (candidate.score === originalScore) {

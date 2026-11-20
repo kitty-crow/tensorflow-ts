@@ -99,7 +99,8 @@ export function getFilteredNodesXToY(
   for (let i = 0; i < tape.length; i++) {
     const node = tape[i];
 
-    if (nodesFromX[node.id] && nodesToY[node.id]) {
+    if (!(nodesFromX[node.id] && nodesToY[node.id])) continue;
+    {
       // Prune the inputs from the node that aren't a function of x.
       const prunedInputs: {[inputName: string]: Tensor} = {};
       for (const inputName in node.inputs) {

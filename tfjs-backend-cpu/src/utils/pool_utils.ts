@@ -131,7 +131,8 @@ export function maxPoolPositions(
               // TODO(mattsoulanille): Remove this when switching to TS5.
               /* tslint:disable: no-unnecessary-type-assertion */
               const pixel = xBuf.get(b, xR, xC, d) as number;
-              if (pixel > maxValue) {
+              if (!(pixel > maxValue)) continue;
+              {
                 maxValue = pixel as number;
                 if (flattenPositions) {
                   maxPosition = includeBatchInIndex ?

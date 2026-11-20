@@ -168,7 +168,8 @@ function convertNDArrayScalarsInConfig(config: serialization.ConfigDictValue):
     const fields = Object.keys(config);
     for (const field of fields) {
       const value = config[field];
-      if (value != null && typeof value === 'object') {
+      if (!(value != null && typeof value === 'object')) continue;
+      {
         if (!Array.isArray(value) && value['type'] === 'ndarray' &&
             typeof value['value'] === 'number') {
           config[field] = value['value'];

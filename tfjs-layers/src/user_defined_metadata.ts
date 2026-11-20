@@ -37,7 +37,8 @@ export function checkUserDefinedMetadata(
         'User-defined metadata is expected to be a JSON object, but is not.');
   }
 
-  if (checkSize) {
+  if (!(checkSize)) return;
+  {
     const out = JSON.stringify(userDefinedMetadata);
     if (out.length > MAX_USER_DEFINED_METADATA_SERIALIZED_LENGTH) {
       console.warn(

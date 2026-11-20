@@ -74,11 +74,9 @@ function liftFinalGuard(node: ts.IfStatement, source: ts.SourceFile): Edit | nul
   if (!ts.isBlock(block) || block.statements.at(-1) !== node) return null;
   const owner = block.parent;
   let exit: string | null = null;
-  if (ts.isForStatement(owner) || ts.isForOfStatement(owner) ||
+  if ((ts.isForStatement(owner) || ts.isForOfStatement(owner) ||
       ts.isForInStatement(owner) || ts.isWhileStatement(owner) ||
-      ts.isDoStatement(owner)) {
-    if (owner.statement === block) exit = 'continue;';
-  }
+      ts.isDoStatement(owner)) && (owner.statement === block)) exit = 'continue;';
   if (ts.isFunctionLike(owner) && owner.body === block) {
     const returnType = owner.type === undefined ? '' : owner.type.getText(source);
     let returnsValue = false;

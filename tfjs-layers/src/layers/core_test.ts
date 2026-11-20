@@ -93,7 +93,8 @@ describeMathCPUAndGPU('Dropout Layer', () => {
               }
             } else {  // default noiseShape
               for (let i = 0; i < xValue.length; ++i) {
-                if (yValue[i] !== 0) {
+                if (!(yValue[i] !== 0)) continue;
+                {
                   nKept++;
                   if (training) {
                     expect(yValue[i]).toBeCloseTo(1 / (1 - rate));

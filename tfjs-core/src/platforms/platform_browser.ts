@@ -78,7 +78,8 @@ export class PlatformBrowser implements Platform {
     if (!this.hasEventListener) {
       this.hasEventListener = true;
       window.addEventListener('message', (event: MessageEvent) => {
-        if (event.source === window && event.data.name === this.messageName) {
+        if (!(event.source === window && event.data.name === this.messageName)) return;
+        {
           event.stopPropagation();
           const functionRef = this.functionRefs[event.data.index];
           functionRef();

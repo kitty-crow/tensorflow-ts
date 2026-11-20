@@ -177,7 +177,8 @@ export function getSignatureDefEntryFromMetaGraphInfo(
     signature: string): SignatureDefEntry {
   for (let i = 0; i < savedModelInfo.length; i++) {
     const metaGraphInfo = savedModelInfo[i];
-    if (stringArraysHaveSameElements(tags, metaGraphInfo.tags)) {
+    if (!(stringArraysHaveSameElements(tags, metaGraphInfo.tags))) continue;
+    {
       if (metaGraphInfo.signatureDefs[signature] == null) {
         throw new Error('The SavedModel does not have signature: ' + signature);
       }

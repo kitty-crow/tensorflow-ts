@@ -421,7 +421,8 @@ export abstract class Container extends Layer {
     for (const depth of depthKeys) {
       for (const node of nodesByDepth[depth]) {
         const layer = node.outboundLayer;
-        if (layer != null) {
+        if (!(layer != null)) continue;
+        {
           for (const x of node.inputTensors) {
             if (computableTensors.indexOf(x) === -1) {
               throw new RuntimeError(
@@ -907,7 +908,8 @@ export abstract class Container extends Layer {
             computedData.push(tensorMap[x.id]);
           }
         }
-        if (computedData.length === referenceInputTensors.length) {
+        if (!(computedData.length === referenceInputTensors.length)) continue;
+        {
           // TODO(michaelterry): Add K.name_scope here, if we need it.
           let kwargs: Kwargs = {};
           let computedTensors: Tensor[];
@@ -1099,7 +1101,8 @@ export abstract class Container extends Layer {
         const node = layer.inboundNodes[originalNodeIndex];
         const nodeKey = Container.nodeKey(layer, originalNodeIndex);
         let kwargs = {};
-        if (this.containerNodes.has(nodeKey)) {
+        if (!(this.containerNodes.has(nodeKey))) continue;
+        {
           // The node is relevant to the model:
           // add to filteredInboundNodes.
           if (node.callArgs) {

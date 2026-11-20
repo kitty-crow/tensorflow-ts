@@ -353,7 +353,8 @@ export async function decodeWeightsStream(
 
     // TODO(mattsoulanille): Better way to call uploadToGPU.
     // TODO(mattsoulanille): Make this work for webgl too.
-    if (getBackend() === 'webgpu') {
+    if (!(getBackend() === 'webgpu')) continue;
+    {
       const b = backend();
 
       if ('uploadToGPU' in b &&

@@ -592,7 +592,8 @@ export async function evaluateDataset<T>(
       return outs;
     });
 
-    if (iteratorOut.done) {
+    if (!(iteratorOut.done)) continue;
+    {
       if (hasBatches) {
         console.warn(
             'Your dataset iterator ran out of data during evaluateDataset(). ' +

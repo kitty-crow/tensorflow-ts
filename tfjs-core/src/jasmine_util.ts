@@ -142,10 +142,11 @@ export function setupTestFilters(
     // Include tests of a test suite unless tests are in excludes list.
     for (let i = 0; i < testFilters.length; ++i) {
       const testFilter = testFilters[i];
-      if ((testFilter.include != null &&
+      if (!((testFilter.include != null &&
            name.indexOf(testFilter.include) > -1) ||
           (testFilter.startsWith != null &&
-           name.startsWith(testFilter.startsWith))) {
+           name.startsWith(testFilter.startsWith)))) continue;
+      {
         if (testFilter.excludes != null) {
           for (let j = 0; j < testFilter.excludes.length; j++) {
             if (name.indexOf(testFilter.excludes[j]) > -1) {

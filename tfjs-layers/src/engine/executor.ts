@@ -326,7 +326,8 @@ export function execute(
       if (mask != null) {
         maskExists = true;
       }
-      if (!training) {
+      if (!(!training)) continue;
+      {
         recipientCounts[input.name]--;
         if (recipientCounts[input.name] === 0 && !feedDict.hasKey(input) &&
             outputNames.indexOf(input.name) === -1 && !value.isDisposed &&

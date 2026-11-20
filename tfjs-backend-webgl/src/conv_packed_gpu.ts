@@ -322,7 +322,8 @@
        // GPU with limited cache, accumulate sum across large amount of
        // veriables will cause lots of cache misses. (i.e. 5x5 filter will have
        // 50 variables)
-       if (colIndex < filterWidth) {
+       if (!(colIndex < filterWidth)) continue;
+       {
          mainLoop += `
              wTexel = getW(r, ${colIndex}, d1, d2);
              dotProd += xC${colIndex}.xxzz * vec4(wTexel.xy, wTexel.xy);

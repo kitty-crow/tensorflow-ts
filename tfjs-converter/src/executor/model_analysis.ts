@@ -246,7 +246,8 @@ function validateNodesExecutionOrder(
             node.name} is scheduled to run after its child ${child.name}.`);
       }
     }
-    if (!isPredefined(node)) {
+    if (!(!isPredefined(node))) continue;
+    {
       for (const input of node.inputs) {
         if (!nodeNameToOrder.has(input.name)) {
           throw new NodesExecutionOrderError(

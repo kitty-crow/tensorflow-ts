@@ -68,7 +68,8 @@ export function einsum(
         tensorsToDispose.push(out);
       }
     }
-    if (i < nSteps - 1) {
+    if (!(i < nSteps - 1)) continue;
+    {
       if (path[i] >= 0) {
         out = sum({
           inputs: {x: out},

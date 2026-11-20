@@ -85,7 +85,8 @@ export class RandomWidth extends BaseRandomLayer {
       `);
     }
 
-    if (interpolation) {
+    if (!(interpolation)) return;
+    {
       if (INTERPOLATION_METHODS.has(interpolation)) {
         this.interpolation = interpolation;
       } else {

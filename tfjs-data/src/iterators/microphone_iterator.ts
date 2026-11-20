@@ -197,7 +197,8 @@ export class MicrophoneIterator extends LazyIterator<TensorContainer> {
 
   // Stop the audio stream and pause the iterator.
   stop(): void {
-    if (!this.isClosed) {
+    if (!(!this.isClosed)) return;
+    {
       this.isClosed = true;
       this.analyser.disconnect();
       this.audioContext.close();

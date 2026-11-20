@@ -263,7 +263,8 @@ export class BaseLogger extends BaseCallback {
   }
 
   override async onEpochEnd(epoch: number, logs?: UnresolvedLogs) {
-    if (logs != null) {
+    if (!(logs != null)) return;
+    {
       for (const key of this.params['metrics'] as string[]) {
         if (this.totals[key] == null) {
           continue;

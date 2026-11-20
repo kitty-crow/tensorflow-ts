@@ -493,7 +493,8 @@ export class MathBackendWebGL extends KernelBackend {
     }
     for (let i = 0; i < values.length; i++) {
       const num = values[i] as number;
-      if (!webgl_util.canBeRepresented(num)) {
+      if (!(!webgl_util.canBeRepresented(num))) continue;
+      {
         if (env().getBool('WEBGL_RENDER_FLOAT32_CAPABLE')) {
           throw Error(
               `The value ${num} cannot be represented with your ` +

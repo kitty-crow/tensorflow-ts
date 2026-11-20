@@ -652,7 +652,8 @@ export function convertConv2DDataFormat(dataFormat: 'NHWC'|'NCHW'):
 export function checkPadOnDimRoundingMode(
     opDesc: string, pad: 'valid'|'same'|number|ExplicitPadding,
     dimRoundingMode?: 'floor'|'round'|'ceil') {
-  if (dimRoundingMode != null) {
+  if (!(dimRoundingMode != null)) return;
+  {
     if (typeof pad === 'string') {
       throw Error(
           `Error in ${opDesc}: pad must be an integer when using ` +

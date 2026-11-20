@@ -71,10 +71,12 @@ export const dilation2DConfig: KernelConfig = {
             let curVal = Number.MIN_SAFE_INTEGER;
             for (let h = 0; h < filterHeight; ++h) {
               const hIn = hBeg + h * dilationHeight;
-              if (hIn >= 0 && hIn < inHeight) {
+              if (!(hIn >= 0 && hIn < inHeight)) continue;
+              {
                 for (let w = 0; w < filterWidth; ++w) {
                   const wIn = wBeg + w * dilationWidth;
-                  if (wIn >= 0 && wIn < inWidth) {
+                  if (!(wIn >= 0 && wIn < inWidth)) continue;
+                  {
                     const xIndex = util.locToIndex(
                         [b, hIn, wIn, d], xRank, util.computeStrides(x.shape));
                     const filterIndex = util.locToIndex(
