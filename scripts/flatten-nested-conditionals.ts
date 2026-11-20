@@ -149,12 +149,13 @@ function assignmentValue(statement: ts.Statement): {
  * return value or one assignment with a type-narrowing conditional expression.
  */
 function foldSimpleNestedBranches(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
-  if (!ts.isBlock(node.thenStatement)) return null;
+  if (node.elseStatement !== undefined || !ts.isBlock(node.thenStatement)) return null;
   const statements = node.thenStatement.statements;
   const inner = statements[0];
-  if (inner === undefined || !ts.isIfStatement(inner) ||
-      (statements.length !== 1 && statements.length !== 2)) return null;
-  const alternate = inner.elseStatement ?? (statements.length === 2 ? statements[1] : undefined);
+  if (inner === undefined || !ts.isIfStatement(inner)) return null;
+  if (inner.elseStatement !== undefined && statements.length !== 1) return null;
+  if (inner.elseStatement === undefined && statements.length !== 2) return null;
+  const alternate = inner.elseStatement ?? statements[1];
   if (alternate === undefined) return null;
   // Preserve any meaningful comments attached to the collapsed branch nodes.
   const before = source.text.slice(node.thenStatement.getStart(source) + 1, inner.getStart(source));
