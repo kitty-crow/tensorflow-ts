@@ -23,6 +23,14 @@ import {describeMathCPU, describeMathCPUAndGPU, describeMathGPU, expectTensorsCl
 
 import {conv1d, conv1dWithBias, conv2d, conv2dWithBiasActivation, conv3d, conv3dWithBias} from './convolutional';
 
+/** Derive convolution output dimensions from input, kernel and stride sizes. */
+function convolutionOutputSize(
+    inputSize: number, kernelSize: number, stride: number,
+    padding: PaddingMode): number {
+  return padding === 'same' ? Math.ceil(inputSize / stride) :
+                              Math.floor((inputSize - kernelSize) / stride) + 1;
+}
+
 describeMathCPUAndGPU('conv1dWithBias', () => {
   const xLength4Data = [10, 20, 40, 80];
   const kernelLength2Data = [1, -1];
@@ -293,33 +301,16 @@ describeMathCPU('Conv2D Layers: Symbolic', () => {
               const output =
                   conv2dLayer.apply(symbolicInput) as tfl.SymbolicTensor;
 
-              let outputRows: number;
-              let outputCols: number;
-              if (stride === undefined) {  // Same strides as kernelSize.
-                outputRows = kernelSize[0] === 2 ? 5 : 3;
-                if (padding === 'same') {
-                  outputRows++;
-                }
-                outputCols = kernelSize[1] === 2 ? 4 : 2;
-                if (padding === 'same') {
-                  outputCols++;
-                }
-              } else {  // strides: 1.
-                outputRows = kernelSize[0] === 2 ? 10 : 9;
-                if (padding === 'same') {
-                  outputRows += kernelSize[0] - 1;
-                }
-                outputCols = kernelSize[1] === 2 ? 8 : 6;
-                if (padding === 'same') {
-                  outputCols += kernelSize[1] - 1;
-                }
-              }
-              let expectedShape: [number, number, number, number];
-              if (dataFormat === 'channelsFirst') {
-                expectedShape = [2, filters, outputRows, outputCols];
-              } else {
-                expectedShape = [2, outputRows, outputCols, filters];
-              }
+              const outputRows = convolutionOutputSize(
+                  11, kernelSize[0], stride === undefined ? kernelSize[0] : stride,
+                  padding);
+              const outputCols = convolutionOutputSize(
+                  9, kernelSize[1], stride === undefined ? kernelSize[1] : stride,
+                  padding);
+              const expectedShape: [number, number, number, number] =
+                  dataFormat === 'channelsFirst' ?
+                  [2, filters, outputRows, outputCols] :
+                  [2, outputRows, outputCols, filters];
 
               expect(output.shape).toEqual(expectedShape);
               expect(output.dtype).toEqual(symbolicInput.dtype);
@@ -691,44 +682,19 @@ describeMathCPU('Conv3D Layers: Symbolic', () => {
               const output =
                   conv3dLayer.apply(symbolicInput) as tfl.SymbolicTensor;
 
-              let outputRows: number;
-              let outputCols: number;
-              let outputDepth: number;
-              if (stride === undefined) {  // Same strides as kernelSize.
-                outputRows = kernelSize[0] === 2 ? 5 : 3;
-                if (padding === 'same') {
-                  outputRows++;
-                }
-                outputCols = kernelSize[1] === 2 ? 4 : 2;
-                if (padding === 'same') {
-                  outputCols++;
-                }
-                outputDepth = kernelSize[2] === 2 ? 4 : 2;
-                if (padding === 'same') {
-                  outputDepth++;
-                }
-              } else {  // strides: 1.
-                outputRows = kernelSize[0] === 2 ? 10 : 9;
-                if (padding === 'same') {
-                  outputRows += kernelSize[0] - 1;
-                }
-                outputCols = kernelSize[1] === 2 ? 8 : 6;
-                if (padding === 'same') {
-                  outputCols += kernelSize[1] - 1;
-                }
-                outputDepth = kernelSize[2] === 2 ? 8 : 6;
-                if (padding === 'same') {
-                  outputDepth += kernelSize[1] - 1;
-                }
-              }
-              let expectedShape: [number, number, number, number, number];
-              if (dataFormat === 'channelsFirst') {
-                expectedShape =
-                    [2, filters, outputRows, outputCols, outputDepth];
-              } else {
-                expectedShape =
-                    [2, outputRows, outputCols, outputDepth, filters];
-              }
+              const outputRows = convolutionOutputSize(
+                  11, kernelSize[0], stride === undefined ? kernelSize[0] : stride,
+                  padding);
+              const outputCols = convolutionOutputSize(
+                  9, kernelSize[1], stride === undefined ? kernelSize[1] : stride,
+                  padding);
+              const outputDepth = convolutionOutputSize(
+                  9, kernelSize[2], stride === undefined ? kernelSize[2] : stride,
+                  padding);
+              const expectedShape: [number, number, number, number, number] =
+                  dataFormat === 'channelsFirst' ?
+                  [2, filters, outputRows, outputCols, outputDepth] :
+                  [2, outputRows, outputCols, outputDepth, filters];
 
               expect(output.shape).toEqual(expectedShape);
               expect(output.dtype).toEqual(symbolicInput.dtype);
