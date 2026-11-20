@@ -161,7 +161,9 @@ function foldSimpleNestedBranches(node: ts.IfStatement, source: ts.SourceFile): 
   const before = source.text.slice(node.thenStatement.getStart(source) + 1, inner.getStart(source));
   const between = source.text.slice(inner.thenStatement.end, alternate.getStart(source));
   const after = source.text.slice(alternate.end, node.thenStatement.end - 1);
-  if (hasComments(before) || hasComments(between) || hasComments(after)) return null;
+  if (hasComments(before) || hasComments(between) || hasComments(after) ||
+      hasComments(inner.thenStatement.getFullText(source)) ||
+      hasComments(alternate.getFullText(source))) return null;
   const chosen = inner.expression.getText(source);
   const firstReturn = returnValue(inner.thenStatement);
   const nextReturn = returnValue(alternate);
