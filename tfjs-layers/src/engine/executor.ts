@@ -72,14 +72,23 @@ export class FeedDict {
           this.id2Mask[id] = feeds.id2Mask[id];
         }
       }
-    } else {
-      if (feeds == null) {
-        return;
-      }
-      for (const feed of feeds) {
-        this.add(feed.key, feed.value);
-      }
+      return;
     }
+    if (feeds == null) {
+      return;
+    }
+    for (const feed of feeds) {
+      this.add(feed.key, feed.value);
+    }
+  }
+
+  /** Map a feed name to its existing tensor ID, retaining its original error. */
+  private namedFeedId(name: string): number {
+    const id = this.name2Id[name];
+    if (id == null) {
+      throw new ValueError(`Feed dict has no SymbolicTensor name: ${name}`);
+    }
+    return id;
   }
 
   /**
@@ -138,20 +147,13 @@ export class FeedDict {
    * @throws ValueError: If `key` does not exist in this `FeedDict`.
    */
   getValue(key: SymbolicTensor|string): Tensor {
-    if (!(key instanceof SymbolicTensor)) {
-      const id = this.name2Id[key];
-      if (id == null) {
-        throw new ValueError(`Feed dict has no SymbolicTensor name: ${key}`);
-      }
-      return this.id2Value[id];
+    if (typeof key === 'string') {
+      return this.id2Value[this.namedFeedId(key)];
     }
-    {
-      if (this.id2Value[key.id] == null) {
-        throw new ValueError(`Nonexistent key: ${key.name}`);
-      } else {
-        return this.id2Value[key.id];
-      }
+    if (this.id2Value[key.id] == null) {
+      throw new ValueError(`Nonexistent key: ${key.name}`);
     }
+    return this.id2Value[key.id];
   }
 
   /**
@@ -162,20 +164,13 @@ export class FeedDict {
    * @throws ValueError: If `key` does not exist in this `FeedDict`.
    */
   getMask(key: SymbolicTensor|string): Tensor {
-    if (!(key instanceof SymbolicTensor)) {
-      const id = this.name2Id[key];
-      if (id == null) {
-        throw new ValueError(`Feed dict has no SymbolicTensor name: ${key}`);
-      }
-      return this.id2Mask[id];
+    if (typeof key === 'string') {
+      return this.id2Mask[this.namedFeedId(key)];
     }
-    {
-      if (this.id2Value[key.id] == null) {
-        throw new ValueError(`Nonexistent key: ${key.name}`);
-      } else {
-        return this.id2Mask[key.id];
-      }
+    if (this.id2Value[key.id] == null) {
+      throw new ValueError(`Nonexistent key: ${key.name}`);
     }
+    return this.id2Mask[key.id];
   }
 
   /** Dispose all mask Tensors held by this object. */
@@ -326,14 +321,12 @@ export function execute(
       if (mask != null) {
         maskExists = true;
       }
-      if (!(!training)) continue;
-      {
-        recipientCounts[input.name]--;
-        if (recipientCounts[input.name] === 0 && !feedDict.hasKey(input) &&
-            outputNames.indexOf(input.name) === -1 && !value.isDisposed &&
-            input.sourceLayer.stateful !== true) {
-          tensorsToDispose.push(value);
-        }
+      if (training) continue;
+      recipientCounts[input.name]--;
+      if (recipientCounts[input.name] === 0 && !feedDict.hasKey(input) &&
+          outputNames.indexOf(input.name) === -1 && !value.isDisposed &&
+          input.sourceLayer.stateful !== true) {
+        tensorsToDispose.push(value);
       }
     }
 
