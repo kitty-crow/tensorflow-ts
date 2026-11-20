@@ -86,6 +86,63 @@ export function isDataDict(x: Tensor|Tensor[]|
 }
 
 /**
+ * Report an input where no model inputs are expected. Empty arrays still count
+ * as supplied data, matching the historical behaviour of this validator.
+ */
+function hasUnexpectedInputData(
+    data: Tensor|Tensor[]|{[inputName: string]: Tensor}): boolean {
+  if (data == null) {
+    return false;
+  }
+  if (isDataDict(data)) {
+    for (const key in data) {
+      if (data.hasOwnProperty(key)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
+/** Resolve and validate each supported tensor input representation. */
+function collectInputTensors(
+    data: Tensor|Tensor[]|{[inputName: string]: Tensor}, names: string[],
+    exceptionPrefix: string): Tensor[] {
+  if (isDataDict(data)) {
+    const values = data as {[inputName: string]: Tensor};
+    const tensors: Tensor[] = [];
+    for (const name of names) {
+      if (values[name] == null) {
+        throw new ValueError(
+            `No data provided for "${name}". Need data for each key in: ` +
+            `${names}`);
+      }
+      tensors.push(values[name]);
+    }
+    return tensors;
+  }
+  if (isDataArray(data)) {
+    const values = data as Tensor[];
+    if (values.length !== names.length) {
+      throw new ValueError(
+          `Error when checking model ${exceptionPrefix}: the Array of ` +
+          `Tensors that you are passing to your model is not the size the ` +
+          `model expected. Expected to see ${names.length} Tensor(s), but ` +
+          `instead got the following list of Tensor(s): ${values}`);
+    }
+    return values;
+  }
+  const value = data as Tensor;
+  if (names.length > 1) {
+    throw new ValueError(
+        `The model ${exceptionPrefix} expects ${names.length} Tensor(s), ` +
+        `but only received one Tensor. Found: Tensor with shape ${value.shape}`);
+  }
+  return [value];
+}
+
+/**
  * Normalizes inputs and targets provided by users.
  * @param data User-provided input data (polymorphic).
  * @param names An Array of expected Tensor names.
@@ -100,28 +157,10 @@ export function standardizeInputData(
     data: Tensor|Tensor[]|{[inputName: string]: Tensor}, names: string[],
     shapes?: Shape[], checkBatchAxis = true, exceptionPrefix = ''): Tensor[] {
   if (names == null || names.length === 0) {
-    // Check for the case where the model expected no data, but some data got
-    // sent.
-    if (data != null) {
-      let gotUnexpectedData = false;
-      if (isDataArray(data) && (data as Tensor[]).length > 0) {
-        gotUnexpectedData = true;
-      } else if (isDataDict(data)) {
-        for (const key in data) {
-          if (data.hasOwnProperty(key)) {
-            gotUnexpectedData = true;
-            break;
-          }
-        }
-      } else {
-        // `data` is a singleton Tensor in this case.
-        gotUnexpectedData = true;
-      }
-      if (gotUnexpectedData) {
-        throw new ValueError(
-            `Error when checking model ${exceptionPrefix} expected no data, ` +
-            `but got ${data}`);
-      }
+    if (hasUnexpectedInputData(data)) {
+      throw new ValueError(
+          `Error when checking model ${exceptionPrefix} expected no data, ` +
+          `but got ${data}`);
     }
     return [];
   }
@@ -129,38 +168,7 @@ export function standardizeInputData(
     return names.map(name => null);
   }
 
-  let arrays: Tensor[];
-  if (isDataDict(data)) {
-    data = data as {[inputName: string]: Tensor};
-    arrays = [];
-    for (const name of names) {
-      if (data[name] == null) {
-        throw new ValueError(
-            `No data provided for "${name}". Need data for each key in: ` +
-            `${names}`);
-      }
-      arrays.push(data[name]);
-    }
-  } else if (isDataArray(data)) {
-    data = data as Tensor[];
-    if (data.length !== names.length) {
-      throw new ValueError(
-          `Error when checking model ${exceptionPrefix}: the Array of ` +
-          `Tensors that you are passing to your model is not the size the ` +
-          `model expected. Expected to see ${names.length} Tensor(s), but ` +
-          `instead got the following list of Tensor(s): ${data}`);
-    }
-    arrays = data;
-  } else {
-    data = data as Tensor;
-    if (names.length > 1) {
-      throw new ValueError(
-          `The model ${exceptionPrefix} expects ${names.length} Tensor(s), ` +
-          `but only received one Tensor. Found: Tensor with shape ${
-              data.shape}`);
-    }
-    arrays = [data];
-  }
+  let arrays = collectInputTensors(data, names, exceptionPrefix);
 
   arrays = ensureTensorsRank2OrHigher(arrays);
 
