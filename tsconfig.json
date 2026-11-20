@@ -21,6 +21,9 @@
       "@tensorflow/tfjs-core": [
         "./tfjs-core/src/index.ts",
       ],
+      "@tensorflow/tfjs-core/test_util": [
+        "./tfjs-core/src/test_util.ts",
+      ],
       "@tensorflow/tfjs-data": [
         "./tfjs-data/src/index.ts",
       ],
