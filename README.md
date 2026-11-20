@@ -49,3 +49,7 @@ For live granularity during the strict scan, use `bun run guards:strict --progre
 The CI workflow currently runs only the strict `no-nested-if` Code Guards rule while neural analysis is being optimised upstream. Source files and tests remain in scope; vendored dependencies are excluded. Run the same local check with `bun run guards:nested --format github --progress`. The existing `bun run guards:strict` command remains available for the complete 23-rule scan. Restore full CI enforcement when Code Guards performance is suitable for this repository.
 
 The temporary nested-conditional CI also publishes an unmodified `nested-conditional-inventory` JSON artifact, and prints the most affected source files and the first exact locations in the job log. The final strict scan still fails on any finding.
+
+## Nested conditional refactoring baseline
+
+The strict Code Guards `no-nested-if` CI guard reports **errors**, not advisory warnings. The current baseline after behaviour-preserving refactoring is **887 CG001 findings**. An AST-guided maintenance tool at `scripts/flatten-nested-conditionals.ts` supports `--apply` for narrowly justified transformations. The separate `Safe Nested Conditional Refactoring` workflow generates a patch artifact for review but **does not automatically push changes**. CI keeps the exact source location inventory available as an artifact. Remaining findings must be reviewed and refactored without changing TensorFlow's external APIs or runtime behaviour.
