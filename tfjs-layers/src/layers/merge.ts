@@ -29,6 +29,26 @@ import {getExactlyOneShape} from '../utils/types_utils';
  *
  * Used to implement `Sum`, `Average`, `Concatenate`, etc.
  */
+/** Resolve a single broadcast axis, preserving the original error shape. */
+function broadcastDimension(
+    i: number, j: number, shape1: Shape, shape2: Shape): number {
+  if (i == null || j == null || i < 0 || j < 0) {
+    return null;
+  }
+  if (i === 1) {
+    return j;
+  }
+  if (j === 1) {
+    return i;
+  }
+  if (i !== j) {
+    throw new ValueError(
+        'Operands could not be broadcast together with shapes ' +
+        JSON.stringify(shape1) + ' ' + JSON.stringify(shape2));
+  }
+  return i;
+}
+
 export abstract class Merge extends Layer {
   protected reshapeRequired: boolean;
 
@@ -69,20 +89,7 @@ export abstract class Merge extends Layer {
     for (let k = 0; k < shape2.length; ++k) {
       const i = shape1[shape1.length - shape2.length + k];
       const j = shape2[k];
-      if (i == null || j == null || i < 0 || j < 0) {
-        outputShape.push(null);
-      } else if (i === 1) {
-        outputShape.push(j);
-      } else if (j === 1) {
-        outputShape.push(i);
-      } else {
-        if (i !== j) {
-          throw new ValueError(
-              'Operands could not be broadcast together with shapes ' +
-              JSON.stringify(shape1) + ' ' + JSON.stringify(shape2));
-        }
-        outputShape.push(i);
-      }
+      outputShape.push(broadcastDimension(i, j, shape1, shape2));
     }
     return outputShape;
   }
@@ -763,12 +770,14 @@ export class Concatenate extends Merge {
         if (mask[i] == null) {
           // Input is unmasked. Append all 1's to masks.
           outputMasks.push(tfc.cast(tfc.onesLike(inputs[i]), 'bool'));
-        } else if (mask[i].rank < inputs[i].rank) {
+          continue;
+        }
+        if (mask[i].rank < inputs[i].rank) {
           // Mask is smaller than the input, expand it.
           outputMasks.push(tfc.expandDims(mask[i], -1));
-        } else {
-          outputMasks.push(mask[i]);
+          continue;
         }
+        outputMasks.push(mask[i]);
       }
       const concatenatedMasks = tfc.concat(outputMasks, this.axis);
       return tfc.all(concatenatedMasks, -1, false);
