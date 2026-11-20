@@ -24,6 +24,10 @@ jobs:
         run: bun scripts/flatten-nested-conditionals.ts --apply --guarded-returns-only
       - name: Check Core and Layers TypeScript after refactoring
         run: bun x tsc --noEmit --pretty false --project tfjs-layers/tsconfig.json
+      - name: Check Data TypeScript after refactoring
+        run: bun x tsc --noEmit --pretty false --project tfjs-data/tsconfig.json
+      - name: Check CPU backend TypeScript after refactoring
+        run: bun x tsc --noEmit --pretty false --project tfjs-backend-cpu/tsconfig.json
       - name: Check WebGL TypeScript after refactoring
         run: bun x tsc --noEmit --pretty false --project tfjs-backend-webgl/tsconfig.json
       - name: Verify changed-file formatting
@@ -39,7 +43,7 @@ jobs:
       - name: Measure remaining nested conditionals
         run: |
           bun vendor/code-guards/dist/src/cli.js no-nested-if --project tsconfig.code-guards.json --format json > remaining-nested-conditions.json
-          bun -e 'const fs=require("fs"); const issues=JSON.parse(fs.readFileSync("remaining-nested-conditions.json","utf8")); console.log("Remaining CG001 findings:",issues.length); if(issues.length>=744) process.exit(1);'
+          bun -e 'const fs=require("fs"); const issues=JSON.parse(fs.readFileSync("remaining-nested-conditions.json","utf8")); console.log("Remaining CG001 findings:",issues.length); if(issues.length>=682) process.exit(1);'
       - name: Create reviewed patch
         run: git diff --binary > nested-conditional-refactor.patch
       - uses: actions/upload-artifact@v4
