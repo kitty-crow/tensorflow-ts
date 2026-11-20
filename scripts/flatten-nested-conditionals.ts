@@ -118,18 +118,27 @@ function switchDispatch(node: ts.IfStatement, source: ts.SourceFile): Edit | nul
   const otherwise = next.elseStatement;
   if (otherwise !== undefined && unlabelledBreak(otherwise)) return null;
   const pad = indentation(source, node.getStart(source));
-  const caseStrings = choices.map(choice => {
-    const body = choice.body.getText(source);
-    return '  case ' + choice.literal + ':\n    ' + body +
-      (returnOrThrow(choice.body) ? '' : '\n    break;');
-  });
-  if (otherwise !== undefined) caseStrings.push('  default:\n    ' + otherwise.getText(source));
+  const caseBody = (body: ts.Statement): string => {
+    const text = body.getText(source);
+    const raw = ts.isBlock(body) ? text.slice(1, -1) : text;
+    const lines = raw.replace(/^\s*\n/, '').replace(/\n\s*$/, '').split('\n');
+    const nonempty = lines.filter(line => line.trim().length > 0);
+    const margin = Math.min(...nonempty.map(line => (line.match(/^[ \t]*/) ?? [''])[0].length));
+    return lines.map(line => pad + '    ' + line.slice(margin)).join('\n');
+  };
+  const caseStrings = choices.map(choice =>
+    pad + '  case ' + choice.literal + ': {\n' +
+    caseBody(choice.body) +
+    (returnOrThrow(choice.body) ? '' : '\n' + pad + '    break;') +
+    '\n' + pad + '  }');
+  if (otherwise !== undefined) {
+    caseStrings.push(pad + '  default: {\n' + caseBody(otherwise) + '\n' + pad + '  }');
+  }
   return {
     start: node.getStart(source),
     end: node.end,
     replacement: 'switch (' + first.identifier + ') {\n' +
-      caseStrings.map(text => text.split('\n').map(line => pad + line).join('\n')).join('\n') +
-      '\n' + pad + '}',
+      caseStrings.join('\n') + '\n' + pad + '}',
     kind: 'literal-dispatch switch'
   };
 }
