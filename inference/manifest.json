@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "format": "sha256-score-shards",
+  "description": "Content-addressed MobileBERT window scores. No source text is stored."
+}
