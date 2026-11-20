@@ -87,7 +87,10 @@ function deepMapInternal(
     seen.set(input, result.value);
     return result.value;
   }
-  if (isIterable(input)) {
+  if (!(isIterable(input))) {
+    throw new Error(`Can't recurse into non-iterable type: ${input}`);
+  }
+  {
     // tslint:disable-next-line:no-any
     const mappedIterable: any|any[] = Array.isArray(input) ? [] : {};
     containedIn.add(input);
@@ -101,8 +104,6 @@ function deepMapInternal(
       mappedIterable.__proto__ = input.__proto__;
     }
     return mappedIterable;
-  } else {
-    throw new Error(`Can't recurse into non-iterable type: ${input}`);
   }
 }
 

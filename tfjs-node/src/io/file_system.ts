@@ -209,15 +209,16 @@ export class NodeFileSystem implements tf.io.IOHandler {
       try {
         await mkdir(path);
       } catch (e) {
-        if (e.code === 'EEXIST') {
+        if (!(e.code === 'EEXIST')) {
+          throw e;
+        }
+        {
           if ((await stat(path)).isFile()) {
             throw new Error(
                 `Path ${path} exists as a file. The path must be ` +
                 `nonexistent or point to a directory.`);
           }
           // else continue, the directory exists
-        } else {
-          throw e;
         }
       }
     }

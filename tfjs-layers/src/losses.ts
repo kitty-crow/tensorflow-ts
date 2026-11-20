@@ -259,7 +259,10 @@ export const lossesMap: {[functionName: string]: LossOrMetricFn} = {
 // Porting note: This diverges from the PyKeras implementation and may need to
 // change based on (de)serialization requirements.
 export function get(identifierOrFn: string|LossOrMetricFn): LossOrMetricFn {
-  if (typeof identifierOrFn === 'string') {
+  if (!(typeof identifierOrFn === 'string')) {
+    return identifierOrFn;
+  }
+  {
     if (identifierOrFn in lossesMap) {
       return lossesMap[identifierOrFn];
     }
@@ -270,7 +273,5 @@ export function get(identifierOrFn: string|LossOrMetricFn): LossOrMetricFn {
           'tf.losses.softmaxCrossEntropy';
     }
     throw new ValueError(errMsg);
-  } else {
-    return identifierOrFn;
   }
 }

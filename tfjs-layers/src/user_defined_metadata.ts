@@ -66,7 +66,12 @@ export function plainObjectCheck(x: any): boolean {
     // Note: typeof `null` is 'object', and `null` is valid in JSON.
     return true;
   }
-  if (typeof x === 'object') {
+  if (!(typeof x === 'object')) {
+    // `x` is not a JavaScript object or `null`.
+    const xType = typeof x;
+    return xType === 'string' || xType === 'number' || xType === 'boolean';
+  }
+  {
     if (Object.getPrototypeOf(x) === Object.prototype) {
       // `x` is a JavaScript object and its prototype is Object.
       const keys = Object.keys(x);
@@ -82,7 +87,13 @@ export function plainObjectCheck(x: any): boolean {
       return true;
     } else {
       // `x` is a JavaScript object but its prototype is not Object.
-      if (Array.isArray(x)) {
+      if (!(Array.isArray(x))) {
+        // `x` is a JavaScript object and its prototype is not Object,
+        // and it's not an Array. I.e., it's a complex object such as
+        // `Error` and `Date`.
+        return false;
+      }
+      {
         // `x` is a JavaScript array.
         for (const item of x) {
           if (!plainObjectCheck(item)) {  // Recursive call.
@@ -90,16 +101,7 @@ export function plainObjectCheck(x: any): boolean {
           }
         }
         return true;
-      } else {
-        // `x` is a JavaScript object and its prototype is not Object,
-        // and it's not an Array. I.e., it's a complex object such as
-        // `Error` and `Date`.
-        return false;
       }
     }
-  } else {
-    // `x` is not a JavaScript object or `null`.
-    const xType = typeof x;
-    return xType === 'string' || xType === 'number' || xType === 'boolean';
   }
 }

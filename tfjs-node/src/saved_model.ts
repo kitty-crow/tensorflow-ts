@@ -236,7 +236,10 @@ export class TFSavedModel implements InferenceModel {
    * @doc {heading: 'Models', subheading: 'SavedModel'}
    */
   dispose() {
-    if (!this.disposed) {
+    if (!(!this.disposed)) {
+      throw new Error('This SavedModel has already been deleted.');
+    }
+    {
       this.disposed = true;
 
       loadedSavedModelPathMap.delete(this.jsid);
@@ -247,8 +250,6 @@ export class TFSavedModel implements InferenceModel {
         }
       }
       this.backend.deleteSavedModel(this.sessionId);
-    } else {
-      throw new Error('This SavedModel has already been deleted.');
     }
   }
 

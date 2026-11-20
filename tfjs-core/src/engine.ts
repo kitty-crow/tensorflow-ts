@@ -236,14 +236,15 @@ export class Engine implements TensorTracker, DataMover {
     if (!(backendName in this.registry)) {
       // If the backend hasn't been initialized but we have a registry entry for
       // it, initialize it and return it.
-      if (backendName in this.registryFactory) {
+      if (!(backendName in this.registryFactory)) {
+        return null;
+      }
+      {
         const {asyncInit} = this.initializeBackend(backendName);
         if (asyncInit) {
           // Backend is not ready yet.
           return null;
         }
-      } else {
-        return null;
       }
     }
     return this.registry[backendName];

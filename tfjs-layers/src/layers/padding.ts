@@ -191,19 +191,7 @@ export class ZeroPadding2D extends Layer {
 
     let rows: number;
     let cols: number;
-    if (this.dataFormat === 'channelsFirst') {
-      if (inputShape[2] != null && inputShape[2] >= 0) {
-        rows = inputShape[2] + this.padding[0][0] + this.padding[0][1];
-      } else {
-        rows = null;
-      }
-      if (inputShape[3] != null && inputShape[3] >= 0) {
-        cols = inputShape[3] + this.padding[1][0] + this.padding[1][1];
-      } else {
-        cols = null;
-      }
-      return [inputShape[0], inputShape[1], rows, cols];
-    } else {
+    if (!(this.dataFormat === 'channelsFirst')) {
       if (inputShape[1] != null && inputShape[1] >= 0) {
         rows = inputShape[1] + this.padding[0][0] + this.padding[0][1];
       } else {
@@ -215,6 +203,19 @@ export class ZeroPadding2D extends Layer {
         cols = null;
       }
       return [inputShape[0], rows, cols, inputShape[3]];
+    }
+    {
+      if (inputShape[2] != null && inputShape[2] >= 0) {
+        rows = inputShape[2] + this.padding[0][0] + this.padding[0][1];
+      } else {
+        rows = null;
+      }
+      if (inputShape[3] != null && inputShape[3] >= 0) {
+        cols = inputShape[3] + this.padding[1][0] + this.padding[1][1];
+      } else {
+        cols = null;
+      }
+      return [inputShape[0], inputShape[1], rows, cols];
     }
   }
 

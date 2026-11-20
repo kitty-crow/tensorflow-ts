@@ -93,14 +93,15 @@ export class FeedDict {
    *   `FeedDict`.
    */
   add(key: SymbolicTensor, value: Tensor, mask?: Tensor): FeedDict {
-    if (this.id2Value[key.id] == null) {
+    if (!(this.id2Value[key.id] == null)) {
+      throw new ValueError(`Duplicate key: name=${key.name}, id=${key.id}`);
+    }
+    {
       this.id2Value[key.id] = assertFeedCompatibility(key, value);
       this.name2Id[key.name] = key.id;
       if (mask != null) {
         this.id2Mask[key.id] = mask;
       }
-    } else {
-      throw new ValueError(`Duplicate key: name=${key.name}, id=${key.id}`);
     }
     return this;
   }
@@ -137,18 +138,19 @@ export class FeedDict {
    * @throws ValueError: If `key` does not exist in this `FeedDict`.
    */
   getValue(key: SymbolicTensor|string): Tensor {
-    if (key instanceof SymbolicTensor) {
-      if (this.id2Value[key.id] == null) {
-        throw new ValueError(`Nonexistent key: ${key.name}`);
-      } else {
-        return this.id2Value[key.id];
-      }
-    } else {
+    if (!(key instanceof SymbolicTensor)) {
       const id = this.name2Id[key];
       if (id == null) {
         throw new ValueError(`Feed dict has no SymbolicTensor name: ${key}`);
       }
       return this.id2Value[id];
+    }
+    {
+      if (this.id2Value[key.id] == null) {
+        throw new ValueError(`Nonexistent key: ${key.name}`);
+      } else {
+        return this.id2Value[key.id];
+      }
     }
   }
 
@@ -160,18 +162,19 @@ export class FeedDict {
    * @throws ValueError: If `key` does not exist in this `FeedDict`.
    */
   getMask(key: SymbolicTensor|string): Tensor {
-    if (key instanceof SymbolicTensor) {
-      if (this.id2Value[key.id] == null) {
-        throw new ValueError(`Nonexistent key: ${key.name}`);
-      } else {
-        return this.id2Mask[key.id];
-      }
-    } else {
+    if (!(key instanceof SymbolicTensor)) {
       const id = this.name2Id[key];
       if (id == null) {
         throw new ValueError(`Feed dict has no SymbolicTensor name: ${key}`);
       }
       return this.id2Mask[id];
+    }
+    {
+      if (this.id2Value[key.id] == null) {
+        throw new ValueError(`Nonexistent key: ${key.name}`);
+      } else {
+        return this.id2Mask[key.id];
+      }
     }
   }
 

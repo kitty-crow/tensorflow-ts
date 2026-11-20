@@ -140,7 +140,12 @@ export async function standardizeWeights(
         // Assume class indices.
         return clone(y) as Tensor1D;
       }
-      if (y.shape.length === 2) {
+      if (!(y.shape.length === 2)) {
+        throw new Error(
+            `Unexpected rank of target (y) tensor (${y.rank}) during ` +
+            `handling of class weights. The rank is expected to be 1 or 2.`);
+      }
+      {
         if (y.shape[1] > 1) {
           // Assume one-hot encoding of classes.
           const axis = 1;
@@ -155,10 +160,6 @@ export async function standardizeWeights(
               `during handling of class weights. The size is expected to be ` +
               `>= 1.`);
         }
-      } else {
-        throw new Error(
-            `Unexpected rank of target (y) tensor (${y.rank}) during ` +
-            `handling of class weights. The rank is expected to be 1 or 2.`);
       }
     });
 

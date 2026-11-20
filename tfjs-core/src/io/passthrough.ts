@@ -106,7 +106,22 @@ export function fromMemory(
 export function fromMemorySync(
     modelArtifacts: {}|ModelArtifacts, weightSpecs?: WeightsManifestEntry[],
     weightData?: WeightData, trainingConfig?: TrainingConfig): IOHandlerSync {
-  if (arguments.length === 1) {
+  if (!(arguments.length === 1)) {
+    // Legacy support.
+    // TODO(cais): Remove this deprecated API.
+    console.warn(
+        'Please call tf.io.fromMemory() with only one argument. ' +
+        'The argument should be of type ModelArtifacts. ' +
+        'The multi-argument signature of tf.io.fromMemory() has been ' +
+        'deprecated and will be removed in a future release.');
+    return new PassthroughLoader({
+      modelTopology: modelArtifacts as {},
+      weightSpecs,
+      weightData,
+      trainingConfig
+    });
+  }
+  {
     const isModelArtifacts =
         (modelArtifacts as ModelArtifacts).modelTopology != null ||
         (modelArtifacts as ModelArtifacts).weightSpecs != null;
@@ -122,20 +137,6 @@ export function fromMemorySync(
           'deprecated and will be removed in a future release.');
       return new PassthroughLoader({modelTopology: modelArtifacts as {}});
     }
-  } else {
-    // Legacy support.
-    // TODO(cais): Remove this deprecated API.
-    console.warn(
-        'Please call tf.io.fromMemory() with only one argument. ' +
-        'The argument should be of type ModelArtifacts. ' +
-        'The multi-argument signature of tf.io.fromMemory() has been ' +
-        'deprecated and will be removed in a future release.');
-    return new PassthroughLoader({
-      modelTopology: modelArtifacts as {},
-      weightSpecs,
-      weightData,
-      trainingConfig
-    });
   }
 }
 

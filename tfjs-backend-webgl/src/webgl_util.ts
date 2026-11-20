@@ -611,14 +611,7 @@ export function isDownloadFloatTextureEnabled(webGLVersion: number): boolean {
 
   const gl = getWebGLContext(webGLVersion);
 
-  if (webGLVersion === 1) {
-    if (!hasExtension(gl, 'OES_texture_float')) {
-      return false;
-    }
-    if (!hasExtension(gl, 'WEBGL_color_buffer_float')) {
-      return false;
-    }
-  } else {
+  if (!(webGLVersion === 1)) {
     if (hasExtension(gl, 'EXT_color_buffer_float')) {
       return createFloatTextureAndBindToFramebuffer(gl);
     }
@@ -632,6 +625,14 @@ export function isDownloadFloatTextureEnabled(webGLVersion: number): boolean {
     }
 
     return false;
+  }
+  {
+    if (!hasExtension(gl, 'OES_texture_float')) {
+      return false;
+    }
+    if (!hasExtension(gl, 'WEBGL_color_buffer_float')) {
+      return false;
+    }
   }
 
   const isFrameBufferComplete = createFloatTextureAndBindToFramebuffer(gl);

@@ -109,7 +109,15 @@ export function fftImpl(
       cpuBackend.data.get(inputVals.complexTensorInfos.imag.dataId).values as
       Float32Array;
 
-  if (isExponentOf2(inputSize)) {
+  if (!(isExponentOf2(inputSize))) {
+    const data = backend_util.mergeRealAndImagArrays(realVals, imagVals);
+
+    const rawOutput =
+        fourierTransformByMatmul(data, inputSize, inverse) as Float32Array;
+
+    return backend_util.splitRealAndImagArrays(rawOutput);
+  }
+  {
     const result =
         fftRadix2(realVals, imagVals, inputSize, inverse, cpuBackend);
 
@@ -152,13 +160,6 @@ export function fftImpl(
     }
 
     return result;
-  } else {
-    const data = backend_util.mergeRealAndImagArrays(realVals, imagVals);
-
-    const rawOutput =
-        fourierTransformByMatmul(data, inputSize, inverse) as Float32Array;
-
-    return backend_util.splitRealAndImagArrays(rawOutput);
   }
 }
 

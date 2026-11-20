@@ -347,7 +347,11 @@ export class VarianceScaling extends Initializer {
       scale /= Math.max(1, (fanIn + fanOut) / 2);
     }
 
-    if (this.distribution === 'normal') {
+    if (!(this.distribution === 'normal')) {
+      const limit = Math.sqrt(3 * scale);
+      return randomUniform(shape, -limit, limit, dtype, this.seed);
+    }
+    {
       const stddev = Math.sqrt(scale);
       dtype = dtype || 'float32';
       if (dtype !== 'float32' && dtype !== 'int32') {
@@ -355,9 +359,6 @@ export class VarianceScaling extends Initializer {
             `${this.getClassName()} does not support dType ${dtype}.`);
       }
       return truncatedNormal(shape, 0, stddev, dtype, this.seed);
-    } else {
-      const limit = Math.sqrt(3 * scale);
-      return randomUniform(shape, -limit, limit, dtype, this.seed);
     }
   }
 

@@ -559,22 +559,23 @@ export class GPGPUContext {
       return true;
     }
 
-    if (queryTimerVersion === 2) {
-      const gl2 = this.gl as WebGL2RenderingContext;
-      const ext = this.getQueryTimerExtensionWebGL2();
+    if (!(queryTimerVersion === 2)) {
+      const ext = this.getQueryTimerExtensionWebGL1();
 
       const available =
-          gl2.getQueryParameter(query, gl2.QUERY_RESULT_AVAILABLE);
+          ext.getQueryObjectEXT(query, ext.QUERY_RESULT_AVAILABLE_EXT);
       if (this.disjoint == null) {
         this.disjoint = this.gl.getParameter(ext.GPU_DISJOINT_EXT);
       }
 
       return available && !this.disjoint;
-    } else {
-      const ext = this.getQueryTimerExtensionWebGL1();
+    }
+    {
+      const gl2 = this.gl as WebGL2RenderingContext;
+      const ext = this.getQueryTimerExtensionWebGL2();
 
       const available =
-          ext.getQueryObjectEXT(query, ext.QUERY_RESULT_AVAILABLE_EXT);
+          gl2.getQueryParameter(query, gl2.QUERY_RESULT_AVAILABLE);
       if (this.disjoint == null) {
         this.disjoint = this.gl.getParameter(ext.GPU_DISJOINT_EXT);
       }

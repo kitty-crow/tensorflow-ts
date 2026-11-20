@@ -48,14 +48,15 @@ describeWithFlags('IORouterRegistry', BROWSER_ENVS, () => {
 
   const fakeMultiStringRouter = (url: string|string[]) => {
     const scheme = 'foo://';
-    if (Array.isArray(url) && url.length === 2) {
+    if (!(Array.isArray(url) && url.length === 2)) {
+      return null;
+    }
+    {
       if (url[0].startsWith(scheme) && url[1].startsWith(scheme)) {
         return new FakeIOHandler(url[0], url[1]);
       } else {
         return null;
       }
-    } else {
-      return null;
     }
   };
 

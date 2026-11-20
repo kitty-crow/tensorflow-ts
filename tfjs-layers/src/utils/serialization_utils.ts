@@ -53,19 +53,7 @@ export function convertPythonicToTs(
       (typeof pythonicConfig === 'boolean')) {
     return pythonicConfig;
   }
-  if (pythonicConfig instanceof Array) {
-    const tsArray = [];
-    const arrayLength = pythonicConfig.length;
-    for (let i = 0; i < arrayLength; ++i) {
-      const item = pythonicConfig[i];
-      if (isArrayItemInputOrOutputName(key, i, item)) {
-        tsArray.push(item);
-      } else {
-        tsArray.push(convertPythonicToTs(item, key));
-      }
-    }
-    return tsArray;
-  } else {
+  if (!(pythonicConfig instanceof Array)) {
     const tsDict: serialization.ConfigDict = {};
     for (const pythonicKey of Object.keys(pythonicConfig)) {
       const pythonicValue = pythonicConfig[pythonicKey];
@@ -80,6 +68,19 @@ export function convertPythonicToTs(
       }
     }
     return tsDict;
+  }
+  {
+    const tsArray = [];
+    const arrayLength = pythonicConfig.length;
+    for (let i = 0; i < arrayLength; ++i) {
+      const item = pythonicConfig[i];
+      if (isArrayItemInputOrOutputName(key, i, item)) {
+        tsArray.push(item);
+      } else {
+        tsArray.push(convertPythonicToTs(item, key));
+      }
+    }
+    return tsArray;
   }
 }
 
@@ -100,19 +101,7 @@ export function convertTsToPythonic(
   if ((typeof tsConfig === 'number') || (typeof tsConfig === 'boolean')) {
     return tsConfig;
   }
-  if (tsConfig instanceof Array) {
-    const pyArray = [];
-    const arrayLength = tsConfig.length;
-    for (let i = 0; i < arrayLength; ++i) {
-      const item = tsConfig[i];
-      if (isArrayItemInputOrOutputName(key, i, item)) {
-        pyArray.push(item);
-      } else {
-        pyArray.push(convertTsToPythonic(item, key));
-      }
-    }
-    return pyArray;
-  } else {
+  if (!(tsConfig instanceof Array)) {
     const pyDict: serialization.ConfigDict = {};
     for (const tsKey of Object.keys(tsConfig)) {
       const tsValue = tsConfig[tsKey];
@@ -128,5 +117,18 @@ export function convertTsToPythonic(
       }
     }
     return pyDict;
+  }
+  {
+    const pyArray = [];
+    const arrayLength = tsConfig.length;
+    for (let i = 0; i < arrayLength; ++i) {
+      const item = tsConfig[i];
+      if (isArrayItemInputOrOutputName(key, i, item)) {
+        pyArray.push(item);
+      } else {
+        pyArray.push(convertTsToPythonic(item, key));
+      }
+    }
+    return pyArray;
   }
 }

@@ -995,38 +995,7 @@ export abstract class Layer extends serialization.Serializable {
       // TODO(michaelterry): Mask propagation not currently implemented.
 
       // Actually call the layer, collecting output(s), mask(s), and shape(s).
-      if (noneAreSymbolic) {
-        let output = this.call(inputs, kwargs);
-
-        // Apply masks to the output tensors if the layer supports it.
-        if (this.supportsMasking) {
-          // TODO(mattsoulanille): pass the input tensors' masks to computeMask
-          this.setMaskMetadata(inputs, output);
-        }
-
-        // If the layer returns tensors from its inputs, unmodified,
-        // we copy them to avoid loss of tensor metadata.
-        const outputList: Tensor[] = generic_utils.toList(output);
-        const outputListCopy: Tensor[] = [];
-        // TODO(michaelterry): This copying may not be necessary given our eager
-        // backend.
-        for (let x of outputList) {
-          if (inputsList.indexOf(x) !== -1) {
-            x = x.clone();
-          }
-          outputListCopy.push(x);
-        }
-        output = generic_utils.singletonOrArray(outputListCopy);
-
-        if (this.activityRegularizer != null) {
-          throw new NotImplementedError(
-              'Layer invocation in the presence of activity ' +
-              'regularizer(s) is not supported yet.');
-        }
-
-        // TODO(michaelterry): Call addInboundNode()?
-        return output;
-      } else {
+      if (!(noneAreSymbolic)) {
         const inputShape = collectInputShape(inputs);
         const outputShape = this.computeOutputShape(inputShape);
         let output: SymbolicTensor|SymbolicTensor[];
@@ -1067,6 +1036,38 @@ export abstract class Layer extends serialization.Serializable {
               'regularizer(s) is not supported yet.');
         }
 
+        return output;
+      }
+      {
+        let output = this.call(inputs, kwargs);
+
+        // Apply masks to the output tensors if the layer supports it.
+        if (this.supportsMasking) {
+          // TODO(mattsoulanille): pass the input tensors' masks to computeMask
+          this.setMaskMetadata(inputs, output);
+        }
+
+        // If the layer returns tensors from its inputs, unmodified,
+        // we copy them to avoid loss of tensor metadata.
+        const outputList: Tensor[] = generic_utils.toList(output);
+        const outputListCopy: Tensor[] = [];
+        // TODO(michaelterry): This copying may not be necessary given our eager
+        // backend.
+        for (let x of outputList) {
+          if (inputsList.indexOf(x) !== -1) {
+            x = x.clone();
+          }
+          outputListCopy.push(x);
+        }
+        output = generic_utils.singletonOrArray(outputListCopy);
+
+        if (this.activityRegularizer != null) {
+          throw new NotImplementedError(
+              'Layer invocation in the presence of activity ' +
+              'regularizer(s) is not supported yet.');
+        }
+
+        // TODO(michaelterry): Call addInboundNode()?
         return output;
       }
     });
@@ -1132,7 +1133,14 @@ export abstract class Layer extends serialization.Serializable {
         allOutputShapes.push(shapeString);
       }
     }
-    if (allOutputShapes.length === 1) {
+    if (!(allOutputShapes.length === 1)) {
+      throw new AttributeError(
+          `The layer ${this.name} has multiple inbound nodes with different ` +
+          `output shapes. Hence the notion of "output shape" is ill-defined ` +
+          `for the layer.`);
+      // TODO(cais): Implement getOutputShapeAt().
+    }
+    {
       const outputShapes = this.inboundNodes[0].outputShapes;
       if (Array.isArray(outputShapes) && Array.isArray(outputShapes[0]) &&
           outputShapes.length === 1) {
@@ -1141,12 +1149,6 @@ export abstract class Layer extends serialization.Serializable {
         return outputShapes;
       }
 
-    } else {
-      throw new AttributeError(
-          `The layer ${this.name} has multiple inbound nodes with different ` +
-          `output shapes. Hence the notion of "output shape" is ill-defined ` +
-          `for the layer.`);
-      // TODO(cais): Implement getOutputShapeAt().
     }
   }
 

@@ -126,7 +126,10 @@ export class CSVDataset extends Dataset<TensorContainer> {
   }
 
   private async maybeReadHeaderLine() {
-    if (this.hasHeader) {
+    if (!(this.hasHeader)) {
+      return null;
+    }
+    {
       const iter = await this.base.iterator();
       const firstElement = await iter.next();
       if (firstElement.done) {
@@ -135,8 +138,6 @@ export class CSVDataset extends Dataset<TensorContainer> {
       const firstLine: string = firstElement.value;
       const headers = this.parseRow(firstLine, false);
       return headers;
-    } else {
-      return null;
     }
   }
 

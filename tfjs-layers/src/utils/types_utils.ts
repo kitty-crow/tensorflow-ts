@@ -68,14 +68,15 @@ export function getExactlyOneTensor(xs: Tensor|Tensor[]): Tensor {
  *   1.
  */
 export function getExactlyOneShape(shapes: Shape|Shape[]): Shape {
-  if (Array.isArray(shapes) && Array.isArray(shapes[0])) {
+  if (!(Array.isArray(shapes) && Array.isArray(shapes[0]))) {
+    return shapes as Shape;
+  }
+  {
     if (shapes.length === 1) {
       shapes = shapes as Shape[];
       return shapes[0];
     } else {
       throw new ValueError(`Expected exactly 1 Shape; got ${shapes.length}`);
     }
-  } else {
-    return shapes as Shape;
   }
 }

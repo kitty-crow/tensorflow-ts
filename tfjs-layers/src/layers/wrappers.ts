@@ -523,7 +523,10 @@ export class Bidirectional extends Wrapper {
         outputMask = null;
       }
     }
-    if (this.returnState) {
+    if (!(this.returnState)) {
+      return outputMask;
+    }
+    {
       const states = this.forwardLayer.states;
       const stateMask: Tensor[] = states.map(state => null);
       if (Array.isArray(outputMask)) {
@@ -531,8 +534,6 @@ export class Bidirectional extends Wrapper {
       } else {
         return [outputMask].concat(stateMask).concat(stateMask);
       }
-    } else {
-      return outputMask;
     }
   }
 

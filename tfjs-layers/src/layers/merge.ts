@@ -135,7 +135,10 @@ export abstract class Merge extends Layer {
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tidy(() => {
       inputs = inputs as Tensor[];
-      if (this.reshapeRequired) {
+      if (!(this.reshapeRequired)) {
+        return this.mergeFunction(inputs);
+      }
+      {
         const reshapedInputs: Tensor[] = [];
         const inputDims = inputs.map(input => input.rank);
         if (inputDims.indexOf(null) === -1) {
@@ -196,8 +199,6 @@ export abstract class Merge extends Layer {
           }
           return y;
         }
-      } else {
-        return this.mergeFunction(inputs);
       }
     });
   }
