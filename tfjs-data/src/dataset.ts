@@ -138,20 +138,11 @@ export abstract class Dataset<T extends tf.TensorContainer> {
     tf.util.assert(
         batchSize > 0, () => `batchSize needs to be positive, but it is
       ${batchSize}`);
-    let size;
-    if (this.size === Infinity || this.size == null) {
-      // If the size of this dataset is infinity or null, the new size keeps the
-      // same.
-      size = this.size;
-    } else if (smallLastBatch) {
-      // If the size of this dataset is known and include small last batch, the
-      // new size is full batch count plus last batch.
-      size = Math.ceil(this.size / batchSize);
-    } else {
-      // If the size of this dataset is known and not include small last batch,
-      // the new size is full batch count.
-      size = Math.floor(this.size / batchSize);
-    }
+    // Unknown and infinite sizes remain unchanged. Finite batches include
+    // the remainder only when smallLastBatch is enabled.
+    const size = this.size === Infinity || this.size == null ? this.size :
+        smallLastBatch ? Math.ceil(this.size / batchSize) :
+                         Math.floor(this.size / batchSize);
     return datasetFromIteratorFn(async () => {
       return (await base.iterator())
           .columnMajorBatch(batchSize, smallLastBatch, deepBatchConcat);
@@ -175,20 +166,11 @@ export abstract class Dataset<T extends tf.TensorContainer> {
    */
   concatenate(dataset: Dataset<T>): Dataset<T> {
     const base = this;
-    let size;
-    if (this.size === Infinity || dataset.size === Infinity) {
-      // If the size of any of these two dataset is infinity, new size is
-      // infinity.
-      size = Infinity;
-    } else if (this.size != null && dataset.size != null) {
-      // If the size of both datasets are known and not infinity, new size is
-      // sum the size of these two datasets.
-      size = this.size + dataset.size;
-    } else {
-      // If neither of these two datasets has infinite size and any of these two
-      // datasets' size is null, the new size is null.
-      size = null;
-    }
+    // Infinite input dominates, followed by the known finite sum.
+    const size = this.size === Infinity || dataset.size === Infinity ?
+        Infinity :
+        this.size != null && dataset.size != null ?
+        this.size + dataset.size : null;
     return datasetFromIteratorFn(
         async () =>
             (await base.iterator()).concatenate(await dataset.iterator()),
@@ -340,23 +322,12 @@ export abstract class Dataset<T extends tf.TensorContainer> {
    */
   repeat(count?: number): Dataset<T> {
     const base = this;
-    let size;
-    if (this.size != null && count > 0) {
-      // If this dataset has size and count is positive, new size is current
-      // size multiply count. This also covers the case that current size is
-      // infinity.
-      size = this.size * count;
-    } else if (count === 0) {
-      // If count is 0, new size is 0.
-      size = 0;
-    } else if (this.size != null && (count === undefined || count < 0)) {
-      // If this dataset has size and count is undefined or negative, the
-      // dataset will be repeated indefinitely and new size is infinity.
-      size = Infinity;
-    } else {
-      // If the size of this dataset is null, the new dataset's size is null.
-      size = null;
-    }
+    // Zero repetitions yield zero elements; unspecified or negative counts
+    // repeat indefinitely when the source size is known.
+    const size = this.size != null && count > 0 ? this.size * count :
+        count === 0 ? 0 :
+        this.size != null && (count === undefined || count < 0) ?
+        Infinity : null;
     return datasetFromIteratorFn(async () => {
       const iteratorIterator = iteratorFromFunction(
           async () => ({value: await base.iterator(), done: false}));
@@ -383,22 +354,13 @@ export abstract class Dataset<T extends tf.TensorContainer> {
    */
   skip(count: number): Dataset<T> {
     const base = this;
-    let size;
-    if (this.size != null && count >= 0 && this.size >= count) {
-      // If the size of this dataset is greater than count, the new dataset's
-      // size is current size minus skipped size.This also covers the case that
-      // current size is infinity.
-      size = this.size - count;
-    } else if (
+    // Skipping past a known size, or using an invalid count, empties the
+    // result. Unknown source sizes remain unknown.
+    const size = this.size != null && count >= 0 && this.size >= count ?
+        this.size - count :
         this.size != null &&
-        (this.size < count || count === undefined || count < 0)) {
-      // If the size of this dataset is smaller than count, or count is
-      // undefined or negative, skips the entire dataset and the new size is 0.
-      size = 0;
-    } else {
-      // If the size of this dataset is null, the new dataset's size is null.
-      size = null;
-    }
+            (this.size < count || count === undefined || count < 0) ?
+        0 : null;
     return datasetFromIteratorFn(
         async () => (await base.iterator()).skip(count), size);
   }
@@ -431,16 +393,12 @@ export abstract class Dataset<T extends tf.TensorContainer> {
   shuffle(bufferSize: number, seed?: string, reshuffleEachIteration = true):
       Dataset<T> {
     if (bufferSize == null || bufferSize < 0) {
-      if (this.size == null) {
-        throw new RangeError(
-            '`Dataset.shuffle()` requires bufferSize to be specified.');
-      } else {
-        throw new RangeError(
-            '`Dataset.shuffle()` requires bufferSize to be specified.  ' +
-            'If your data fits in main memory (for regular JS objects), ' +
-            'and/or GPU memory (for `tf.Tensor`s), consider setting ' +
-            `bufferSize to the dataset size (${this.size} elements)`);
-      }
+      const hint = this.size == null ? '' :
+          '  If your data fits in main memory (for regular JS objects), ' +
+          'and/or GPU memory (for `tf.Tensor`s), consider setting ' +
+          `bufferSize to the dataset size (${this.size} elements)`;
+      throw new RangeError(
+          '`Dataset.shuffle()` requires bufferSize to be specified.' + hint);
     }
     const base = this;
     const random = seedrandom.alea(seed || tf.util.now().toString());
@@ -472,19 +430,10 @@ export abstract class Dataset<T extends tf.TensorContainer> {
    */
   take(count: number): Dataset<T> {
     const base = this;
-    let size;
-    if (this.size != null && this.size > count) {
-      // If the size of this dataset is greater than count, the new dataset's
-      // size is count.
-      size = count;
-    } else if (this.size != null && this.size <= count) {
-      // If the size of this dataset is equal or smaller than count, the new
-      // dataset's size is the size of this dataset.
-      size = this.size;
-    } else {
-      // If the size of this dataset is null, the new dataset's size is null.
-      size = null;
-    }
+    // Taking fewer than the known size limits the result to count.
+    // An unknown source size remains unknown.
+    const size = this.size != null && this.size > count ? count :
+        this.size != null && this.size <= count ? this.size : null;
     return datasetFromIteratorFn(
         async () => (await base.iterator()).take(count), size);
   }
