@@ -215,16 +215,12 @@ export function startIndicesWithElidedDims(
   for (let axis = 0; axis < newIndices.length; axis++) {
     if (elidedAxes.indexOf(axis) > -1) {
       newIndices[axis] = 0;
-    } else {
-      const originalAxis =
-          unnormalizeAxis(ellipsisInsertionIndex, numElidedAxes, axis);
-      let originalValue = originalBegin[originalAxis];
-      if (beginMask & 1 << originalAxis) {
-        originalValue = 0;
-      }
-
-      newIndices[axis] = originalValue;
+      continue;
     }
+    const originalAxis =
+        unnormalizeAxis(ellipsisInsertionIndex, numElidedAxes, axis);
+    newIndices[axis] = beginMask & 1 << originalAxis ?
+        0 : originalBegin[originalAxis];
   }
   return newIndices;
 }
@@ -240,15 +236,12 @@ export function stopIndicesWithElidedDims(
   for (let axis = 0; axis < newIndices.length; axis++) {
     if (elidedAxes.indexOf(axis) > -1) {
       newIndices[axis] = Number.MAX_SAFE_INTEGER;
-    } else {
-      const originalAxis =
-          unnormalizeAxis(ellipsisInsertionIndex, numElidedAxes, axis);
-      let originalValue = originalEnd[originalAxis];
-      if (endMask & 1 << originalAxis) {
-        originalValue = Number.MAX_SAFE_INTEGER;
-      }
-      newIndices[axis] = originalValue;
+      continue;
     }
+    const originalAxis =
+        unnormalizeAxis(ellipsisInsertionIndex, numElidedAxes, axis);
+    newIndices[axis] = endMask & 1 << originalAxis ?
+        Number.MAX_SAFE_INTEGER : originalEnd[originalAxis];
   }
 
   for (let i = 0; i < newIndices.length; i++) {
@@ -282,15 +275,9 @@ export function startForAxis(
   // Check the axis bit from right of masked axes, or the begin index is not set
   // for the axis.
   if (beginMask & 1 << axis || ellipsisMask & 1 << axis || start == null) {
-    if (stride > 0) {
-      // Forward iteration - use the first element. These values will get
-      // clamped below (Note: We could have set them to 0 and axis_size-1, but
-      // use lowest() and max() to maintain symmetry with StopForAxis())
-      start = Number.MIN_SAFE_INTEGER;
-    } else {
-      // Backward iteration - use the last element.
-      start = Number.MAX_SAFE_INTEGER;
-    }
+    // Forward iteration starts at the first element; backward at the last.
+    // Extreme values are clamped below, matching StopForAxis().
+    start = stride > 0 ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
   }
 
   // Handle negative indices
@@ -315,14 +302,8 @@ export function stopForAxis(
   // Check the axis bit from right of masked axes, or if the stop index is not
   // set for this axis.
   if (endMask & (1 << axis) || ellipsisMask & (1 << axis) || stop == null) {
-    if (stride > 0) {
-      // Forward iteration - use the last element. These values will get
-      // clamped below
-      stop = Number.MAX_SAFE_INTEGER;
-    } else {
-      // Backward iteration - use the first element.
-      stop = Number.MIN_SAFE_INTEGER;
-    }
+    // Use extreme bounds before clamping to the axis dimensions.
+    stop = stride > 0 ? Number.MAX_SAFE_INTEGER : Number.MIN_SAFE_INTEGER;
   }
 
   // Handle negative indices
@@ -379,30 +360,23 @@ export function computeFlatOffset(begin: number[], strides: number[]): number {
 export function parseSliceParams(
     x: TensorInfo, begin: number|number[], size?: number|number[]) {
   // The following logic allows for more ergonomic calls.
-  let begin_: number[];
   const xRank = x.shape.length;
-  if (typeof begin === 'number') {
-    begin_ = [begin, ...new Array(xRank - 1).fill(0)];
-  } else if (begin.length < xRank) {
-    begin_ = begin.concat(new Array(xRank - begin.length).fill(0));
-  } else {
-    begin_ = begin.slice();
-  }
+  const begin_: number[] = typeof begin === 'number' ?
+      [begin, ...new Array(xRank - 1).fill(0)] :
+      begin.length < xRank ?
+      begin.concat(new Array(xRank - begin.length).fill(0)) :
+      begin.slice();
   begin_.forEach(d => {
     util.assert(
         d !== -1, () => 'slice() does not support negative begin indexing.');
   });
-  let size_: number[];
-  if (size == null) {
-    size_ = new Array(xRank).fill(-1);
-  } else if (typeof size === 'number') {
-    size_ = [size, ...new Array(xRank - 1).fill(-1)];
-  } else if (size.length < xRank) {
-    size_ = size.concat(new Array(xRank - size.length).fill(-1));
-  } else {
-    size_ = size;
-  }
-  size_ = size_.map((d, i) => {
+  const initialSize: number[] = size == null ?
+      new Array(xRank).fill(-1) :
+      typeof size === 'number' ?
+      [size, ...new Array(xRank - 1).fill(-1)] :
+      size.length < xRank ?
+      size.concat(new Array(xRank - size.length).fill(-1)) : size;
+  const size_ = initialSize.map((d, i) => {
     if (d >= 0) {
       return d;
     } else {

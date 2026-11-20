@@ -376,24 +376,33 @@ export function runProgram<T extends Tensor, K extends Tensor>(
       const d = binary.program.customUniforms[i];
       const customLoc = binary.customUniformLocations[i];
       const customValue = customUniformValues[i];
-      if (d.type === 'float') {
-        gpgpu.gl.uniform1fv(customLoc, customValue);
-      } else if (d.type === 'vec2') {
-        gpgpu.gl.uniform2fv(customLoc, customValue);
-      } else if (d.type === 'vec3') {
-        gpgpu.gl.uniform3fv(customLoc, customValue);
-      } else if (d.type === 'vec4') {
-        gpgpu.gl.uniform4fv(customLoc, customValue);
-      } else if (d.type === 'int') {
-        gpgpu.gl.uniform1iv(customLoc, customValue);
-      } else if (d.type === 'ivec2') {
-        gpgpu.gl.uniform2iv(customLoc, customValue);
-      } else if (d.type === 'ivec3') {
-        gpgpu.gl.uniform3iv(customLoc, customValue);
-      } else if (d.type === 'ivec4') {
-        gpgpu.gl.uniform4iv(customLoc, customValue);
-      } else {
-        throw Error(`uniform type ${d.type} is not supported yet.`);
+      switch (d.type) {
+        case 'float':
+          gpgpu.gl.uniform1fv(customLoc, customValue);
+          break;
+        case 'vec2':
+          gpgpu.gl.uniform2fv(customLoc, customValue);
+          break;
+        case 'vec3':
+          gpgpu.gl.uniform3fv(customLoc, customValue);
+          break;
+        case 'vec4':
+          gpgpu.gl.uniform4fv(customLoc, customValue);
+          break;
+        case 'int':
+          gpgpu.gl.uniform1iv(customLoc, customValue);
+          break;
+        case 'ivec2':
+          gpgpu.gl.uniform2iv(customLoc, customValue);
+          break;
+        case 'ivec3':
+          gpgpu.gl.uniform3iv(customLoc, customValue);
+          break;
+        case 'ivec4':
+          gpgpu.gl.uniform4iv(customLoc, customValue);
+          break;
+        default:
+          throw Error(`uniform type ${d.type} is not supported yet.`);
       }
     }
   }
