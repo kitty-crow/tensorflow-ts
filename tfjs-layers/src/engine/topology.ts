@@ -795,23 +795,21 @@ export abstract class Layer extends serialization.Serializable {
               `: expected dtype=${spec.dtype}, found dtype=${x.dtype}.`);
         }
 
-      // Check specific shape axes.
-      if (spec.axes) {
-        const xShape = x.shape;
-        for (const key in spec.axes) {
-          const axis = Number(key);
-          const value = spec.axes[key];
-          // Perform Python-style slicing in case axis < 0;
-          // TODO(cais): Use https://github.com/alvivi/typescript-underscore to
-          // ensure type safety through Underscore calls.
-          const xShapeAtAxis =
-              axis >= 0 ? xShape[axis] : xShape[xShape.length + axis];
-          if (value != null && [value, null].indexOf(xShapeAtAxis) === -1) {
-            throw new ValueError(
-                `Input ${inputIndex} is incompatible with layer ` +
-                `${this.name}: expected axis ${axis} of input shape to ` +
-                `have value ${value} but got shape ${xShape}.`);
-          }
+      // Check specific shape axes, with no iteration for missing axes.
+      const xShape = x.shape;
+      for (const key in spec.axes ?? {}) {
+        const axis = Number(key);
+        const value = spec.axes[key];
+        // Perform Python-style slicing in case axis < 0;
+        // TODO(cais): Use https://github.com/alvivi/typescript-underscore to
+        // ensure type safety through Underscore calls.
+        const xShapeAtAxis =
+            axis >= 0 ? xShape[axis] : xShape[xShape.length + axis];
+        if (value != null && [value, null].indexOf(xShapeAtAxis) === -1) {
+          throw new ValueError(
+              `Input ${inputIndex} is incompatible with layer ` +
+              `${this.name}: expected axis ${axis} of input shape to ` +
+              `have value ${value} but got shape ${xShape}.`);
         }
       }
 
@@ -1091,21 +1089,21 @@ export abstract class Layer extends serialization.Serializable {
           `${JSON.stringify(inputShape)}) does not match that of the ` +
           `batchInputShape (${JSON.stringify(this.batchInputShape)}) ` +
           `of the layer ${this.name}`);
-    } else {
-      let dimMismatch = false;
-      this.batchInputShape.forEach((dimension, i) => {
-        if (dimension != null && inputShape[i] != null &&
-            inputShape[i] !== dimension) {
-          dimMismatch = true;
-        }
-      });
-      if (dimMismatch) {
-        console.warn(
-            `The shape of the input tensor ` +
-            `(${JSON.stringify(inputShape)}) does not ` +
-            `match the expectation of layer ${this.name}: ` +
-            `${JSON.stringify(this.batchInputShape)}`);
+      return;
+    }
+    let dimMismatch = false;
+    this.batchInputShape.forEach((dimension, i) => {
+      if (dimension != null && inputShape[i] != null &&
+          inputShape[i] !== dimension) {
+        dimMismatch = true;
       }
+    });
+    if (dimMismatch) {
+      console.warn(
+          `The shape of the input tensor ` +
+          `(${JSON.stringify(inputShape)}) does not ` +
+          `match the expectation of layer ${this.name}: ` +
+          `${JSON.stringify(this.batchInputShape)}`);
     }
   }
 
@@ -1628,27 +1626,25 @@ export function getSourceInputs(
   }
   if (layer.inboundNodes.length === 0) {
     return [tensor];
-  } else {
-    const node = layer.inboundNodes[nodeIndex];
-    if (node.inboundLayers.length === 0) {
-      return node.inputTensors;
-    } else {
-      const sourceTensors: SymbolicTensor[] = [];
-      for (let i = 0; i < node.inboundLayers.length; i++) {
-        const x = node.inputTensors[i];
-        const layer = node.inboundLayers[i];
-        const nodeIndex = node.nodeIndices[i];
-        const previousSources = getSourceInputs(x, layer, nodeIndex);
-        // Avoid input redundancy.
-        for (const x of previousSources) {
-          if (sourceTensors.indexOf(x) === -1) {
-            sourceTensors.push(x);
-          }
-        }
+  }
+  const node = layer.inboundNodes[nodeIndex];
+  if (node.inboundLayers.length === 0) {
+    return node.inputTensors;
+  }
+  const sourceTensors: SymbolicTensor[] = [];
+  for (let i = 0; i < node.inboundLayers.length; i++) {
+    const x = node.inputTensors[i];
+    const parentLayer = node.inboundLayers[i];
+    const parentNodeIndex = node.nodeIndices[i];
+    const previousSources = getSourceInputs(x, parentLayer, parentNodeIndex);
+    // Avoid input redundancy.
+    for (const source of previousSources) {
+      if (sourceTensors.indexOf(source) === -1) {
+        sourceTensors.push(source);
       }
-      return sourceTensors;
     }
   }
+  return sourceTensors;
 }
 
 type MaybeSymbolic = SymbolicTensor|Tensor;
