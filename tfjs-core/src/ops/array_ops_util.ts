@@ -52,35 +52,40 @@ export function getReshaped(
  *
  * see step 2: https://www.tensorflow.org/api_docs/python/tf/batch_to_space_nd
  */
+/** Permutation for a batch-to-space reshape. */
+function batchToSpacePermutation(
+    reshapedRank: number, blockShapeRank: number): number[] {
+  const permuted = [blockShapeRank];
+  for (let i = blockShapeRank + 1; i < reshapedRank; ++i) {
+    permuted.push(i);
+    if (i <= 2 * blockShapeRank) {
+      permuted.push(i - (blockShapeRank + 1));
+    }
+  }
+  return permuted;
+}
+
+/** Permutation for a space-to-batch reshape. */
+function spaceToBatchPermutation(
+    reshapedRank: number, blockShapeRank: number): number[] {
+  const permutedBeforeBatch: number[] = [];
+  const permutedAfterBatch: number[] = [];
+  for (let i = 1; i < reshapedRank; ++i) {
+    if (i >= blockShapeRank * 2 + 1 || i % 2 === 1) {
+      permutedAfterBatch.push(i);
+    } else {
+      permutedBeforeBatch.push(i);
+    }
+  }
+  return [...permutedBeforeBatch, 0, ...permutedAfterBatch];
+}
+
 export function getPermuted(
     reshapedRank: number, blockShapeRank: number,
     batchToSpace = true): number[] {
-  const permuted = [];
-  if (batchToSpace) {
-    permuted.push(blockShapeRank);
-    for (let i = blockShapeRank + 1; i < reshapedRank; ++i) {
-      if (i <= 2 * blockShapeRank) {
-        permuted.push(i);
-        permuted.push(i - (blockShapeRank + 1));
-      } else {
-        permuted.push(i);
-      }
-    }
-  } else {
-    const permutedBeforeBatch = [];
-    const permutedAfterBatch = [];
-    for (let i = 1; i < reshapedRank; ++i) {
-      if (i >= blockShapeRank * 2 + 1 || i % 2 === 1) {
-        permutedAfterBatch.push(i);
-      } else {
-        permutedBeforeBatch.push(i);
-      }
-    }
-    permuted.push(...permutedBeforeBatch);
-    permuted.push(0);
-    permuted.push(...permutedAfterBatch);
-  }
-  return permuted;
+  return batchToSpace ?
+      batchToSpacePermutation(reshapedRank, blockShapeRank) :
+      spaceToBatchPermutation(reshapedRank, blockShapeRank);
 }
 
 /**
@@ -104,15 +109,10 @@ export function getReshapedPermuted(
   }
 
   for (let i = 1; i < inputShape.length; ++i) {
-    if (i <= blockShape.length) {
-      if (batchToSpace) {
-        reshapedPermuted.push(blockShape[i - 1] * inputShape[i]);
-      } else {
-        reshapedPermuted.push(inputShape[i] / blockShape[i - 1]);
-      }
-    } else {
-      reshapedPermuted.push(inputShape[i]);
-    }
+    const dimension = i > blockShape.length ? inputShape[i] :
+        batchToSpace ? blockShape[i - 1] * inputShape[i] :
+                       inputShape[i] / blockShape[i - 1];
+    reshapedPermuted.push(dimension);
   }
 
   return reshapedPermuted;

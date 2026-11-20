@@ -25,23 +25,22 @@ export function normalizeArray(
     value: number|number[], n: number, name: string): number[] {
   if (typeof value === 'number') {
     return pyListRepeat(value, n);
-  } else {
-    if (value.length !== n) {
-      throw new ValueError(
-          `The ${name} argument must be an integer or tuple of ${n} integers.` +
-          ` Received: ${value.length} elements.`);
-    }
-    for (let i = 0; i < n; ++i) {
-      const singleValue = value[i];
-      if (!isInteger(singleValue)) {
-        throw new ValueError(
-            `The ${name} argument must be an integer or tuple of ${n}` +
-            ` integers. Received: ${JSON.stringify(value)} including a` +
-            ` non-integer number ${singleValue}`);
-      }
-    }
-    return value;
   }
+  if (value.length !== n) {
+    throw new ValueError(
+        `The ${name} argument must be an integer or tuple of ${n} integers.` +
+        ` Received: ${value.length} elements.`);
+  }
+  for (let i = 0; i < n; ++i) {
+    const singleValue = value[i];
+    if (!isInteger(singleValue)) {
+      throw new ValueError(
+          `The ${name} argument must be an integer or tuple of ${n}` +
+          ` integers. Received: ${JSON.stringify(value)} including a` +
+          ` non-integer number ${singleValue}`);
+    }
+  }
+  return value;
 }
 
 /**
