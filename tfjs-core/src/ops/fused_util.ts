@@ -80,8 +80,10 @@ export function applyActivation(
     case 'sigmoid': {
       return sigmoid(x);
     }
+    default: {
+      throw new Error(`Unknown fused activation ${activation}.`);
+    }
   }
-  throw new Error(`Unknown fused activation ${activation}.`);
 }
 
 // Whether we should call fused ops.

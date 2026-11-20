@@ -581,7 +581,6 @@ function reshapeBias(xRank: number, bias: Tensor, dataFormat: string) {
           return tfc.reshape(
               bias, [1, biasShape[3], biasShape[0], biasShape[1], biasShape[2]]);
         }
-        break;
       }
       case 'channelsLast': {
         if (biasShape.length === 1) {
@@ -589,7 +588,6 @@ function reshapeBias(xRank: number, bias: Tensor, dataFormat: string) {
         } else {
           return tfc.reshape(bias, [1].concat(biasShape));
         }
-        break;
       }
     }
   } else if (xRank === 4) {
@@ -600,7 +598,6 @@ function reshapeBias(xRank: number, bias: Tensor, dataFormat: string) {
         } else {
           return tfc.reshape(bias, [1, biasShape[2], biasShape[0], biasShape[1]]);
         }
-        break;
       }
       case 'channelsLast': {
         if (biasShape.length === 1) {
@@ -608,7 +605,6 @@ function reshapeBias(xRank: number, bias: Tensor, dataFormat: string) {
         } else {
           return tfc.reshape(bias, [1].concat(biasShape));
         }
-        break;
       }
     }
   } else if (xRank === 3) {
@@ -619,7 +615,6 @@ function reshapeBias(xRank: number, bias: Tensor, dataFormat: string) {
         } else {
           return tfc.reshape(bias, [1, biasShape[1], biasShape[0]]);
         }
-        break;
       }
       case 'channelsLast': {
         if (biasShape.length === 1) {
@@ -627,7 +622,6 @@ function reshapeBias(xRank: number, bias: Tensor, dataFormat: string) {
         } else {
           return tfc.reshape(bias, [1].concat(biasShape));
         }
-        break;
       }
     }
   } else if (xRank < 3) {

@@ -13,7 +13,7 @@
  */
 
 import * as tfc from '@tensorflow/tfjs-core';
-import {scalar, Tensor, tensor1d, tensor3d, tensor4d, tensor5d, util} from '@tensorflow/tfjs-core';
+import {scalar, Tensor, tensor1d, tensor3d, tensor4d, tensor5d} from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
 import {InitializerIdentifier} from '../initializers';

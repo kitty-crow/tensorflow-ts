@@ -30,10 +30,17 @@ function indentation(source: ts.SourceFile, position: number): string {
 }
 
 function returnOrThrow(statement: ts.Statement): boolean {
-  if (ts.isReturnStatement(statement) || ts.isThrowStatement(statement)) return true;
-  if (!ts.isBlock(statement)) return false;
-  const last = statement.statements.at(-1);
-  return last !== undefined && (ts.isReturnStatement(last) || ts.isThrowStatement(last));
+  if (ts.isReturnStatement(statement) || ts.isThrowStatement(statement) ||
+      ts.isBreakStatement(statement) || ts.isContinueStatement(statement)) return true;
+  if (ts.isBlock(statement)) {
+    const last = statement.statements.at(-1);
+    return last !== undefined && returnOrThrow(last);
+  }
+  if (ts.isIfStatement(statement) && statement.elseStatement !== undefined) {
+    return returnOrThrow(statement.thenStatement) &&
+      returnOrThrow(statement.elseStatement);
+  }
+  return false;
 }
 
 function nestedConditional(statement: ts.Statement): boolean {

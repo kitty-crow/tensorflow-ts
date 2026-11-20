@@ -226,7 +226,9 @@ export function mapActivationToShaderProgram(
       }
       return unary_op.SIGMOID;
     }
+    default: {
+      throw new Error(`Activation ${
+          activation} has not been implemented for the WebGL backend.`);
+    }
   }
-  throw new Error(`Activation ${
-      activation} has not been implemented for the WebGL backend.`);
 }

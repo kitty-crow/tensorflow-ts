@@ -51,7 +51,9 @@ export function applyActivation(
     case 'sigmoid': {
       return sigmoid({inputs: {x}, backend}) as TensorInfo;
     }
+    default: {
+      throw new Error(
+          `Activation ${activation} has not been implemented for the CPU backend.`);
+    }
   }
-  throw new Error(
-      `Activation ${activation} has not been implemented for the CPU backend.`);
 }
