@@ -1,11 +1,6 @@
 name: Inference Workload Preflight
 
 on:
-  push:
-    paths:
-      - vendor/code-guards
-      - .github/workflows/inference-preflight.yml
-      - tsconfig.code-guards.json
   workflow_dispatch:
 
 permissions:
