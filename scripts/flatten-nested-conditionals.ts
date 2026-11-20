@@ -326,7 +326,9 @@ function findEdits(source: ts.SourceFile): Edit[] {
   const options: Edit[] = [];
   const walk = (node: ts.Node): void => {
     if (ts.isIfStatement(node)) {
-      const replacement = mergeConjunction(node, source) ??
+      const guardedOnly = process.argv.includes('--guarded-returns-only');
+      const replacement = guardedOnly ? foldGuardedReturns(node, source) :
+        mergeConjunction(node, source) ??
         foldSimpleNestedBranches(node, source) ??
         foldGuardedReturns(node, source) ??
         switchDispatch(node, source) ??

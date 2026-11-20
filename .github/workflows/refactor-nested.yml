@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Preview AST-safe flattening
-        run: bun scripts/flatten-nested-conditionals.ts --apply
+        run: bun scripts/flatten-nested-conditionals.ts --apply --guarded-returns-only
       - name: Check Core and Layers TypeScript after refactoring
         run: bun x tsc --noEmit --pretty false --project tfjs-layers/tsconfig.json
       - name: Verify changed-file formatting
