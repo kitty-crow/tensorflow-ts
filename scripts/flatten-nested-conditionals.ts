@@ -122,6 +122,72 @@ function mergeConjunction(node: ts.IfStatement, source: ts.SourceFile): Edit | n
   };
 }
 
+/** Return the expression of a single return statement, without altering evaluation order. */
+function returnValue(statement: ts.Statement): ts.Expression | null {
+  const item = ts.isBlock(statement) && statement.statements.length === 1 ?
+    statement.statements[0] : statement;
+  return item !== undefined && ts.isReturnStatement(item) ?
+    item.expression ?? null : null;
+}
+
+/** Extract a direct assignment of the same identifier from both branches. */
+function assignmentValue(statement: ts.Statement): {
+  name: string; value: ts.Expression
+} | null {
+  const item = ts.isBlock(statement) && statement.statements.length === 1 ?
+    statement.statements[0] : statement;
+  if (item === undefined || !ts.isExpressionStatement(item)) return null;
+  const assignment = item.expression;
+  if (!ts.isBinaryExpression(assignment) ||
+      assignment.operatorToken.kind !== ts.SyntaxKind.EqualsToken ||
+      !ts.isIdentifier(assignment.left)) return null;
+  return {name: assignment.left.text, value: assignment.right};
+}
+
+/**
+ * Keep the enclosing guard but replace nested decisions that select one
+ * return value or one assignment with a type-narrowing conditional expression.
+ */
+function foldSimpleNestedBranches(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
+  if (!ts.isBlock(node.thenStatement)) return null;
+  const statements = node.thenStatement.statements;
+  const inner = statements[0];
+  if (inner === undefined || !ts.isIfStatement(inner) ||
+      (statements.length !== 1 && statements.length !== 2)) return null;
+  const alternate = inner.elseStatement ?? (statements.length === 2 ? statements[1] : undefined);
+  if (alternate === undefined) return null;
+  // Preserve any meaningful comments attached to the collapsed branch nodes.
+  const before = source.text.slice(node.thenStatement.getStart(source) + 1, inner.getStart(source));
+  const between = source.text.slice(inner.thenStatement.end, alternate.getStart(source));
+  const after = source.text.slice(alternate.end, node.thenStatement.end - 1);
+  if (hasComments(before) || hasComments(between) || hasComments(after)) return null;
+  const chosen = inner.expression.getText(source);
+  const firstReturn = returnValue(inner.thenStatement);
+  const nextReturn = returnValue(alternate);
+  const firstAssignment = assignmentValue(inner.thenStatement);
+  const nextAssignment = assignmentValue(alternate);
+  let expression: string;
+  if (firstReturn !== null && nextReturn !== null) {
+    expression = 'return (' + chosen + ') ? ' +
+      firstReturn.getText(source) + ' : ' + nextReturn.getText(source) + ';';
+  } else if (firstAssignment !== null && nextAssignment !== null &&
+             firstAssignment.name === nextAssignment.name) {
+    expression = firstAssignment.name + ' = (' + chosen + ') ? ' +
+      firstAssignment.value.getText(source) + ' : ' +
+      nextAssignment.value.getText(source) + ';';
+  } else {
+    return null;
+  }
+  return {
+    start: node.getStart(source),
+    end: node.end,
+    replacement: 'if (' + node.expression.getText(source) + ') {\n' +
+      indentation(source, node.getStart(source)) + '  ' + expression + '\n' +
+      indentation(source, node.getStart(source)) + '}',
+    kind: 'nested branch expression'
+  };
+}
+
 function flattenTerminalElse(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
   const branch = node.elseStatement;
   if (branch === undefined || !ts.isIfStatement(branch) || !returnOrThrow(node.thenStatement)) return null;
@@ -212,6 +278,7 @@ function findEdits(source: ts.SourceFile): Edit[] {
   const walk = (node: ts.Node): void => {
     if (ts.isIfStatement(node)) {
       const replacement = mergeConjunction(node, source) ??
+        foldSimpleNestedBranches(node, source) ??
         switchDispatch(node, source) ??
         liftTerminalFallback(node, source) ??
         liftFinalGuard(node, source) ??
