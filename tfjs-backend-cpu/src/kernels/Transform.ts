@@ -138,55 +138,46 @@ function mapCoord(
 }
 
 function mapCoordReflect(outCoord: number, len: number): number {
-  // Reflect [abcd] to [dcba|abcd|dcba].
-  let inCoord = outCoord;
-  if (inCoord < 0) {
-    if (len <= 1) {
-      inCoord = 0;
-    } else {
-      const sz2 = 2 * len;
-      if (inCoord < sz2) {
-        inCoord = sz2 * Math.trunc(-inCoord / sz2) + inCoord;
-      }
-      inCoord = inCoord < -len ? inCoord + sz2 : -inCoord - 1;
-    }
-  } else if (inCoord > len - 1) {
-    if (len <= 1) {
-      inCoord = 0;
-    } else {
-      const sz2 = 2 * len;
-      inCoord -= sz2 * Math.trunc(inCoord / sz2);
-      if (inCoord >= len) {
-        inCoord = sz2 - inCoord - 1;
-      }
-    }
+  // Reflect [abcd] to [dcba|abcd|dcba]. Preserve the original
+  // boundary clamp for image axes with zero or one element.
+  if (len <= 1 && (outCoord < 0 || outCoord > len - 1)) {
+    return util.clamp(0, 0, len - 1);
   }
-  // clamp is necessary because when outCoord = 3.5 and len = 4,
-  // inCoord = 3.5 and will be rounded to 4 in nearest interpolation.
-  return util.clamp(0, inCoord, len - 1);
+  if (outCoord < 0) {
+    const sz2 = 2 * len;
+    const folded = outCoord < sz2 ?
+        sz2 * Math.trunc(-outCoord / sz2) + outCoord : outCoord;
+    const reflected = folded < -len ? folded + sz2 : -folded - 1;
+    return util.clamp(0, reflected, len - 1);
+  }
+  if (outCoord > len - 1) {
+    const sz2 = 2 * len;
+    const folded = outCoord - sz2 * Math.trunc(outCoord / sz2);
+    const reflected = folded >= len ? sz2 - folded - 1 : folded;
+    return util.clamp(0, reflected, len - 1);
+  }
+  // Clamping also prevents nearest interpolation from rounding beyond
+  // the last valid pixel when an output coordinate is fractional.
+  return util.clamp(0, outCoord, len - 1);
 }
 
 function mapCoordWrap(outCoord: number, len: number): number {
-  // Wrap [abcd] to [abcd|abcd|abcd].
-  let inCoord = outCoord;
-  if (inCoord < 0) {
-    if (len <= 1) {
-      inCoord = 0;
-    } else {
-      const sz = len - 1;
-      inCoord += len * (Math.trunc(-inCoord / sz) + 1);
-    }
-  } else if (inCoord > len - 1) {
-    if (len <= 1) {
-      inCoord = 0;
-    } else {
-      const sz = len - 1;
-      inCoord -= len * Math.trunc(inCoord / sz);
-    }
+  // Wrap [abcd] to [abcd|abcd|abcd], retaining original clamping.
+  if (len <= 1 && (outCoord < 0 || outCoord > len - 1)) {
+    return util.clamp(0, 0, len - 1);
   }
-  // clamp is necessary because when outCoord = -0.5 and len = 4,
-  // inCoord = 3.5 and will be rounded to 4 in nearest interpolation.
-  return util.clamp(0, inCoord, len - 1);
+  if (outCoord < 0) {
+    const sz = len - 1;
+    const wrapped = outCoord + len * (Math.trunc(-outCoord / sz) + 1);
+    return util.clamp(0, wrapped, len - 1);
+  }
+  if (outCoord > len - 1) {
+    const sz = len - 1;
+    const wrapped = outCoord - len * Math.trunc(outCoord / sz);
+    return util.clamp(0, wrapped, len - 1);
+  }
+  // Fractional coordinates may round up during nearest interpolation.
+  return util.clamp(0, outCoord, len - 1);
 }
 
 function mapCoordConstant(outCoord: number, len: number): number {
