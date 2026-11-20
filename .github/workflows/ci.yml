@@ -38,4 +38,4 @@ jobs:
         run: bun run check:source-policy
 
       - name: Strict full source and test scan with Bun
-        run: bun run guards:strict --format github
+        run: bun run guards:strict --format github --progress

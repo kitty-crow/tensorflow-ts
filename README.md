@@ -41,3 +41,5 @@ bun run guards:strict
 The scan uses `tsconfig.code-guards.json` to include sources omitted by the upstream root TypeScript configuration, including Node, WebGL and WebGPU modules. Existing violations must be fixed in source; no guards are disabled. Generated output, installed dependencies and the vendored analyser are excluded from the target scan.
 
 The Code Guards and source-policy CI steps run on Bun. The remaining legacy TensorFlow build, native addon and Bazel paths still use their original Yarn/Node.js tooling where compatibility has not been verified. The root `build` and `test` scripts invoke the Bun source-policy check before handing off to those existing paths.
+
+For live granularity during the strict scan, use `bun run guards:strict --progress`. The scanner reports each stage, elapsed time, findings and MobileBERT inference windows to standard error; GitHub CI displays these messages while retaining GitHub-format diagnostics. Code Guards excludes vendored source and documentation, including the pinned submodules listed in `.gitmodules`.
