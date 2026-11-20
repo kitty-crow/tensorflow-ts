@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - '.github/workflows/typecheck-compatibility.yml'
+      - 'tsconfig.json'
+      - 'tsconfig_base.json'
+      - 'tfjs-*/tsconfig.json'
       - 'tfjs-core/src/**'
       - 'tfjs-layers/src/**'
       - 'tfjs-data/src/**'
