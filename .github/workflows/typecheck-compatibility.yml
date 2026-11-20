@@ -1,0 +1,27 @@
+name: TensorFlow TypeScript Compatibility
+
+on:
+  push:
+    paths:
+      - '.github/workflows/typecheck-compatibility.yml'
+      - 'tfjs-core/src/**'
+      - 'tfjs-layers/src/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    name: Core and Layers TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Check TensorFlow Core and Layers source types
+        run: bun x tsc --noEmit --pretty false --project tfjs-layers/tsconfig.json
