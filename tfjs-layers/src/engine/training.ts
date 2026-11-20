@@ -44,6 +44,24 @@ import {checkBatchSize, disposeNewTensors, ensureTensorsRank2OrHigher, makeBatch
 import {ClassWeight, ClassWeightMap, computeWeightedLoss, standardizeClassWeights, standardizeWeights} from './training_utils';
 
 /**
+ * Resolve a standard accuracy or cross-entropy metric for one model output.
+ * Binary output precedence matches the original metrics configuration.
+ */
+function selectStandardMetric(
+    metric: string, binary: boolean, sparse: boolean): LossOrMetricFn {
+  const accuracy = metric === 'accuracy' || metric === 'acc';
+  if (binary) {
+    return accuracy ? Metrics.binaryAccuracy : Metrics.binaryCrossentropy;
+  }
+  if (sparse) {
+    return accuracy ? Metrics.sparseCategoricalAccuracy :
+                      Metrics.sparseCategoricalCrossentropy;
+  }
+  return accuracy ? Metrics.categoricalAccuracy :
+                    Metrics.categoricalCrossentropy;
+}
+
+/**
  * Helper function for polymorphic input data: 1. singleton Tensor.
  */
 export function isDataTensor(x: Tensor|Tensor[]|{[inputName: string]: Tensor}|
@@ -799,7 +817,6 @@ export class LayersModel extends Container implements tfc.InferenceModel {
         const handleMetrics = (metrics: Array<string|LossOrMetricFn>) => {
           const metricNamePrefix = '';
           let metricName: string;
-          let accFn: LossOrMetricFn;
           let weightedMetricFn: LossOrMetricFn;
           //  TODO(cais): Use 'weights_' for weighted metrics.
 
@@ -808,42 +825,14 @@ export class LayersModel extends Container implements tfc.InferenceModel {
                 ['accuracy', 'acc', 'crossentropy', 'ce'].indexOf(metric) !==
                     -1) {
               const outputShape = this.internalOutputShapes[i];
-
-              if (outputShape[outputShape.length - 1] === 1 ||
-                  this.lossFunctions[i] === losses.binaryCrossentropy) {
-                // case: binary accuracy/crossentropy.
-                if (['accuracy', 'acc'].indexOf(metric) !== -1) {
-                  accFn = Metrics.binaryAccuracy;
-                } else if (['crossentropy', 'ce'].indexOf(metric) !== -1) {
-                  accFn = Metrics.binaryCrossentropy;
-                }
-              } else if (
-                  this.lossFunctions[i] ===
-                  losses.sparseCategoricalCrossentropy) {
-                // case: categorical accuracy / crossentropy with sparse
-                // targets.
-                if (['accuracy', 'acc'].indexOf(metric) !== -1) {
-                  accFn = Metrics.sparseCategoricalAccuracy;
-                } else if (['crossentropy', 'ce'].indexOf(metric) !== -1) {
-                  accFn = Metrics.sparseCategoricalCrossentropy;
-                }
-              } else {
-                // case: categorical accuracy / crossentropy.
-                if (['accuracy', 'acc'].indexOf(metric) !== -1) {
-                  accFn = Metrics.categoricalAccuracy;
-                } else if (['crossentropy', 'ce'].indexOf(metric) !== -1) {
-                  accFn = Metrics.categoricalCrossentropy;
-                }
-              }
-              let suffix: string;
-              if (['accuracy', 'acc'].indexOf(metric) !== -1) {
-                suffix = 'acc';
-              } else if (['crossentropy', 'ce'].indexOf(metric) !== -1) {
-                suffix = 'ce';
-              }
+              const binary = outputShape[outputShape.length - 1] === 1 ||
+                  this.lossFunctions[i] === losses.binaryCrossentropy;
+              const sparse = this.lossFunctions[i] ===
+                  losses.sparseCategoricalCrossentropy;
               // TODO(cais): Add weighting actually.
-              weightedMetricFn = accFn;
-              metricName = metricNamePrefix + suffix;
+              weightedMetricFn = selectStandardMetric(metric, binary, sparse);
+              metricName = metricNamePrefix +
+                  (metric === 'accuracy' || metric === 'acc' ? 'acc' : 'ce');
             } else {
               const metricFn = Metrics.get(metric);
               // TODO(cais): Add weighting actually.

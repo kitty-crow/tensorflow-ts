@@ -976,30 +976,18 @@ describeMathCPU('Conv2DTranspose: Symbolic', () => {
                 {filters, kernelSize, padding, strides});
             const y = layer.apply(x) as tfl.SymbolicTensor;
 
-            let expectedShape: [number, number, number, number];
-            if (strides === undefined) {
-              if (padding === 'valid' || padding === undefined) {
-                if (kernelSize as number === 2 ||
-                    util.arraysEqual(kernelSize as number[], [2, 2])) {
-                  expectedShape = [2, 12, 10, filters];
-                } else if (util.arraysEqual(kernelSize as number[], [3, 4])) {
-                  expectedShape = [2, 13, 12, filters];
-                }
-              } else if (padding === 'same') {
-                expectedShape = [2, 11, 9, filters];
-              }
-            } else {
-              if (padding === 'valid' || padding === undefined) {
-                if (kernelSize as number === 2 ||
-                    util.arraysEqual(kernelSize as number[], [2, 2])) {
-                  expectedShape = [2, 22, 18, filters];
-                } else if (util.arraysEqual(kernelSize as number[], [3, 4])) {
-                  expectedShape = [2, 23, 20, filters];
-                }
-              } else if (padding === 'same') {
-                expectedShape = [2, 22, 18, filters];
-              }
-            }
+            // A transposed convolution expands each input interval by the
+            // stride and contributes either its kernel width or the stride.
+            const dimensions = typeof kernelSize === 'number' ?
+                [kernelSize, kernelSize] : kernelSize;
+            const step = strides === undefined ? 1 : strides;
+            const same = padding === 'same';
+            const expectedRows = (inputShape[1] - 1) * step +
+                (same ? step : dimensions[0]);
+            const expectedCols = (inputShape[2] - 1) * step +
+                (same ? step : dimensions[1]);
+            const expectedShape: [number, number, number, number] =
+                [2, expectedRows, expectedCols, filters];
             expect(y.shape).toEqual(expectedShape);
           });
         }
