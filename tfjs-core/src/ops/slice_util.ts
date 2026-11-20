@@ -531,45 +531,11 @@ export function sliceInfo(
       sliceDim0 = sliceDim0 &&
           ((i === 0 && denseSpec.strides[i] === 1) || beginAndEndMasked);
     }
-    // Compute the processing shape (the intermediate Eigen will produce)
-    let intervalLength;
-    let knownInterval = false;
-    if (denseSpec.beginValid && denseSpec.endValid) {
-      intervalLength = denseSpec.end[i] - denseSpec.begin[i];
-      knownInterval = true;
-    } else if (shrinkI) {
-      // The dimension is still known as 1 for the processingShape, but will be
-      // discarded for the final shape.
-      intervalLength = 1;
-      knownInterval = true;
-    } else if (beginAndEndMasked) {
-      // Even if we don't have values for begin or end, we do know that this
-      // dimension covers the whole interval. If we have shape information for
-      // this dimension, that tells us the interval length.
-      if (dimI >= 0) {
-        if (denseSpec.strides[i] < 0) {
-          intervalLength = -dimI;
-        } else {
-          intervalLength = dimI;
-        }
-        knownInterval = true;
-      }
-    }
-    if (knownInterval) {
-      let sizeI;
-      // Hold zero if the interval is degenerate, otherwise account for
-      // remainder
-      if (intervalLength === 0 ||
-          ((intervalLength < 0) !== (denseSpec.strides[i] < 0))) {
-        sizeI = 0;
-      } else {
-        sizeI = Math.trunc(intervalLength / denseSpec.strides[i]) +
-            (intervalLength % denseSpec.strides[i] !== 0 ? 1 : 0);
-      }
-      processingShape.push(sizeI);
-    } else {
-      processingShape.push(-1);
-    }
+    // The intermediate Eigen shape uses -1 for an unknown dimension.
+    const intervalLength = knownSliceInterval(
+        denseSpec, i, shrinkI, beginAndEndMasked, dimI);
+    processingShape.push(intervalLength === null ? -1 :
+        intervalElementCount(intervalLength, denseSpec.strides[i]));
   }
 
   // Step 4: Compute the final shape
@@ -600,6 +566,36 @@ export function sliceInfo(
     end: denseSpec.end,
     strides: denseSpec.strides
   };
+}
+
+/**
+ * Determine the extent of a dense slice interval when the indexing metadata
+ * contains enough information. Explicit bounds take precedence over masks.
+ */
+function knownSliceInterval(
+    dense: StridedSliceDenseSpec, axis: number, shrink: boolean,
+    beginAndEndMasked: boolean, dimension: number): number|null {
+  if (dense.beginValid && dense.endValid) {
+    return dense.end[axis] - dense.begin[axis];
+  }
+  if (shrink) {
+    // A shrunk axis is always one element in the intermediate shape.
+    return 1;
+  }
+  if (beginAndEndMasked && dimension >= 0) {
+    return dense.strides[axis] < 0 ? -dimension : dimension;
+  }
+  return null;
+}
+
+/** Compute the number of indexed elements, including incomplete strides. */
+function intervalElementCount(intervalLength: number, stride: number): number {
+  if (intervalLength === 0 ||
+      ((intervalLength < 0) !== (stride < 0))) {
+    return 0;
+  }
+  return Math.trunc(intervalLength / stride) +
+      (intervalLength % stride !== 0 ? 1 : 0);
 }
 
 function buildDenseSpec(
