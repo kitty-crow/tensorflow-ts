@@ -370,6 +370,17 @@ export function getShapeAs3D(shape: number[]): [number, number, number] {
   return shapeAs3D;
 }
 
+/**
+ * Find a squarish packed shape in texels, then convert to paired channels.
+ * Packed rows and columns must remain even.
+ */
+function packedSquarishTextureShape(logShape: number[]): [number, number] {
+  const batchDim = getBatchDim(logShape);
+  const [rows, cols] = logShape.length ? getRowsCols(logShape) : [2, 2];
+  const texels = batchDim * (rows / 2) * (cols / 2);
+  return util.sizeToSquarishShape(texels).map(d => d * 2) as [number, number];
+}
+
 /** Preserve the first valid physical texture shape in the original priority. */
 function preferredTextureShape(
     shape: number[], size: number, maxTexSize: number): [number, number]|null {
@@ -448,24 +459,9 @@ export function getTextureShapeFromLogicalShape(
       Math.min(...textureShape) > 0;
 
   if (textureShape == null || isLongNarrowTex) {
-    if (isPacked) {
-      // For packed textures size equals the number of channels required to
-      // accommodate the texture data. However in order to squarify such that
-      // inner dimensions stay even, we rewrite size to equal the number of
-      // texels. Then in the return statement we rehydrate the squarified
-      // dimensions to channel units.
-
-      const batchDim = getBatchDim(logShape);
-      let rows = 2, cols = 2;
-      if (logShape.length) {
-        [rows, cols] = getRowsCols(logShape);
-      }
-      size = batchDim * (rows / 2) * (cols / 2);
-      textureShape =
-          util.sizeToSquarishShape(size).map(d => d * 2) as [number, number];
-    } else {
-      textureShape = util.sizeToSquarishShape(size);
-    }
+    textureShape = isPacked ?
+        packedSquarishTextureShape(logShape) :
+        util.sizeToSquarishShape(size);
   }
 
   return textureShape;
@@ -545,18 +541,15 @@ export function getWebGLDisjointQueryTimerVersion(webGLVersion: number):
     return 0;
   }
 
-  let queryTimerVersion: number;
   const gl = getWebGLContext(webGLVersion);
-
   if (hasExtension(gl, 'EXT_disjoint_timer_query_webgl2') &&
       webGLVersion === 2) {
-    queryTimerVersion = 2;
-  } else if (hasExtension(gl, 'EXT_disjoint_timer_query')) {
-    queryTimerVersion = 1;
-  } else {
-    queryTimerVersion = 0;
+    return 2;
   }
-  return queryTimerVersion;
+  if (hasExtension(gl, 'EXT_disjoint_timer_query')) {
+    return 1;
+  }
+  return 0;
 }
 
 export function hasExtension(gl: WebGLRenderingContext, extensionName: string) {
