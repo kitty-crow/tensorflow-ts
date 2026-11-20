@@ -138,11 +138,7 @@ function getWeightBytelength(spec: WeightsManifestEntry,
   slice: (start: number, end: number) => ArrayBuffer): number {
 
   const size = sizeFromShape(spec.shape);
-  let bytesPerValue: number;
-  if ('quantization' in spec) {
-    const quantization = spec.quantization;
-    bytesPerValue = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
-  } else if (spec.dtype === 'string') {
+  if (!('quantization' in spec) && spec.dtype === 'string') {
     // Can not statically determine string length.
     let byteLength = 0;
     for (let i = 0; i < size; i++) {
@@ -150,11 +146,9 @@ function getWeightBytelength(spec: WeightsManifestEntry,
         slice(byteLength, byteLength + NUM_BYTES_STRING_LENGTH))[0];
     }
     return byteLength;
-  } else {
-    bytesPerValue = DTYPE_VALUE_SIZE_MAP[spec.dtype];
   }
-
-  return size * bytesPerValue;
+  const dtype = 'quantization' in spec ? spec.quantization.dtype : spec.dtype;
+  return size * DTYPE_VALUE_SIZE_MAP[dtype];
 }
 
 async function getWeightBytelengthAsync(
@@ -163,11 +157,7 @@ async function getWeightBytelengthAsync(
 ): Promise<number> {
 
   const size = sizeFromShape(spec.shape);
-  let bytesPerValue: number;
-  if ('quantization' in spec) {
-    const quantization = spec.quantization;
-    bytesPerValue = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
-  } else if (spec.dtype === 'string') {
+  if (!('quantization' in spec) && spec.dtype === 'string') {
     // Can not statically determine string length.
     let byteLength = 0;
     for (let i = 0; i < size; i++) {
@@ -175,11 +165,35 @@ async function getWeightBytelengthAsync(
         await slice(byteLength, byteLength + NUM_BYTES_STRING_LENGTH))[0];
     }
     return byteLength;
-  } else {
-    bytesPerValue = DTYPE_VALUE_SIZE_MAP[spec.dtype];
   }
+  const dtype = 'quantization' in spec ? spec.quantization.dtype : spec.dtype;
+  return size * DTYPE_VALUE_SIZE_MAP[dtype];
+}
 
-  return size * bytesPerValue;
+
+/** Verify quantised metadata before reading weight bytes. */
+function validateWeightQuantization(spec: WeightsManifestEntry): void {
+  const quantization = spec.quantization;
+  const integerQuantization = quantization.dtype === 'uint8' ||
+      quantization.dtype === 'uint16';
+  if (integerQuantization &&
+      !('min' in quantization && 'scale' in quantization)) {
+    throw new Error(
+        `Weight ${spec.name} with quantization ${quantization.dtype} ` +
+        `doesn't have corresponding metadata min and scale.`);
+  }
+  if (quantization.dtype === 'float16' && spec.dtype !== 'float32') {
+    throw new Error(
+        `Weight ${spec.name} is quantized with ${quantization.dtype} ` +
+        `which only supports weights of type float32 not ${spec.dtype}.`);
+  }
+  if (!integerQuantization && quantization.dtype !== 'float16') {
+    throw new Error(
+        `Weight ${spec.name} has unknown ` +
+        `quantization dtype ${quantization.dtype}. ` +
+        `Supported quantization dtypes are: ` +
+        `'uint8', 'uint16', and 'float16'.`);
+  }
 }
 
 function decodeWeight(
@@ -195,25 +209,7 @@ function decodeWeight(
 
   if ('quantization' in spec) {
     const quantization = spec.quantization;
-    if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
-      if (!('min' in quantization && 'scale' in quantization)) {
-        throw new Error(
-            `Weight ${spec.name} with quantization ${quantization.dtype} ` +
-            `doesn't have corresponding metadata min and scale.`);
-      }
-    } else if (quantization.dtype === 'float16') {
-      if (dtype !== 'float32') {
-        throw new Error(
-            `Weight ${spec.name} is quantized with ${quantization.dtype} ` +
-            `which only supports weights of type float32 not ${dtype}.`);
-      }
-    } else {
-      throw new Error(
-          `Weight ${spec.name} has unknown ` +
-          `quantization dtype ${quantization.dtype}. ` +
-          `Supported quantization dtypes are: ` +
-          `'uint8', 'uint16', and 'float16'.`);
-    }
+    validateWeightQuantization(spec);
     const quantizationSizeFactor = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
     const quantizedArray = (quantization.dtype === 'uint8') ?
       new Uint8Array(byteBuffer) :
