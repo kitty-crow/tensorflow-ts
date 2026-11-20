@@ -142,6 +142,44 @@ function collectInputTensors(
   return [value];
 }
 
+/** Confirm supplied tensor ranks and non-batch dimensions match declared shapes. */
+function verifyInputShapes(
+    arrays: Tensor[], names: string[], shapes: Shape[],
+    checkBatchAxis: boolean, exceptionPrefix: string): void {
+  for (let i = 0; i < names.length; ++i) {
+    if (shapes[i] == null) {
+      continue;
+    }
+    const array = arrays[i];
+    if (array.shape.length !== shapes[i].length) {
+      throw new ValueError(
+          `Error when checking ${exceptionPrefix}: expected ${names[i]} ` +
+          `to have ${shapes[i].length} dimension(s). but got array with ` +
+          `shape ${array.shape}`);
+    }
+    for (let j = 0; j < shapes[i].length; ++j) {
+      if (j === 0 && !checkBatchAxis) {
+        // Skip the first (batch) axis.
+        continue;
+      }
+      const dim = array.shape[j];
+      const refDim = shapes[i][j];
+      if (refDim != null && refDim >= 0 && dim !== refDim) {
+        throw new ValueError(
+            `${exceptionPrefix} expected a batch of elements where each ` +
+            `example has shape [${shapes[i].slice(1, shapes[i].length)}] ` +
+            `(i.e.,tensor shape [*,${
+                shapes[i].slice(1, shapes[i].length)}])` +
+            ` but the ${exceptionPrefix} received an input with ${
+                array.shape[0]}` +
+            ` examples, each with shape [${
+                array.shape.slice(1, array.shape.length)}]` +
+            ` (tensor shape [${array.shape}])`);
+      }
+    }
+  }
+}
+
 /**
  * Normalizes inputs and targets provided by users.
  * @param data User-provided input data (polymorphic).
@@ -172,40 +210,8 @@ export function standardizeInputData(
 
   arrays = ensureTensorsRank2OrHigher(arrays);
 
-  // Check shape compatibility.
   if (shapes != null) {
-    for (let i = 0; i < names.length; ++i) {
-      if (shapes[i] == null) {
-        continue;
-      }
-      const array = arrays[i];
-      if (array.shape.length !== shapes[i].length) {
-        throw new ValueError(
-            `Error when checking ${exceptionPrefix}: expected ${names[i]} ` +
-            `to have ${shapes[i].length} dimension(s). but got array with ` +
-            `shape ${array.shape}`);
-      }
-      for (let j = 0; j < shapes[i].length; ++j) {
-        if (j === 0 && !checkBatchAxis) {
-          // Skip the first (batch) axis.
-          continue;
-        }
-        const dim = array.shape[j];
-        const refDim = shapes[i][j];
-        if (refDim != null && refDim >= 0 && dim !== refDim) {
-          throw new ValueError(
-              `${exceptionPrefix} expected a batch of elements where each ` +
-              `example has shape [${shapes[i].slice(1, shapes[i].length)}] ` +
-              `(i.e.,tensor shape [*,${
-                  shapes[i].slice(1, shapes[i].length)}])` +
-              ` but the ${exceptionPrefix} received an input with ${
-                  array.shape[0]}` +
-              ` examples, each with shape [${
-                  array.shape.slice(1, array.shape.length)}]` +
-              ` (tensor shape [${array.shape}])`);
-        }
-      }
-    }
+    verifyInputShapes(arrays, names, shapes, checkBatchAxis, exceptionPrefix);
   }
   return arrays;
 }
