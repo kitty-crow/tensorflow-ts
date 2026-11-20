@@ -1449,23 +1449,13 @@ describeMathCPU('UpSampling2D Layer: Symbolic', () => {
               `undetermined dimension = ${
                                 JSON.stringify(undeterminedDimension)}`;
           it(testTitle, () => {
-            let inputShape: Shape;
-            if (undeterminedDimension == null) {
-              inputShape = dataFormat === 'channelsFirst' ? [2, 16, 11, 9] :
-                                                            [2, 11, 9, 16];
-            } else switch (undeterminedDimension) {
-  case 'height': {
-    inputShape = dataFormat === 'channelsFirst' ? [2, 16, null, 9] :
-                                                  [2, null, 9, 16];
-    break;
-  }
-  case 'both': {
-    inputShape = dataFormat === 'channelsFirst' ?
-        [2, 16, null, null] :
-        [2, null, null, 16];
-    break;
-  }
-}
+            const inputHeight: number = undeterminedDimension == null ?
+                11 : null;
+            const inputWidth: number = undeterminedDimension === 'both' ?
+                null : 9;
+            const inputShape: Shape = dataFormat === 'channelsFirst' ?
+                [2, 16, inputHeight, inputWidth] :
+                [2, inputHeight, inputWidth, 16];
             const symbolicInput =
                 new tfl.SymbolicTensor('float32', inputShape, null, [], null);
 
@@ -1478,47 +1468,16 @@ describeMathCPU('UpSampling2D Layer: Symbolic', () => {
             const output =
                 upSampling2dLayer.apply(symbolicInput) as tfl.SymbolicTensor;
 
-            let outputRows: number;
-            let outputCols: number;
-            if (size === undefined) {
-              outputRows = 2;
-              outputCols = 2;
-            } else {
-              outputRows = size[0];
-              outputCols = size[1];
-            }
-            let expectedShape: [number, number, number, number];
-            if (undeterminedDimension == null) {
-              if (dataFormat === 'channelsFirst') {
-                outputRows *= inputShape[2];
-                outputCols *= inputShape[3];
-                expectedShape = [2, 16, outputRows, outputCols];
-              } else {
-                outputRows *= inputShape[1];
-                outputCols *= inputShape[2];
-                expectedShape = [2, outputRows, outputCols, 16];
-              }
-            } else switch (undeterminedDimension) {
-  case 'height': {
-    if (dataFormat === 'channelsFirst') {
-      outputCols *= inputShape[3];
-      expectedShape = [2, 16, null, outputCols];
-    } else {
-      outputCols *= inputShape[2];
-      expectedShape = [2, null, outputCols, 16];
-    }
-    break;
-  }
-  case 'both': {
-    if (dataFormat === 'channelsFirst') {
-      expectedShape = [2, 16, null, null];
-    } else {
-      outputCols *= inputShape[2];
-      expectedShape = [2, null, null, 16];
-    }
-    break;
-  }
-}
+            const rowScale = size === undefined ? 2 : size[0];
+            const colScale = size === undefined ? 2 : size[1];
+            const outputRows = inputHeight == null ?
+                null : inputHeight * rowScale;
+            const outputCols = inputWidth == null ?
+                null : inputWidth * colScale;
+            const expectedShape: [number, number, number, number] =
+                dataFormat === 'channelsFirst' ?
+                [2, 16, outputRows, outputCols] :
+                [2, outputRows, outputCols, 16];
 
             expect(output.shape).toEqual(expectedShape);
           });
