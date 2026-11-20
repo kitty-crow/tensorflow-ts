@@ -1148,6 +1148,39 @@ describeMathCPUAndGPU('Conv1D Layer: Tensor', () => {
   });
 });
 
+/**
+ * Expected dimensions for the symbolic separable-convolution test matrix.
+ * Each exclusive case matches the original padding, dilation and stride data.
+ */
+function expectedSeparableShape(
+    kernelSize: number[], stride: number, padding: PaddingMode,
+    dilationRate: number): [number, number] {
+  const same = padding === 'same';
+  const kernelStride = stride === undefined;
+  if (dilationRate == null && kernelStride) {
+    return [
+      (kernelSize[0] === 2 ? 5 : 3) + (same ? 1 : 0),
+      (kernelSize[1] === 2 ? 4 : 2) + (same ? 1 : 0)
+    ];
+  }
+  if (dilationRate == null) {
+    return [
+      (kernelSize[0] === 2 ? 10 : 9) + (same ? kernelSize[0] - 1 : 0),
+      (kernelSize[1] === 2 ? 8 : 6) + (same ? kernelSize[1] - 1 : 0)
+    ];
+  }
+  if (same && kernelStride) {
+    return [kernelSize[0] === 2 ? 6 : 4, kernelSize[1] === 2 ? 5 : 3];
+  }
+  if (same) {
+    return [11, 9];
+  }
+  if (kernelStride) {
+    return [kernelSize[0] === 2 ? 5 : 3, kernelSize[1] === 2 ? 4 : 1];
+  }
+  return [kernelSize[0] === 2 ? 9 : 7, kernelSize[1] === 2 ? 7 : 3];
+}
+
 describeMathCPU('SeparableConv2D Layers: Symbolic', () => {
   const filtersArray = [1, 8];
   const paddingModes: PaddingMode[] = [undefined, 'valid', 'same'];
@@ -1187,47 +1220,8 @@ describeMathCPU('SeparableConv2D Layers: Symbolic', () => {
 
                 const output = layer.apply(symbolicInput) as tfl.SymbolicTensor;
 
-                let outputRows: number;
-                let outputCols: number;
-                if (dilationRate == null) {
-                  if (stride === undefined) {  // Same strides as kernelSize.
-                    outputRows = kernelSize[0] === 2 ? 5 : 3;
-                    if (padding === 'same') {
-                      outputRows++;
-                    }
-                    outputCols = kernelSize[1] === 2 ? 4 : 2;
-                    if (padding === 'same') {
-                      outputCols++;
-                    }
-                  } else {  // strides: 1.
-                    outputRows = kernelSize[0] === 2 ? 10 : 9;
-                    if (padding === 'same') {
-                      outputRows += kernelSize[0] - 1;
-                    }
-                    outputCols = kernelSize[1] === 2 ? 8 : 6;
-                    if (padding === 'same') {
-                      outputCols += kernelSize[1] - 1;
-                    }
-                  }
-                } else {
-                  if (padding === 'same') {
-                    if (stride === undefined) {  // Same strides as kernelSize.
-                      outputRows = kernelSize[0] === 2 ? 6 : 4;
-                      outputCols = kernelSize[1] === 2 ? 5 : 3;
-                    } else {  // strides: 1.
-                      outputRows = 11;
-                      outputCols = 9;
-                    }
-                  } else {
-                    if (stride === undefined) {  // Same strides as kernelSize.
-                      outputRows = kernelSize[0] === 2 ? 5 : 3;
-                      outputCols = kernelSize[1] === 2 ? 4 : 1;
-                    } else {  // strides: 1.
-                      outputRows = kernelSize[0] === 2 ? 9 : 7;
-                      outputCols = kernelSize[1] === 2 ? 7 : 3;
-                    }
-                  }
-                }
+                const [outputRows, outputCols] = expectedSeparableShape(
+                    kernelSize, stride, padding, dilationRate);
                 let expectedShape: [number, number, number, number];
                 if (dataFormat === 'channelsFirst') {
                   expectedShape = [2, filters, outputRows, outputCols];
