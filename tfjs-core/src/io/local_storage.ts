@@ -123,6 +123,30 @@ function maybeStripScheme(key: string) {
       key;
 }
 
+/** Restore optional model fields from the local-storage metadata record. */
+function assignLocalStorageMetadata(
+    artifacts: ModelArtifacts, metadata: ModelMetadata): void {
+  artifacts.format = metadata.format;
+  artifacts.generatedBy = metadata.generatedBy;
+  artifacts.convertedBy = metadata.convertedBy;
+  if (metadata.signature != null) {
+    artifacts.signature = metadata.signature;
+  }
+  if (metadata.userDefinedMetadata != null) {
+    artifacts.userDefinedMetadata = metadata.userDefinedMetadata;
+  }
+  if (metadata.modelInitializer != null) {
+    artifacts.modelInitializer = metadata.modelInitializer;
+  }
+  if (metadata.initializerSignature != null) {
+    artifacts.initializerSignature = metadata.initializerSignature;
+  }
+  if (metadata.trainingConfig != null) {
+    artifacts.trainingConfig = metadata.trainingConfig;
+  }
+}
+
+
 /**
  * IOHandler subclass: Browser Local Storage.
  *
@@ -169,62 +193,61 @@ export class BrowserLocalStorage implements IOHandler {
       throw new Error(
           'BrowserLocalStorage.save() does not support saving model topology ' +
           'in binary formats yet.');
-    } else {
-      const topology = JSON.stringify(modelArtifacts.modelTopology);
-      const weightSpecs = JSON.stringify(modelArtifacts.weightSpecs);
+    }
+    const topology = JSON.stringify(modelArtifacts.modelTopology);
+    const weightSpecs = JSON.stringify(modelArtifacts.weightSpecs);
 
-      const modelArtifactsInfo: ModelArtifactsInfo =
-          getModelArtifactsInfoForJSON(modelArtifacts);
+    const modelArtifactsInfo: ModelArtifactsInfo =
+        getModelArtifactsInfoForJSON(modelArtifacts);
 
-      // TODO(mattsoulanille): Support saving models over 2GB that exceed
-      // Chrome's ArrayBuffer size limit.
-      const weightBuffer = CompositeArrayBuffer.join(modelArtifacts.weightData);
+    // TODO(mattsoulanille): Support saving models over 2GB that exceed
+    // Chrome's ArrayBuffer size limit.
+    const weightBuffer = CompositeArrayBuffer.join(modelArtifacts.weightData);
 
-      try {
-        this.LS.setItem(this.keys.info, JSON.stringify(modelArtifactsInfo));
-        this.LS.setItem(this.keys.topology, topology);
-        this.LS.setItem(this.keys.weightSpecs, weightSpecs);
-        this.LS.setItem(
-            this.keys.weightData,
-            arrayBufferToBase64String(weightBuffer));
+    try {
+      this.LS.setItem(this.keys.info, JSON.stringify(modelArtifactsInfo));
+      this.LS.setItem(this.keys.topology, topology);
+      this.LS.setItem(this.keys.weightSpecs, weightSpecs);
+      this.LS.setItem(
+          this.keys.weightData,
+          arrayBufferToBase64String(weightBuffer));
 
-        // Note that JSON.stringify doesn't write out keys that have undefined
-        // values, so for some keys, we set undefined instead of a null-ish
-        // value.
-        const metadata: Required<ModelMetadata> = {
-          format: modelArtifacts.format,
-          generatedBy: modelArtifacts.generatedBy,
-          convertedBy: modelArtifacts.convertedBy,
-          signature: modelArtifacts.signature != null ?
-              modelArtifacts.signature :
-              undefined,
-          userDefinedMetadata: modelArtifacts.userDefinedMetadata != null ?
-              modelArtifacts.userDefinedMetadata :
-              undefined,
-          modelInitializer: modelArtifacts.modelInitializer != null ?
-              modelArtifacts.modelInitializer :
-              undefined,
-          initializerSignature: modelArtifacts.initializerSignature != null ?
-              modelArtifacts.initializerSignature :
-              undefined,
-          trainingConfig: modelArtifacts.trainingConfig != null ?
-              modelArtifacts.trainingConfig :
-              undefined
-        };
-        this.LS.setItem(this.keys.modelMetadata, JSON.stringify(metadata));
+      // Note that JSON.stringify doesn't write out keys that have undefined
+      // values, so for some keys, we set undefined instead of a null-ish
+      // value.
+      const metadata: Required<ModelMetadata> = {
+        format: modelArtifacts.format,
+        generatedBy: modelArtifacts.generatedBy,
+        convertedBy: modelArtifacts.convertedBy,
+        signature: modelArtifacts.signature != null ?
+            modelArtifacts.signature :
+            undefined,
+        userDefinedMetadata: modelArtifacts.userDefinedMetadata != null ?
+            modelArtifacts.userDefinedMetadata :
+            undefined,
+        modelInitializer: modelArtifacts.modelInitializer != null ?
+            modelArtifacts.modelInitializer :
+            undefined,
+        initializerSignature: modelArtifacts.initializerSignature != null ?
+            modelArtifacts.initializerSignature :
+            undefined,
+        trainingConfig: modelArtifacts.trainingConfig != null ?
+            modelArtifacts.trainingConfig :
+            undefined
+      };
+      this.LS.setItem(this.keys.modelMetadata, JSON.stringify(metadata));
 
-        return {modelArtifactsInfo};
-      } catch (err) {
-        // If saving failed, clean up all items saved so far.
-        removeItems(this.keys);
+      return {modelArtifactsInfo};
+    } catch (err) {
+      // If saving failed, clean up all items saved so far.
+      removeItems(this.keys);
 
-        throw new Error(
-            `Failed to save model '${this.modelPath}' to local storage: ` +
-            `size quota being exceeded is a possible cause of this failure: ` +
-            `modelTopologyBytes=${modelArtifactsInfo.modelTopologyBytes}, ` +
-            `weightSpecsBytes=${modelArtifactsInfo.weightSpecsBytes}, ` +
-            `weightDataBytes=${modelArtifactsInfo.weightDataBytes}.`);
-      }
+      throw new Error(
+          `Failed to save model '${this.modelPath}' to local storage: ` +
+          `size quota being exceeded is a possible cause of this failure: ` +
+          `modelTopologyBytes=${modelArtifactsInfo.modelTopologyBytes}, ` +
+          `weightSpecsBytes=${modelArtifactsInfo.weightSpecsBytes}, ` +
+          `weightDataBytes=${modelArtifactsInfo.weightDataBytes}.`);
     }
   }
 
@@ -273,25 +296,8 @@ export class BrowserLocalStorage implements IOHandler {
     // Load meta-data fields.
     const metadataString = this.LS.getItem(this.keys.modelMetadata);
     if (metadataString != null) {
-      const metadata = JSON.parse(metadataString) as ModelMetadata;
-      out.format = metadata.format;
-      out.generatedBy = metadata.generatedBy;
-      out.convertedBy = metadata.convertedBy;
-      if (metadata.signature != null) {
-        out.signature = metadata.signature;
-      }
-      if (metadata.userDefinedMetadata != null) {
-        out.userDefinedMetadata = metadata.userDefinedMetadata;
-      }
-      if (metadata.modelInitializer != null) {
-        out.modelInitializer = metadata.modelInitializer;
-      }
-      if (metadata.initializerSignature != null) {
-        out.initializerSignature = metadata.initializerSignature;
-      }
-      if (metadata.trainingConfig != null) {
-        out.trainingConfig = metadata.trainingConfig;
-      }
+      assignLocalStorageMetadata(
+          out, JSON.parse(metadataString) as ModelMetadata);
     }
 
     // Load weight data.
@@ -308,16 +314,12 @@ export class BrowserLocalStorage implements IOHandler {
 }
 
 export const localStorageRouter: IORouter = (url: string|string[]) => {
-  if (!env().getBool('IS_BROWSER')) {
+  if (!env().getBool('IS_BROWSER') || Array.isArray(url) ||
+      !url.startsWith(BrowserLocalStorage.URL_SCHEME)) {
     return null;
-  } else {
-    if (!Array.isArray(url) && url.startsWith(BrowserLocalStorage.URL_SCHEME)) {
-      return browserLocalStorage(
-          url.slice(BrowserLocalStorage.URL_SCHEME.length));
-    } else {
-      return null;
-    }
   }
+  return browserLocalStorage(
+      url.slice(BrowserLocalStorage.URL_SCHEME.length));
 };
 IORouterRegistry.registerSaveRouter(localStorageRouter);
 IORouterRegistry.registerLoadRouter(localStorageRouter);
