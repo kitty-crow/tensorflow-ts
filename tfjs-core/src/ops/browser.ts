@@ -31,6 +31,65 @@ import {tensor3d} from './tensor3d';
 let fromPixels2DContext: CanvasRenderingContext2D;
 let hasToPixelsWarned = false;
 
+type PixelSource = PixelData|ImageData|HTMLImageElement|HTMLCanvasElement|
+    HTMLVideoElement|ImageBitmap;
+type PixelSourceKind = 'pixel-data'|'image-data'|'video'|'image'|'canvas'|
+    'bitmap';
+
+/** Validate pixel input by the original precedence of supported source types. */
+function classifyPixelSource(pixels: PixelSource): PixelSourceKind {
+  if ((pixels as PixelData).data instanceof Uint8Array) {
+    return 'pixel-data';
+  }
+  if (typeof ImageData !== 'undefined' && pixels instanceof ImageData) {
+    return 'image-data';
+  }
+  if (typeof HTMLVideoElement !== 'undefined' &&
+      pixels instanceof HTMLVideoElement) {
+    return 'video';
+  }
+  if (typeof HTMLImageElement !== 'undefined' &&
+      pixels instanceof HTMLImageElement) {
+    return 'image';
+  }
+  // Canvas-like objects, including OffscreenCanvas, precede ImageBitmap.
+  // tslint:disable-next-line: no-any
+  if ((pixels as any).getContext != null) {
+    return 'canvas';
+  }
+  if (typeof ImageBitmap !== 'undefined' && pixels instanceof ImageBitmap) {
+    return 'bitmap';
+  }
+  throw new Error(
+      'pixels passed to tf.browser.fromPixels() must be either an ' +
+      'HTMLVideoElement, HTMLImageElement, HTMLCanvasElement, ImageData ' +
+      'in browser, or OffscreenCanvas, ImageData in webworker' +
+      ' or {data: Uint32Array, width: number, height: number}, ' +
+      `but was ${(pixels as {}).constructor.name}`);
+}
+
+/** Resolve the reusable 2D context without requiring DOM support in workers. */
+function pixels2DContext(): CanvasRenderingContext2D {
+  if (fromPixels2DContext != null) {
+    return fromPixels2DContext;
+  }
+  if (typeof document !== 'undefined') {
+    fromPixels2DContext = document.createElement('canvas').getContext(
+        '2d', {willReadFrequently: true});
+    return fromPixels2DContext;
+  }
+  if (typeof OffscreenCanvas !== 'undefined' &&
+      typeof OffscreenCanvasRenderingContext2D !== 'undefined') {
+    // @ts-ignore
+    fromPixels2DContext = new OffscreenCanvas(1, 1).getContext('2d');
+    return fromPixels2DContext;
+  }
+  throw new Error(
+      'Cannot parse input in current context. ' +
+      'Reason: OffscreenCanvas Context2D rendering is not supported.');
+}
+
+
 /**
  * Creates a `tf.Tensor` from an image.
  *
@@ -75,39 +134,7 @@ function fromPixels_(
   if (pixels == null) {
     throw new Error('pixels passed to tf.browser.fromPixels() can not be null');
   }
-  let isPixelData = false;
-  let isImageData = false;
-  let isVideo = false;
-  let isImage = false;
-  let isCanvasLike = false;
-  let isImageBitmap = false;
-  if ((pixels as PixelData).data instanceof Uint8Array) {
-    isPixelData = true;
-  } else if (
-      typeof (ImageData) !== 'undefined' && pixels instanceof ImageData) {
-    isImageData = true;
-  } else if (
-      typeof (HTMLVideoElement) !== 'undefined' &&
-      pixels instanceof HTMLVideoElement) {
-    isVideo = true;
-  } else if (
-      typeof (HTMLImageElement) !== 'undefined' &&
-      pixels instanceof HTMLImageElement) {
-    isImage = true;
-    // tslint:disable-next-line: no-any
-  } else if ((pixels as any).getContext != null) {
-    isCanvasLike = true;
-  } else if (
-      typeof (ImageBitmap) !== 'undefined' && pixels instanceof ImageBitmap) {
-    isImageBitmap = true;
-  } else {
-    throw new Error(
-        'pixels passed to tf.browser.fromPixels() must be either an ' +
-        `HTMLVideoElement, HTMLImageElement, HTMLCanvasElement, ImageData ` +
-        `in browser, or OffscreenCanvas, ImageData in webworker` +
-        ` or {data: Uint32Array, width: number, height: number}, ` +
-        `but was ${(pixels as {}).constructor.name}`);
-  }
+  const sourceKind = classifyPixelSource(pixels);
   // If the current backend has 'FromPixels' registered, it has a more
   // efficient way of handling pixel uploads, so we call that.
   const kernel = getKernel(FromPixels, ENGINE.backendName);
@@ -119,7 +146,7 @@ function fromPixels_(
         attrs as unknown as NamedAttrMap);
   }
 
-  const [width, height] = isVideo ?
+  const [width, height] = sourceKind === 'video' ?
       [
         (pixels as HTMLVideoElement).videoWidth,
         (pixels as HTMLVideoElement).videoHeight
@@ -127,34 +154,26 @@ function fromPixels_(
       [pixels.width, pixels.height];
   let vals: Uint8ClampedArray|Uint8Array;
 
-  if (isCanvasLike) {
-    vals =
-        // tslint:disable-next-line:no-any
-        (pixels as any).getContext('2d').getImageData(0, 0, width, height).data;
-  } else if (isImageData || isPixelData) {
-    vals = (pixels as PixelData | ImageData).data;
-  } else if (isImage || isVideo || isImageBitmap) {
-    if (fromPixels2DContext == null) {
-      if (typeof document === 'undefined') {
-        if (typeof OffscreenCanvas !== 'undefined' &&
-            typeof OffscreenCanvasRenderingContext2D !== 'undefined') {
-          // @ts-ignore
-          fromPixels2DContext = new OffscreenCanvas(1, 1).getContext('2d');
-        } else {
-          throw new Error(
-              'Cannot parse input in current context. ' +
-              'Reason: OffscreenCanvas Context2D rendering is not supported.');
-        }
-      } else {
-        fromPixels2DContext = document.createElement('canvas').getContext(
-            '2d', {willReadFrequently: true});
-      }
+  switch (sourceKind) {
+    case 'canvas':
+      vals =
+          // tslint:disable-next-line:no-any
+          (pixels as any).getContext('2d').getImageData(0, 0, width, height).data;
+      break;
+    case 'pixel-data':
+    case 'image-data':
+      vals = (pixels as PixelData|ImageData).data;
+      break;
+    case 'video':
+    case 'image':
+    case 'bitmap': {
+      const context = pixels2DContext();
+      context.canvas.width = width;
+      context.canvas.height = height;
+      context.drawImage(pixels as HTMLVideoElement, 0, 0, width, height);
+      vals = context.getImageData(0, 0, width, height).data;
+      break;
     }
-    fromPixels2DContext.canvas.width = width;
-    fromPixels2DContext.canvas.height = height;
-    fromPixels2DContext.drawImage(
-        pixels as HTMLVideoElement, 0, 0, width, height);
-    vals = fromPixels2DContext.getImageData(0, 0, width, height).data;
   }
   let values: Int32Array;
   if (numChannels === 4) {
