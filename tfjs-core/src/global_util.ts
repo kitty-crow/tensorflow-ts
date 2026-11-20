@@ -21,22 +21,26 @@
 // tslint:disable-next-line:no-any
 let globalNameSpace: {_tfGlobals: Map<string, any>};
 // tslint:disable-next-line:no-any
+function resolveGlobalObject(): any {
+  if (typeof (window) !== 'undefined') {
+    return window;
+  }
+  if (typeof (global) !== 'undefined') {
+    return global;
+  }
+  if (typeof (process) !== 'undefined') {
+    return process;
+  }
+  if (typeof (self) !== 'undefined') {
+    return self;
+  }
+  throw new Error('Could not find a global object');
+}
+
+// tslint:disable-next-line:no-any
 export function getGlobalNamespace(): {_tfGlobals: Map<string, any>} {
   if (globalNameSpace == null) {
-    // tslint:disable-next-line:no-any
-    let ns: any;
-    if (typeof (window) !== 'undefined') {
-      ns = window;
-    } else if (typeof (global) !== 'undefined') {
-      ns = global;
-    } else if (typeof (process) !== 'undefined') {
-      ns = process;
-    } else if (typeof (self) !== 'undefined') {
-      ns = self;
-    } else {
-      throw new Error('Could not find a global object');
-    }
-    globalNameSpace = ns;
+    globalNameSpace = resolveGlobalObject();
   }
   return globalNameSpace;
 }
@@ -61,9 +65,8 @@ export function getGlobal<T>(key: string, init: () => T): T {
   const globalMap = getGlobalMap();
   if (globalMap.has(key)) {
     return globalMap.get(key);
-  } else {
-    const singleton = init();
-    globalMap.set(key, singleton);
-    return globalMap.get(key);
   }
+  const singleton = init();
+  globalMap.set(key, singleton);
+  return globalMap.get(key);
 }

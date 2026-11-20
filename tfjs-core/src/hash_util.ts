@@ -141,13 +141,13 @@ function hashLen33to64(s: Uint8Array, len = s.length): Long {
 
 export function fingerPrint64(s: Uint8Array, len = s.length): Long {
   const seed: Long = Long.fromNumber(81, true);
+  if (len <= 16) {
+    return hashLen0to16(s, len);
+  }
   if (len <= 32) {
-    if (len <= 16) {
-      return hashLen0to16(s, len);
-    } else {
-      return hashLen17to32(s, len);
-    }
-  } else if (len <= 64) {
+    return hashLen17to32(s, len);
+  }
+  if (len <= 64) {
     return hashLen33to64(s, len);
   }
 

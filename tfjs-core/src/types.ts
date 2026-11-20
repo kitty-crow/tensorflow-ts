@@ -124,10 +124,10 @@ const upcastTypeMap = {
 };
 
 export function upcastType(typeA: DataType, typeB: DataType): DataType {
+  if (typeA === 'string' && typeB === 'string') {
+    return 'string';
+  }
   if (typeA === 'string' || typeB === 'string') {
-    if (typeA === 'string' && typeB === 'string') {
-      return 'string';
-    }
     throw new Error(`Can not upcast ${typeA} with ${typeB}`);
   }
   return upcastTypeMap[typeA][typeB];

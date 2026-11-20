@@ -56,12 +56,11 @@ export class Environment {
   }
 
   setPlatform(platformName: string, platform: Platform) {
-    if (this.platform != null) {
-      if (!(env().getBool('IS_TEST') || env().getBool('PROD'))) {
-        console.warn(
-            `Platform ${this.platformName} has already been set. ` +
-            `Overwriting the platform with ${platformName}.`);
-      }
+    if (this.platform != null &&
+        !(env().getBool('IS_TEST') || env().getBool('PROD'))) {
+      console.warn(
+          `Platform ${this.platformName} has already been set. ` +
+          `Overwriting the platform with ${platformName}.`);
     }
     this.platformName = platformName;
     this.platform = platform;
@@ -74,14 +73,15 @@ export class Environment {
 
     // Override the flag value from the URL. This has to happen here because
     // the environment is initialized before flags get registered.
-    if (this.urlFlags[flagName] != null) {
-      const flagValue = this.urlFlags[flagName];
-      if (!(env().getBool('IS_TEST') || env().getBool('PROD'))) {
-        console.warn(
-            `Setting feature override from URL ${flagName}: ${flagValue}.`);
-      }
-      this.set(flagName, flagValue);
+    if (this.urlFlags[flagName] == null) {
+      return;
     }
+    const flagValue = this.urlFlags[flagName];
+    if (!(env().getBool('IS_TEST') || env().getBool('PROD'))) {
+      console.warn(
+          `Setting feature override from URL ${flagName}: ${flagValue}.`);
+    }
+    this.set(flagName, flagValue);
   }
 
   async getAsync(flagName: string): Promise<FlagValue> {
@@ -194,11 +194,11 @@ function parseValue(flagName: string, value: string): FlagValue {
   const lowerCaseValue = value.toLowerCase();
   if (lowerCaseValue === 'true' || lowerCaseValue === 'false') {
     return lowerCaseValue === 'true';
-  } else if (`${+ lowerCaseValue}` === lowerCaseValue) {
-    return +lowerCaseValue;
-  } else {
-    return value;
   }
+  if (`${+ lowerCaseValue}` === lowerCaseValue) {
+    return +lowerCaseValue;
+  }
+  return value;
 }
 
 /**
