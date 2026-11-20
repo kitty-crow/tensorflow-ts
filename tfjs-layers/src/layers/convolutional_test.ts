@@ -30,6 +30,13 @@ function convolutionOutputSize(
   return padding === 'same' ? Math.ceil(inputSize / stride) :
                               Math.floor((inputSize - kernelSize) / stride) + 1;
 }
+/** Derive the transposed convolution output dimension for a spatial axis. */
+function transposedConvolutionOutputSize(
+    inputSize: number, kernelSize: number, stride: number,
+    padding: PaddingMode): number {
+  return padding === 'same' ? inputSize * stride :
+                              (inputSize - 1) * stride + kernelSize;
+}
 
 describeMathCPUAndGPU('conv1dWithBias', () => {
   const xLength4Data = [10, 20, 40, 80];
@@ -1674,33 +1681,12 @@ describeMathCPU('Conv3DTranspose: Symbolic', () => {
                 {filters, kernelSize, padding, strides});
             const y = layer.apply(x) as tfl.SymbolicTensor;
 
-            let expectedShape: [number, number, number, number, number];
-            switch (strides) {
-              case 1: {
-                if (padding === 'same') {
-                  expectedShape = [1, 2, 11, 9, filters];
-                } else {
-                  if (kernelSize[0] === 2) {
-                    expectedShape = [1, 3, 12, 10, filters];
-                  } else {
-                    expectedShape = [1, 4, 14, 12, filters];
-                  }
-                }
-                break;
-              }
-              case 3: {
-                if (padding === 'same') {
-                  expectedShape = [1, 6, 33, 27, filters];
-                } else {
-                  if (kernelSize[0] === 2) {
-                    expectedShape = [1, 6, 33, 27, filters];
-                  } else {
-                    expectedShape = [1, 6, 34, 28, filters];
-                  }
-                }
-                break;
-              }
-            }
+            const expectedShape: [number, number, number, number, number] =
+                [1,
+                 transposedConvolutionOutputSize(2, kernelSize[0], strides, padding),
+                 transposedConvolutionOutputSize(11, kernelSize[1], strides, padding),
+                 transposedConvolutionOutputSize(9, kernelSize[2], strides, padding),
+                 filters];
             expect(y.shape).toEqual(expectedShape);
           });
         }
