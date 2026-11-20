@@ -1,0 +1,4 @@
+[submodule "vendor/code-guards"]
+	path = vendor/code-guards
+	url = https://github.com/kitty-crow/code-guards.git
+	branch = main

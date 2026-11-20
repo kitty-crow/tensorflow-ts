@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "tfjs/src/**/*.ts",
+    "tfjs-core/src/**/*.ts",
+    "tfjs-layers/src/**/*.ts",
+    "tfjs-data/src/**/*.ts",
+    "tfjs-converter/src/**/*.ts",
+    "tfjs-backend-cpu/src/**/*.ts",
+    "tfjs-backend-webgl/src/**/*.ts",
+    "tfjs-backend-webgpu/src/**/*.ts",
+    "tfjs-node/src/**/*.ts",
+    "tfjs-node-gpu/src/**/*.ts",
+    "tfjs*/**/*.test.ts",
+    "tfjs*/**/*_test.ts",
+    "link-package/**/*.ts",
+    "tools/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/deps/**",
+    "**/coverage/**",
+    "**/bazel-out/**",
+    "vendor/**",
+    "tfjs-node-gpu/binding/**",
+    "**/*.d.ts",
+    "**/test_data/**",
+    "**/test-data/**"
+  ]
+}
