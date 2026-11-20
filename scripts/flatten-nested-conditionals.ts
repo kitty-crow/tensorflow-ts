@@ -36,6 +36,37 @@ function returnOrThrow(statement: ts.Statement): boolean {
   return last !== undefined && (ts.isReturnStatement(last) || ts.isThrowStatement(last));
 }
 
+function nestedConditional(statement: ts.Statement): boolean {
+  let nested = false;
+  const visit = (node: ts.Node): void => {
+    if (ts.isIfStatement(node)) nested = true;
+    if (ts.isFunctionLike(node)) return;
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(statement, visit);
+  return nested;
+}
+
+/**
+ * A terminating fallback may be lifted to an early guard. Keeping the then
+ * block as a standalone block preserves let/const scope and abrupt completion.
+ */
+function liftTerminalFallback(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
+  const fallback = node.elseStatement;
+  if (fallback === undefined || !returnOrThrow(fallback) ||
+      !nestedConditional(node.thenStatement) || !ts.isBlock(node.parent)) return null;
+  const between = source.text.slice(node.thenStatement.end, fallback.getStart(source));
+  if (!/^\s*else\s*$/.test(between)) return null;
+  const pad = indentation(source, node.getStart(source));
+  return {
+    start: node.getStart(source),
+    end: node.end,
+    replacement: 'if (!(' + node.expression.getText(source) + ')) ' +
+      fallback.getText(source) + '\n' + pad + node.thenStatement.getText(source),
+    kind: 'terminal fallback guard'
+  };
+}
+
 function mergeConjunction(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
   if (node.elseStatement !== undefined || !ts.isBlock(node.thenStatement)) return null;
   const outer = node.thenStatement;
@@ -148,7 +179,9 @@ function findEdits(source: ts.SourceFile): Edit[] {
   const walk = (node: ts.Node): void => {
     if (ts.isIfStatement(node)) {
       const replacement = mergeConjunction(node, source) ??
-        switchDispatch(node, source) ?? flattenTerminalElse(node, source);
+        switchDispatch(node, source) ??
+        liftTerminalFallback(node, source) ??
+        flattenTerminalElse(node, source);
       if (replacement !== null) options.push(replacement);
     }
     ts.forEachChild(node, walk);
