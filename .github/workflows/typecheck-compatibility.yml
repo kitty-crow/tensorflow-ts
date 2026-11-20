@@ -10,6 +10,7 @@ on:
       - 'tfjs-core/src/**'
       - 'tfjs-layers/src/**'
       - 'tfjs-data/src/**'
+      - 'tfjs-backend-cpu/src/**'
       - 'tfjs-backend-webgl/src/**'
   pull_request:
   workflow_dispatch:
@@ -19,7 +20,7 @@ permissions:
 
 jobs:
   compile:
-    name: Core, Layers, Data and WebGL TypeScript
+    name: Core, Layers, Data, CPU and WebGL TypeScript
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -32,5 +33,7 @@ jobs:
         run: bun x tsc --noEmit --pretty false --project tfjs-layers/tsconfig.json
       - name: Check TensorFlow Data source types
         run: bun x tsc --noEmit --pretty false --project tfjs-data/tsconfig.json
+      - name: Check TensorFlow CPU backend source types
+        run: bun x tsc --noEmit --pretty false --project tfjs-backend-cpu/tsconfig.json
       - name: Check TensorFlow WebGL source types
         run: bun x tsc --noEmit --pretty false --project tfjs-backend-webgl/tsconfig.json
