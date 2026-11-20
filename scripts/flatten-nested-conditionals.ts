@@ -22,6 +22,13 @@ function hasComments(value: string): boolean {
   return value.includes('//') || value.includes('/*');
 }
 
+function indentation(source: ts.SourceFile, position: number): string {
+  const location = source.getLineAndCharacterOfPosition(position);
+  const lineStart = source.getPositionOfLineAndCharacter(location.line, 0);
+  const leading = source.text.slice(lineStart, position);
+  return /^[ \t]*$/.test(leading) ? leading : '';
+}
+
 function returnOrThrow(statement: ts.Statement): boolean {
   if (ts.isReturnStatement(statement) || ts.isThrowStatement(statement)) return true;
   if (!ts.isBlock(statement)) return false;
@@ -62,7 +69,8 @@ function flattenTerminalElse(node: ts.IfStatement, source: ts.SourceFile): Edit 
     start: node.getStart(source),
     end: node.end,
     replacement: 'if (' + node.expression.getText(source) + ') ' +
-      node.thenStatement.getText(source) + '\n' + branch.getText(source),
+      node.thenStatement.getText(source) + '\n' +
+      indentation(source, node.getStart(source)) + branch.getText(source),
     kind: 'terminal else-if'
   };
 }
@@ -109,14 +117,19 @@ function switchDispatch(node: ts.IfStatement, source: ts.SourceFile): Edit | nul
   if (choices.length < 2) return null;
   const otherwise = next.elseStatement;
   if (otherwise !== undefined && unlabelledBreak(otherwise)) return null;
-  const caseStrings = choices.map(choice =>
-    '  case ' + choice.literal + ': {\n' +
-    '    ' + choice.body.getText(source) + '\n    break;\n  }');
-  if (otherwise !== undefined) caseStrings.push('  default: {\n    ' + otherwise.getText(source) + '\n  }');
+  const pad = indentation(source, node.getStart(source));
+  const caseStrings = choices.map(choice => {
+    const body = choice.body.getText(source);
+    return '  case ' + choice.literal + ':\n    ' + body +
+      (returnOrThrow(choice.body) ? '' : '\n    break;');
+  });
+  if (otherwise !== undefined) caseStrings.push('  default:\n    ' + otherwise.getText(source));
   return {
     start: node.getStart(source),
     end: node.end,
-    replacement: 'switch (' + first.identifier + ') {\n' + caseStrings.join('\n') + '\n}',
+    replacement: 'switch (' + first.identifier + ') {\n' +
+      caseStrings.map(text => text.split('\n').map(line => pad + line).join('\n')).join('\n') +
+      '\n' + pad + '}',
     kind: 'literal-dispatch switch'
   };
 }
