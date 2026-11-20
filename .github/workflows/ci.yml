@@ -37,5 +37,21 @@ jobs:
       - name: Check TensorFlow source policy with Bun
         run: bun run check:source-policy
 
+      - name: Collect nested conditional inventory
+        run: |
+          set +e
+          bun run guards:nested --format json --progress > nested-conditions.json
+          result=$?
+          set -e
+          if [ "$result" -gt 1 ]; then exit "$result"; fi
+          bun scripts/summarise-nested-conditions.ts nested-conditions.json
+
+      - name: Upload complete nested conditional inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: nested-conditional-inventory
+          path: nested-conditions.json
+          if-no-files-found: error
+
       - name: Strict nested conditional scan with Bun
         run: bun run guards:nested --format github --progress

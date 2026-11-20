@@ -47,3 +47,5 @@ For live granularity during the strict scan, use `bun run guards:strict --progre
 ## Temporary nested-conditional validation
 
 The CI workflow currently runs only the strict `no-nested-if` Code Guards rule while neural analysis is being optimised upstream. Source files and tests remain in scope; vendored dependencies are excluded. Run the same local check with `bun run guards:nested --format github --progress`. The existing `bun run guards:strict` command remains available for the complete 23-rule scan. Restore full CI enforcement when Code Guards performance is suitable for this repository.
+
+The temporary nested-conditional CI also publishes an unmodified `nested-conditional-inventory` JSON artifact, and prints the most affected source files and the first exact locations in the job log. The final strict scan still fails on any finding.
