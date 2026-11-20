@@ -105,7 +105,8 @@
     "bazel:lint-check": "yarn bazel:format --lint=warn --mode=check",
     "buildifier-ci": "./scripts/buildifier-ci.sh",
     "start-local-debugger-server": "node ./scripts/start_local_debugger_server.js",
-    "guards:strict": "bun vendor/code-guards/dist/src/cli.js --project tsconfig.code-guards.json --strict --include-tests"
+    "guards:strict": "bun vendor/code-guards/dist/src/cli.js --project tsconfig.code-guards.json --strict --include-tests",
+    "guards:nested": "bun vendor/code-guards/dist/src/cli.js no-nested-if --project tsconfig.code-guards.json --strict --include-tests"
   },
   "dependencies": {
     "node-fetch": "^2.6.7"
