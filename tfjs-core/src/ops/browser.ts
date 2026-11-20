@@ -31,6 +31,35 @@ import {tensor3d} from './tensor3d';
 let fromPixels2DContext: CanvasRenderingContext2D;
 let hasToPixelsWarned = false;
 
+/** Validate the native pixel range for the Tensor's element type. */
+function validatePixelComponent(dtype: string, value: number): void {
+  if (dtype === 'float32' && (value < 0 || value > 1)) {
+    throw new Error(
+        `Tensor values for a float32 Tensor must be in the ` +
+        `range [0 - 1] but encountered ${value}.`);
+  }
+  if (dtype === 'int32' && (value < 0 || value > 255)) {
+    throw new Error(
+        `Tensor values for a int32 Tensor must be in the ` +
+        `range [0 - 255] but encountered ${value}.`);
+  }
+}
+
+/** Emit the canvas drawing performance warning once when a Draw kernel exists. */
+function warnAboutCanvasDrawing(): void {
+  if (hasToPixelsWarned) {
+    return;
+  }
+  const kernel = getKernel(Draw, ENGINE.backendName);
+  if (kernel == null) {
+    return;
+  }
+  console.warn(
+      'tf.browser.toPixels is not efficient to draw tensor on canvas. ' +
+      'Please try tf.browser.draw instead.');
+  hasToPixelsWarned = true;
+}
+
 type PixelSource = PixelData|ImageData|HTMLImageElement|HTMLCanvasElement|
     HTMLVideoElement|ImageBitmap;
 type PixelSourceKind = 'pixel-data'|'image-data'|'video'|'image'|'canvas'|
@@ -359,17 +388,7 @@ export async function toPixels(
     for (let d = 0; d < depth; d++) {
       const value = data[i * depth + d];
 
-      if ($img.dtype === 'float32') {
-        if (value < 0 || value > 1) {
-          throw new Error(
-              `Tensor values for a float32 Tensor must be in the ` +
-              `range [0 - 1] but encountered ${value}.`);
-        }
-      } else if (($img.dtype === 'int32') && (value < 0 || value > 255)) {
-          throw new Error(
-              `Tensor values for a int32 Tensor must be in the ` +
-              `range [0 - 255] but encountered ${value}.`);
-        }
+      validatePixelComponent($img.dtype, value);
 
       if (depth === 1) {
         rgba[0] = value * multiplier;
@@ -388,15 +407,7 @@ export async function toPixels(
   }
 
   if (canvas != null) {
-    if (!hasToPixelsWarned) {
-      const kernel = getKernel(Draw, ENGINE.backendName);
-      if (kernel != null) {
-        console.warn(
-            'tf.browser.toPixels is not efficient to draw tensor on canvas. ' +
-            'Please try tf.browser.draw instead.');
-        hasToPixelsWarned = true;
-      }
-    }
+    warnAboutCanvasDrawing();
 
     canvas.width = width;
     canvas.height = height;
