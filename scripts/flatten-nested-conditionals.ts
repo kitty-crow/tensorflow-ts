@@ -198,6 +198,45 @@ function foldSimpleNestedBranches(node: ts.IfStatement, source: ts.SourceFile): 
   };
 }
 
+/**
+ * A guarded return followed immediately by an unconditional return selects
+ * exactly one result. A conditional expression preserves evaluation order,
+ * short circuiting, and type narrowing while removing the inner control flow.
+ */
+function foldGuardedReturns(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
+  const outer = node.thenStatement;
+  if (node.elseStatement !== undefined || !ts.isBlock(outer) ||
+      outer.statements.length !== 2) return null;
+  const first = outer.statements[0];
+  const last = outer.statements[1];
+  if (!ts.isIfStatement(first) || first.elseStatement !== undefined ||
+      !ts.isReturnStatement(last) || last.expression === undefined) return null;
+  const branch = first.thenStatement;
+  const returnNode = ts.isBlock(branch) && branch.statements.length === 1 ?
+      branch.statements[0] : branch;
+  if (!ts.isReturnStatement(returnNode) || returnNode.expression === undefined) return null;
+  const leading = source.text.slice(outer.getStart(source) + 1, first.getStart(source));
+  const between = source.text.slice(first.end, last.getStart(source));
+  const tail = source.text.slice(last.end, outer.end - 1);
+  if (hasComments(between) || hasComments(tail)) return null;
+  if (ts.isBlock(branch)) {
+    const beforeReturn = source.text.slice(branch.getStart(source) + 1,
+        returnNode.getStart(source));
+    const afterReturn = source.text.slice(returnNode.end, branch.end - 1);
+    if (hasComments(beforeReturn) || hasComments(afterReturn)) return null;
+  }
+  const pad = indentation(source, node.getStart(source));
+  const branchPad = indentation(source, first.getStart(source));
+  return {
+    start: node.getStart(source), end: node.end,
+    replacement: 'if (' + node.expression.getText(source) + ') {' + leading +
+      'return (' + first.expression.getText(source) + ') ?\n' +
+      branchPad + '    (' + returnNode.expression.getText(source) + ') :\n' +
+      branchPad + '    (' + last.expression.getText(source) + ');\n' + pad + '}',
+    kind: 'guarded return selection'
+  };
+}
+
 function flattenTerminalElse(node: ts.IfStatement, source: ts.SourceFile): Edit | null {
   const branch = node.elseStatement;
   if (branch === undefined || !ts.isIfStatement(branch) || !returnOrThrow(node.thenStatement)) return null;
@@ -289,6 +328,7 @@ function findEdits(source: ts.SourceFile): Edit[] {
     if (ts.isIfStatement(node)) {
       const replacement = mergeConjunction(node, source) ??
         foldSimpleNestedBranches(node, source) ??
+        foldGuardedReturns(node, source) ??
         switchDispatch(node, source) ??
         liftTerminalFallback(node, source) ??
         liftFinalGuard(node, source) ??
