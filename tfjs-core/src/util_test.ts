@@ -532,6 +532,13 @@ describe('util.hasEncodingLoss', () => {
   });
 });
 
+/** Compare nested numeric values without recursive Jasmine matcher types. */
+function expectNestedNumericArray(
+    actual: number|util.NestedNumericArray,
+    expected: number|util.NestedNumericArray): void {
+  expect<number|ReadonlyArray<number|object>>(actual).toEqual(expected);
+}
+
 describeWithFlags('util.toNestedArray', ALL_ENVS, () => {
   it('rejects a scalar with missing data', () => {
     expect(() => util.toNestedArray([], new Float32Array(0)))
@@ -539,19 +546,19 @@ describeWithFlags('util.toNestedArray', ALL_ENVS, () => {
   });
   it('2 dimensions', () => {
     const a = new Float32Array([1, 2, 3, 4, 5, 6]);
-    expect(util.toNestedArray([2, 3], a)).toEqual([[1, 2, 3], [4, 5, 6]]);
+    expectNestedNumericArray(util.toNestedArray([2, 3], a), [[1, 2, 3], [4, 5, 6]]);
   });
 
   it('3 dimensions (2x2x3)', () => {
     const a = new Float32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-    expect(util.toNestedArray([2, 2, 3], a)).toEqual([
+    expectNestedNumericArray(util.toNestedArray([2, 2, 3], a), [
       [[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [9, 10, 11]]
     ]);
   });
 
   it('3 dimensions (3x2x2)', () => {
     const a = new Float32Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-    expect(util.toNestedArray([3, 2, 2], a)).toEqual([
+    expectNestedNumericArray(util.toNestedArray([3, 2, 2], a), [
       [[0, 1], [2, 3]], [[4, 5], [6, 7]], [[8, 9], [10, 11]]
     ]);
   });
@@ -563,26 +570,26 @@ describeWithFlags('util.toNestedArray', ALL_ENVS, () => {
 
   it('tensor to nested array', async () => {
     const x = tensor2d([1, 2, 3, 4], [2, 2]);
-    expect(util.toNestedArray(x.shape, await x.data())).toEqual([
+    expectNestedNumericArray(util.toNestedArray(x.shape, await x.data()), [
       [1, 2], [3, 4]
     ]);
   });
 
   it('scalar to nested array', async () => {
     const x = scalar(1);
-    expect(util.toNestedArray(x.shape, await x.data())).toEqual(1);
+    expectNestedNumericArray(util.toNestedArray(x.shape, await x.data()), 1);
   });
 
   it('tensor with zero shape', () => {
     const a = new Float32Array([0, 1]);
-    expect(util.toNestedArray([1, 0, 2], a)).toEqual([]);
+    expectNestedNumericArray(util.toNestedArray([1, 0, 2], a), []);
   });
 });
 
 describeWithFlags('util.toNestedArray for a complex tensor', ALL_ENVS, () => {
   it('2 dimensions', () => {
     const a = new Float32Array([1, 11, 2, 12, 3, 13, 4, 14, 5, 15, 6, 16]);
-    expect(util.toNestedArray([2, 3], a, true)).toEqual([
+    expectNestedNumericArray(util.toNestedArray([2, 3], a, true), [
       [1, 11, 2, 12, 3, 13], [4, 14, 5, 15, 6, 16]
     ]);
   });
@@ -592,7 +599,7 @@ describeWithFlags('util.toNestedArray for a complex tensor', ALL_ENVS, () => {
       0, 50, 1, 51, 2, 52, 3, 53, 4,  54, 5,  55,
       6, 56, 7, 57, 8, 58, 9, 59, 10, 60, 11, 61
     ]);
-    expect(util.toNestedArray([2, 2, 3], a, true)).toEqual([
+    expectNestedNumericArray(util.toNestedArray([2, 2, 3], a, true), [
       [[0, 50, 1, 51, 2, 52], [3, 53, 4, 54, 5, 55]],
       [[6, 56, 7, 57, 8, 58], [9, 59, 10, 60, 11, 61]]
     ]);
@@ -603,7 +610,7 @@ describeWithFlags('util.toNestedArray for a complex tensor', ALL_ENVS, () => {
       0, 50, 1, 51, 2, 52, 3, 53, 4,  54, 5,  55,
       6, 56, 7, 57, 8, 58, 9, 59, 10, 60, 11, 61
     ]);
-    expect(util.toNestedArray([3, 2, 2], a, true)).toEqual([
+    expectNestedNumericArray(util.toNestedArray([3, 2, 2], a, true), [
       [[0, 50, 1, 51], [2, 52, 3, 53]], [[4, 54, 5, 55], [6, 56, 7, 57]],
       [[8, 58, 9, 59], [10, 60, 11, 61]]
     ]);
@@ -616,7 +623,7 @@ describeWithFlags('util.toNestedArray for a complex tensor', ALL_ENVS, () => {
 
   it('tensor to nested array', async () => {
     const x = complex([[1, 2], [3, 4]], [[11, 12], [13, 14]]);
-    expect(util.toNestedArray(x.shape, await x.data(), true)).toEqual([
+    expectNestedNumericArray(util.toNestedArray(x.shape, await x.data(), true), [
       [1, 11, 2, 12], [3, 13, 4, 14]
     ]);
   });
