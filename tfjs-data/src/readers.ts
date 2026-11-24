@@ -132,8 +132,9 @@ export function csv(
  *
  * @param f A function that produces one data element on each call.
  */
-export function func<T extends TensorContainer>(
-    f: () => IteratorResult<T>| Promise<IteratorResult<T>>): Dataset<T> {
+export function func<T extends TensorContainer, TReturn = unknown>(
+    f: () => IteratorResult<T, TReturn>|
+        Promise<IteratorResult<T, TReturn>>): Dataset<T> {
   const iter = iteratorFromFunction(f);
   return datasetFromIteratorFn(async () => iter);
 }
@@ -196,9 +197,10 @@ export function func<T extends TensorContainer>(
  *   configParamIndices: [1]
  *  }
  */
-export function generator<T extends TensorContainer>(
-  generator: () => Iterator<T> | Promise<Iterator<T>> | AsyncIterator<T>,
-): Dataset<T> {
+export function generator<T extends TensorContainer, TReturn = unknown>(
+    generator: () => Iterator<T, TReturn, void>|
+        Promise<Iterator<T, TReturn, void>>|
+        AsyncIterator<T, TReturn, void>): Dataset<T> {
   return datasetFromIteratorFn(async () => {
     const gen = await generator();
     return iteratorFromFunction(() => gen.next());

@@ -43,10 +43,17 @@ export class LruCache<T> {
     if (this.cache.has(key)) {
       this.cache.delete(key);
     } else if (this.cache.size >= this.maxEntries) {
-      const keyToDelete = this.cache.keys().next().value;
-      this.cache.delete(keyToDelete);
+      this.evictOldest();
     }
     this.cache.set(key, value);
+  }
+
+  /** Evict the oldest present key without using an unchecked iterator result. */
+  private evictOldest(): void {
+    for (const key of this.cache.keys()) {
+      this.cache.delete(key);
+      break;
+    }
   }
 
   /**
@@ -69,8 +76,7 @@ export class LruCache<T> {
 
     if (this.maxEntries > maxEntries) {
       for (let i = 0; i < this.maxEntries - maxEntries; i++) {
-        const keyToDelete = this.cache.keys().next().value;
-        this.cache.delete(keyToDelete);
+        this.evictOldest();
       }
     }
 

@@ -33,7 +33,7 @@ export class TestIntegerIterator extends LazyIterator<number> {
     return `TestIntegers`;
   }
 
-  async next(): Promise<IteratorResult<number>> {
+  async next(): Promise<IteratorResult<number, null>> {
     if (this.currentIndex >= this.length) {
       return {value: null, done: true};
     }
@@ -270,7 +270,7 @@ describe('LazyIterator', () => {
         return `${this.upstream.summary} -> ParallelFilterIterator`;
       }
 
-      async next(): Promise<IteratorResult<T>> {
+      async next(): Promise<IteratorResult<T, null>> {
         while (true) {
           const item = await this.upstream.next();
           if (item.done || this.predicate(item.value)) {

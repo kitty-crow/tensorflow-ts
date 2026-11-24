@@ -16,7 +16,7 @@
  */
 
 export abstract class LazyIterator<T> {
-  abstract next(): Promise<IteratorResult<T>>;
+  abstract next(): Promise<IteratorResult<T, null>>;
 }
 
 export abstract class Dataset<T> {

@@ -100,15 +100,9 @@ export function getGradient(kernelName: string): GradConfig {
 }
 
 export function getKernelsForBackend(backendName: string): KernelConfig[] {
-  const it = kernelRegistry.entries();
   const result: KernelConfig[] = [];
 
-  while (true) {
-    const {done, value} = it.next();
-    if (done) {
-      break;
-    }
-    const [key, config] = value;
+  for (const [key, config] of kernelRegistry) {
     const [backend, ] = key.split('_');
     if (backend === backendName) {
       result.push(config);

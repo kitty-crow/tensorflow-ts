@@ -133,7 +133,7 @@ export class MicrophoneIterator extends LazyIterator<TensorContainer> {
     return;
   }
 
-  async next(): Promise<IteratorResult<TensorContainer>> {
+  async next(): Promise<IteratorResult<TensorContainer, null>> {
     if (this.isClosed) {
       return {value: null, done: true};
     }

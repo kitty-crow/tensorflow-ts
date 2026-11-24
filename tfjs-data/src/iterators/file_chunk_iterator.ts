@@ -59,7 +59,7 @@ export class FileChunkIterator extends ByteChunkIterator {
     return `FileChunks ${this.file}`;
   }
 
-  async next(): Promise<IteratorResult<Uint8Array>> {
+  async next(): Promise<IteratorResult<Uint8Array, null>> {
     if (this.offset >= ((this.file instanceof Uint8Array) ?
                             this.file.byteLength :
                             this.file.size)) {

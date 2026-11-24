@@ -112,7 +112,7 @@ class FakeNumericIterator extends LazyIterator<FitDatasetElement> {
             'or both set.');
   }
 
-  async next(): Promise<IteratorResult<FitDatasetElement>> {
+  async next(): Promise<IteratorResult<FitDatasetElement, null>> {
     const done = ++this.batchCount > this.numBatches;
     if (done) {
       return {done, value: null};
@@ -235,11 +235,14 @@ class FakeNumericIteratorLegacyArrayForm extends
   }
 
   async next():
-      Promise<IteratorResult<[TensorOrArrayOrMap, TensorOrArrayOrMap]>> {
+      Promise<IteratorResult<[TensorOrArrayOrMap, TensorOrArrayOrMap], null>> {
     const result = await this.it.next();
+    if (result.done === true) {
+      return {done: true, value: null};
+    }
     return {
-      done: result.done,
-      value: result.value == null ? null : [result.value.xs, result.value.ys]
+      done: false,
+      value: [result.value.xs, result.value.ys]
     };
   }
 }

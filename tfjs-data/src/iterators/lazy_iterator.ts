@@ -62,9 +62,9 @@ export function iteratorFromIncrementing(start: number): LazyIterator<number> {
  *
  * @param func A function that produces data on each call.
  */
-export function iteratorFromFunction<T>(
-    func: () =>
-        IteratorResult<T>| Promise<IteratorResult<T>>): LazyIterator<T> {
+export function iteratorFromFunction<T, TReturn = unknown>(
+    func: () => IteratorResult<T, TReturn>|
+        Promise<IteratorResult<T, TReturn>>): LazyIterator<T> {
   return new FunctionCallIterator(func);
 }
 
@@ -102,8 +102,8 @@ export function iteratorFromConcatenated<T>(
  *   whether the error should be propagated, whether the error should be
  *   ignored, or whether the base stream should be terminated.
  */
-export function iteratorFromConcatenatedFunction<T>(
-    iteratorFunc: () => IteratorResult<LazyIterator<T>>, count: number,
+export function iteratorFromConcatenatedFunction<T, TReturn = unknown>(
+    iteratorFunc: () => IteratorResult<LazyIterator<T>, TReturn>, count: number,
     baseErrorHandler?: (e: Error) => boolean): LazyIterator<T> {
   return iteratorFromConcatenated(
       iteratorFromFunction(iteratorFunc).take(count), baseErrorHandler);
@@ -160,7 +160,7 @@ export abstract class LazyIterator<T> {
    *
    * Calling next() on a closed stream returns `{value:null, done:true}`.
    */
-  abstract next(): Promise<IteratorResult<T>>;
+  abstract next(): Promise<IteratorResult<T, null>>;
 
   /**
    * Collect all remaining elements of a bounded stream into an array.
@@ -225,10 +225,8 @@ export abstract class LazyIterator<T> {
    */
   async resolveWhile(predicate: (r: T) => boolean): Promise<void> {
     let x = await this.next();
-    let shouldContinue = predicate(x.value);
-    while ((!x.done) && shouldContinue) {
+    while (x.done !== true && predicate(x.value)) {
       x = await this.next();
-      shouldContinue = predicate(x.value);
     }
   }
 
@@ -495,7 +493,7 @@ class ArrayIterator<T> extends LazyIterator<T> {
     return `Array of ${this.items.length} items`;
   }
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     if (this.trav >= this.items.length) {
       return {value: null, done: true};
     }
@@ -505,9 +503,10 @@ class ArrayIterator<T> extends LazyIterator<T> {
   }
 }
 
-class FunctionCallIterator<T> extends LazyIterator<T> {
+class FunctionCallIterator<T, TReturn> extends LazyIterator<T> {
   constructor(
-      protected nextFn: () => IteratorResult<T>| Promise<IteratorResult<T>>) {
+      protected nextFn: () => IteratorResult<T, TReturn>|
+          Promise<IteratorResult<T, TReturn>>) {
     super();
   }
 
@@ -515,13 +514,23 @@ class FunctionCallIterator<T> extends LazyIterator<T> {
     return `Function call`;
   }
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     try {
-      return this.nextFn();
+      // A generator's final return value is not a stream element.
+      // Preserve the documented null completion sentinel.
+      return Promise.resolve(this.nextFn()).then(
+          (result): IteratorResult<T, null> => {
+            if (result.done === true) {
+              return {value: null, done: true};
+            }
+            return result;
+          });
     } catch (e) {
-      // Modify the error message but leave the stack trace intact
-      e.message =
-          `Error thrown while iterating through a dataset: ${e.message}`;
+      // Modify Error messages without assuming arbitrary thrown values are Errors.
+      if (e instanceof Error) {
+        e.message =
+            `Error thrown while iterating through a dataset: ${e.message}`;
+      }
       throw e;
     }
   }
@@ -530,18 +539,18 @@ class FunctionCallIterator<T> extends LazyIterator<T> {
 class SerialIterator<T> extends LazyIterator<T> {
   // Strict Promise execution order:
   // a next() call may not even begin until the previous one completes.
-  private lastRead: Promise<IteratorResult<T>>;
+  private lastRead: Promise<IteratorResult<T, null>>;
 
   constructor(protected upstream: LazyIterator<T>) {
     super();
-    this.lastRead = Promise.resolve({value: null, done: false});
+    this.lastRead = Promise.resolve({value: null, done: true});
   }
 
   summary() {
     return `${this.upstream.summary()} -> Serial`;
   }
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     // This sets this.lastRead to a new Promise right away, as opposed to
     // saying `await this.lastRead; this.lastRead = this.serialNext();` which
     // would not work because this.nextRead would be updated only after the
@@ -550,7 +559,7 @@ class SerialIterator<T> extends LazyIterator<T> {
     return this.lastRead;
   }
 
-  private async serialNext(): Promise<IteratorResult<T>> {
+  private async serialNext(): Promise<IteratorResult<T, null>> {
     return this.upstream.next();
   }
 }
@@ -558,21 +567,21 @@ class SerialIterator<T> extends LazyIterator<T> {
 class SkipIterator<T> extends LazyIterator<T> {
   // Strict Promise execution order:
   // a next() call may not even begin until the previous one completes.
-  private lastRead: Promise<IteratorResult<T>>;
+  private lastRead: Promise<IteratorResult<T, null>>;
 
   // Local state that should not be clobbered by out-of-order execution.
   count = 0;
 
   constructor(protected upstream: LazyIterator<T>, protected maxCount: number) {
     super();
-    this.lastRead = Promise.resolve({value: null, done: false});
+    this.lastRead = Promise.resolve({value: null, done: true});
   }
 
   summary() {
     return `${this.upstream.summary()} -> Skip`;
   }
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     // This sets this.lastRead to a new Promise right away, as opposed to
     // saying `await this.lastRead; this.lastRead = this.serialNext();` which
     // would not work because this.nextRead would be updated only after the
@@ -581,7 +590,7 @@ class SkipIterator<T> extends LazyIterator<T> {
     return this.lastRead;
   }
 
-  private async serialNext(): Promise<IteratorResult<T>> {
+  private async serialNext(): Promise<IteratorResult<T, null>> {
     // TODO(soergel): consider tradeoffs of reading in parallel, eg.
     // collecting next() promises in an Array and then waiting for
     // Promise.all() of those. Benefit: pseudo-parallel execution.  Drawback:
@@ -608,7 +617,7 @@ class TakeIterator<T> extends LazyIterator<T> {
     return `${this.upstream.summary()} -> Take`;
   }
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     if (this.count++ >= this.maxCount) {
       return {value: null, done: true};
     }
@@ -622,20 +631,20 @@ class TakeIterator<T> extends LazyIterator<T> {
 class RowMajorBatchIterator<T> extends LazyIterator<T[]> {
   // Strict Promise execution order:
   // a next() call may not even begin until the previous one completes.
-  private lastRead: Promise<IteratorResult<T[]>>;
+  private lastRead: Promise<IteratorResult<T[], null>>;
 
   constructor(
       protected upstream: LazyIterator<T>, protected batchSize: number,
       protected enableSmallLastBatch = true) {
     super();
-    this.lastRead = Promise.resolve({value: null, done: false});
+    this.lastRead = Promise.resolve({value: null, done: true});
   }
 
   summary() {
     return `${this.upstream.summary()} -> RowMajorBatch`;
   }
 
-  async next(): Promise<IteratorResult<T[]>> {
+  async next(): Promise<IteratorResult<T[], null>> {
     // This sets this.lastRead to a new Promise right away, as opposed to
     // saying `await this.lastRead; this.lastRead = this.serialNext();` which
     // would not work because this.nextRead would be updated only after the
@@ -644,7 +653,7 @@ class RowMajorBatchIterator<T> extends LazyIterator<T[]> {
     return this.lastRead;
   }
 
-  private async serialNext(): Promise<IteratorResult<T[]>> {
+  private async serialNext(): Promise<IteratorResult<T[], null>> {
     const batch: T[] = [];
     while (batch.length < this.batchSize) {
       const item = await this.upstream.next();
@@ -660,20 +669,20 @@ class RowMajorBatchIterator<T> extends LazyIterator<T[]> {
 class FilterIterator<T> extends LazyIterator<T> {
   // Strict Promise execution order:
   // a next() call may not even begin until the previous one completes.
-  private lastRead: Promise<IteratorResult<T>>;
+  private lastRead: Promise<IteratorResult<T, null>>;
 
   constructor(
       protected upstream: LazyIterator<T>,
       protected predicate: (value: T) => boolean) {
     super();
-    this.lastRead = Promise.resolve({value: null, done: false});
+    this.lastRead = Promise.resolve({value: null, done: true});
   }
 
   summary() {
     return `${this.upstream.summary()} -> Filter`;
   }
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     // This sets this.lastRead to a new Promise right away, as opposed to
     // saying `await this.lastRead; this.lastRead = this.serialNext();` which
     // would not work because this.nextRead would be updated only after the
@@ -682,7 +691,7 @@ class FilterIterator<T> extends LazyIterator<T> {
     return this.lastRead;
   }
 
-  private async serialNext(): Promise<IteratorResult<T>> {
+  private async serialNext(): Promise<IteratorResult<T, null>> {
     while (true) {
       const item = await this.upstream.next();
       if (item.done || this.predicate(item.value)) {
@@ -704,7 +713,7 @@ class MapIterator<I, O> extends LazyIterator<O> {
     return `${this.upstream.summary()} -> Map`;
   }
 
-  async next(): Promise<IteratorResult<O>> {
+  async next(): Promise<IteratorResult<O, null>> {
     const item = await this.upstream.next();
     if (item.done) {
       return {value: null, done: true};
@@ -736,7 +745,7 @@ class ErrorHandlingLazyIterator<T> extends LazyIterator<T> {
       protected upstream: LazyIterator<T>,
       protected handler: (error: Error) => boolean) {
     super();
-    this.lastRead = Promise.resolve({value: null, done: false});
+    this.lastRead = Promise.resolve({value: null, done: true});
   }
 
   summary() {
@@ -745,9 +754,9 @@ class ErrorHandlingLazyIterator<T> extends LazyIterator<T> {
 
   // Strict Promise execution order:
   // a next() call may not even begin until the previous one completes.
-  private lastRead: Promise<IteratorResult<T>>;
+  private lastRead: Promise<IteratorResult<T, null>>;
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     // This sets this.lastRead to a new Promise right away, as opposed to
     // saying `await this.lastRead; this.lastRead = this.serialNext();` which
     // would not work because this.nextRead would be updated only after the
@@ -756,7 +765,7 @@ class ErrorHandlingLazyIterator<T> extends LazyIterator<T> {
     return this.lastRead;
   }
 
-  async serialNext(): Promise<IteratorResult<T>> {
+  async serialNext(): Promise<IteratorResult<T, null>> {
     while (true) {
       try {
         return await this.upstream.next();
@@ -785,7 +794,7 @@ class AsyncMapIterator<I, O> extends LazyIterator<O> {
     return `${this.upstream.summary()} -> AsyncMap`;
   }
 
-  async next(): Promise<IteratorResult<O>> {
+  async next(): Promise<IteratorResult<O, null>> {
     const item = await this.upstream.next();
     if (item.done) {
       return {value: null, done: true};
@@ -825,7 +834,7 @@ class AsyncMapIterator<I, O> extends LazyIterator<O> {
 export abstract class OneToManyIterator<T> extends LazyIterator<T> {
   // Strict Promise execution order:
   // a next() call may not even begin until the previous one completes.
-  private lastRead: Promise<IteratorResult<T>>;
+  private lastRead: Promise<IteratorResult<T, null>>;
 
   // Local state that should not be clobbered by out-of-order execution.
   protected outputQueue: RingBuffer<T>;
@@ -833,10 +842,10 @@ export abstract class OneToManyIterator<T> extends LazyIterator<T> {
   constructor() {
     super();
     this.outputQueue = new GrowingRingBuffer<T>();
-    this.lastRead = Promise.resolve({value: null, done: false});
+    this.lastRead = Promise.resolve({value: null, done: true});
   }
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     // This sets this.lastRead to a new Promise right away, as opposed to
     // saying `await this.lastRead; this.lastRead = this.serialNext();` which
     // would not work because this.nextRead would be updated only after the
@@ -859,7 +868,7 @@ export abstract class OneToManyIterator<T> extends LazyIterator<T> {
    */
   protected abstract pump(): Promise<boolean>;
 
-  async serialNext(): Promise<IteratorResult<T>> {
+  async serialNext(): Promise<IteratorResult<T, null>> {
     // Fetch so that the queue contains at least one item if possible.
     // If the upstream source is exhausted, AND there are no items left in
     // the output queue, then this stream is also exhausted.
@@ -923,7 +932,7 @@ class FlatmapIterator<I, O> extends OneToManyIterator<O> {
 export class ChainedIterator<T> extends LazyIterator<T> {
   // Strict Promise execution order:
   // a next() call may not even begin until the previous one completes.
-  private lastRead: Promise<IteratorResult<T>> = null;
+  private lastRead: Promise<IteratorResult<T, null>> = null;
 
   // Local state that should not be clobbered by out-of-order execution.
   private iterator: LazyIterator<T> = null;
@@ -941,13 +950,13 @@ export class ChainedIterator<T> extends LazyIterator<T> {
     return `${upstreamSummaries} -> Chained`;
   }
 
-  async next(): Promise<IteratorResult<T>> {
+  async next(): Promise<IteratorResult<T, null>> {
     this.lastRead = this.readFromChain(this.lastRead);
     return this.lastRead;
   }
 
-  private async readFromChain(lastRead: Promise<IteratorResult<T>>):
-      Promise<IteratorResult<T>> {
+  private async readFromChain(lastRead: Promise<IteratorResult<T, null>>):
+      Promise<IteratorResult<T, null>> {
     // Must await on the previous read since the previous read may have advanced
     // the stream of streams, from which we need to read.
     // This is unfortunate since we can't parallelize reads. Which means
@@ -1011,7 +1020,7 @@ export enum ZipMismatchMode {
  */
 class ZipIterator<O extends tf.TensorContainer> extends LazyIterator<O> {
   private count = 0;
-  private currentPromise: Promise<IteratorResult<O>> = null;
+  private currentPromise: Promise<IteratorResult<O, null>> = null;
 
   constructor(
       protected readonly iterators: IteratorContainer,
@@ -1024,8 +1033,8 @@ class ZipIterator<O extends tf.TensorContainer> extends LazyIterator<O> {
     return `{${upstreamSummaries}} -> Zip`;
   }
 
-  private async nextState(afterState: Promise<IteratorResult<O>>):
-      Promise<IteratorResult<O>> {
+  private async nextState(afterState: Promise<IteratorResult<O, null>>):
+      Promise<IteratorResult<O, null>> {
     // This chaining ensures that the underlying next() are not even called
     // before the previous ones have resolved.
     await afterState;
@@ -1077,7 +1086,7 @@ class ZipIterator<O extends tf.TensorContainer> extends LazyIterator<O> {
     return {value: mapped, done: false};
   }
 
-  async next(): Promise<IteratorResult<O>> {
+  async next(): Promise<IteratorResult<O, null>> {
     this.currentPromise = this.nextState(this.currentPromise);
     return this.currentPromise;
   }
@@ -1094,12 +1103,12 @@ class ZipIterator<O extends tf.TensorContainer> extends LazyIterator<O> {
  * Promises resolve.
  */
 export class PrefetchIterator<T> extends LazyIterator<T> {
-  protected buffer: RingBuffer<Promise<IteratorResult<T>>>;
+  protected buffer: RingBuffer<Promise<IteratorResult<T, null>>>;
 
   constructor(
       protected upstream: LazyIterator<T>, protected bufferSize: number) {
     super();
-    this.buffer = new RingBuffer<Promise<IteratorResult<T>>>(bufferSize);
+    this.buffer = new RingBuffer<Promise<IteratorResult<T, null>>>(bufferSize);
   }
 
   summary() {
@@ -1117,7 +1126,7 @@ export class PrefetchIterator<T> extends LazyIterator<T> {
     }
   }
 
-  next(): Promise<IteratorResult<T>> {
+  next(): Promise<IteratorResult<T, null>> {
     this.refill();
     // This shift will never throw an error because the buffer is always
     // full after a refill. If the stream is exhausted, the buffer will be
@@ -1137,7 +1146,7 @@ export class ShuffleIterator<T> extends PrefetchIterator<T> {
 
   // Strict Promise execution order:
   // a next() call may not even begin until the previous one completes.
-  private lastRead: Promise<IteratorResult<T>>;
+  private lastRead: Promise<IteratorResult<T, null>>;
 
   // Local state that should not be clobbered by out-of-order execution.
   private upstreamExhausted = false;
@@ -1147,10 +1156,10 @@ export class ShuffleIterator<T> extends PrefetchIterator<T> {
       seed?: string) {
     super(upstream, windowSize);
     this.random = seedrandom.alea(seed || tf.util.now().toString());
-    this.lastRead = Promise.resolve({value: null, done: false});
+    this.lastRead = Promise.resolve({value: null, done: true});
   }
 
-  override async next(): Promise<IteratorResult<T>> {
+  override async next(): Promise<IteratorResult<T, null>> {
     // This sets this.lastRead to a new Promise right away, as opposed to
     // saying `await this.lastRead; this.lastRead = this.serialNext();` which
     // would not work because this.nextRead would be updated only after the
@@ -1167,7 +1176,7 @@ export class ShuffleIterator<T> extends PrefetchIterator<T> {
     return this.randomInt(this.buffer.length());
   }
 
-  async serialNext(): Promise<IteratorResult<T>> {
+  async serialNext(): Promise<IteratorResult<T, null>> {
     // TODO(soergel): consider performance
     if (!this.upstreamExhausted) {
       this.refill();

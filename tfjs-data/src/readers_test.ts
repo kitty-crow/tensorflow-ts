@@ -45,6 +45,28 @@ describeAllEnvs('readers', () => {
     expect(result).toEqual([0, 1, 2, 3, 4]);
   });
 
+  it('uses null as the completion sentinel for a generator', async () => {
+    function* generate() {
+      yield 0;
+      yield 2;
+      return 'not a dataset element';
+    }
+    const iterator = await tfd.generator(generate).iterator();
+    expect(await iterator.next()).toEqual({value: 0, done: false});
+    expect(await iterator.next()).toEqual({value: 2, done: false});
+    expect(await iterator.next()).toEqual({value: null, done: true});
+  });
+
+  it('uses null as the completion sentinel for an async generator', async () => {
+    async function* generate() {
+      yield 1;
+      return 42;
+    }
+    const iterator = await tfd.generator(generate).iterator();
+    expect(await iterator.next()).toEqual({value: 1, done: false});
+    expect(await iterator.next()).toEqual({value: null, done: true});
+  });
+
   it('generate dataset from async generator', async () => {
     async function* dataGenerator() {
       const numElements = 5;
@@ -124,14 +146,14 @@ describeAllEnvs('readers', () => {
 
   it('generate dataset from async iterator factory', async () => {
     async function waitAndCreateCount() {
-      return new Promise(resolve => {
+      return new Promise<number>(resolve => {
         setTimeout(() => {
           resolve(3);
         }, 1000);
       });
     }
     async function makeIterator() {
-      let iterationCount = (await waitAndCreateCount()) as number;
+      let iterationCount = await waitAndCreateCount();
       const iterator = {
         next: () => {
           let result;
