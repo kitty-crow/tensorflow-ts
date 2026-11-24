@@ -12,7 +12,7 @@
  * Unit tests for core.ts.
  */
 
-import {cast, ones, serialization, Tensor, tensor1d, Tensor2D, tensor2d, tensor3d} from '@tensorflow/tfjs-core';
+import {cast, ones, serialization, Tensor, tensor1d, Tensor2D, tensor2d, tensor3d, test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 
 import {SymbolicTensor} from '../engine/topology';
 import * as tfl from '../index';
@@ -45,7 +45,7 @@ describeMathCPU('Merge Layers Except Concatenate: Symbolic', () => {
                 new tfl.SymbolicTensor('float32', inputShape, null, [], null));
           }
           const output = addLayer.apply(symbolicInputs) as tfl.SymbolicTensor;
-          expect(output.dtype).toEqual(symbolicInputs[0].dtype);
+          expect(output.dtype).toEqual(fixtureTestUtil.requiredTestElement(symbolicInputs, 0).dtype);
           expect(output.shape).toEqual(inputShape);
         });
       }
@@ -610,12 +610,12 @@ describeMathCPU('Deserialize Merge Layers', () => {
         convertPythonicToTs(modelWithMergeJSON) as serialization.ConfigDict;
     const model = deserialize(tsConfig) as tfl.LayersModel;
     expect(model.inputs.length).toEqual(2);
-    expect(model.inputs[0].shape).toEqual([null, 4]);
-    expect(model.inputs[1].shape).toEqual([null, 4]);
+    expect(fixtureTestUtil.requiredTestElement(model.inputs, 0).shape).toEqual([null, 4]);
+    expect(fixtureTestUtil.requiredTestElement(model.inputs, 1).shape).toEqual([null, 4]);
     expect(model.layers.length).toEqual(3);
-    expect(model.layers[2] instanceof Add);
+    expect(fixtureTestUtil.requiredTestElement(model.layers, 2) instanceof Add);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 4]);
+    expect(fixtureTestUtil.requiredTestElement(model.outputs, 0).shape).toEqual([null, 4]);
   });
 
   it('LayersModel with Concatenate Layer', () => {
@@ -677,12 +677,12 @@ describeMathCPU('Deserialize Merge Layers', () => {
         convertPythonicToTs(modelWithMergeJSON) as serialization.ConfigDict;
     const model = deserialize(tsConfig) as tfl.LayersModel;
     expect(model.inputs.length).toEqual(2);
-    expect(model.inputs[0].shape).toEqual([null, 4]);
-    expect(model.inputs[1].shape).toEqual([null, 4]);
+    expect(fixtureTestUtil.requiredTestElement(model.inputs, 0).shape).toEqual([null, 4]);
+    expect(fixtureTestUtil.requiredTestElement(model.inputs, 1).shape).toEqual([null, 4]);
     expect(model.layers.length).toEqual(3);
-    expect(model.layers[2] instanceof Concatenate);
+    expect(fixtureTestUtil.requiredTestElement(model.layers, 2) instanceof Concatenate);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 8]);
+    expect(fixtureTestUtil.requiredTestElement(model.outputs, 0).shape).toEqual([null, 8]);
   });
 });
 

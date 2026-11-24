@@ -87,14 +87,14 @@ describe('ragged', () => {
 
         expect(spyOps.raggedGather)
             .toHaveBeenCalledWith(
-                [paramsNestedSplits1[0], paramsNestedSplits2[0]],
-                paramsDenseValues[0], indices[0], OUTPUT_RAGGED_RANK);
+                [test_util.requiredTestElement(paramsNestedSplits1, 0), test_util.requiredTestElement(paramsNestedSplits2, 0)],
+                test_util.requiredTestElement(paramsDenseValues, 0), test_util.requiredTestElement(indices, 0), OUTPUT_RAGGED_RANK);
 
-        test_util.expectArraysClose(await result[0].data(), [0, 0, 2, 3, 3, 5]);
-        test_util.expectArraysClose(await result[1].data(), [0, 2, 3, 3, 5, 8]);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [0, 0, 2, 3, 3, 5]);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 1).data(), [0, 2, 3, 3, 5, 8]);
 
         test_util.expectArraysClose(
-            await result[2].data(), [.1, .2, .3, .4, .5, .6, .7, .8]);
+            await test_util.requiredTestElement(result, 2).data(), [.1, .2, .3, .4, .5, .6, .7, .8]);
       });
 
       it('should match json def', () => {
@@ -123,10 +123,10 @@ describe('ragged', () => {
             Tensor[];
 
         expect(spyOps.raggedRange)
-            .toHaveBeenCalledWith(starts[0], limits[0], splits[0]);
-        test_util.expectArraysClose(await result[0].data(), [0, 4, 6, 6, 10]);
+            .toHaveBeenCalledWith(test_util.requiredTestElement(starts, 0), test_util.requiredTestElement(limits, 0), test_util.requiredTestElement(splits, 0));
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [0, 4, 6, 6, 10]);
         test_util.expectArraysClose(
-            await result[1].data(), [0, 2, 4, 6, 5, 6, 5, 4, 3, 2]);
+            await test_util.requiredTestElement(result, 1).data(), [0, 2, 4, 6, 5, 6, 5, 4, 3, 2]);
       });
 
       it('should match json def', () => {
@@ -167,9 +167,9 @@ describe('ragged', () => {
 
         expect(spyOps.raggedTensorToTensor)
             .toHaveBeenCalledWith(
-                shape[0], values[0], defaultValue[0],
-                [rowPartition1[0], rowPartition2[0]], types);
-        test_util.expectArraysClose(await result[0].data(), [
+                test_util.requiredTestElement(shape, 0), test_util.requiredTestElement(values, 0), test_util.requiredTestElement(defaultValue, 0),
+                [test_util.requiredTestElement(rowPartition1, 0), test_util.requiredTestElement(rowPartition2, 0)], types);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [
           .1, .2, .3, 1.5, 1.5, 1.5, 1.5, 1.5, .4, .5, .6, .7, .8, .9, 1.5, 1.5
         ]);
       });

@@ -13,7 +13,7 @@
  */
 
 import * as tfc from '@tensorflow/tfjs-core';
-import {scalar, Tensor, tensor1d, tensor2d, tensor3d} from '@tensorflow/tfjs-core';
+import {scalar, Tensor, tensor1d, tensor2d, tensor3d, test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 
 import {epsilon} from './backend/common';
 import * as losses from './losses';
@@ -105,7 +105,7 @@ describeMathCPUAndGPU('squaredHinge', () => {
     const yPred = tensor2d([[-3, 5], [3, -2]], [2, 2]);
     // First row has correct predictions, so loss is 0.
     const secondRow = [1 - (-3 * 3), 1 - (2 * -2)].map(x => x * x);
-    const expectedVal = tensor1d([0, (secondRow[0] + secondRow[1]) / 2]);
+    const expectedVal = tensor1d([0, (fixtureTestUtil.requiredTestElement(secondRow, 0) + fixtureTestUtil.requiredTestElement(secondRow, 1)) / 2]);
     const result = losses.squaredHinge(yTrue, yPred);
     expectTensorsClose(result, expectedVal);
   });
@@ -117,7 +117,7 @@ describeMathCPUAndGPU('hinge', () => {
     const yPred = tensor2d([[-3, 5], [3, -2]], [2, 2]);
     // First row has correct predictions, so loss is 0.
     const secondRow = [1 - (-3 * 3), 1 - (2 * -2)];
-    const expectedVal = tensor1d([0, (secondRow[0] + secondRow[1]) / 2]);
+    const expectedVal = tensor1d([0, (fixtureTestUtil.requiredTestElement(secondRow, 0) + fixtureTestUtil.requiredTestElement(secondRow, 1)) / 2]);
     const result = losses.hinge(yTrue, yPred);
     expectTensorsClose(result, expectedVal);
   });
@@ -146,8 +146,8 @@ describeMathCPUAndGPU('logcosh', () => {
     const yPred = tensor2d([[1, 2], [3, 4]], [2, 2]);
     const firstRow = [1, 2].map(_logcosh);
     const secondRow = [3, 4].map(_logcosh);
-    const firstVal = (firstRow[0] + firstRow[1]) / 2;
-    const secondVal = (secondRow[0] + secondRow[1]) / 2;
+    const firstVal = (fixtureTestUtil.requiredTestElement(firstRow, 0) + fixtureTestUtil.requiredTestElement(firstRow, 1)) / 2;
+    const secondVal = (fixtureTestUtil.requiredTestElement(secondRow, 0) + fixtureTestUtil.requiredTestElement(secondRow, 1)) / 2;
     const expectedVal = tensor1d([firstVal, secondVal]);
     const result = losses.logcosh(yTrue, yPred);
     expectTensorsClose(result, expectedVal);

@@ -16,7 +16,7 @@
  * =============================================================================
  */
 
-import {TensorContainer, TensorContainerArray, TensorContainerObject} from '@tensorflow/tfjs-core';
+import {TensorContainer, TensorContainerArray, TensorContainerObject, test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 
 import {iteratorFromConcatenated, iteratorFromConcatenatedFunction, iteratorFromFunction, iteratorFromIncrementing, iteratorFromItems, iteratorFromZipped, LazyIterator, ZipMismatchMode} from './lazy_iterator';
 
@@ -156,7 +156,7 @@ describe('LazyIterator', () => {
     for (let i = 0; i < 12; i++) {
       expect(result[i]).toEqual(Array.from({length: 8}, (v, k) => (i * 8) + k));
     }
-    expect(result[12]).toEqual([96, 97, 98, 99]);
+    expect(fixtureTestUtil.requiredTestElement(result, 12)).toEqual([96, 97, 98, 99]);
   });
 
   it('batches elements to a column-major representation', async () => {
@@ -166,7 +166,7 @@ describe('LazyIterator', () => {
     for (let i = 0; i < 12; i++) {
       expect(result[i]).toEqual(Array.from({length: 8}, (v, k) => (i * 8) + k));
     }
-    expect(result[12]).toEqual([96, 97, 98, 99]);
+    expect(fixtureTestUtil.requiredTestElement(result, 12)).toEqual([96, 97, 98, 99]);
   });
 
   it('can be limited to a certain number of elements', async () => {
@@ -367,8 +367,8 @@ describe('LazyIterator', () => {
 
     for (const e of result) {
       const ee = e as TensorContainerArray;
-      expect(ee[1]).toEqual(ee[0] as number * 10);
-      expect(ee[2]).toEqual(`string ${ee[0]}`);
+      expect(fixtureTestUtil.requiredTestElement(ee, 1)).toEqual(fixtureTestUtil.requiredTestElement(ee, 0) as number * 10);
+      expect(fixtureTestUtil.requiredTestElement(ee, 2)).toEqual(`string ${fixtureTestUtil.requiredTestElement(ee, 0)}`);
     }
   });
 
@@ -407,9 +407,9 @@ describe('LazyIterator', () => {
 
     for (const e of result) {
       const ee = e as TensorContainerArray;
-      const aa = ee[0] as TensorContainerObject;
-      const bb = ee[1] as TensorContainerObject;
-      const cc = ee[2] as TensorContainerObject;
+      const aa = fixtureTestUtil.requiredTestElement(ee, 0) as TensorContainerObject;
+      const bb = fixtureTestUtil.requiredTestElement(ee, 1) as TensorContainerObject;
+      const cc = fixtureTestUtil.requiredTestElement(ee, 2) as TensorContainerObject;
       expect(aa['constant']).toEqual(12);
       expect(bb['b']).toEqual(aa['a'] as number * 10);
       expect(bb['array']).toEqual([
@@ -459,7 +459,7 @@ describe('LazyIterator', () => {
            iteratorFromZipped([a, b, c], ZipMismatchMode.LONGEST);
        const result = await readStream.toArrayForTest();
        expect(result.length).toEqual(10);
-       expect(result[9]).toEqual([9, null, null]);
+       expect(fixtureTestUtil.requiredTestElement(result, 9)).toEqual([9, null, null]);
      });
 
   /**

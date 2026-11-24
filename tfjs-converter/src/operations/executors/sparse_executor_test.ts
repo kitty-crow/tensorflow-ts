@@ -70,14 +70,14 @@ describe('sparse', () => {
 
         expect(spyOps.sparse.sparseFillEmptyRows)
             .toHaveBeenCalledWith(
-                indices[0], values[0], denseShape[0], defaultValue[0]);
+                test_util.requiredTestElement(indices, 0), test_util.requiredTestElement(values, 0), test_util.requiredTestElement(denseShape, 0), test_util.requiredTestElement(defaultValue, 0));
         test_util.expectArraysClose(
-            await result[0].data(),
+            await test_util.requiredTestElement(result, 0).data(),
             [0, 0, 1, 0, 1, 3, 1, 4, 2, 0, 3, 2, 3, 3, 4, 0]);
         test_util.expectArraysClose(
-            await result[1].data(), [0, 10, 13, 14, -1, 32, 33, -1]);
-        test_util.expectArraysClose(await result[2].data(), [0, 0, 1, 0, 1]);
-        test_util.expectArraysClose(await result[3].data(), [0, 1, 2, 3, 5, 6]);
+            await test_util.requiredTestElement(result, 1).data(), [0, 10, 13, 14, -1, 32, 33, -1]);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 2).data(), [0, 0, 1, 0, 1]);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 3).data(), [0, 1, 2, 3, 5, 6]);
       });
       it('should match json def', () => {
         node.op = 'SparseFillEmptyRows';
@@ -110,10 +110,10 @@ describe('sparse', () => {
                       spyOpsAsTfOps) as Tensor[];
 
         expect(spyOps.sparse.sparseReshape)
-            .toHaveBeenCalledWith(inputIndices[0], inputShape[0], newShape[0]);
+            .toHaveBeenCalledWith(test_util.requiredTestElement(inputIndices, 0), test_util.requiredTestElement(inputShape, 0), test_util.requiredTestElement(newShape, 0));
         test_util.expectArraysClose(
-            await result[0].data(), [0, 0, 0, 1, 1, 2, 4, 2, 8, 1]);
-        test_util.expectArraysClose(await result[1].data(), [9, 4]);
+            await test_util.requiredTestElement(result, 0).data(), [0, 0, 0, 1, 1, 2, 4, 2, 8, 1]);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 1).data(), [9, 4]);
       });
 
       it('should match json def', () => {
@@ -146,9 +146,9 @@ describe('sparse', () => {
                       spyOpsAsTfOps) as Tensor[];
 
         expect(spyOps.sparse.sparseSegmentMean)
-            .toHaveBeenCalledWith(data[0], indices[0], segmentIds[0]);
+            .toHaveBeenCalledWith(test_util.requiredTestElement(data, 0), test_util.requiredTestElement(indices, 0), test_util.requiredTestElement(segmentIds, 0));
         test_util.expectArraysClose(
-            await result[0].data(), [1.0, 2.0, 3.0, 4.0, 2.5, 2.5, 2.5, 2.5]);
+            await test_util.requiredTestElement(result, 0).data(), [1.0, 2.0, 3.0, 4.0, 2.5, 2.5, 2.5, 2.5]);
       });
       it('should match json def', () => {
         node.op = 'SparseSegmentMean';
@@ -180,8 +180,8 @@ describe('sparse', () => {
                       spyOpsAsTfOps) as Tensor[];
 
         expect(spyOps.sparse.sparseSegmentSum)
-            .toHaveBeenCalledWith(data[0], indices[0], segmentIds[0]);
-        test_util.expectArraysClose(await result[0].data(), [0, 0, 0, 0]);
+            .toHaveBeenCalledWith(test_util.requiredTestElement(data, 0), test_util.requiredTestElement(indices, 0), test_util.requiredTestElement(segmentIds, 0));
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [0, 0, 0, 0]);
       });
       it('should match json def', () => {
         node.op = 'SparseSegmentSum';

@@ -67,10 +67,10 @@ describe('string', () => {
                                  spyOpsAsTfOps) as Tensor[];
 
         expect(spyOps.string.staticRegexReplace)
-            .toHaveBeenCalledWith(input[0], 'foo', 'bar', true);
+            .toHaveBeenCalledWith(test_util.requiredTestElement(input, 0), 'foo', 'bar', true);
 
         test_util.expectArraysEqual(
-            await result[0].data(), ['a', 'b', 'bar', 'd']);
+            await test_util.requiredTestElement(result, 0).data(), ['a', 'b', 'bar', 'd']);
       });
     });
     describe('StringNGrams', () => {
@@ -98,12 +98,12 @@ describe('string', () => {
 
         expect(spyOps.string.stringNGrams)
             .toHaveBeenCalledWith(
-                data[0], dataSplits[0], '|', [3], 'LP', 'RP', -1, false);
-        test_util.expectArraysEqual(await result[0].data(), [
+                test_util.requiredTestElement(data, 0), test_util.requiredTestElement(dataSplits, 0), '|', [3], 'LP', 'RP', -1, false);
+        test_util.expectArraysEqual(await test_util.requiredTestElement(result, 0).data(), [
           'LP|LP|a', 'LP|a|b', 'a|b|c', 'b|c|d', 'c|d|RP', 'd|RP|RP',  // 0
           'LP|LP|e', 'LP|e|f', 'e|f|RP', 'f|RP|RP'                     // 1
         ]);
-        test_util.expectArraysEqual(await result[1].data(), [0, 6, 10]);
+        test_util.expectArraysEqual(await test_util.requiredTestElement(result, 1).data(), [0, 6, 10]);
       });
       it('should match json def', () => {
         node.op = 'StringNGrams';
@@ -132,12 +132,12 @@ describe('string', () => {
                                  spyOpsAsTfOps) as Tensor[];
 
         expect(spyOps.string.stringSplit)
-            .toHaveBeenCalledWith(input[0], delimiter[0], false);
+            .toHaveBeenCalledWith(test_util.requiredTestElement(input, 0), test_util.requiredTestElement(delimiter, 0), false);
         test_util.expectArraysEqual(
-            await result[0].data(), [0, 0, 0, 1, 1, 0, 1, 1, 2, 0, 2, 1, 2, 2]);
+            await test_util.requiredTestElement(result, 0).data(), [0, 0, 0, 1, 1, 0, 1, 1, 2, 0, 2, 1, 2, 2]);
         test_util.expectArraysEqual(
-            await result[1].data(), ['', 'a', 'b', '', '', 'c', '']);
-        test_util.expectArraysEqual(await result[2].data(), [3, 3]);
+            await test_util.requiredTestElement(result, 1).data(), ['', 'a', 'b', '', '', 'c', '']);
+        test_util.expectArraysEqual(await test_util.requiredTestElement(result, 2).data(), [3, 3]);
       });
       it('should match json def', () => {
         node.op = 'StringSplit';
@@ -162,8 +162,8 @@ describe('string', () => {
                                  spyOpsAsTfOps) as Tensor[];
 
         expect(spyOps.string.stringToHashBucketFast)
-            .toHaveBeenCalledWith(input[0], 10);
-        test_util.expectArraysClose(await result[0].data(), [9, 2, 2, 5]);
+            .toHaveBeenCalledWith(test_util.requiredTestElement(input, 0), 10);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [9, 2, 2, 5]);
       });
       it('should match json def', () => {
         node.op = 'StringToHashBucketFast';

@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {scalar} from '@tensorflow/tfjs-core';
+import {scalar, test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 // tslint:disable-next-line: no-imports-from-dist
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 
@@ -66,7 +66,7 @@ describe('basic math', () => {
             spyOps[uncapitalize(op)].and.returnValue({});
             executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-            expect(spyOps[uncapitalize(op)]).toHaveBeenCalledWith(input1[0]);
+            expect(spyOps[uncapitalize(op)]).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0));
           });
           it('should match op def', () => {
             node.op = op;
@@ -80,7 +80,7 @@ describe('basic math', () => {
 
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.relu6).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.relu6).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0));
       });
       it('should match op def', () => {
         node.op = 'Relu6';
@@ -98,7 +98,7 @@ describe('basic math', () => {
         const input3 = [tfOps.scalar(3)];
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 
-        expect(spyOps.clipByValue).toHaveBeenCalledWith(input1[0], 2, 3);
+        expect(spyOps.clipByValue).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0), 2, 3);
       });
       it('should match op def', () => {
         node.op = 'ClipByValue';
@@ -129,7 +129,7 @@ describe('basic math', () => {
         node.inputNames = ['input1'];
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.leakyRelu).toHaveBeenCalledWith(input1[0], 1);
+        expect(spyOps.leakyRelu).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0), 1);
       });
       it('should match op def', () => {
         node.op = 'LeakyRelu';
@@ -146,7 +146,7 @@ describe('basic math', () => {
         const input2 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 
-        expect(spyOps.prelu).toHaveBeenCalledWith(input1[0], input2[0]);
+        expect(spyOps.prelu).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0), input2[0]);
       });
       it('should match op def', () => {
         node.op = 'Prelu';
@@ -163,7 +163,7 @@ describe('basic math', () => {
         const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 
-        expect(spyOps.atan2).toHaveBeenCalledWith(input1[0], input2[0]);
+        expect(spyOps.atan2).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0), input2[0]);
       });
       it('should match op def', () => {
         node.op = 'Atan2';
@@ -178,7 +178,7 @@ describe('basic math', () => {
         node.inputNames = ['input1'];
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.abs).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.abs).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0));
       });
       it('should match op def', () => {
         node.op = 'ComplexAbs';
@@ -197,7 +197,7 @@ describe('basic math', () => {
         node.inputNames = ['input1', 'input2'];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 
-        expect(spyOps.complex).toHaveBeenCalledWith(input1[0], input2[0]);
+        expect(spyOps.complex).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0), input2[0]);
       });
       it('should match op def', () => {
         node.op = 'Complex';
@@ -215,7 +215,7 @@ describe('basic math', () => {
 
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.isNaN).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.isNaN).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0));
       });
       it('should match op def', () => {
         node.op = 'IsNan';
@@ -229,7 +229,7 @@ describe('basic math', () => {
 
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.isInf).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.isInf).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0));
       });
       it('should match op def', () => {
         node.op = 'IsInf';
@@ -243,7 +243,7 @@ describe('basic math', () => {
 
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.isFinite).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.isFinite).toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(input1, 0));
       });
       it('should match op def', () => {
         node.op = 'IsFinite';

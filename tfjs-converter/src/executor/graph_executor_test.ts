@@ -14,6 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
+import {test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 import * as tfc from '@tensorflow/tfjs-core';
 
 import * as tensorflow from '../data/compiled_api';
@@ -174,15 +175,15 @@ describe('GraphExecutor', () => {
         it('should execute the op', async () => {
           const inputTensor = tfc.scalar(1);
           const result = executor.execute({input: inputTensor}, ['output']);
-          tfc.test_util.expectArraysClose(await result[0].data(), [7.0]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), [7.0]);
         });
 
         it('should allow output intermediate nodes', async () => {
           const inputTensor = tfc.scalar(1);
           const result = executor.execute(
               {input: inputTensor}, ['output', 'intermediate']);
-          tfc.test_util.expectArraysClose(await result[1].data(), [3.0]);
-          tfc.test_util.expectArraysClose(await result[0].data(), [7.0]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 1).data(), [3.0]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), [7.0]);
         });
 
         it('should allow output multiple intermediate nodes', async () => {
@@ -190,16 +191,16 @@ describe('GraphExecutor', () => {
           const result = executor.execute(
               {input: inputTensor},
               ['output', 'intermediate', 'intermediate2']);
-          tfc.test_util.expectArraysClose(await result[1].data(), [3.0]);
-          tfc.test_util.expectArraysClose(await result[2].data(), [5.0]);
-          tfc.test_util.expectArraysClose(await result[0].data(), [7.0]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 1).data(), [3.0]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 2).data(), [5.0]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), [7.0]);
         });
 
         it('should allow feed intermediate nodes', async () => {
           const intermediateTensor = tfc.scalar(1);
           const result =
               executor.execute({intermediate: intermediateTensor}, ['output']);
-          tfc.test_util.expectArraysClose(await result[0].data(), [5.0]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), [5.0]);
         });
 
         it('should skip noop', async () => {
@@ -262,7 +263,7 @@ describe('GraphExecutor', () => {
           const executor = new GraphExecutor(graph);
           const inputTensor = tfc.tensor1d([123, 456]);
           const result = executor.execute({input: inputTensor}, ['pack']);
-          tfc.test_util.expectArraysClose(await result[0].data(), [123, 456]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), [123, 456]);
         });
 
         describe('strict input check', () => {
@@ -426,14 +427,14 @@ describe('GraphExecutor', () => {
 
           const result =
               await executor.executeAsync({input: inputTensor}, ['output:1']);
-          tfc.test_util.expectArraysClose(await result[0].data(), [0.57735]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), [0.57735]);
         });
 
         it('should allow output intermediate nodes', async () => {
           const inputTensor = tfc.scalar(1);
           const result = await executor.executeAsync(
               {input: inputTensor}, ['intermediate']);
-          tfc.test_util.expectArraysClose(await result[0].data(), [3.0]);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), [3.0]);
         });
 
         it('should be able to execute control flow graph ' +
@@ -443,10 +444,10 @@ describe('GraphExecutor', () => {
 
              const result = await executor.executeAsync(
                  {intermediate: inputTensor}, ['output:1']);
-             tfc.test_util.expectArraysClose(await result[0].data(), [1]);
+             tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), [1]);
              const result2 = await executor.executeAsync(
                  {intermediate: inputTensor}, ['output:1']);
-             tfc.test_util.expectArraysClose(await result2[0].data(), [1]);
+             tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result2, 0).data(), [1]);
            });
 
         it('should not have mem leak', async () => {
@@ -570,10 +571,10 @@ describe('GraphExecutor', () => {
 
           let result = await executor.executeAsync(
               {input: condTensor, x: trueTensor, y: falseTensor}, ['output']);
-          tfc.test_util.expectArraysClose(await result[0].data(), 1);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), 1);
           result = await executor.executeAsync(
               {input: condTensor2, x: trueTensor, y: falseTensor}, ['output']);
-          tfc.test_util.expectArraysClose(await result[0].data(), 0);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), 0);
         });
         it('should not have mem leak', async () => {
           const condTensor = tfc.scalar(true, 'bool');
@@ -692,7 +693,7 @@ describe('GraphExecutor', () => {
 
           const result = await executor.executeAsync(
               {x: trueTensor, y: falseTensor}, ['output']);
-          tfc.test_util.expectArraysClose(await result[0].data(), 0);
+          tfc.test_util.expectArraysClose(await fixtureTestUtil.requiredTestElement(result, 0).data(), 0);
         });
         it('should not have mem leak', async () => {
           const trueTensor = tfc.scalar(-1, 'int32');

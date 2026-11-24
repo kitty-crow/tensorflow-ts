@@ -16,7 +16,7 @@
  * =============================================================================
  */
 
-import {env} from '@tensorflow/tfjs-core';
+import {env, test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 
 import {array} from '../dataset';
 import {FileDataSource} from '../sources/file_data_source';
@@ -224,11 +224,11 @@ describe('CSVDataset', () => {
       csvIterator.next(), csvIterator.next()
     ];
     const elements = await Promise.all(promises);
-    expect(elements[0].value).toEqual({A: 1, B: 2, C: 3});
-    expect(elements[1].value).toEqual({A: 2, B: 2, C: 3});
-    expect(elements[2].value).toEqual({A: 3, B: 2, C: 3});
-    expect(elements[3].value).toEqual({A: 4, B: 2, C: 3});
-    expect(elements[4].value).toEqual({A: 5, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(elements, 0).value).toEqual({A: 1, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(elements, 1).value).toEqual({A: 2, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(elements, 2).value).toEqual({A: 3, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(elements, 3).value).toEqual({A: 4, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(elements, 4).value).toEqual({A: 5, B: 2, C: 3});
   });
 
   it('throw error when required column is empty', async () => {
@@ -279,11 +279,11 @@ describe('CSVDataset', () => {
     const iter = await dataset.iterator();
     const result = await iter.toArrayForTest();
 
-    expect(result[0]).toEqual({A: 1, B: 2, C: 3});
-    expect(result[1]).toEqual({A: 2, B: 2, C: 3});
-    expect(result[2]).toEqual({A: 3, B: 2, C: 3});
-    expect(result[3]).toEqual({A: 4, B: 2, C: 3});
-    expect(result[4]).toEqual({A: 5, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 0)).toEqual({A: 1, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 1)).toEqual({A: 2, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 2)).toEqual({A: 3, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 3)).toEqual({A: 4, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 4)).toEqual({A: 5, B: 2, C: 3});
   });
 
   it('provide datatype through parameter to parse different types',
@@ -455,11 +455,11 @@ describe('CSVDataset', () => {
     const iter = await dataset.iterator();
     const result = await iter.toArrayForTest();
 
-    expect(result[0]).toEqual({A: 1, B: 2, C: 3});
-    expect(result[1]).toEqual({A: 2, B: 2, C: 3});
-    expect(result[2]).toEqual({A: 3, B: 2, C: 3});
-    expect(result[3]).toEqual({A: 4, B: 2, C: 3});
-    expect(result[4]).toEqual({A: 5, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 0)).toEqual({A: 1, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 1)).toEqual({A: 2, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 2)).toEqual({A: 3, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 3)).toEqual({A: 4, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 4)).toEqual({A: 5, B: 2, C: 3});
   });
 
   it('parse correctly with single white spaces delimiter', async () => {
@@ -470,9 +470,9 @@ describe('CSVDataset', () => {
     const iter = await dataset.iterator();
     const result = await iter.toArrayForTest();
 
-    expect(result[0]).toEqual({A: 1, B: 2, C: 3});
-    expect(result[1]).toEqual({A: 2, B: undefined, C: undefined});
-    expect(result[2]).toEqual({A: 3, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 0)).toEqual({A: 1, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 1)).toEqual({A: 2, B: undefined, C: undefined});
+    expect(fixtureTestUtil.requiredTestElement(result, 2)).toEqual({A: 3, B: 2, C: 3});
   });
 
   it('throw error when delimiter is provided and delimWhitespace is true',
@@ -498,9 +498,9 @@ describe('CSVDataset', () => {
     const iter = await dataset.iterator();
     const result = await iter.toArrayForTest();
 
-    expect(result[0]).toEqual({A: 1, B: 2, C: 3});
-    expect(result[1]).toEqual({A: 'v', B: '\rw', C: 'x'});
-    expect(result[2]).toEqual({A: 3, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 0)).toEqual({A: 1, B: 2, C: 3});
+    expect(fixtureTestUtil.requiredTestElement(result, 1)).toEqual({A: 'v', B: '\rw', C: 'x'});
+    expect(fixtureTestUtil.requiredTestElement(result, 2)).toEqual({A: 3, B: 2, C: 3});
   });
 
   it('can be used with concatenate', async () => {

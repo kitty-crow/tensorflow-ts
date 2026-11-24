@@ -157,25 +157,25 @@ describe('SavedModel', () => {
      * }]
      */
     expect(modelInfo.length).toBe(1);
-    expect(modelInfo[0].tags.length).toBe(1);
-    expect(modelInfo[0].tags[0]).toBe('serve');
-    expect(Object.keys(modelInfo[0].signatureDefs).length).toBe(1);
-    expect(Object.keys(modelInfo[0].signatureDefs)[0]).toBe('serving_default');
-    expect(Object.keys(modelInfo[0].signatureDefs['serving_default'].inputs)
+    expect(test_util.requiredTestElement(modelInfo, 0).tags.length).toBe(1);
+    expect(test_util.requiredTestElement(modelInfo, 0).tags[0]).toBe('serve');
+    expect(Object.keys(test_util.requiredTestElement(modelInfo, 0).signatureDefs).length).toBe(1);
+    expect(Object.keys(test_util.requiredTestElement(modelInfo, 0).signatureDefs)[0]).toBe('serving_default');
+    expect(Object.keys(test_util.requiredTestElement(modelInfo, 0).signatureDefs['serving_default'].inputs)
                .length)
         .toBe(1);
-    expect(modelInfo[0].signatureDefs['serving_default'].inputs['x'].name)
+    expect(test_util.requiredTestElement(modelInfo, 0).signatureDefs['serving_default'].inputs['x'].name)
         .toBe('serving_default_x:0');
-    expect(modelInfo[0].signatureDefs['serving_default'].inputs['x'].dtype)
+    expect(test_util.requiredTestElement(modelInfo, 0).signatureDefs['serving_default'].inputs['x'].dtype)
         .toBe('float32');
-    expect(Object.keys(modelInfo[0].signatureDefs['serving_default'].outputs)
+    expect(Object.keys(test_util.requiredTestElement(modelInfo, 0).signatureDefs['serving_default'].outputs)
                .length)
         .toBe(1);
     expect(
-        modelInfo[0].signatureDefs['serving_default'].outputs['output_0'].name)
+        test_util.requiredTestElement(modelInfo, 0).signatureDefs['serving_default'].outputs['output_0'].name)
         .toBe('StatefulPartitionedCall:0');
     expect(
-        modelInfo[0].signatureDefs['serving_default'].outputs['output_0'].dtype)
+        test_util.requiredTestElement(modelInfo, 0).signatureDefs['serving_default'].outputs['output_0'].dtype)
         .toBe('float32');
   });
 
@@ -330,7 +330,7 @@ describe('SavedModel', () => {
     const input = tf.tensor1d([1.0, 2, 3]);
     const outputArray = model.predict([input]) as tf.Tensor[];
     expect(outputArray.length).toBe(1);
-    const output = outputArray[0];
+    const output = test_util.requiredTestElement(outputArray, 0);
     expect(output.shape).toEqual(input.shape);
     expect(output.dtype).toBe(input.dtype);
     expect(output.dtype).toBe('float32');
@@ -384,8 +384,8 @@ describe('SavedModel', () => {
     expect(output.shape).toEqual([2]);
     expect(output.dtype).toBe('int32');
     const data = await output.data();
-    expect(Number(data[0])).toEqual(18);
-    expect(Number(data[1])).toEqual(24);
+    expect(Number(test_util.requiredTestElement(data, 0))).toEqual(18);
+    expect(Number(test_util.requiredTestElement(data, 1))).toEqual(24);
     model.dispose();
   });
 
@@ -440,8 +440,8 @@ describe('SavedModel', () => {
         'serving_default');
     const input = tf.tensor1d([1, 2, 3], 'int32');
     const output = model.predict(input) as tf.Tensor[];
-    const output1 = output[0];
-    const output2 = output[1];
+    const output1 = test_util.requiredTestElement(output, 0);
+    const output2 = test_util.requiredTestElement(output, 1);
     expect(output1.shape).toEqual(input.shape);
     expect(output1.dtype).toBe(input.dtype);
     expect(output2.shape).toEqual(input.shape);
@@ -494,25 +494,25 @@ describe('SavedModel', () => {
     expect(model.inputs.length).toBe(2);
     expect(model.outputs.length).toBe(2);
 
-    expect(model.inputs[0].name).toBe('serving_default_x');
-    expect(model.inputs[0].dtype).toBe('int32');
-    expect(model.inputs[0].tfDtype).toBe('DT_INT32');
-    expect(model.inputs[0].shape.length).toBe(0);
+    expect(test_util.requiredTestElement(model.inputs, 0).name).toBe('serving_default_x');
+    expect(test_util.requiredTestElement(model.inputs, 0).dtype).toBe('int32');
+    expect(test_util.requiredTestElement(model.inputs, 0).tfDtype).toBe('DT_INT32');
+    expect(test_util.requiredTestElement(model.inputs, 0).shape.length).toBe(0);
 
-    expect(model.inputs[1].name).toBe('serving_default_y');
-    expect(model.inputs[1].dtype).toBe('int32');
-    expect(model.inputs[1].tfDtype).toBe('DT_INT32');
-    expect(model.inputs[1].shape.length).toBe(0);
+    expect(test_util.requiredTestElement(model.inputs, 1).name).toBe('serving_default_y');
+    expect(test_util.requiredTestElement(model.inputs, 1).dtype).toBe('int32');
+    expect(test_util.requiredTestElement(model.inputs, 1).tfDtype).toBe('DT_INT32');
+    expect(test_util.requiredTestElement(model.inputs, 1).shape.length).toBe(0);
 
-    expect(model.outputs[0].name).toBe('StatefulPartitionedCall');
-    expect(model.outputs[0].dtype).toBe('int32');
-    expect(model.outputs[0].tfDtype).toBe('DT_INT32');
-    expect(model.outputs[0].shape.length).toBe(0);
+    expect(test_util.requiredTestElement(model.outputs, 0).name).toBe('StatefulPartitionedCall');
+    expect(test_util.requiredTestElement(model.outputs, 0).dtype).toBe('int32');
+    expect(test_util.requiredTestElement(model.outputs, 0).tfDtype).toBe('DT_INT32');
+    expect(test_util.requiredTestElement(model.outputs, 0).shape.length).toBe(0);
 
-    expect(model.outputs[1].name).toBe('StatefulPartitionedCall:1');
-    expect(model.outputs[1].dtype).toBe('int32');
-    expect(model.outputs[1].tfDtype).toBe('DT_INT32');
-    expect(model.outputs[1].shape.length).toBe(0);
+    expect(test_util.requiredTestElement(model.outputs, 1).name).toBe('StatefulPartitionedCall:1');
+    expect(test_util.requiredTestElement(model.outputs, 1).dtype).toBe('int32');
+    expect(test_util.requiredTestElement(model.outputs, 1).tfDtype).toBe('DT_INT32');
+    expect(test_util.requiredTestElement(model.outputs, 1).shape.length).toBe(0);
     model.dispose();
   });
 });

@@ -61,7 +61,7 @@ describe('tensorboard', () => {
       // file in JavaScript/TypeScript.
       const fileNames = fs.readdirSync(tmpLogDir);
       expect(fileNames.length).toEqual(1);
-      const eventFilePath = path.join(tmpLogDir, fileNames[0]);
+      const eventFilePath = path.join(tmpLogDir, tf.test_util.requiredTestElement(fileNames, 0));
       const fileSize0 = fs.statSync(eventFilePath).size;
 
       writer.scalar('foo', 43, 1);
@@ -117,12 +117,12 @@ describe('tensorboard', () => {
       // file in JavaScript/TypeScript.
       let fileNames = fs.readdirSync(logDir1);
       expect(fileNames.length).toEqual(1);
-      const eventFilePath1 = path.join(logDir1, fileNames[0]);
+      const eventFilePath1 = path.join(logDir1, tf.test_util.requiredTestElement(fileNames, 0));
       const fileSize1Num0 = fs.statSync(eventFilePath1).size;
 
       fileNames = fs.readdirSync(logDir2);
       expect(fileNames.length).toEqual(1);
-      const eventFilePath2 = path.join(logDir2, fileNames[0]);
+      const eventFilePath2 = path.join(logDir2, tf.test_util.requiredTestElement(fileNames, 0));
       const fileSize2Num0 = fs.statSync(eventFilePath2).size;
       expect(fileSize2Num0).toBeGreaterThan(0);
 
@@ -174,7 +174,7 @@ describe('tensorboard', () => {
       // file in JavaScript/TypeScript.
       const fileNames = fs.readdirSync(tmpLogDir);
       expect(fileNames.length).toEqual(1);
-      const eventFilePath = path.join(tmpLogDir, fileNames[0]);
+      const eventFilePath = path.join(tmpLogDir, tf.test_util.requiredTestElement(fileNames, 0));
       const fileSize0 = fs.statSync(eventFilePath).size;
 
       writer.histogram('foo', tensor1d([1, 1, 1, 1, 1], 'int32'), 1, 5);
@@ -261,11 +261,11 @@ describe('tensorBoard callback', () => {
     const trainLogDir = path.join(tmpLogDir, 'train');
     const trainFiles = fs.readdirSync(trainLogDir);
     const trainFileSize0 =
-        fs.statSync(path.join(trainLogDir, trainFiles[0])).size;
+        fs.statSync(path.join(trainLogDir, tf.test_util.requiredTestElement(trainFiles, 0))).size;
     expect(trainFileSize0).toBeGreaterThan(0);
     const valLogDir = path.join(tmpLogDir, 'val');
     const valFiles = fs.readdirSync(valLogDir);
-    const valFileSize0 = fs.statSync(path.join(valLogDir, valFiles[0])).size;
+    const valFileSize0 = fs.statSync(path.join(valLogDir, tf.test_util.requiredTestElement(valFiles, 0))).size;
     expect(valFileSize0).toBeGreaterThan(0);
     // With updateFreq === epoch, the train and val subset should have generated
     // the same amount of logs.
@@ -284,8 +284,8 @@ describe('tensorBoard callback', () => {
     expect(history.history.val_MAE.length).toEqual(3);
 
     const trainFileSize1 =
-        fs.statSync(path.join(trainLogDir, trainFiles[0])).size;
-    const valFileSize1 = fs.statSync(path.join(valLogDir, valFiles[0])).size;
+        fs.statSync(path.join(trainLogDir, tf.test_util.requiredTestElement(trainFiles, 0))).size;
+    const valFileSize1 = fs.statSync(path.join(valLogDir, tf.test_util.requiredTestElement(valFiles, 0))).size;
     // We currently only assert that new content has been written to the log
     // file.
     expect(trainFileSize1).toBeGreaterThan(trainFileSize0);
@@ -320,11 +320,11 @@ describe('tensorBoard callback', () => {
     const trainLogDir = path.join(tmpLogDir, 'train');
     const trainFiles = fs.readdirSync(trainLogDir);
     const trainFileSize0 =
-        fs.statSync(path.join(trainLogDir, trainFiles[0])).size;
+        fs.statSync(path.join(trainLogDir, tf.test_util.requiredTestElement(trainFiles, 0))).size;
     expect(trainFileSize0).toBeGreaterThan(0);
     const valLogDir = path.join(tmpLogDir, 'val');
     const valFiles = fs.readdirSync(valLogDir);
-    const valFileSize0 = fs.statSync(path.join(valLogDir, valFiles[0])).size;
+    const valFileSize0 = fs.statSync(path.join(valLogDir, tf.test_util.requiredTestElement(valFiles, 0))).size;
     expect(valFileSize0).toBeGreaterThan(0);
     // The train subset should have generated more logs than the val subset,
     // because the train subset gets logged every batch, while the val subset
@@ -344,8 +344,8 @@ describe('tensorBoard callback', () => {
     expect(history.history.val_MAE.length).toEqual(3);
 
     const trainFileSize1 =
-        fs.statSync(path.join(trainLogDir, trainFiles[0])).size;
-    const valFileSize1 = fs.statSync(path.join(valLogDir, valFiles[0])).size;
+        fs.statSync(path.join(trainLogDir, tf.test_util.requiredTestElement(trainFiles, 0))).size;
+    const valFileSize1 = fs.statSync(path.join(valLogDir, tf.test_util.requiredTestElement(valFiles, 0))).size;
     // We currently only assert that new content has been written to the log
     // file.
     expect(trainFileSize1).toBeGreaterThan(trainFileSize0);
@@ -392,24 +392,24 @@ describe('tensorBoard callback', () => {
     const trainCallArgs = trainWriterScalarSpy.calls.allArgs();
     // Assert that the epoch numbers used to log the epoch-end loss and metric
     // reflect initialEpoch.
-    expect(trainCallArgs[0][0]).toEqual('epoch_loss');
-    expect(trainCallArgs[0][2]).toEqual(3);
-    expect(trainCallArgs[1][0]).toEqual('epoch_MAE');
-    expect(trainCallArgs[1][2]).toEqual(3);
-    expect(trainCallArgs[2][0]).toEqual('epoch_loss');
-    expect(trainCallArgs[2][2]).toEqual(4);
-    expect(trainCallArgs[3][0]).toEqual('epoch_MAE');
-    expect(trainCallArgs[3][2]).toEqual(4);
+    expect(tf.test_util.requiredTestElement(trainCallArgs, 0)[0]).toEqual('epoch_loss');
+    expect(tf.test_util.requiredTestElement(trainCallArgs, 0)[2]).toEqual(3);
+    expect(tf.test_util.requiredTestElement(trainCallArgs, 1)[0]).toEqual('epoch_MAE');
+    expect(tf.test_util.requiredTestElement(trainCallArgs, 1)[2]).toEqual(3);
+    expect(tf.test_util.requiredTestElement(trainCallArgs, 2)[0]).toEqual('epoch_loss');
+    expect(tf.test_util.requiredTestElement(trainCallArgs, 2)[2]).toEqual(4);
+    expect(tf.test_util.requiredTestElement(trainCallArgs, 3)[0]).toEqual('epoch_MAE');
+    expect(tf.test_util.requiredTestElement(trainCallArgs, 3)[2]).toEqual(4);
     expect(valWriterScalarSpy).toHaveBeenCalledTimes(4);
     const valCallArgs = valWriterScalarSpy.calls.allArgs();
-    expect(valCallArgs[0][0]).toEqual('epoch_loss');
-    expect(valCallArgs[0][2]).toEqual(3);
-    expect(valCallArgs[1][0]).toEqual('epoch_MAE');
-    expect(valCallArgs[1][2]).toEqual(3);
-    expect(valCallArgs[2][0]).toEqual('epoch_loss');
-    expect(valCallArgs[2][2]).toEqual(4);
-    expect(valCallArgs[3][0]).toEqual('epoch_MAE');
-    expect(valCallArgs[3][2]).toEqual(4);
+    expect(tf.test_util.requiredTestElement(valCallArgs, 0)[0]).toEqual('epoch_loss');
+    expect(tf.test_util.requiredTestElement(valCallArgs, 0)[2]).toEqual(3);
+    expect(tf.test_util.requiredTestElement(valCallArgs, 1)[0]).toEqual('epoch_MAE');
+    expect(tf.test_util.requiredTestElement(valCallArgs, 1)[2]).toEqual(3);
+    expect(tf.test_util.requiredTestElement(valCallArgs, 2)[0]).toEqual('epoch_loss');
+    expect(tf.test_util.requiredTestElement(valCallArgs, 2)[2]).toEqual(4);
+    expect(tf.test_util.requiredTestElement(valCallArgs, 3)[0]).toEqual('epoch_MAE');
+    expect(tf.test_util.requiredTestElement(valCallArgs, 3)[2]).toEqual(4);
   });
 
   it('fit(): histogramFreq 2, with validation', async () => {
@@ -435,7 +435,7 @@ describe('tensorBoard callback', () => {
     const trainLogDir = path.join(tmpLogDir, 'train');
     const trainFiles = fs.readdirSync(trainLogDir);
     const trainFileSize0 =
-        fs.statSync(path.join(trainLogDir, trainFiles[0])).size;
+        fs.statSync(path.join(trainLogDir, tf.test_util.requiredTestElement(trainFiles, 0))).size;
     expect(trainFileSize0).toBeGreaterThan(0);
 
     // Actual training run.
@@ -447,7 +447,7 @@ describe('tensorBoard callback', () => {
     });
 
     const trainFileSize1 =
-        fs.statSync(path.join(trainLogDir, trainFiles[0])).size;
+        fs.statSync(path.join(trainLogDir, tf.test_util.requiredTestElement(trainFiles, 0))).size;
 
     // We currently only assert that new content has been written to the log
     // file.

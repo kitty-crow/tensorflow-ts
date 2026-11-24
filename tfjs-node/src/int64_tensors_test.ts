@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 import {encodeInt32ArrayAsInt64, Int64Scalar} from './int64_tensors';
 
 describe('int64 tensors', () => {
@@ -24,8 +25,8 @@ describe('int64 tensors', () => {
     const valueArray = x.valueArray;
     expect(valueArray.constructor.name).toEqual('Int32Array');
     expect(valueArray.length).toEqual(2);
-    expect(valueArray[0]).toEqual(42);
-    expect(valueArray[1]).toEqual(0);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 0)).toEqual(42);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 1)).toEqual(0);
   });
 
   it('zero value', () => {
@@ -34,8 +35,8 @@ describe('int64 tensors', () => {
     const valueArray = x.valueArray;
     expect(valueArray.constructor.name).toEqual('Int32Array');
     expect(valueArray.length).toEqual(2);
-    expect(valueArray[0]).toEqual(0);
-    expect(valueArray[1]).toEqual(0);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 0)).toEqual(0);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 1)).toEqual(0);
   });
 
   it('negative value', () => {
@@ -44,8 +45,8 @@ describe('int64 tensors', () => {
     const valueArray = x.valueArray;
     expect(valueArray.constructor.name).toEqual('Int32Array');
     expect(valueArray.length).toEqual(2);
-    expect(valueArray[0]).toEqual(-3);
-    expect(valueArray[1]).toEqual(-1);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 0)).toEqual(-3);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 1)).toEqual(-1);
   });
 
   it('Non-integer value leads to error', () => {
@@ -63,9 +64,9 @@ describe('int64 tensors', () => {
     const input = Int32Array.from([2, 10]);
     const valueArray = encodeInt32ArrayAsInt64(input);
     expect(valueArray.length).toEqual(4);
-    expect(valueArray[0]).toEqual(2);
-    expect(valueArray[1]).toEqual(0);
-    expect(valueArray[2]).toEqual(10);
-    expect(valueArray[3]).toEqual(0);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 0)).toEqual(2);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 1)).toEqual(0);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 2)).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(valueArray, 3)).toEqual(0);
   });
 });

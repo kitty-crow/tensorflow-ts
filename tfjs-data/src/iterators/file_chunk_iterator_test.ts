@@ -16,7 +16,7 @@
  * =============================================================================
  */
 
-import {env} from '@tensorflow/tfjs-core';
+import {env, test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 import {FileChunkIterator} from './file_chunk_iterator';
 
 const range = (start: number, end: number) => {
@@ -39,23 +39,23 @@ describe('FileChunkIterator', () => {
   it('Reads chunks in order', async () => {
     const readIterator = new FileChunkIterator(testData, {chunkSize: 10});
     const result = await readIterator.toArrayForTest();
-    expect(result[0][0]).toEqual(0);
-    expect(result[1][0]).toEqual(10);
-    expect(result[2][0]).toEqual(20);
-    expect(result[3][0]).toEqual(30);
-    expect(result[4][0]).toEqual(40);
-    expect(result[5][0]).toEqual(50);
+    expect(fixtureTestUtil.requiredTestElement(result, 0)[0]).toEqual(0);
+    expect(fixtureTestUtil.requiredTestElement(result, 1)[0]).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(result, 2)[0]).toEqual(20);
+    expect(fixtureTestUtil.requiredTestElement(result, 3)[0]).toEqual(30);
+    expect(fixtureTestUtil.requiredTestElement(result, 4)[0]).toEqual(40);
+    expect(fixtureTestUtil.requiredTestElement(result, 5)[0]).toEqual(50);
   });
 
   it('Reads chunks of expected sizes', async () => {
     const readIterator = new FileChunkIterator(testData, {chunkSize: 10});
     const result = await readIterator.toArrayForTest();
-    expect(result[0].length).toEqual(10);
-    expect(result[1].length).toEqual(10);
-    expect(result[2].length).toEqual(10);
-    expect(result[3].length).toEqual(10);
-    expect(result[4].length).toEqual(10);
-    expect(result[5].length).toEqual(5);
+    expect(fixtureTestUtil.requiredTestElement(result, 0).length).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(result, 1).length).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(result, 2).length).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(result, 3).length).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(result, 4).length).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(result, 5).length).toEqual(5);
   });
 
   it('Provides mistyped data throws error', () => {

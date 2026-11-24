@@ -83,15 +83,15 @@ describe('progbarLogger', () => {
         expect(tickConfigs[i]['placeholderForLossesAndMetrics'])
             .toMatch(/^loss=.*/);
       }
-      expect(tickConfigs[2]).toEqual({placeholderForLossesAndMetrics: ''});
+      expect(tf.test_util.requiredTestElement(tickConfigs, 2)).toEqual({placeholderForLossesAndMetrics: ''});
     }
     expect(consoleMessages.length).toEqual(6);
-    expect(consoleMessages[0]).toEqual('Epoch 1 / 3');
-    expect(consoleMessages[1]).toMatch(/.*ms .*us\/step - loss=.*/);
-    expect(consoleMessages[2]).toEqual('Epoch 2 / 3');
-    expect(consoleMessages[3]).toMatch(/.*ms .*us\/step - loss=.*/);
-    expect(consoleMessages[4]).toEqual('Epoch 3 / 3');
-    expect(consoleMessages[5]).toMatch(/.*ms .*us\/step - loss=.*/);
+    expect(tf.test_util.requiredTestElement(consoleMessages, 0)).toEqual('Epoch 1 / 3');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 1)).toMatch(/.*ms .*us\/step - loss=.*/);
+    expect(tf.test_util.requiredTestElement(consoleMessages, 2)).toEqual('Epoch 2 / 3');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 3)).toMatch(/.*ms .*us\/step - loss=.*/);
+    expect(tf.test_util.requiredTestElement(consoleMessages, 4)).toEqual('Epoch 3 / 3');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 5)).toMatch(/.*ms .*us\/step - loss=.*/);
   });
 
   it('Model.fit with loss, metric and validation, verbose = 2', async () => {
@@ -136,14 +136,14 @@ describe('progbarLogger', () => {
         expect(tickConfigs[i]['placeholderForLossesAndMetrics'])
             .toMatch(/^acc=.* loss=.*/);
       }
-      expect(tickConfigs[5]).toEqual({placeholderForLossesAndMetrics: ''});
+      expect(tf.test_util.requiredTestElement(tickConfigs, 5)).toEqual({placeholderForLossesAndMetrics: ''});
     }
     expect(consoleMessages.length).toEqual(4);
-    expect(consoleMessages[0]).toEqual('Epoch 1 / 2');
-    expect(consoleMessages[1])
+    expect(tf.test_util.requiredTestElement(consoleMessages, 0)).toEqual('Epoch 1 / 2');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 1))
         .toMatch(/.*ms .*us\/step - acc=.* loss=.* val_acc=.* val_loss=.*/);
-    expect(consoleMessages[2]).toEqual('Epoch 2 / 2');
-    expect(consoleMessages[3])
+    expect(tf.test_util.requiredTestElement(consoleMessages, 2)).toEqual('Epoch 2 / 2');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 3))
         .toMatch(/.*ms .*us\/step - acc=.* loss=.* val_acc=.* val_loss=.*/);
   });
 
@@ -204,10 +204,10 @@ describe('progbarLogger', () => {
     await model.fitDataset(dataset, {batchesPerEpoch: 4, epochs, verbose: 1});
 
     expect(consoleMessages.length).toEqual(4);
-    expect(consoleMessages[0]).toEqual('Epoch 1 / 2');
-    expect(consoleMessages[1]).toMatch(/.*ms .*us\/step - loss=.*/);
-    expect(consoleMessages[2]).toEqual('Epoch 2 / 2');
-    expect(consoleMessages[3]).toMatch(/.*ms .*us\/step - loss=.*/);
+    expect(tf.test_util.requiredTestElement(consoleMessages, 0)).toEqual('Epoch 1 / 2');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 1)).toMatch(/.*ms .*us\/step - loss=.*/);
+    expect(tf.test_util.requiredTestElement(consoleMessages, 2)).toEqual('Epoch 2 / 2');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 3)).toMatch(/.*ms .*us\/step - loss=.*/);
   });
 
   it('Model.fitDataset: batchesPerEpoch unavailable, verbose = 1', async () => {
@@ -238,10 +238,10 @@ describe('progbarLogger', () => {
     await model.fitDataset(dataset, {epochs, verbose: 1});
 
     expect(consoleMessages.length).toEqual(4);
-    expect(consoleMessages[0]).toEqual('Epoch 1 / 2');
-    expect(consoleMessages[1]).toMatch(/.*ms .*us\/step - loss=.*/);
-    expect(consoleMessages[2]).toEqual('Epoch 2 / 2');
-    expect(consoleMessages[3]).toMatch(/.*ms .*us\/step - loss=.*/);
+    expect(tf.test_util.requiredTestElement(consoleMessages, 0)).toEqual('Epoch 1 / 2');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 1)).toMatch(/.*ms .*us\/step - loss=.*/);
+    expect(tf.test_util.requiredTestElement(consoleMessages, 2)).toEqual('Epoch 2 / 2');
+    expect(tf.test_util.requiredTestElement(consoleMessages, 3)).toMatch(/.*ms .*us\/step - loss=.*/);
   });
 
   it('Model.fitDataset: verbose = 0 leads to no logging', async () => {
