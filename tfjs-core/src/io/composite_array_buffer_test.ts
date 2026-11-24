@@ -116,6 +116,20 @@ describe('CompositeArrayBuffer', () => {
     expectArraysEqual(new Uint8Array(composite.slice(0, NaN)), []);
   });
 
+  it('reports zero bytes for missing or empty input', () => {
+    expect(new CompositeArrayBuffer().byteLength).toBe(0);
+    expect(new CompositeArrayBuffer([]).byteLength).toBe(0);
+  });
+
+  it('ignores empty shards when calculating byte offsets', () => {
+    const composite = new CompositeArrayBuffer([
+      new ArrayBuffer(0), new Uint8Array([1, 2]).buffer,
+      new ArrayBuffer(0), new Uint8Array([3]).buffer
+    ]);
+    expect(composite.byteLength).toBe(3);
+    expectArraysEqual(new Uint8Array(composite.slice(1, 3)), [2, 3]);
+  });
+
   it('supports TypedArray input', () => {
     // This support is necessary for some tests in tfjs-converter. Maybe those
     // tests are misconfigured?

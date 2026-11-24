@@ -22,7 +22,7 @@ import {BROWSER_ENVS, describeWithFlags} from '../jasmine_util';
 import {BrowserIndexedDB, browserIndexedDB} from './indexed_db';
 import {BrowserLocalStorage, browserLocalStorage} from './local_storage';
 import {IORouterRegistry} from './router_registry';
-import {IOHandler, LoadHandler, LoadOptions, SaveHandler} from './types';
+import {IOHandler, LoadOptions, ModelArtifacts} from './types';
 
 describeWithFlags('IORouterRegistry', BROWSER_ENVS, () => {
   const localStorageRouter = (url: string) => {
@@ -45,6 +45,10 @@ describeWithFlags('IORouterRegistry', BROWSER_ENVS, () => {
 
   class FakeIOHandler implements IOHandler {
     constructor(url1: string, url2: string) {}
+
+    async load(): Promise<ModelArtifacts> {
+      return {};
+    }
   }
 
   const fakeMultiStringRouter = (url: string|string[]) => {
@@ -125,13 +129,22 @@ describeWithFlags('IORouterRegistry', BROWSER_ENVS, () => {
   };
 
   class FakeLoadOptionsHandler implements IOHandler {
-    save?: SaveHandler;
-    load?: LoadHandler;
     constructor(url: string, private readonly loadOptions?: LoadOptions) {}
+
+    async load(): Promise<ModelArtifacts> {
+      return {};
+    }
     get loadOptionsData() {
       return this.loadOptions;
     }
   }
+
+  it('rejects a router returning a handler without its registered capability', () => {
+    IORouterRegistry.registerLoadRouter(() => ({}));
+    IORouterRegistry.registerSaveRouter(() => ({}));
+    expect(() => tf.io.getLoadHandlers('foo:///123')).toThrowError(/without load/);
+    expect(() => tf.io.getSaveHandlers('foo:///123')).toThrowError(/without save/);
+  });
 
   it('getLoadHandler loadOptions', () => {
     IORouterRegistry.registerLoadRouter(fakeLoadOptionsRouter);

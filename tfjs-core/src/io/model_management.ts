@@ -121,6 +121,9 @@ async function cloneModelInternal(
       () => `Copying failed because more than one (${loadHandlers.length}) ` +
           `load handlers for source URL ${sourceURL}.`);
   const loadHandler = loadHandlers[0];
+  if (loadHandler == null) {
+    throw new Error('The validated load handler is missing.');
+  }
 
   const saveHandlers = IORouterRegistry.getSaveHandlers(destURL);
   assert(
@@ -132,6 +135,9 @@ async function cloneModelInternal(
       () => `Copying failed because more than one (${loadHandlers.length}) ` +
           `save handlers for destination URL ${destURL}.`);
   const saveHandler = saveHandlers[0];
+  if (saveHandler == null) {
+    throw new Error('The validated save handler is missing.');
+  }
 
   const sourceScheme = parseURL(sourceURL).scheme;
   const sourcePath = parseURL(sourceURL).path;

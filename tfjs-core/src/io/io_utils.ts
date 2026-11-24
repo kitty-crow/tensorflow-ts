@@ -56,13 +56,10 @@ export async function encodeWeights(
   const specs: WeightsManifestEntry[] = [];
   const dataPromises: Array<Promise<TypedArray>> = [];
 
-  const names: string[] = Array.isArray(tensors) ?
-      tensors.map(tensor => tensor.name) :
-      Object.keys(tensors);
+  const entries: NamedTensor[] = Array.isArray(tensors) ?
+      tensors : Object.entries(tensors).map(([name, tensor]) => ({name, tensor}));
 
-  for (let i = 0; i < names.length; ++i) {
-    const name = names[i];
-    const t = Array.isArray(tensors) ? tensors[i].tensor : tensors[name];
+  for (const {name, tensor: t} of entries) {
     if (t.dtype !== 'float32' && t.dtype !== 'int32' && t.dtype !== 'bool' &&
         t.dtype !== 'string' && t.dtype !== 'complex64') {
       throw new Error(`Unsupported dtype in weight '${name}': ${t.dtype}`);
@@ -75,8 +72,7 @@ export async function encodeWeights(
             NUM_BYTES_STRING_LENGTH * vals.length;
         const bytes = new Uint8Array(totalNumBytes);
         let offset = 0;
-        for (let i = 0; i < vals.length; i++) {
-          const val = vals[i];
+        for (const val of vals) {
           const bytesOfLength =
               new Uint8Array(new Uint32Array([val.length]).buffer);
           bytes.set(bytesOfLength, offset);

@@ -101,7 +101,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
 
   it('Save-load round trip', runWithLock(async () => {
        const testStartDate = new Date();
-       const handler = tf.io.getSaveHandlers('indexeddb://FooModel')[0];
+       const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://FooModel'), 0);
 
        const saveResult = await handler.save(artifacts1);
        expect(saveResult.modelArtifactsInfo.dateSaved.getTime())
@@ -133,7 +133,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
          weightSpecs: weightSpecs2,
          weightData: weightData2,
        };
-       const handler1 = tf.io.getSaveHandlers('indexeddb://Model/1')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://Model/1'), 0);
        const saveResult1 = await handler1.save(artifacts1);
        // Note: The following two assertions work only because there is no
        // non-ASCII characters in `modelTopology1` and `weightSpecs1`.
@@ -144,7 +144,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
        expect(saveResult1.modelArtifactsInfo.weightDataBytes)
            .toEqual(weightData1.byteLength);
 
-       const handler2 = tf.io.getSaveHandlers('indexeddb://Model/2')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://Model/2'), 0);
        const saveResult2 = await handler2.save(artifacts2);
        expect(saveResult2.modelArtifactsInfo.dateSaved.getTime())
            .toBeGreaterThanOrEqual(
@@ -168,7 +168,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
      }));
 
   it('Loading nonexistent model fails', runWithLock(async () => {
-       const handler = tf.io.getSaveHandlers('indexeddb://NonexistentModel')[0];
+       const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://NonexistentModel'), 0);
 
        try {
          await handler.load();
@@ -207,7 +207,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
      }));
 
   it('Manager: List models: 1 result', runWithLock(async () => {
-       const handler = tf.io.getSaveHandlers('indexeddb://baz/QuxModel')[0];
+       const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://baz/QuxModel'), 0);
        const saveResult = await handler.save(artifacts1);
 
        // After successful saving, there should be one model.
@@ -225,11 +225,11 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
 
   it('Manager: List models: 2 results', runWithLock(async () => {
        // First, save a model.
-       const handler1 = tf.io.getSaveHandlers('indexeddb://QuxModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://QuxModel'), 0);
        const saveResult1 = await handler1.save(artifacts1);
 
        // Then, save the model under another path.
-       const handler2 = tf.io.getSaveHandlers('indexeddb://repeat/QuxModel')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://repeat/QuxModel'), 0);
        const saveResult2 = await handler2.save(artifacts1);
 
        // After successful saving, there should be two models.
@@ -255,11 +255,11 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
 
   it('Manager: Successful removeModel', runWithLock(async () => {
        // First, save a model.
-       const handler1 = tf.io.getSaveHandlers('indexeddb://QuxModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://QuxModel'), 0);
        await handler1.save(artifacts1);
 
        // Then, save the model under another path.
-       const handler2 = tf.io.getSaveHandlers('indexeddb://repeat/QuxModel')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://repeat/QuxModel'), 0);
        await handler2.save(artifacts1);
 
        // After successful saving, delete the first save, and then
@@ -274,11 +274,11 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
   it('Manager: Successful removeModel with URL scheme',
      runWithLock(async () => {
        // First, save a model.
-       const handler1 = tf.io.getSaveHandlers('indexeddb://QuxModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://QuxModel'), 0);
        await handler1.save(artifacts1);
 
        // Then, save the model under another path.
-       const handler2 = tf.io.getSaveHandlers('indexeddb://repeat/QuxModel')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://repeat/QuxModel'), 0);
        await handler2.save(artifacts1);
 
        // After successful saving, delete the first save, and then

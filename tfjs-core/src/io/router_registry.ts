@@ -15,10 +15,18 @@
  * =============================================================================
  */
 
-import {IOHandler, LoadOptions} from './types';
+import {IOHandler, LoadingIOHandler, LoadOptions, SavingIOHandler} from './types';
 
 export type IORouter = (url: string|string[], loadOptions?: LoadOptions) =>
     IOHandler;
+
+function hasSaveCapability(handler: IOHandler): handler is SavingIOHandler {
+  return typeof handler.save === 'function';
+}
+
+function hasLoadCapability(handler: IOHandler): handler is LoadingIOHandler {
+  return typeof handler.load === 'function';
+}
 
 export class IORouterRegistry {
   // Singleton instance.
@@ -63,12 +71,16 @@ export class IORouterRegistry {
    * Look up IOHandler for saving, given a URL-like string.
    *
    * @param url
-   * @returns If only one match is found, an instance of IOHandler with the
-   * `save` method defined. If no match is found, `null`.
-   * @throws Error, if more than one match is found.
+   * @returns All matching handlers with a callable save method.
+   * @throws Error if a router supplies a handler without that capability.
    */
-  static getSaveHandlers(url: string|string[]): IOHandler[] {
-    return IORouterRegistry.getHandlers(url, 'save');
+  static getSaveHandlers(url: string|string[]): SavingIOHandler[] {
+    return IORouterRegistry.getHandlers(url, 'save').map(handler => {
+      if (!hasSaveCapability(handler)) {
+        throw new Error('A registered save router returned a handler without save().');
+      }
+      return handler;
+    });
   }
 
   /**
@@ -80,8 +92,13 @@ export class IORouterRegistry {
    *   handler routers.
    */
   static getLoadHandlers(url: string|string[], loadOptions?: LoadOptions):
-      IOHandler[] {
-    return IORouterRegistry.getHandlers(url, 'load', loadOptions);
+      LoadingIOHandler[] {
+    return IORouterRegistry.getHandlers(url, 'load', loadOptions).map(handler => {
+      if (!hasLoadCapability(handler)) {
+        throw new Error('A registered load router returned a handler without load().');
+      }
+      return handler;
+    });
   }
 
   private static getHandlers(
@@ -93,7 +110,7 @@ export class IORouterRegistry {
         IORouterRegistry.getInstance().saveRouters;
     routers.forEach(router => {
       const handler = router(url, loadOptions);
-      if (handler !== null) {
+      if (handler != null) {
         validHandlers.push(handler);
       }
     });

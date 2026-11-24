@@ -94,7 +94,7 @@ describe('File system IOHandler', () => {
   it('save succeeds with newly created directory', async () => {
     const t0 = new Date();
     const dir = path.join(testDir, 'save-destination');
-    const handler = tf.io.getSaveHandlers(`file://${dir}`)[0];
+    const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(`file://${dir}`), 0);
 
     const saveResult = await handler.save({
       modelTopology: modelTopology1,
@@ -138,7 +138,7 @@ describe('File system IOHandler', () => {
     const dir = path.join(testDir, 'save-destination');
     // Create a file at the locatin.
     await writeFile(dir, 'foo');
-    const handler = tf.io.getSaveHandlers(`file://${dir}`)[0];
+    const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(`file://${dir}`), 0);
     await expectAsync(handler.save({
       modelTopology: modelTopology1,
       weightSpecs: weightSpecs1,
@@ -147,7 +147,7 @@ describe('File system IOHandler', () => {
   });
 
   it('save-load round trip: one weight file', done => {
-    const handler1 = tf.io.getSaveHandlers(`file://${testDir}`)[0];
+    const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(`file://${testDir}`), 0);
     handler1
         .save({
           modelTopology: modelTopology1,
@@ -157,7 +157,7 @@ describe('File system IOHandler', () => {
         })
         .then(saveResult => {
           const modelJSONPath = path.join(testDir, 'model.json');
-          const handler2 = tf.io.getLoadHandlers(`file://${modelJSONPath}`)[0];
+          const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers(`file://${modelJSONPath}`), 0);
           handler2.load()
               .then(modelArtifacts => {
                 expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
@@ -215,7 +215,7 @@ describe('File system IOHandler', () => {
 
       // Load the artifacts consisting of a model.json and two binary weight
       // files.
-      const handler = tf.io.getLoadHandlers(`file://${modelJSONPath}`)[0];
+      const handler = tf.test_util.requiredTestElement(tf.io.getLoadHandlers(`file://${modelJSONPath}`), 0);
       const modelArtifacts = await handler.load();
       expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
       expect(modelArtifacts.weightSpecs).toEqual([
@@ -238,7 +238,7 @@ describe('File system IOHandler', () => {
 
     it('loading from nonexistent model.json path fails', done => {
       const handler =
-          tf.io.getLoadHandlers(`file://${testDir}/foo/model.json`)[0];
+          tf.test_util.requiredTestElement(tf.io.getLoadHandlers(`file://${testDir}/foo/model.json`), 0);
       handler.load()
           .then(getModelArtifactsInfoForJSON => {
             done.fail(
@@ -289,7 +289,7 @@ describe('File system IOHandler', () => {
 
       // Load the artifacts consisting of a model.json and two binary weight
       // files.
-      const handler = tf.io.getLoadHandlers(`file://${modelJSONPath}`)[0];
+      const handler = tf.test_util.requiredTestElement(tf.io.getLoadHandlers(`file://${modelJSONPath}`), 0);
       await expectAsync(handler.load()).toBeRejectedWithError(
         /Weight file .*weights\.2\.bin does not exist/);
     });

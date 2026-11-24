@@ -126,7 +126,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
 
   it('Save artifacts succeeds', runWithLock(async () => {
        const testStartDate = new Date();
-       const handler = tf.io.getSaveHandlers('localstorage://foo/FooModel')[0];
+       const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://foo/FooModel'), 0);
        const saveResult = await handler.save(artifacts1);
 
        expect(saveResult.modelArtifactsInfo.dateSaved.getTime())
@@ -167,10 +167,10 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
      }));
 
   it('Save-load round trip succeeds', runWithLock(async () => {
-       const handler1 = tf.io.getSaveHandlers('localstorage://FooModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://FooModel'), 0);
 
        await handler1.save(artifacts1);
-       const handler2 = tf.io.getLoadHandlers('localstorage://FooModel')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers('localstorage://FooModel'), 0);
        const loaded = await handler2.load();
        expect(loaded.modelTopology).toEqual(modelTopology1);
        expect(loaded.weightSpecs).toEqual(weightSpecs1);
@@ -185,10 +185,10 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
      }));
 
   it('Save-load round trip succeeds: v0 format', runWithLock(async () => {
-       const handler1 = tf.io.getSaveHandlers('localstorage://FooModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://FooModel'), 0);
 
        await handler1.save(artifactsV0);
-       const handler2 = tf.io.getLoadHandlers('localstorage://FooModel')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers('localstorage://FooModel'), 0);
        const loaded = await handler2.load();
        expect(loaded.modelTopology).toEqual(modelTopology1);
        expect(loaded.weightSpecs).toEqual(weightSpecs1);
@@ -205,7 +205,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
 
   it('Loading nonexistent model fails.', runWithLock(async () => {
        const handler =
-           tf.io.getSaveHandlers('localstorage://NonexistentModel')[0];
+           tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://NonexistentModel'), 0);
        try {
          await handler.load();
        } catch (err) {
@@ -219,13 +219,13 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
      }));
 
   it('Loading model with missing topology fails.', runWithLock(async () => {
-       const handler1 = tf.io.getSaveHandlers('localstorage://FooModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://FooModel'), 0);
        await handler1.save(artifacts1);
        // Manually remove the topology item from local storage.
        window.localStorage.removeItem(
            'tensorflowjs_models/FooModel/model_topology');
 
-       const handler2 = tf.io.getLoadHandlers('localstorage://FooModel')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers('localstorage://FooModel'), 0);
        try {
          await handler2.load();
        } catch (err) {
@@ -239,13 +239,13 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
      }));
 
   it('Loading model with missing weight specs fails.', runWithLock(async () => {
-       const handler1 = tf.io.getSaveHandlers('localstorage://FooModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://FooModel'), 0);
        await handler1.save(artifacts1);
        // Manually remove the weight specs item from local storage.
        window.localStorage.removeItem(
            'tensorflowjs_models/FooModel/weight_specs');
 
-       const handler2 = tf.io.getLoadHandlers('localstorage://FooModel')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers('localstorage://FooModel'), 0);
        try {
          await handler2.load();
        } catch (err) {
@@ -261,14 +261,14 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
      }));
 
   it('Loading model with missing weight data fails.', runWithLock(async () => {
-       const handler1 = tf.io.getSaveHandlers('localstorage://FooModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://FooModel'), 0);
        await handler1.save(artifacts1);
 
        // Manually remove the weight data item from local storage.
        window.localStorage.removeItem(
            'tensorflowjs_models/FooModel/weight_data');
 
-       const handler2 = tf.io.getLoadHandlers('localstorage://FooModel')[0];
+       const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers('localstorage://FooModel'), 0);
        try {
          await handler2.load();
          fail(
@@ -289,7 +289,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
          weightSpecs: weightSpecs1,
          weightData: new ArrayBuffer(overflowByteSize),
        };
-       const handler1 = tf.io.getSaveHandlers('localstorage://FooModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://FooModel'), 0);
        try {
          await handler1.save(overflowArtifacts);
          fail(
@@ -330,7 +330,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
      }));
 
   it('Manager: List models: 1 result', runWithLock(async () => {
-       const handler = tf.io.getSaveHandlers('localstorage://baz/QuxModel')[0];
+       const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://baz/QuxModel'), 0);
        const saveResult = await handler.save(artifacts1);
 
        // After successful saving, there should be one model.
@@ -352,12 +352,12 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
 
   it('Manager: List models: 2 results', runWithLock(async () => {
        // First, save a model.
-       const handler1 = tf.io.getSaveHandlers('localstorage://QuxModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://QuxModel'), 0);
        const saveResult1 = await handler1.save(artifacts1);
 
        // Then, save the model under another path.
        const handler2 =
-           tf.io.getSaveHandlers('localstorage://repeat/QuxModel')[0];
+           tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://repeat/QuxModel'), 0);
        const saveResult2 = await handler2.save(artifacts1);
 
        // After successful saving, there should be two models.
@@ -386,12 +386,12 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
 
   it('Manager: Successful deleteModel', runWithLock(async () => {
        // First, save a model.
-       const handler1 = tf.io.getSaveHandlers('localstorage://QuxModel')[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://QuxModel'), 0);
        await handler1.save(artifacts1);
 
        // Then, save the model under another path.
        const handler2 =
-           tf.io.getSaveHandlers('localstorage://repeat/QuxModel')[0];
+           tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://repeat/QuxModel'), 0);
        await handler2.save(artifacts1);
 
        // After successful saving, delete the first save, and then

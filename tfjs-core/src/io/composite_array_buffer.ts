@@ -53,33 +53,31 @@ export class CompositeArrayBuffer {
 
   constructor(buffers?: ArrayBuffer | ArrayBuffer[] | TypedArray |
     TypedArray[]) {
-    if (buffers == null) {
-      return;
-    }
-    // Normalize the `buffers` input to be `ArrayBuffer[]`.
-    if (!(buffers instanceof Array)) {
-      buffers = [buffers];
-    }
-    buffers = buffers.map((bufferOrTypedArray) => {
-      if (util.isTypedArray(bufferOrTypedArray)) {
-        return bufferOrTypedArray.buffer;
+    const inputs: ReadonlyArray<ArrayBuffer|TypedArray> =
+        buffers == null ? [] :
+        buffers instanceof Array ? buffers : [buffers];
+    const arrayBuffers = inputs.map((input): ArrayBuffer => {
+      if (util.isTypedArray(input)) {
+        return input.buffer;
       }
-      return bufferOrTypedArray;
+      return input;
     });
 
-    // Skip setting up shards if there are no buffers.
-    if (buffers.length === 0) {
+    // Empty shards carry no bytes and must not be used to compute a stride.
+    const nonEmpty = arrayBuffers.filter(buffer => buffer.byteLength > 0);
+    const first = nonEmpty[0];
+    if (first == null) {
+      this.byteLength = 0;
       return;
     }
-
-    this.bufferUniformSize = buffers[0].byteLength;
+    this.bufferUniformSize = first.byteLength;
     let start = 0;
 
-    for (let i = 0; i < buffers.length; i++) {
-      const buffer = buffers[i];
+    for (const [i, buffer] of nonEmpty.entries()) {
       // Check that all buffers except the last one have the same length.
-      if (i !== buffers.length - 1 &&
-        buffer.byteLength !== this.bufferUniformSize) {
+      if (buffer.byteLength > this.bufferUniformSize ||
+          (i !== nonEmpty.length - 1 &&
+           buffer.byteLength !== this.bufferUniformSize)) {
         // Unset the buffer uniform size, since the buffer sizes are not
         // uniform.
         this.bufferUniformSize = undefined;
@@ -91,11 +89,7 @@ export class CompositeArrayBuffer {
       start = end;
     }
 
-    // Set the byteLength
-    if (this.shards.length === 0) {
-      this.byteLength = 0;
-    }
-    this.byteLength = this.shards[this.shards.length - 1].end;
+    this.byteLength = start;
   }
 
   slice(start = 0, end = this.byteLength): ArrayBuffer {

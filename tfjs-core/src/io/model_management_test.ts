@@ -108,7 +108,7 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
   // tslint:disable-next-line:ban
   xit('List models: 1 result', done => {
     const url = 'localstorage://baz/QuxModel';
-    const handler = tf.io.getSaveHandlers(url)[0];
+    const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(url), 0);
     handler.save(artifacts1)
         .then(saveResult => {
           // After successful saving, there should be one model.
@@ -138,11 +138,11 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
     const url2 = 'indexeddb://QuxModel';
 
     // First, save a model in Local Storage.
-    const handler1 = tf.io.getSaveHandlers(url1)[0];
+    const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(url1), 0);
     handler1.save(artifacts1)
         .then(saveResult1 => {
           // Then, save the model in IndexedDB.
-          const handler2 = tf.io.getSaveHandlers(url2)[0];
+          const handler2 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(url2), 0);
           handler2.save(artifacts1)
               .then(saveResult2 => {
                 // After successful saving, there should be two models.
@@ -187,12 +187,12 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
   // tslint:disable-next-line:ban
   xit('Successful removeModel', done => {
     // First, save a model.
-    const handler1 = tf.io.getSaveHandlers('localstorage://QuxModel')[0];
+    const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('localstorage://QuxModel'), 0);
     handler1.save(artifacts1)
         .then(saveResult1 => {
           // Then, save the model under another path.
           const handler2 =
-              tf.io.getSaveHandlers('indexeddb://repeat/QuxModel')[0];
+              tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://repeat/QuxModel'), 0);
           handler2.save(artifacts1)
               .then(saveResult2 => {
                 // After successful saving, delete the first save, and then
@@ -236,7 +236,7 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
     const url1 = 'localstorage://a1/FooModel';
     const url2 = 'indexeddb://a1/FooModel';
     // First, save a model.
-    const handler1 = tf.io.getSaveHandlers(url1)[0];
+    const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(url1), 0);
     handler1.save(artifacts1)
         .then(saveResult => {
           // Once model is saved, copy the model to another path.
@@ -264,7 +264,7 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                       .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
 
                   // Load the copy and verify the content.
-                  const handler2 = tf.io.getLoadHandlers(url2)[0];
+                  const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers(url2), 0);
                   handler2.load()
                       .then(loaded => {
                         expect(loaded.modelTopology).toEqual(modelTopology1);
@@ -290,7 +290,7 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
     const url1 = 'localstorage://a1/FooModel';
     const url2 = 'indexeddb://a1/FooModel';
     // First, save a model.
-    const handler1 = tf.io.getSaveHandlers(url1)[0];
+    const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(url1), 0);
     handler1.save(artifacts1)
         .then(saveResult => {
           // Once model is saved, move the model to another path.
@@ -309,7 +309,7 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                       .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
 
                   // Load the copy and verify the content.
-                  const handler2 = tf.io.getLoadHandlers(url2)[0];
+                  const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers(url2), 0);
                   handler2.load()
                       .then(loaded => {
                         expect(loaded.modelTopology).toEqual(modelTopology1);
@@ -349,7 +349,7 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
        const url1 = 'localstorage://a1/FooModel';
        const url2 = 'invalidurl';
        // First, save a model.
-       const handler1 = tf.io.getSaveHandlers(url1)[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(url1), 0);
        handler1.save(artifacts1)
            .then(saveResult => {
              // Once model is saved, copy the model to another path.
@@ -372,7 +372,7 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
        const url1 = 'localstorage://a1/FooModel';
        const url2 = 'invalidurl';
        // First, save a model.
-       const handler1 = tf.io.getSaveHandlers(url1)[0];
+       const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers(url1), 0);
        handler1.save(artifacts1)
            .then(saveResult => {
              // Once model is saved, copy the model to an invalid path, which

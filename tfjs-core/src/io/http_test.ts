@@ -226,7 +226,7 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
 
   it('Save topology and weights, default POST method', (done) => {
     const testStartDate = new Date();
-    const handler = tf.io.getSaveHandlers('http://model-upload-test')[0];
+    const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('http://model-upload-test'), 0);
     handler.save(artifacts1)
         .then(saveResult => {
           expect(saveResult.modelArtifactsInfo.dateSaved.getTime())
@@ -281,7 +281,7 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
 
   it('Save topology only, default POST method', (done) => {
     const testStartDate = new Date();
-    const handler = tf.io.getSaveHandlers('http://model-upload-test')[0];
+    const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('http://model-upload-test'), 0);
     const topologyOnlyArtifacts = {modelTopology: modelTopology1};
     handler.save(topologyOnlyArtifacts)
         .then(saveResult => {
@@ -391,7 +391,7 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
   });
 
   it('404 response causes Error', (done) => {
-    const handler = tf.io.getSaveHandlers('http://invalid/path')[0];
+    const handler = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('http://invalid/path'), 0);
     handler.save(artifacts1)
         .then(saveResult => {
           done.fail(
