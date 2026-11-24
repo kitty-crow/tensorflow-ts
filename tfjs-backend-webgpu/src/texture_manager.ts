@@ -18,8 +18,8 @@
 export class TextureManager {
   private numUsedTextures = 0;
   private numFreeTextures = 0;
-  private freeTextures: Map<string, GPUTexture[]> = new Map();
-  private usedTextures: Map<string, GPUTexture[]> = new Map();
+  private freeTextures: Map<string, GPUTexture[]> = new Map<string, GPUTexture[]>();
+  private usedTextures: Map<string, GPUTexture[]> = new Map<string, GPUTexture[]>();
 
   public numBytesUsed = 0;
   public numBytesAllocated = 0;
@@ -28,70 +28,65 @@ export class TextureManager {
 
   acquireTexture(
       width: number, height: number, format: GPUTextureFormat,
-      usage: GPUTextureUsageFlags) {
-    const bytesPerElement = getBytesPerElement(format);
-    const byteSize = width * height * bytesPerElement;
+      usage: GPUTextureUsageFlags): GPUTexture {
+    const byteSize = width * height * getBytesPerElement(format);
     const key = getTextureKey(width, height, format, usage);
-    if (!this.freeTextures.has(key)) {
-      this.freeTextures.set(key, []);
+    const free = this.freeTextures.get(key);
+    let texture: GPUTexture;
+    const recycled = free == null ? null : free.shift();
+    if (recycled != null) {
+      texture = recycled;
+      this.numFreeTextures--;
+    } else {
+      texture = this.device.createTexture({
+        size: [width, height],
+        format,
+        usage,
+      });
+      this.numBytesAllocated += byteSize;
     }
 
-    if (!this.usedTextures.has(key)) {
-      this.usedTextures.set(key, []);
+    let used = this.usedTextures.get(key);
+    if (used == null) {
+      used = [];
+      this.usedTextures.set(key, used);
     }
-
+    used.push(texture);
     this.numBytesUsed += byteSize;
     this.numUsedTextures++;
-
-    if (this.freeTextures.get(key).length > 0) {
-      this.numFreeTextures--;
-
-      const newTexture = this.freeTextures.get(key).shift();
-      this.usedTextures.get(key).push(newTexture);
-      return newTexture;
-    }
-
-    this.numBytesAllocated += byteSize;
-
-    const newTexture = this.device.createTexture({
-      size: [width, height],
-      format,
-      usage,
-    });
-    this.usedTextures.get(key).push(newTexture);
-
-    return newTexture;
+    return texture;
   }
 
   releaseTexture(texture: GPUTexture) {
-    if (this.freeTextures.size === 0) {
+    if (this.usedTextures.size === 0 && this.freeTextures.size === 0) {
       return;
     }
 
-    const width = texture.width;
-    const height = texture.height;
-    const format = texture.format;
-    const usage = texture.usage;
-
+    const {width, height, format, usage} = texture;
     const key = getTextureKey(width, height, format, usage);
-    if (!this.freeTextures.has(key)) {
-      this.freeTextures.set(key, []);
-    }
-
-    this.freeTextures.get(key).push(texture);
-    this.numFreeTextures++;
-    this.numUsedTextures--;
-
-    const textureList = this.usedTextures.get(key);
-    const textureIndex = textureList.indexOf(texture);
-    if (textureIndex < 0) {
+    const used = this.usedTextures.get(key);
+    if (used == null) {
       throw new Error(
           'Cannot release a texture that was never provided by this ' +
           'texture manager');
     }
-    textureList.splice(textureIndex, 1);
-    const bytesPerElement = getBytesPerElement(format);
-    const byteSize = width * height * bytesPerElement;
+    const index = used.indexOf(texture);
+    if (index < 0) {
+      throw new Error(
+          'Cannot release a texture that was never provided by this ' +
+          'texture manager');
+    }
+    const byteSize = width * height * getBytesPerElement(format);
+    used.splice(index, 1);
+
+    let free = this.freeTextures.get(key);
+    if (free == null) {
+      free = [];
+      this.freeTextures.set(key, free);
+    }
+    free.push(texture);
+    this.numFreeTextures++;
+    this.numUsedTextures--;
     this.numBytesUsed -= byteSize;
   }
 
@@ -116,8 +111,8 @@ export class TextureManager {
       });
     });
 
-    this.freeTextures = new Map();
-    this.usedTextures = new Map();
+    this.freeTextures = new Map<string, GPUTexture[]>();
+    this.usedTextures = new Map<string, GPUTexture[]>();
     this.numUsedTextures = 0;
     this.numFreeTextures = 0;
     this.numBytesUsed = 0;

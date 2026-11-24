@@ -18,8 +18,8 @@
 export class BufferManager {
   private numUsedBuffers = 0;
   private numFreeBuffers = 0;
-  private freeBuffers: Map<string, GPUBuffer[]> = new Map();
-  private usedBuffers: Map<string, GPUBuffer[]> = new Map();
+  private freeBuffers: Map<string, GPUBuffer[]> = new Map<string, GPUBuffer[]>();
+  private usedBuffers: Map<string, GPUBuffer[]> = new Map<string, GPUBuffer[]>();
 
   public numBytesUsed = 0;
   public numBytesAllocated = 0;
@@ -28,31 +28,26 @@ export class BufferManager {
 
   acquireBuffer(
       size: number, usage: GPUBufferUsageFlags, mappedAtCreation = false,
-      reuse = true) {
-    let buffer;
+      reuse = true): GPUBuffer {
     const key = getBufferKey(size, usage);
+    const free = this.freeBuffers.get(key);
+    let buffer: GPUBuffer;
+    const recycled = reuse && free != null ? free.pop() : null;
 
-    if (reuse) {
-      if (!this.freeBuffers.has(key)) {
-        this.freeBuffers.set(key, []);
-      }
-
-      if (this.freeBuffers.get(key).length > 0) {
-        buffer = this.freeBuffers.get(key).pop();
-        this.numFreeBuffers--;
-      } else {
-        buffer = this.device.createBuffer({size, usage, mappedAtCreation});
-        this.numBytesAllocated += size;
-      }
+    if (recycled != null) {
+      buffer = recycled;
+      this.numFreeBuffers--;
     } else {
       buffer = this.device.createBuffer({size, usage, mappedAtCreation});
       this.numBytesAllocated += size;
     }
 
-    if (!this.usedBuffers.has(key)) {
-      this.usedBuffers.set(key, []);
+    let used = this.usedBuffers.get(key);
+    if (used == null) {
+      used = [];
+      this.usedBuffers.set(key, used);
     }
-    this.usedBuffers.get(key).push(buffer);
+    used.push(buffer);
     this.numUsedBuffers++;
     this.numBytesUsed += size;
 
@@ -60,26 +55,38 @@ export class BufferManager {
   }
 
   releaseBuffer(buffer: GPUBuffer, reuse = true) {
-    if (this.freeBuffers.size === 0) {
+    if (this.usedBuffers.size === 0 && this.freeBuffers.size === 0) {
       return;
     }
 
     const size = buffer.size;
     const usage = buffer.usage;
-
     const key = getBufferKey(size, usage);
-    const bufferArray = this.usedBuffers.get(key);
-    const index = bufferArray.indexOf(buffer);
+    const used = this.usedBuffers.get(key);
+    if (used == null) {
+      throw new Error('Cannot find the buffer in buffer manager');
+    }
+    const index = used.indexOf(buffer);
     if (index < 0) {
       throw new Error('Cannot find the buffer in buffer manager');
     }
-    bufferArray[index] = bufferArray[bufferArray.length - 1];
-    bufferArray.pop();
+    const last = used.pop();
+    if (last == null) {
+      throw new Error('Buffer manager has an inconsistent used buffer list');
+    }
+    if (index < used.length) {
+      used[index] = last;
+    }
     this.numUsedBuffers--;
     this.numBytesUsed -= size;
 
     if (reuse) {
-      this.freeBuffers.get(key).push(buffer);
+      let free = this.freeBuffers.get(key);
+      if (free == null) {
+        free = [];
+        this.freeBuffers.set(key, free);
+      }
+      free.push(buffer);
       this.numFreeBuffers++;
     } else {
       buffer.destroy();
@@ -108,8 +115,8 @@ export class BufferManager {
       });
     });
 
-    this.freeBuffers = new Map();
-    this.usedBuffers = new Map();
+    this.freeBuffers = new Map<string, GPUBuffer[]>();
+    this.usedBuffers = new Map<string, GPUBuffer[]>();
     this.numUsedBuffers = 0;
     this.numFreeBuffers = 0;
     this.numBytesUsed = 0;

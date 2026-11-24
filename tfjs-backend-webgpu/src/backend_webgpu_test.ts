@@ -22,6 +22,8 @@ const {expectArraysEqual, expectArraysClose} = test_util;
 
 import {WebGPUBackend, WebGPUMemoryInfo} from './backend_webgpu';
 import {describeWebGPU} from './test_util';
+import {BufferManager} from './buffer_manager';
+import {TextureManager} from './texture_manager';
 
 describeWebGPU('backend webgpu cpu forwarding turned on', () => {
   let cpuForwardFlagSaved: boolean;
@@ -63,6 +65,66 @@ describeWebGPU('backend webgpu cpu forwarding turned on', () => {
     expect(endNumBytesInGPU - startNumBytesInGPU).toEqual(64);
 
     expectArraysClose(dData, new Float32Array([9, 12, 15, 19, 26, 33]));
+  });
+});
+
+describeWebGPU('GPU resource pool ownership', () => {
+  it('releases a non-reusable buffer without a pre-existing free bucket', () => {
+    const backend = tf.backend() as WebGPUBackend;
+    const manager = new BufferManager(backend.device);
+    try {
+      const value = manager.acquireBuffer(
+          16, GPUBufferUsage.COPY_DST, false, false);
+      expect(manager.getNumUsedBuffers()).toBe(1);
+      manager.releaseBuffer(value, false);
+      expect(manager.getNumUsedBuffers()).toBe(0);
+      expect(manager.getNumFreeBuffers()).toBe(0);
+      expect(manager.numBytesUsed).toBe(0);
+      expect(manager.numBytesAllocated).toBe(0);
+    } finally {
+      manager.dispose();
+    }
+  });
+
+  it('recycles released buffers and rejects double releases', () => {
+    const backend = tf.backend() as WebGPUBackend;
+    const manager = new BufferManager(backend.device);
+    try {
+      const first = manager.acquireBuffer(16, GPUBufferUsage.COPY_DST);
+      const second = manager.acquireBuffer(16, GPUBufferUsage.COPY_DST);
+      manager.releaseBuffer(first);
+      expect(() => manager.releaseBuffer(first)).toThrowError();
+      expect(manager.getNumUsedBuffers()).toBe(1);
+      expect(manager.getNumFreeBuffers()).toBe(1);
+      expect(manager.acquireBuffer(16, GPUBufferUsage.COPY_DST)).toBe(first);
+      manager.releaseBuffer(first);
+      manager.releaseBuffer(second);
+      expect(manager.getNumUsedBuffers()).toBe(0);
+      expect(manager.getNumFreeBuffers()).toBe(2);
+    } finally {
+      manager.dispose();
+    }
+  });
+
+  it('preserves texture pool accounting after an invalid release', () => {
+    const backend = tf.backend() as WebGPUBackend;
+    const manager = new TextureManager(backend.device);
+    try {
+      const usage = GPUTextureUsage.COPY_DST;
+      const texture = manager.acquireTexture(2, 2, 'rgba8unorm', usage);
+      manager.releaseTexture(texture);
+      const allocated = manager.numBytesAllocated;
+      expect(() => manager.releaseTexture(texture)).toThrowError();
+      expect(manager.getNumFreeTextures()).toBe(1);
+      expect(manager.getNumUsedTextures()).toBe(0);
+      expect(manager.numBytesUsed).toBe(0);
+      expect(manager.numBytesAllocated).toBe(allocated);
+      expect(manager.acquireTexture(2, 2, 'rgba8unorm', usage)).toBe(texture);
+      expect(manager.getNumFreeTextures()).toBe(0);
+      expect(manager.getNumUsedTextures()).toBe(1);
+    } finally {
+      manager.dispose();
+    }
   });
 });
 

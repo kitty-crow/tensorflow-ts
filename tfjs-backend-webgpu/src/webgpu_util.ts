@@ -16,13 +16,18 @@
  */
 import {DataType, TensorInfo, util} from '@tensorflow/tfjs-core';
 
-const arrayProduct = (arr: number[]) => {
+/** Multiply the validated dimensions selected by a dispatch axis. */
+function dispatchAxisSize(shape: number[], dimensions: number[]): number {
   let product = 1;
-  for (let i = 0; i < arr.length; i++) {
-    product *= arr[i];
+  for (const axis of dimensions) {
+    const dimension = shape[axis];
+    if (dimension == null) {
+      throw new Error(`Missing output shape dimension ${axis}.`);
+    }
+    product *= dimension;
   }
   return product;
-};
+}
 
 export function tilesFitEvenlyIntoShape(
     tileSize: number[], shape: number[]): boolean {
@@ -32,8 +37,13 @@ export function tilesFitEvenlyIntoShape(
         ` tiles fit evenly into rank ${shape.length} shape` +
         ` - ranks must match.`);
   }
-  return shape.every(
-      (dim: number, dimIdx: number) => dim % tileSize[dimIdx] === 0);
+  return shape.every((dim, dimIdx) => {
+    const tile = tileSize[dimIdx];
+    if (tile == null) {
+      throw new Error(`Missing tile size for dimension ${dimIdx}.`);
+    }
+    return dim % tile === 0;
+  });
 }
 
 // Computes dispatch geometry based on layout of output dimensions and
@@ -45,14 +55,14 @@ export function computeDispatch(
         [1, 1, 1]): [number, number, number] {
   const [dispatchX, dispatchY, dispatchZ] = [
     Math.ceil(
-        arrayProduct(layout.x.map(d => outputShape[d])) /
+        dispatchAxisSize(outputShape, layout.x) /
         (workgroupSize[0] * elementsPerThread[0])),
     layout.y ? Math.ceil(
-                   arrayProduct(layout.y.map(d => outputShape[d])) /
+                   dispatchAxisSize(outputShape, layout.y) /
                    (workgroupSize[1] * elementsPerThread[1])) :
                1,
     layout.z ? Math.ceil(
-                   arrayProduct(layout.z.map(d => outputShape[d])) /
+                   dispatchAxisSize(outputShape, layout.z) /
                    (workgroupSize[2] * elementsPerThread[2])) :
                1
   ];
@@ -97,8 +107,12 @@ export function computeWorkgroupSizeForConv2d(
     return [8, 8, 1];
   }
 
-  const dim0 = arrayProduct(layout.x.map(d => outputShape[d]));
-  const dim1 = arrayProduct(layout.y.map(d => outputShape[d]));
+  const y = layout.y;
+  if (y == null) {
+    throw new Error('Conv2D dispatch requires a y axis.');
+  }
+  const dim0 = dispatchAxisSize(outputShape, layout.x);
+  const dim1 = dispatchAxisSize(outputShape, y);
   // TODO(jiajia.qin@intel.com): More fine tune based on outputShape.
   // These are experimental values. Usually, we need to adjust the work group
   // size based on the output shape. For example, when one dimension is smaller
@@ -124,8 +138,12 @@ export function computeWorkPerThreadForConv2d(
     return [4, 4, 1];
   }
 
-  const dim0 = arrayProduct(layout.x.map(d => outputShape[d]));
-  const dim1 = arrayProduct(layout.y.map(d => outputShape[d]));
+  const y = layout.y;
+  if (y == null) {
+    throw new Error('Conv2D dispatch requires a y axis.');
+  }
+  const dim0 = dispatchAxisSize(outputShape, layout.x);
+  const dim1 = dispatchAxisSize(outputShape, y);
   // TODO(jiajia.qin@intel.com): More fine tune based on outputShape.
   // The following conditions correspond to the values set in
   // computeWorkgroupSizeForConv2d.

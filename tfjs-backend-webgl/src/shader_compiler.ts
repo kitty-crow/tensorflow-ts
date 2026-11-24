@@ -417,7 +417,7 @@ function getOutputScalarCoords() {
 function getOutputPacked1DCoords(
     shape: [number], texShape: [number, number],
     enableShapeUniforms: boolean): string {
-  const packedTexShape =
+  const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
   if (packedTexShape[0] === 1) {
     return (enableShapeUniforms) ? `
@@ -530,7 +530,7 @@ function getOutputPacked3DCoords(
   `;
   }
 
-  const packedTexShape =
+  const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
   const texelsInLogicalRow = Math.ceil(shape[2] / 2);
   const texelsInBatch = texelsInLogicalRow * Math.ceil(shape[1] / 2);
@@ -613,7 +613,7 @@ function getOutputPackedNDCoords(
     }
   `;
   }
-  const packedTexShape =
+  const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
 
   const texelsInLogicalRow = Math.ceil(shape[shape.length - 1] / 2);
@@ -727,7 +727,7 @@ function getOutput6DCoords(
 function getOutputPacked2DCoords(
     shape: [number, number], texShape: [number, number],
     enableShapeUniforms: boolean): string {
-  const packedTexShape =
+  const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
   if (util.arraysEqual(shape, texShape)) {
     return (enableShapeUniforms) ? `
@@ -926,7 +926,7 @@ function getPackedSampler1D(
     }
   `;
   }
-  const packedTexShape =
+  const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
   return `
     vec4 ${funcName}(int index) {
@@ -1013,6 +1013,7 @@ function getSampler1D(
 function getPackedSampler2D(
     inputInfo: InputInfo, enableShapeUniforms: boolean): string {
   const shape = inputInfo.shapeInfo.logicalShape;
+  util.assertArrayLength(shape, 2);
   const texName = inputInfo.name;
   const funcName = 'get' + texName.charAt(0).toUpperCase() + texName.slice(1);
   const texShape = inputInfo.shapeInfo.texShape;
@@ -1048,7 +1049,7 @@ function getPackedSampler2D(
     }
   `;
   }
-  const packedTexShape =
+  const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
   const valuesPerRow = Math.ceil(shape[1] / 2);
 
@@ -1064,6 +1065,7 @@ function getPackedSampler2D(
 function getSampler2D(
     inputInfo: InputInfo, enableShapeUniforms: boolean): string {
   const shape = inputInfo.shapeInfo.logicalShape;
+  util.assertArrayLength(shape, 2);
   const texName = inputInfo.name;
   const funcName = 'get' + texName.charAt(0).toUpperCase() + texName.slice(1);
   const texShape = inputInfo.shapeInfo.texShape;
@@ -1178,10 +1180,11 @@ function getSampler2D(
 function getPackedSampler3D(
     inputInfo: InputInfo, enableShapeUniforms: boolean): string {
   const shape = inputInfo.shapeInfo.logicalShape;
+  util.assertArrayLength(shape, 3);
   const texName = inputInfo.name;
   const funcName = 'get' + texName.charAt(0).toUpperCase() + texName.slice(1);
   const texShape = inputInfo.shapeInfo.texShape;
-  const packedTexShape =
+  const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
 
   if (shape[0] === 1) {
@@ -1231,6 +1234,7 @@ function getPackedSampler3D(
 function getSampler3D(
     inputInfo: InputInfo, enableShapeUniforms: boolean): string {
   const shape = inputInfo.shapeInfo.logicalShape;
+  util.assertArrayLength(shape, 3);
   const texName = inputInfo.name;
   const funcName = 'get' + texName.charAt(0).toUpperCase() + texName.slice(1);
   const stride0 = shape[1] * shape[2];
@@ -1360,7 +1364,7 @@ function getPackedSamplerND(
   const shape = inputInfo.shapeInfo.logicalShape;
   const rank = shape.length;
   const texShape = inputInfo.shapeInfo.texShape;
-  const packedTexShape =
+  const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
   const texNumR = packedTexShape[0];
   const texNumC = packedTexShape[1];
@@ -1388,6 +1392,7 @@ function getPackedSamplerND(
 function getSampler4D(
     inputInfo: InputInfo, enableShapeUniforms: boolean): string {
   const shape = inputInfo.shapeInfo.logicalShape;
+  util.assertArrayLength(shape, 4);
   const texName = inputInfo.name;
   const funcName = 'get' + texName.charAt(0).toUpperCase() + texName.slice(1);
   const stride2 = shape[3];
@@ -1508,6 +1513,7 @@ function getSampler4D(
 
 function getSampler5D(inputInfo: InputInfo): string {
   const shape = inputInfo.shapeInfo.logicalShape;
+  util.assertArrayLength(shape, 5);
   const texName = inputInfo.name;
   const funcName = 'get' + texName.charAt(0).toUpperCase() + texName.slice(1);
   const stride3 = shape[4];
@@ -1589,6 +1595,7 @@ function getSampler5D(inputInfo: InputInfo): string {
 
 function getSampler6D(inputInfo: InputInfo): string {
   const shape = inputInfo.shapeInfo.logicalShape;
+  util.assertArrayLength(shape, 6);
   const texName = inputInfo.name;
   const funcName = 'get' + texName.charAt(0).toUpperCase() + texName.slice(1);
 

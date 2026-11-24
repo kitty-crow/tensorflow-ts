@@ -15,9 +15,37 @@
  * =============================================================================
  */
 
-import {computeDispatch} from './webgpu_util';
+import {computeDispatch, computeWorkgroupSizeForConv2d, computeWorkPerThreadForConv2d, tilesFitEvenlyIntoShape} from './webgpu_util';
 
 describe('webgpu util', () => {
+  it('retains zero-sized dimensions and absent optional dispatch axes', () => {
+    expect(computeDispatch({x: [0]}, [0])).toEqual([0, 1, 1]);
+    expect(computeDispatch({x: []}, [])).toEqual([1, 1, 1]);
+  });
+
+  it('rejects dispatch axes that have no corresponding output dimension', () => {
+    expect(() => computeDispatch({x: [1]}, [4]))
+        .toThrowError(/Missing output shape dimension 1/);
+    expect(() => computeDispatch({x: [0], y: [2]}, [4, 5]))
+        .toThrowError(/Missing output shape dimension 2/);
+  });
+
+  it('requires a y axis for non-vectorised convolution dispatch', () => {
+    expect(() => computeWorkgroupSizeForConv2d({x: [0]}, [4]))
+        .toThrowError(/requires a y axis/);
+    expect(() => computeWorkPerThreadForConv2d({x: [0]}, [4]))
+        .toThrowError(/requires a y axis/);
+    expect(computeWorkgroupSizeForConv2d({x: [0]}, [4], true))
+        .toEqual([8, 8, 1]);
+  });
+
+  it('checks tile sizes for missing dimensions', () => {
+    expect(tilesFitEvenlyIntoShape([2, 3], [4, 6])).toBe(true);
+    expect(tilesFitEvenlyIntoShape([2, 3], [5, 6])).toBe(false);
+    expect(() => tilesFitEvenlyIntoShape(new Array<number>(1), [4]))
+        .toThrowError(/Missing tile size/);
+  });
+
   it('computeDispatch returns dispatch dimensions based on layout of ' +
          'output dimensions and workgroupSize.',
      () => {
