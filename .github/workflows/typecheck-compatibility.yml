@@ -2,6 +2,7 @@ name: TensorFlow TypeScript Compatibility
 
 on:
   push:
+    branches-ignore: [guard-remediation]
     paths:
       - '.github/workflows/typecheck-compatibility.yml'
       - 'tsconfig.json'

@@ -1,0 +1,91 @@
+name: Guard remediation loop
+
+on:
+  push:
+    branches: [guard-remediation]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tensorflow-guard-remediation
+  cancel-in-progress: false
+
+jobs:
+  validate-and-scan:
+    if: github.ref == 'refs/heads/guard-remediation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: oven-sh/setup-bun@v2
+      - name: Install TensorFlow dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Check source policy
+        run: bun run check:source-policy
+      - name: Check all eight TypeScript projects
+        shell: bash
+        run: |
+          failed=0
+          for config in tfjs-core/tsconfig.json tfjs-layers/tsconfig.json tfjs-data/tsconfig.json tfjs-converter/tsconfig.json tfjs-backend-cpu/tsconfig.json tfjs-backend-webgl/tsconfig.json tfjs-backend-webgpu/tsconfig.source-check.json tfjs-node/tsconfig.source-check.json; do
+            echo "::group::$config"
+            if bun x tsc --noEmit --pretty false --project "$config"; then
+              echo "PASSED: $config"
+            else
+              echo "FAILED: $config"
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+          exit "$failed"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install native Code Guards runtime
+        run: |
+          bun install --cwd vendor/code-guards --ignore-scripts
+          python3 -m pip install onnxruntime==1.23.2 tokenizers==0.22.1 huggingface-hub==0.36.0 numpy==2.2.6
+      - name: Restore model downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: code-guards-mobilebert-fp32-v1
+      - name: Scan all guards with persistent inference windows
+        shell: bash
+        run: |
+          # The cache synchroniser creates an independent Git repository.
+          # Pass the checkout credential to its subprocesses without logging it.
+          header="$(git config --local --get http.https://github.com/.extraheader)"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0=http.https://github.com/.extraheader
+          export GIT_CONFIG_VALUE_0="$header"
+          export CODE_GUARDS_WEBGPU_PYTHON="$(command -v python3)"
+          result=0
+          bun vendor/code-guards/src/cli.ts all --project tsconfig.code-guards.json --strict --include-tests --progress --native-cpu --accelerate cache,batch,parallel --concurrency 4 --batch-size 4 --inference-cache-dir "$RUNNER_TEMP/code-guards-inference" --cache-remote "$(git remote get-url origin)" --sync-inference-cache --format json > "$RUNNER_TEMP/findings.json" || result=$?
+          if [ "$result" -gt 1 ]; then exit "$result"; fi
+          # A valid nonempty report is a successful measurement, not a clean scan.
+          bun -e 'const f=await Bun.file(process.env.RUNNER_TEMP+"/findings.json").json(); if(!Array.isArray(f)) throw Error("Invalid guard report"); console.log("Total findings:",f.length);'
+      - name: Publish complete report and connector-readable index
+        shell: bash
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/guard-report-worktree"
+          git fetch --depth=1 origin refs/heads/inference-cache
+          git worktree add --detach "$work" FETCH_HEAD
+          trap 'git worktree remove --force "$work"' EXIT
+          bun .github/scripts/index-guard-report.ts "$RUNNER_TEMP/findings.json" "$work" "$GITHUB_SHA" "$(git -C vendor/code-guards rev-parse HEAD)" "$GITHUB_RUN_ID"
+          git -C "$work" add reports
+          if ! git -C "$work" diff --cached --quiet; then
+            git -C "$work" -c user.name="Code Guards Reports" -c user.email="code-guards-reports@users.noreply.github.com" commit -m "Report $GITHUB_SHA [skip ci]"
+            git -C "$work" push origin HEAD:refs/heads/inference-cache
+          fi
+      - name: Upload raw report as an additional artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-guards-findings
+          path: ${{ runner.temp }}/findings.json
+          if-no-files-found: error
+          retention-days: 14
