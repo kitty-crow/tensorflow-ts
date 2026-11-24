@@ -147,12 +147,11 @@ describeWithFlags('kernel_registry', ALL_ENVS, (testEnv: TestEnv) => {
   it('register kernel with setup and dispose functions', async () => {
     const backendName = 'custom-backend';
     const kernelName = 'MyKernel';
-    interface TestBackend extends KernelBackend {}
     const customBackend = {
       dispose: () => null,
       disposeData: (dataId: {}) => true,
       numDataIds: () => 0
-    } as TestBackend;
+    } as KernelBackend;
     tf.registerBackend(backendName, () => customBackend);
 
     const kernelFunc: KernelFunc = () => {

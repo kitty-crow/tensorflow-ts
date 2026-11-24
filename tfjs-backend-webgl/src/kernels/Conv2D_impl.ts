@@ -29,17 +29,6 @@ import {batchMatMulImpl, MATMUL_SHARED_DIM_THRESHOLD} from './BatchMatMul_impl';
 import {identity} from './Identity';
 import {reshape} from './Reshape';
 
-type Conv2DConfig = {
-  x: TensorInfo,
-  filter: TensorInfo,
-  convInfo: backend_util.Conv2DInfo,
-  backend: MathBackendWebGL,
-  bias?: TensorInfo,
-  preluActivationWeights?: TensorInfo,
-  leakyreluAlpha?: number,
-  activation?: backend_util.Activation
-};
-
 // Both conv2dByMatMul and conv2dWithIm2Row fuse height and width into one
 // dimension to compute batchMatMul, so bias and activation weights are also
 // supposed to fuse the two dimensions into one.
@@ -86,7 +75,7 @@ export function conv2dByMatMul({
   preluActivationWeights = null,
   leakyreluAlpha = 0,
   activation = null
-}: Conv2DConfig) {
+}: backend_util.Conv2DKernelConfig<MathBackendWebGL>) {
   // Reshapes conv2D input to 2D tensors, uses matMul and then reshape the
   // result from 2D to 4D.
   const xShape = x.shape;
@@ -250,7 +239,7 @@ export function conv2dWithIm2Row({
   preluActivationWeights = null,
   leakyreluAlpha = 0,
   activation = null
-}: Conv2DConfig) {
+}: backend_util.Conv2DKernelConfig<MathBackendWebGL>) {
   // Rearranges conv2d input so each block to be convolved over forms the
   // column of a new matrix with shape [filterWidth * filterHeight *
   // inChannels, outHeight * outWidth]. The filter is also rearranged so each

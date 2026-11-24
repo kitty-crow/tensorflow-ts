@@ -12,18 +12,11 @@ import {memory, ones, scalar, Tensor, zeros} from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
 import {Kwargs} from '../types';
-import {describeMathCPUAndGPU, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPUAndGPU, expectTensorsClose, LayerForTest} from '../utils/test_utils';
 
 import {Container, ContainerArgs} from './container';
 import {execute, FeedDict} from './executor';
-import {CallHook, getSourceInputs, Layer, LayerArgs, SymbolicTensor} from './topology';
-
-class LayerForTest extends tfl.layers.Layer {
-  static className = 'LayerForTest';
-  constructor(args: LayerArgs) {
-    super(args);
-  }
-}
+import {CallHook, getSourceInputs, Layer, SymbolicTensor} from './topology';
 
 class ContainerForTest extends Container {
   static className = 'ContainerForTest';

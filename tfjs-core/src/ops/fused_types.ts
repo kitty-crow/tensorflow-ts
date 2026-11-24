@@ -15,8 +15,22 @@
  * =============================================================================
  */
 
+import type {KernelBackend} from '../backends/backend';
 import {Tensor, Tensor3D, Tensor4D} from '../tensor';
+import type {TensorInfo} from '../tensor_info';
 import {Conv2DInfo} from './conv_util';
+
+/** Shared convolution kernel inputs, retaining the concrete backend type. */
+export type Conv2DKernelConfig<B extends KernelBackend> = {
+  x: TensorInfo,
+  filter: TensorInfo,
+  convInfo: Conv2DInfo,
+  backend: B,
+  bias?: TensorInfo,
+  preluActivationWeights?: TensorInfo,
+  leakyreluAlpha?: number,
+  activation?: Activation
+};
 
 export type FusedConv2DConfig = {
   input: Tensor4D,

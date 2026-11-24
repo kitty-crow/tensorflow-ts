@@ -23,7 +23,7 @@ import {Logs, UnresolvedLogs} from '../logs';
 import {Regularizer} from '../regularizers';
 import {Kwargs} from '../types';
 import {pyListRepeat, stringsEqual, unique} from '../utils/generic_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathGPU, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathGPU, expectTensorsClose, StopAfterNBatches} from '../utils/test_utils';
 
 // TODO(bileschi): Use external version of Layer.
 import {Layer, SymbolicTensor} from './topology';
@@ -1483,20 +1483,6 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     });
     expect(history.history.loss.length).toEqual(2);
   });
-
-  class StopAfterNBatches extends tfl.Callback {
-    private readonly batchesToTrain: number;
-    constructor(batchesToTrain: number) {
-      super();
-      this.batchesToTrain = batchesToTrain;
-    }
-
-    override async onBatchEnd(batch: number, logs?: Logs) {
-      if (batch === this.batchesToTrain - 1) {
-        this.model.stopTraining = true;
-      }
-    }
-  }
 
   it('Stop training at the end of a batch: Sequential model', async () => {
     const sequentialModel = tfl.sequential();

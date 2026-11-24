@@ -26,17 +26,6 @@ import {WebGPUProgram} from '../webgpu_program';
 import {batchMatMulImpl} from './BatchMatMul_impl';
 import {reshape} from './Reshape';
 
-type Conv2DConfig = {
-  x: TensorInfo,
-  filter: TensorInfo,
-  convInfo: backend_util.Conv2DInfo,
-  backend: WebGPUBackend,
-  bias?: TensorInfo,
-  preluActivationWeights?: TensorInfo,
-  leakyreluAlpha?: number,
-  activation?: backend_util.Activation
-};
-
 // conv2dByMatMul fuses height and width into one dimension to compute
 // batchMatMul, so bias and activation weights are also supposed to fuse the two
 // dimensions into one.
@@ -77,7 +66,7 @@ function conv2dByMatMul({
   preluActivationWeights = null,
   leakyreluAlpha = 0,
   activation = null
-}: Conv2DConfig) {
+}: backend_util.Conv2DKernelConfig<WebGPUBackend>) {
   const isChannelsLast = convInfo.dataFormat === 'channelsLast';
   const transposeA = isChannelsLast ? false : true;
   const transposeB = false;
@@ -182,7 +171,7 @@ function conv2dWithIm2Col({
   preluActivationWeights = null,
   leakyreluAlpha = 0,
   activation = null
-}: Conv2DConfig) {
+}: backend_util.Conv2DKernelConfig<WebGPUBackend>) {
   // Rearranges conv2d input so each block to be convolved over forms the
   // row of a new matrix with shape [outHeight * outWidth,
   // filterWidth * filterHeight * inChannels]. The filter is also rearranged so
@@ -282,7 +271,7 @@ export function conv2DImpl({
   preluActivationWeights = null,
   leakyreluAlpha = 0,
   activation = null
-}: Conv2DConfig) {
+}: backend_util.Conv2DKernelConfig<WebGPUBackend>) {
   const hasBias = bias != null;
   const hasPreluActivationWeights = preluActivationWeights != null;
   const isChannelsLast = convInfo.dataFormat === 'channelsLast';

@@ -18,7 +18,7 @@ import * as tfc from '@tensorflow/tfjs-core';
 import {CustomCallback, DEFAULT_YIELD_EVERY_MS} from '../base_callbacks';
 import * as tfl from '../index';
 import {Logs} from '../logs';
-import {describeMathCPUAndGPU, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPUAndGPU, expectTensorsClose, StopAfterNBatches} from '../utils/test_utils';
 
 import {FakeNumericDataset} from './dataset_fakes';
 
@@ -2828,20 +2828,6 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
     expect(errorCaught.message)
         .toMatch(/.*validationSplit.*not supported.*validationData/);
   });
-
-  class StopAfterNBatches extends tfl.Callback {
-    private readonly batchesToTrain: number;
-    constructor(epochsToTrain: number) {
-      super();
-      this.batchesToTrain = epochsToTrain;
-    }
-
-    override async onBatchEnd(batch: number, logs?: Logs) {
-      if (batch === this.batchesToTrain - 1) {
-        this.model.stopTraining = true;
-      }
-    }
-  }
 
   it('Stop training resets at start of LayersModel.fitDataset()', async () => {
     const model = createDenseModel();

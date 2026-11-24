@@ -16,7 +16,33 @@ import {memory, Tensor, test_util, util} from '@tensorflow/tfjs-core';
 // tslint:disable-next-line: no-imports-from-dist
 import {ALL_ENVS, describeWithFlags} from '@tensorflow/tfjs-core/dist/jasmine_util';
 
+import {Callback} from '../callbacks';
+import {Layer, LayerArgs} from '../engine/topology';
 import {ValueError} from '../errors';
+import type {Logs} from '../logs';
+
+/** Minimal layer used by topology and container tests. */
+export class LayerForTest extends Layer {
+  static className = 'LayerForTest';
+  constructor(args: LayerArgs = {}) {
+    super(args);
+  }
+}
+
+/** Stops a training test at the end of its requested batch. */
+export class StopAfterNBatches extends Callback {
+  private readonly batchesToTrain: number;
+  constructor(batchesToTrain: number) {
+    super();
+    this.batchesToTrain = batchesToTrain;
+  }
+
+  override async onBatchEnd(batch: number, logs?: Logs) {
+    if (batch === this.batchesToTrain - 1) {
+      this.model.stopTraining = true;
+    }
+  }
+}
 
 /**
  * Expect values are close between a Tensor or number array.
