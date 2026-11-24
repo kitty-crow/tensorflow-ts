@@ -29,6 +29,7 @@ declare module '../../tensor' {
 
 getGlobalTensorClass().prototype.dilation2d =
     function<T extends Tensor3D|Tensor4D>(
+        this: Tensor3D|Tensor4D,
         filter: Tensor3D|TensorLike3D, strides: [number, number]|number,
         pad: 'valid'|'same', dilations?: [number, number]|number,
         dataFormat?: 'NHWC'): T {

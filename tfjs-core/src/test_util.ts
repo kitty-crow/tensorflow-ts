@@ -25,7 +25,7 @@ import {arraysEqual, encodeString, flatten, isString, isTypedArray} from './util
  * instead of passing an absent value into a later assertion or operation.
  * Null elements are retained: some fixtures intentionally contain null.
  */
-export function requiredTestElement<A extends ArrayLike<{}|null|undefined>>(
+export function requiredTestElement<A extends ArrayLike<{}|null|undefined|void>>(
     values: A, index: number): A[number] {
   if (values == null) {
     throw new Error('Expected an array-like test fixture.');

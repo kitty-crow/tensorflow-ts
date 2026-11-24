@@ -26,6 +26,7 @@ declare module '../../tensor' {
 }
 
 getGlobalTensorClass().prototype.batchToSpaceND = function<R extends Rank>(
+    this: Tensor<R>,
     blockShape: number[], crops: number[][]): Tensor<R> {
   this.throwIfDisposed();
   return batchToSpaceND(this, blockShape, crops);

@@ -30,6 +30,7 @@ declare module '../../tensor' {
 
 getGlobalTensorClass().prototype.separableConv2d =
     function<T extends Tensor3D|Tensor4D>(
+        this: Tensor3D|Tensor4D,
         depthwiseFilter: Tensor4D|TensorLike4D,
         pointwiseFilter: Tensor4D|TensorLike, strides: [number, number]|number,
         pad: 'valid'|'same', dilation?: [number, number]|number,

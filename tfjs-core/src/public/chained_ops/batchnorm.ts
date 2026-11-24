@@ -30,6 +30,7 @@ declare module '../../tensor' {
 }
 
 getGlobalTensorClass().prototype.batchNorm = function<R extends Rank>(
+    this: Tensor<R>,
     mean: Tensor<R>|Tensor1D|TensorLike,
     variance: Tensor<R>|Tensor1D|TensorLike,
     offset?: Tensor<R>|Tensor1D|TensorLike,

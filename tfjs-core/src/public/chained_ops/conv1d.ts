@@ -29,6 +29,7 @@ declare module '../../tensor' {
 }
 
 getGlobalTensorClass().prototype.conv1d = function<T extends Tensor2D|Tensor3D>(
+    this: Tensor2D|Tensor3D,
     filter: Tensor3D|TensorLike3D, stride: number,
     pad: 'valid'|'same'|number|ExplicitPadding, dataFormat?: 'NWC'|'NCW',
     dilation?: number, dimRoundingMode?: 'floor'|'round'|'ceil'): T {

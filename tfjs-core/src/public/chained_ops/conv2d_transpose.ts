@@ -30,6 +30,7 @@ declare module '../../tensor' {
 
 getGlobalTensorClass().prototype.conv2dTranspose =
     function<T extends Tensor3D|Tensor4D>(
+        this: Tensor3D|Tensor4D,
         filter: Tensor4D|TensorLike4D,
         outputShape: [number, number, number, number]|[number, number, number],
         strides: [number, number]|number, pad: 'valid'|'same'|number,

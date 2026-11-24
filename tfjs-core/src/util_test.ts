@@ -643,7 +643,7 @@ describeWithFlags('util.toNestedArray for a complex tensor', ALL_ENVS, () => {
 
   it('tensor to nested array', async () => {
     const x = complex([[1, 2], [3, 4]], [[11, 12], [13, 14]]);
-    expect(nestedNumericValueForComparison(util.toNestedArray(x.shape, await x.data())).toEqual(true), [
+    expect(nestedNumericValueForComparison(util.toNestedArray(x.shape, await x.data(), true))).toEqual([
       [1, 11, 2, 12], [3, 13, 4, 14]
     ]);
   });

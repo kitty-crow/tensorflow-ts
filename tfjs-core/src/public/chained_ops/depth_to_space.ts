@@ -26,6 +26,7 @@ declare module '../../tensor' {
 }
 
 getGlobalTensorClass().prototype.depthToSpace = function<T extends Tensor4D>(
+    this: Tensor4D,
     blockSize: number, dataFormat: 'NHWC'|'NCHW'): T {
   this.throwIfDisposed();
   return depthToSpace(this, blockSize, dataFormat) as T;
