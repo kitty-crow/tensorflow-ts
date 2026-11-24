@@ -8,7 +8,7 @@
  * =============================================================================
  */
 
-import {io, linalg, randomNormal, Tensor, zeros} from '@tensorflow/tfjs-core';
+import {io, linalg, randomNormal, Tensor, zeros, test_util} from '@tensorflow/tfjs-core';
 
 import * as tfl from './index';
 // tslint:disable-next-line:max-line-length
@@ -33,8 +33,8 @@ describeMathCPUAndGPU('LayersModel.save', () => {
     const handler = new IOHandlerForTest();
 
     await model.save(handler);
-    expect(handler.savedArtifacts.format).toEqual('layers-model');
-    expect(handler.savedArtifacts.generatedBy)
+    expect(test_util.requiredTestValue(handler.savedArtifacts.format, 'format')).toEqual('layers-model');
+    expect(test_util.requiredTestValue(handler.savedArtifacts.generatedBy, 'generatedBy'))
         .toEqual(`TensorFlow.js tfjs-layers v${version}`);
     expect(handler.savedArtifacts.convertedBy).toEqual(null);
   });
@@ -47,8 +47,8 @@ describeMathCPUAndGPU('LayersModel.save', () => {
     const handler = new IOHandlerForTest();
 
     await model.save(handler);
-    expect(handler.savedArtifacts.format).toEqual('layers-model');
-    expect(handler.savedArtifacts.generatedBy)
+    expect(test_util.requiredTestValue(handler.savedArtifacts.format, 'format')).toEqual('layers-model');
+    expect(test_util.requiredTestValue(handler.savedArtifacts.generatedBy, 'generatedBy'))
         .toEqual(`TensorFlow.js tfjs-layers v${version}`);
     expect(handler.savedArtifacts.convertedBy).toEqual(null);
   });
@@ -59,17 +59,17 @@ describeMathCPUAndGPU('LayersModel.save', () => {
     const handler = new IOHandlerForTest();
 
     await model.save(handler);
-    expect(handler.savedArtifacts.modelTopology)
+    expect(test_util.requiredTestValue(handler.savedArtifacts.modelTopology, 'modelTopology'))
         .toEqual(model.toJSON(null, false));
-    expect(handler.savedArtifacts.weightSpecs.length).toEqual(2);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).name.indexOf('/kernel'))
+    expect(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs').length).toEqual(2);
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 0).name.indexOf('/kernel'))
         .toBeGreaterThan(0);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).shape).toEqual([5, 3]);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).dtype).toEqual('float32');
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).name.indexOf('/bias'))
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 0).shape).toEqual([5, 3]);
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 0).dtype).toEqual('float32');
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 1).name.indexOf('/bias'))
         .toBeGreaterThan(0);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).shape).toEqual([3]);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).dtype).toEqual('float32');
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 1).shape).toEqual([3]);
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 1).dtype).toEqual('float32');
   });
 
   it('Saving only trainable weights succeeds', async () => {
@@ -79,19 +79,19 @@ describeMathCPUAndGPU('LayersModel.save', () => {
     const handler = new IOHandlerForTest();
 
     await model.save(handler, {trainableOnly: true});
-    expect(handler.savedArtifacts.modelTopology)
+    expect(test_util.requiredTestValue(handler.savedArtifacts.modelTopology, 'modelTopology'))
         .toEqual(model.toJSON(null, false));
     // Verify that only the trainable weights (i.e., weights from the
     // 2nd, trainable Dense layer) are saved.
-    expect(handler.savedArtifacts.weightSpecs.length).toEqual(2);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).name.indexOf('/kernel'))
+    expect(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs').length).toEqual(2);
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 0).name.indexOf('/kernel'))
         .toBeGreaterThan(0);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).shape).toEqual([3, 2]);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).dtype).toEqual('float32');
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).name.indexOf('/bias'))
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 0).shape).toEqual([3, 2]);
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 0).dtype).toEqual('float32');
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 1).name.indexOf('/bias'))
         .toBeGreaterThan(0);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).shape).toEqual([2]);
-    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).dtype).toEqual('float32');
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 1).shape).toEqual([2]);
+    expect(requiredTestElement(test_util.requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs'), 1).dtype).toEqual('float32');
   });
 
   it('Saving to a handler without save method fails', async () => {
@@ -444,8 +444,8 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
         }));
     const weights = model.getWeights();
 
-    expect(savedArtifacts.weightSpecs.length).toEqual(3);
-    savedArtifacts.weightSpecs = savedArtifacts.weightSpecs.slice(0, 1);
+    expect(test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs').length).toEqual(3);
+    savedArtifacts.weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs').slice(0, 1);
 
     const qrSpy = spyOn(linalg, 'qr').and.callThrough();
     const strict = false;
@@ -475,8 +475,8 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
         }));
     const weights = model.getWeights();
 
-    expect(savedArtifacts.weightSpecs.length).toEqual(3);
-    savedArtifacts.weightSpecs = savedArtifacts.weightSpecs.slice(0, 1);
+    expect(test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs').length).toEqual(3);
+    savedArtifacts.weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs').slice(0, 1);
 
     const qrSpy = spyOn(linalg, 'qr').and.callThrough();
     const strict = false;

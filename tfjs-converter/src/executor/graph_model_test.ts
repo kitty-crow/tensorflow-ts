@@ -26,7 +26,7 @@ import {GraphModel, loadGraphModel, loadGraphModelSync} from './graph_model';
 import {HASH_TABLE_MODEL_V2} from './test_data/hash_table_v2_model_loader';
 import {STRUCTURED_OUTPUTS_MODEL} from './test_data/structured_outputs_model_loader';
 // tslint:disable-next-line: no-imports-from-dist
-import {expectArrayBuffersEqual} from '@tensorflow/tfjs-core/dist/test_util';
+import {expectArrayBuffersEqual, requiredTestValue} from '@tensorflow/tfjs-core/dist/test_util';
 
 const HOST = 'http://example.org';
 const MODEL_URL = `${HOST}/model.json`;
@@ -600,14 +600,14 @@ describe('Model', () => {
         const handler = new IOHandlerForTest();
 
         await model.save(handler);
-        expect(handler.savedArtifacts.format).toEqual('tfjs-graph-model');
-        expect(handler.savedArtifacts.generatedBy).toEqual('1.15');
-        expect(handler.savedArtifacts.convertedBy).toEqual('1.3.1');
-        expect(handler.savedArtifacts.modelTopology).toEqual(CUSTOM_OP_MODEL);
-        expect(handler.savedArtifacts.weightSpecs).toEqual(weightsManifest);
+        expect(requiredTestValue(handler.savedArtifacts.format, 'format')).toEqual('tfjs-graph-model');
+        expect(requiredTestValue(handler.savedArtifacts.generatedBy, 'generatedBy')).toEqual('1.15');
+        expect(requiredTestValue(handler.savedArtifacts.convertedBy, 'convertedBy')).toEqual('1.3.1');
+        expect(requiredTestValue(handler.savedArtifacts.modelTopology, 'modelTopology')).toEqual(CUSTOM_OP_MODEL);
+        expect(requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightsManifest);
         tfc.test_util.expectArraysClose(
             new Int32Array(io.CompositeArrayBuffer.join(
-                handler.savedArtifacts.weightData)), bias.dataSync());
+                requiredTestValue(handler.savedArtifacts.weightData, 'weightData'))), bias.dataSync());
       });
     });
   });
@@ -634,17 +634,17 @@ describe('Model', () => {
         const handler = new IOHandlerForTest();
 
         await model.save(handler);
-        expect(handler.savedArtifacts.format).toEqual('tfjs-graph-model');
-        expect(handler.savedArtifacts.generatedBy).toEqual('1.15');
-        expect(handler.savedArtifacts.convertedBy).toEqual('1.3.1');
-        expect(handler.savedArtifacts.modelTopology).toEqual(SIMPLE_MODEL);
-        expect(handler.savedArtifacts.userDefinedMetadata).toEqual({
+        expect(requiredTestValue(handler.savedArtifacts.format, 'format')).toEqual('tfjs-graph-model');
+        expect(requiredTestValue(handler.savedArtifacts.generatedBy, 'generatedBy')).toEqual('1.15');
+        expect(requiredTestValue(handler.savedArtifacts.convertedBy, 'convertedBy')).toEqual('1.3.1');
+        expect(requiredTestValue(handler.savedArtifacts.modelTopology, 'modelTopology')).toEqual(SIMPLE_MODEL);
+        expect(requiredTestValue(handler.savedArtifacts.userDefinedMetadata, 'userDefinedMetadata')).toEqual({
           signature: SIGNATURE
         });
-        expect(handler.savedArtifacts.weightSpecs).toEqual(weightsManifest);
+        expect(requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightsManifest);
         tfc.test_util.expectArraysClose(
             new Int32Array(io.CompositeArrayBuffer.join(
-                handler.savedArtifacts.weightData)), bias.dataSync());
+                requiredTestValue(handler.savedArtifacts.weightData, 'weightData'))), bias.dataSync());
       });
     });
 
@@ -872,15 +872,15 @@ describe('Model', () => {
         const handler = new IOHandlerForTest();
 
         await model.save(handler);
-        expect(handler.savedArtifacts.format)
+        expect(requiredTestValue(handler.savedArtifacts.format, 'format'))
             .toEqual(STRUCTURED_OUTPUTS_MODEL.format);
-        expect(handler.savedArtifacts.generatedBy)
+        expect(requiredTestValue(handler.savedArtifacts.generatedBy, 'generatedBy'))
             .toEqual(STRUCTURED_OUTPUTS_MODEL.generatedBy);
-        expect(handler.savedArtifacts.convertedBy)
+        expect(requiredTestValue(handler.savedArtifacts.convertedBy, 'convertedBy'))
             .toEqual(STRUCTURED_OUTPUTS_MODEL.convertedBy);
-        expect(handler.savedArtifacts.modelTopology)
+        expect(requiredTestValue(handler.savedArtifacts.modelTopology, 'modelTopology'))
             .toEqual(STRUCTURED_OUTPUTS_MODEL.modelTopology);
-        expect(handler.savedArtifacts.userDefinedMetadata)
+        expect(requiredTestValue(handler.savedArtifacts.userDefinedMetadata, 'userDefinedMetadata'))
             .toEqual(STRUCTURED_OUTPUTS_MODEL.userDefinedMetadata);
       });
     });
@@ -930,15 +930,15 @@ describe('Model', () => {
         const handler = new IOHandlerForTest();
 
         await model.save(handler);
-        expect(handler.savedArtifacts.format).toEqual('tfjs-graph-model');
-        expect(handler.savedArtifacts.generatedBy).toEqual('1.15');
-        expect(handler.savedArtifacts.convertedBy).toEqual('1.3.1');
-        expect(handler.savedArtifacts.modelTopology)
+        expect(requiredTestValue(handler.savedArtifacts.format, 'format')).toEqual('tfjs-graph-model');
+        expect(requiredTestValue(handler.savedArtifacts.generatedBy, 'generatedBy')).toEqual('1.15');
+        expect(requiredTestValue(handler.savedArtifacts.convertedBy, 'convertedBy')).toEqual('1.3.1');
+        expect(requiredTestValue(handler.savedArtifacts.modelTopology, 'modelTopology'))
             .toEqual(CONTROL_FLOW_MODEL);
-        expect(handler.savedArtifacts.userDefinedMetadata).toEqual({
+        expect(requiredTestValue(handler.savedArtifacts.userDefinedMetadata, 'userDefinedMetadata')).toEqual({
           signature: CONTROL_SIGNATURE
         });
-        expect(handler.savedArtifacts.weightSpecs).toEqual(weightsManifest);
+        expect(requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightsManifest);
         tfc.test_util.expectArraysClose(
             new Int32Array(io.CompositeArrayBuffer.join(handler.savedArtifacts
                 .weightData)), bias.dataSync());

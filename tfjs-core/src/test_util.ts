@@ -37,6 +37,14 @@ export function requiredTestElement<A extends ArrayLike<{}|null|undefined|void>>
   return value;
 }
 
+/** Read a fixture value that must be present, preserving its concrete type. */
+export function requiredTestValue<T>(value: T|undefined, name: string): T {
+  if (typeof value === 'undefined') {
+    throw new Error(`Missing required test value: ${name}.`);
+  }
+  return value;
+}
+
 const TEST_EPSILON_FLOAT32 = 1e-3;
 export const TEST_EPSILON_FLOAT16 = 1e-1;
 

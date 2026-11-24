@@ -16,7 +16,7 @@
  */
 
 import {ALL_ENVS, describeWithFlags} from './jasmine_util';
-import {expectArraysClose, expectArraysEqual, requiredTestElement} from './test_util';
+import {expectArraysClose, expectArraysEqual, requiredTestElement, requiredTestValue} from './test_util';
 
 describeWithFlags('requiredTestElement', ALL_ENVS, () => {
   it('returns present values without replacing zero, false or null', () => {
@@ -31,6 +31,22 @@ describeWithFlags('requiredTestElement', ALL_ENVS, () => {
     expect(() => requiredTestElement([1], -1)).toThrowError(/index -1/);
     expect(() => requiredTestElement(new Array<number>(2), 0))
         .toThrowError(/index 0/);
+  });
+});
+
+describeWithFlags('requiredTestValue', ALL_ENVS, () => {
+  it('preserves present values, including falsy values and null', () => {
+    const value = {name: 'weight'};
+    expect(requiredTestValue(value, 'weight')).toBe(value);
+    expect(requiredTestValue(0, 'bytes')).toBe(0);
+    expect(requiredTestValue(false, 'flag')).toBe(false);
+    expect(requiredTestValue(null, 'metadata')).toBeNull();
+  });
+
+  it('identifies an absent fixture field', () => {
+    const fixture: {weightData?: ArrayBuffer} = {};
+    expect(() => requiredTestValue(fixture.weightData, 'weightData'))
+        .toThrowError(/weightData/);
   });
 });
 

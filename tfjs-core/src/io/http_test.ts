@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {requiredTestElement} from '../test_util';
+import {requiredTestElement, requiredTestValue} from '../test_util';
 import * as tf from '../index';
 import {BROWSER_ENVS, CHROME_ENVS, describeWithFlags, NODE_ENVS} from '../jasmine_util';
 import {HTTPRequest, httpRouter, parseUrl} from './http';
@@ -157,14 +157,14 @@ describeWithFlags('http-load fetch', NODE_ENVS, () => {
 
     const handler = tf.io.http('./model.json');
     const modelArtifacts = await handler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.weightSpecs).toEqual(requiredTestElement(weightManifest1, 0).weights);
-    expect(modelArtifacts.format).toEqual('tfjs-layers');
-    expect(modelArtifacts.generatedBy).toEqual('1.15');
-    expect(modelArtifacts.convertedBy).toEqual('1.3.1');
-    expect(modelArtifacts.userDefinedMetadata).toEqual({});
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(requiredTestElement(weightManifest1, 0).weights);
+    expect(requiredTestValue(modelArtifacts.format, 'format')).toEqual('tfjs-layers');
+    expect(requiredTestValue(modelArtifacts.generatedBy, 'generatedBy')).toEqual('1.15');
+    expect(requiredTestValue(modelArtifacts.convertedBy, 'convertedBy')).toEqual('1.3.1');
+    expect(requiredTestValue(modelArtifacts.userDefinedMetadata, 'userDefinedMetadata')).toEqual({});
     expect(new Float32Array(CompositeArrayBuffer.join(
-        modelArtifacts.weightData))).toEqual(floatData);
+        requiredTestValue(modelArtifacts.weightData, 'weightData')))).toEqual(floatData);
   });
 
   it('throw exception if no fetch polyfill', () => {
@@ -233,11 +233,11 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
               .toBeGreaterThanOrEqual(testStartDate.getTime());
           // Note: The following two assertions work only because there is no
           //   non-ASCII characters in `modelTopology1` and `weightSpecs1`.
-          expect(saveResult.modelArtifactsInfo.modelTopologyBytes)
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
               .toEqual(JSON.stringify(modelTopology1).length);
-          expect(saveResult.modelArtifactsInfo.weightSpecsBytes)
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
               .toEqual(JSON.stringify(weightSpecs1).length);
-          expect(saveResult.modelArtifactsInfo.weightDataBytes)
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'))
               .toEqual(weightData1.byteLength);
 
           expect(requestInits.length).toEqual(1);
@@ -289,10 +289,10 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
               .toBeGreaterThanOrEqual(testStartDate.getTime());
           // Note: The following two assertions work only because there is no
           //   non-ASCII characters in `modelTopology1` and `weightSpecs1`.
-          expect(saveResult.modelArtifactsInfo.modelTopologyBytes)
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
               .toEqual(JSON.stringify(modelTopology1).length);
-          expect(saveResult.modelArtifactsInfo.weightSpecsBytes).toEqual(0);
-          expect(saveResult.modelArtifactsInfo.weightDataBytes).toEqual(0);
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes')).toEqual(0);
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(0);
 
           expect(requestInits.length).toEqual(1);
           const init = requiredTestElement(requestInits, 0);
@@ -333,11 +333,11 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
               .toBeGreaterThanOrEqual(testStartDate.getTime());
           // Note: The following two assertions work only because there is no
           //   non-ASCII characters in `modelTopology1` and `weightSpecs1`.
-          expect(saveResult.modelArtifactsInfo.modelTopologyBytes)
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
               .toEqual(JSON.stringify(modelTopology1).length);
-          expect(saveResult.modelArtifactsInfo.weightSpecsBytes)
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
               .toEqual(JSON.stringify(weightSpecs1).length);
-          expect(saveResult.modelArtifactsInfo.weightDataBytes)
+          expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'))
               .toEqual(weightData1.byteLength);
 
           expect(requestInits.length).toEqual(1);
@@ -502,13 +502,13 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
 
       const handler = tf.io.http('./model.json');
       const modelArtifacts = await handler.load();
-      expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-      expect(modelArtifacts.weightSpecs).toEqual(requiredTestElement(weightManifest1, 0).weights);
-      expect(modelArtifacts.format).toEqual('tfjs-graph-model');
-      expect(modelArtifacts.generatedBy).toEqual('1.15');
-      expect(modelArtifacts.convertedBy).toEqual('1.3.1');
-      expect(modelArtifacts.userDefinedMetadata).toEqual({});
-      expect(modelArtifacts.modelInitializer).toEqual({});
+      expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+      expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(requiredTestElement(weightManifest1, 0).weights);
+      expect(requiredTestValue(modelArtifacts.format, 'format')).toEqual('tfjs-graph-model');
+      expect(requiredTestValue(modelArtifacts.generatedBy, 'generatedBy')).toEqual('1.15');
+      expect(requiredTestValue(modelArtifacts.convertedBy, 'convertedBy')).toEqual('1.3.1');
+      expect(requiredTestValue(modelArtifacts.userDefinedMetadata, 'userDefinedMetadata')).toEqual({});
+      expect(requiredTestValue(modelArtifacts.modelInitializer, 'modelInitializer')).toEqual({});
 
       expect(new Float32Array(CompositeArrayBuffer.join(modelArtifacts
           .weightData))).toEqual(floatData);
@@ -552,8 +552,8 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
           './model.json',
           {requestInit: {headers: {'header_key_1': 'header_value_1'}}});
       const modelArtifacts = await handler.load();
-      expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-      expect(modelArtifacts.weightSpecs).toEqual(requiredTestElement(weightManifest1, 0).weights);
+      expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+      expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(requiredTestElement(weightManifest1, 0).weights);
       expect(new Float32Array(CompositeArrayBuffer.join(modelArtifacts
           .weightData))).toEqual(floatData);
       expect(Object.keys(requestInits).length).toEqual(2);
@@ -602,8 +602,8 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
 
       const handler = tf.io.http('./model.json');
       const modelArtifacts = await handler.load();
-      expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-      expect(modelArtifacts.weightSpecs).toEqual(requiredTestElement(weightManifest1, 0).weights);
+      expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+      expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(requiredTestElement(weightManifest1, 0).weights);
       expect(new Float32Array(CompositeArrayBuffer.join(modelArtifacts
         .weightData))).toEqual(new Float32Array([1, 3, 3, 7, 4]));
     });
@@ -645,12 +645,12 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
 
       const handler = tf.io.http('./model.json');
       const modelArtifacts = await handler.load();
-      expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-      expect(modelArtifacts.weightSpecs)
+      expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+      expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs'))
           .toEqual(
               requiredTestElement(weightsManifest, 0).weights.concat(requiredTestElement(weightsManifest, 1).weights));
       expect(new Float32Array(CompositeArrayBuffer.join(
-          modelArtifacts.weightData)))
+          requiredTestValue(modelArtifacts.weightData, 'weightData'))))
               .toEqual(new Float32Array([1, 3, 3, 7, 4]));
     });
 
@@ -691,13 +691,13 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
 
       const handler = tf.io.http('path1/model.json');
       const modelArtifacts = await handler.load();
-      expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-      expect(modelArtifacts.weightSpecs)
+      expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+      expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs'))
           .toEqual(
               requiredTestElement(weightsManifest, 0).weights.concat(requiredTestElement(weightsManifest, 1).weights));
-      expect(new Int32Array(CompositeArrayBuffer.join(modelArtifacts.weightData)
+      expect(new Int32Array(CompositeArrayBuffer.join(requiredTestValue(modelArtifacts.weightData, 'weightData'))
         .slice(0, 12))).toEqual(new Int32Array([1, 3, 3]));
-      expect(new Uint8Array(CompositeArrayBuffer.join(modelArtifacts.weightData)
+      expect(new Uint8Array(CompositeArrayBuffer.join(requiredTestValue(modelArtifacts.weightData, 'weightData'))
         .slice(12, 14))).toEqual(new Uint8Array([7, 4]));
     });
 
@@ -713,7 +713,7 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
 
       const handler = tf.io.http('./model.json');
       const modelArtifacts = await handler.load();
-      expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
+      expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
       expect(modelArtifacts.weightSpecs).toBeUndefined();
       expect(modelArtifacts.weightData).toBeUndefined();
     });
@@ -755,13 +755,13 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
       const handler = tf.io.http('path1/model.json');
       const modelArtifacts = await handler.load();
       expect(modelArtifacts.modelTopology).toBeUndefined();
-      expect(modelArtifacts.weightSpecs)
+      expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs'))
           .toEqual(
               requiredTestElement(weightsManifest, 0).weights.concat(requiredTestElement(weightsManifest, 1).weights));
-      expect(new Int32Array(CompositeArrayBuffer.join(modelArtifacts.weightData)
+      expect(new Int32Array(CompositeArrayBuffer.join(requiredTestValue(modelArtifacts.weightData, 'weightData'))
           .slice(0, 12))).toEqual(new Int32Array([1, 3, 3]));
       expect(new Float32Array(CompositeArrayBuffer
-          .join(modelArtifacts.weightData)
+          .join(requiredTestValue(modelArtifacts.weightData, 'weightData'))
           .slice(12, 20))).toEqual(new Float32Array([-7, -4]));
     });
 
@@ -845,10 +845,10 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
         weightUrlConverter: prefixWeightUrlConverter
       });
       const modelArtifacts = await handler.load();
-      expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-      expect(modelArtifacts.weightSpecs).toEqual(requiredTestElement(weightManifest1, 0).weights);
+      expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+      expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(requiredTestElement(weightManifest1, 0).weights);
       expect(new Float32Array(CompositeArrayBuffer.join(
-          modelArtifacts.weightData))).toEqual(floatData);
+          requiredTestValue(modelArtifacts.weightData, 'weightData')))).toEqual(floatData);
       expect(Object.keys(requestInits).length).toEqual(2);
       expect(Object.keys(requestInits).length).toEqual(2);
       expect(requestInits['./model.json'].headers['header_key_1'])
@@ -911,11 +911,11 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
         './model.json',
         {requestInit: {credentials: 'include'}, fetchFunc: customFetch});
     const modelArtifacts = await handler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.trainingConfig).toEqual(trainingConfig1);
-    expect(modelArtifacts.weightSpecs).toEqual(requiredTestElement(weightManifest1, 0).weights);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
+    expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(requiredTestElement(weightManifest1, 0).weights);
     expect(new Float32Array(CompositeArrayBuffer
-        .join(modelArtifacts.weightData))).toEqual(floatData);
+        .join(requiredTestValue(modelArtifacts.weightData, 'weightData')))).toEqual(floatData);
 
     expect(fetchInputs).toEqual(['./model.json', './weightfile0']);
     expect(fetchInits.length).toEqual(2);

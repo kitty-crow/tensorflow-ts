@@ -133,11 +133,11 @@ describe('nodeHTTPRequest-load', () => {
         'http://localhost/model.json',
         {credentials: 'include', cache: 'no-cache'});
     const modelArtifacts = await handler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.weightSpecs).toEqual(weightManifest1[0].weights);
-    expect(modelArtifacts.trainingConfig).toEqual(trainingConfig1);
+    expect(tf.test_util.requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(tf.test_util.requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightManifest1[0].weights);
+    expect(tf.test_util.requiredTestValue(modelArtifacts.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
     expect(new Float32Array(tf.io.CompositeArrayBuffer.join(
-      modelArtifacts.weightData))).toEqual(floatData);
+      tf.test_util.requiredTestValue(modelArtifacts.weightData, 'weightData')))).toEqual(floatData);
 
     expect(requestInits).toEqual([
       {credentials: 'include', cache: 'no-cache'},

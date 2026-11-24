@@ -20,6 +20,7 @@
  */
 
 import * as tf from '../index';
+import {requiredTestValue} from '../test_util';
 import {BROWSER_ENVS, describeWithFlags} from '../jasmine_util';
 
 const modelTopology1: {} = {
@@ -101,15 +102,15 @@ describeWithFlags('Passthrough Saver', BROWSER_ENVS, () => {
     const artifactsInfo = saveResult.modelArtifactsInfo;
     expect(artifactsInfo.dateSaved.getTime())
         .toBeGreaterThanOrEqual(testStartDate.getTime());
-    expect(saveResult.modelArtifactsInfo.modelTopologyBytes)
+    expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
         .toEqual(JSON.stringify(modelTopology1).length);
-    expect(saveResult.modelArtifactsInfo.weightSpecsBytes)
+    expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
         .toEqual(JSON.stringify(weightSpecs1).length);
-    expect(saveResult.modelArtifactsInfo.weightDataBytes).toEqual(16);
+    expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(16);
 
-    expect(savedArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(savedArtifacts.weightSpecs).toEqual(weightSpecs1);
-    expect(savedArtifacts.weightData).toEqual(weightData1);
+    expect(requiredTestValue(savedArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    expect(requiredTestValue(savedArtifacts.weightData, 'weightData')).toEqual(weightData1);
   });
 });
 
@@ -139,15 +140,15 @@ describeWithFlags('Passthrough Saver Sync', BROWSER_ENVS, () => {
     const artifactsInfo = saveResult.modelArtifactsInfo;
     expect(artifactsInfo.dateSaved.getTime())
         .toBeGreaterThanOrEqual(testStartDate.getTime());
-    expect(saveResult.modelArtifactsInfo.modelTopologyBytes)
+    expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
         .toEqual(JSON.stringify(modelTopology1).length);
-    expect(saveResult.modelArtifactsInfo.weightSpecsBytes)
+    expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
         .toEqual(JSON.stringify(weightSpecs1).length);
-    expect(saveResult.modelArtifactsInfo.weightDataBytes).toEqual(16);
+    expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(16);
 
-    expect(savedArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(savedArtifacts.weightSpecs).toEqual(weightSpecs1);
-    expect(savedArtifacts.weightData).toEqual(weightData1);
+    expect(requiredTestValue(savedArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    expect(requiredTestValue(savedArtifacts.weightData, 'weightData')).toEqual(weightData1);
   });
 });
 
@@ -156,9 +157,9 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
     const passthroughHandler =
         tf.io.fromMemory(modelTopology1, weightSpecs1, weightData1);
     const modelArtifacts = await passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.weightSpecs).toEqual(weightSpecs1);
-    expect(modelArtifacts.weightData).toEqual(weightData1);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
   });
 
@@ -169,16 +170,16 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
       weightData: weightData1
     });
     const modelArtifacts = await passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.weightSpecs).toEqual(weightSpecs1);
-    expect(modelArtifacts.weightData).toEqual(weightData1);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
   });
 
   it('load model topology only: legacy signature', async () => {
     const passthroughHandler = tf.io.fromMemory(modelTopology1);
     const modelArtifacts = await passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
     expect(modelArtifacts.weightData).toEqual(undefined);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
@@ -188,7 +189,7 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
     const passthroughHandler =
         tf.io.fromMemory({modelTopology: modelTopology1});
     const modelArtifacts = await passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
     expect(modelArtifacts.weightData).toEqual(undefined);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
@@ -203,10 +204,10 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
       userDefinedMetadata
     });
     const modelArtifacts = await passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.weightSpecs).toEqual(weightSpecs1);
-    expect(modelArtifacts.weightData).toEqual(weightData1);
-    expect(modelArtifacts.userDefinedMetadata).toEqual(userDefinedMetadata);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
+    expect(requiredTestValue(modelArtifacts.userDefinedMetadata, 'userDefinedMetadata')).toEqual(userDefinedMetadata);
   });
 });
 
@@ -215,9 +216,9 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
     const passthroughHandler =
         tf.io.fromMemorySync(modelTopology1, weightSpecs1, weightData1);
     const modelArtifacts = passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.weightSpecs).toEqual(weightSpecs1);
-    expect(modelArtifacts.weightData).toEqual(weightData1);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
   });
 
@@ -228,16 +229,16 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
       weightData: weightData1
     });
     const modelArtifacts = passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.weightSpecs).toEqual(weightSpecs1);
-    expect(modelArtifacts.weightData).toEqual(weightData1);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
   });
 
   it('load model topology only: legacy signature', () => {
     const passthroughHandler = tf.io.fromMemorySync(modelTopology1);
     const modelArtifacts = passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
     expect(modelArtifacts.weightData).toEqual(undefined);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
@@ -247,7 +248,7 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
     const passthroughHandler =
         tf.io.fromMemorySync({modelTopology: modelTopology1});
     const modelArtifacts = passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
     expect(modelArtifacts.weightData).toEqual(undefined);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
@@ -262,9 +263,9 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
       userDefinedMetadata
     });
     const modelArtifacts = passthroughHandler.load();
-    expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-    expect(modelArtifacts.weightSpecs).toEqual(weightSpecs1);
-    expect(modelArtifacts.weightData).toEqual(weightData1);
-    expect(modelArtifacts.userDefinedMetadata).toEqual(userDefinedMetadata);
+    expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
+    expect(requiredTestValue(modelArtifacts.userDefinedMetadata, 'userDefinedMetadata')).toEqual(userDefinedMetadata);
   });
 });

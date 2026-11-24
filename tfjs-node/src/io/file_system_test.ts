@@ -160,12 +160,12 @@ describe('File system IOHandler', () => {
           const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers(`file://${modelJSONPath}`), 0);
           handler2.load()
               .then(modelArtifacts => {
-                expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-                expect(modelArtifacts.weightSpecs).toEqual(weightSpecs1);
-                expect(modelArtifacts.trainingConfig).toEqual(trainingConfig1);
+                expect(tf.test_util.requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+                expect(tf.test_util.requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+                expect(tf.test_util.requiredTestValue(modelArtifacts.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
 
                 expect(new Float32Array(tf.io.CompositeArrayBuffer.join(
-                  modelArtifacts.weightData)))
+                  tf.test_util.requiredTestValue(modelArtifacts.weightData, 'weightData'))))
                     .toEqual(new Float32Array([0, 0, 0, 0]));
                 done();
               })
@@ -217,8 +217,8 @@ describe('File system IOHandler', () => {
       // files.
       const handler = tf.test_util.requiredTestElement(tf.io.getLoadHandlers(`file://${modelJSONPath}`), 0);
       const modelArtifacts = await handler.load();
-      expect(modelArtifacts.modelTopology).toEqual(modelTopology1);
-      expect(modelArtifacts.weightSpecs).toEqual([
+      expect(tf.test_util.requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+      expect(tf.test_util.requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual([
         {
           name: 'dense/kernel',
           shape: [3, 1],
@@ -232,7 +232,7 @@ describe('File system IOHandler', () => {
       ]);
       tf.test_util.expectArraysClose(
         new Float32Array(tf.io.CompositeArrayBuffer.join(
-          modelArtifacts.weightData)),
+          tf.test_util.requiredTestValue(modelArtifacts.weightData, 'weightData'))),
         new Float32Array([-1.1, -3.3, -3.3, -7.7]));
     });
 
@@ -344,7 +344,7 @@ describe('File system IOHandler', () => {
       tf.test_util.expectArraysClose(
         new Uint8Array(modelArtifacts.modelTopology as ArrayBuffer),
         new Uint8Array(modelData));
-      expect(modelArtifacts.weightSpecs).toEqual([
+      expect(tf.test_util.requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual([
         {
           name: 'dense/kernel',
           shape: [3, 1],
@@ -358,7 +358,7 @@ describe('File system IOHandler', () => {
       ]);
       tf.test_util.expectArraysClose(
         new Float32Array(tf.io.CompositeArrayBuffer.join(
-          modelArtifacts.weightData)),
+          tf.test_util.requiredTestValue(modelArtifacts.weightData, 'weightData'))),
         new Float32Array([-1.1, -3.3, -3.3, -7.7]));
     });
 

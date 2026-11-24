@@ -8,7 +8,7 @@
  * =============================================================================
  */
 
-import {DataType, env, io, memory, ones, randomNormal, Scalar, scalar, serialization, sum, Tensor, tensor1d, tensor2d, tensor3d, train, zeros} from '@tensorflow/tfjs-core';
+import {DataType, env, io, memory, ones, randomNormal, Scalar, scalar, serialization, sum, Tensor, tensor1d, tensor2d, tensor3d, train, zeros, test_util} from '@tensorflow/tfjs-core';
 
 import {LayersModel} from './engine/training';
 import * as tfl from './index';
@@ -1348,10 +1348,10 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('mean_squared_error');
 
-    const weightSpecs = savedArtifacts.weightSpecs;
+    const weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs');
     // The first two weights belong to the model proper.
     // The next weight is the iterations counter.
     expect(weightSpecs.length).toEqual(2 + 1);
@@ -1360,7 +1360,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
     // element and is also 4 bytes.
-    const weightData = savedArtifacts.weightData;
+    const weightData = test_util.requiredTestValue(savedArtifacts.weightData, 'weightData');
     expect(new io.CompositeArrayBuffer(weightData).byteLength)
         .toEqual(4 * 8 + 4 * 1 + 4);
 
@@ -1403,10 +1403,10 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('mean_squared_error');
 
-    const weightSpecs = savedArtifacts.weightSpecs;
+    const weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs');
     // The first two weights belong to the model proper.
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
@@ -1420,7 +1420,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
     // element and is also 4 bytes.
-    const weightData = savedArtifacts.weightData;
+    const weightData = test_util.requiredTestValue(savedArtifacts.weightData, 'weightData');
     expect(new io.CompositeArrayBuffer(weightData).byteLength)
         .toEqual(4 + 4 * 8 * 3 + 4 * 1 * 3);
 
@@ -1463,10 +1463,10 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('mean_squared_error');
 
-    const weightSpecs = savedArtifacts.weightSpecs;
+    const weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs');
     // The first two weights belong to the model proper.
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
@@ -1480,7 +1480,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
     // element and is also 4 bytes.
-    const weightData = savedArtifacts.weightData;
+    const weightData = test_util.requiredTestValue(savedArtifacts.weightData, 'weightData');
     expect(new io.CompositeArrayBuffer(weightData).byteLength)
         .toEqual(4 + 4 * 8 * 3 + 4 * 1 * 3);
 
@@ -1523,10 +1523,10 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('mean_squared_error');
 
-    const weightSpecs = savedArtifacts.weightSpecs;
+    const weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs');
     // The first two weights belong to the model proper.
     // The next weight is the iterations counter.
     // The last two weights belong to the rmsprop optimizer.
@@ -1538,7 +1538,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
     // element and is also 4 bytes.
-    const weightData = savedArtifacts.weightData;
+    const weightData = test_util.requiredTestValue(savedArtifacts.weightData, 'weightData');
     expect(new io.CompositeArrayBuffer(weightData).byteLength)
         .toEqual(4 + 4 * 8 * 2 + 4 * 1 * 2);
 
@@ -1584,10 +1584,10 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('mean_squared_error');
 
-    const weightSpecs = savedArtifacts.weightSpecs;
+    const weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs');
     // The first two weights belong to the model proper.
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
@@ -1601,7 +1601,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
     // element and is also 4 bytes.
-    const weightData = savedArtifacts.weightData;
+    const weightData = test_util.requiredTestValue(savedArtifacts.weightData, 'weightData');
     expect(new io.CompositeArrayBuffer(weightData).byteLength)
         .toEqual(4 + 4 * 8 * 3 + 4 * 1 * 3);
 
@@ -1643,10 +1643,10 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('mean_squared_error');
 
-    const weightSpecs = savedArtifacts.weightSpecs;
+    const weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs');
     // The first two weights belong to the model proper.
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
@@ -1660,7 +1660,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
     // element and is also 4 bytes.
-    const weightData = savedArtifacts.weightData;
+    const weightData = test_util.requiredTestValue(savedArtifacts.weightData, 'weightData');
     expect(new io.CompositeArrayBuffer(weightData).byteLength)
         .toEqual(4 + 4 * 8 * 3 + 4 * 1 * 3);
 
@@ -1703,10 +1703,10 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('mean_squared_error');
 
-    const weightSpecs = savedArtifacts.weightSpecs;
+    const weightSpecs = test_util.requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs');
     // The first two weights belong to the model proper.
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
@@ -1718,7 +1718,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
     // element and is also 4 bytes.
-    const weightData = savedArtifacts.weightData;
+    const weightData = test_util.requiredTestValue(savedArtifacts.weightData, 'weightData');
     expect(new io.CompositeArrayBuffer(weightData).byteLength)
         .toEqual(4 + 4 * 8 * 2 + 4 * 1 * 2);
 
@@ -1765,7 +1765,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('categorical_crossentropy');
     expect(trainingConfig['metrics']).toEqual(['acc']);
 
@@ -1795,7 +1795,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('categorical_crossentropy');
     expect(trainingConfig['metrics']).toEqual(['acc']);
 
@@ -1843,7 +1843,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
         }),
         {includeOptimizer: true});
 
-    const trainingConfig = savedArtifacts.trainingConfig;
+    const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual([
       'categorical_crossentropy', 'binary_crossentropy'
     ]);

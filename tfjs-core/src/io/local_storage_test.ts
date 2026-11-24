@@ -16,6 +16,7 @@
  */
 
 import * as tf from '../index';
+import {requiredTestValue} from '../test_util';
 import {BROWSER_ENVS, describeWithFlags, runWithLock} from '../jasmine_util';
 import {arrayBufferToBase64String, base64StringToArrayBuffer} from './io_utils';
 import {browserLocalStorage, BrowserLocalStorage, BrowserLocalStorageManager, localStorageRouter, purgeLocalStorageArtifacts} from './local_storage';
@@ -133,11 +134,11 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
            .toBeGreaterThanOrEqual(testStartDate.getTime());
        // Note: The following two assertions work only because there is no
        //   non-ASCII characters in `modelTopology1` and `weightSpecs1`.
-       expect(saveResult.modelArtifactsInfo.modelTopologyBytes)
+       expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
            .toEqual(JSON.stringify(modelTopology1).length);
-       expect(saveResult.modelArtifactsInfo.weightSpecsBytes)
+       expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
            .toEqual(JSON.stringify(weightSpecs1).length);
-       expect(saveResult.modelArtifactsInfo.weightDataBytes).toEqual(16);
+       expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(16);
 
        // Check the content of the saved items in local storage.
        const LS = window.localStorage;
