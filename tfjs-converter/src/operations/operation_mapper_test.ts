@@ -422,46 +422,46 @@ describe('operationMapper without signature', () => {
       });
 
       it('should map the attribute params', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Conv2D'].attrParams['strides'].value)
             .toEqual([1, 2, 2, 1]);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Conv2D'].attrParams['pad'].value)
             .toEqual('same');
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Conv2D'].attrParams['useCudnnOnGpu'].value)
             .toEqual(true);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Split'].attrParams['numOrSizeSplits'].value)
             .toEqual(3);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['FusedBatchNorm'].attrParams['epsilon'].value)
             .toEqual(0.0001);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Squeeze2'].attrParams['axis'].value)
             .toEqual([]);
       });
 
       it('should map the placeholder attribute params', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['image_placeholder'].attrParams['shape'].value)
             .toEqual([3, 3, 3, 1]);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['image_placeholder'].attrParams['dtype'].value)
             .toEqual('float32');
       });
       it('should map params with deprecated name', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Squeeze'].attrParams['axis'].value)
             .toEqual([1, 2]);
       });
       it('should map params with int64 dtype', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Cast'].attrParams['dtype'].value)
             .toEqual('int32');
       });
       it('should map params with complex64 dtype', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Cast4'].attrParams['dtype'].value)
             .toEqual('complex64');
       });
@@ -530,56 +530,56 @@ describe('operationMapper with signature', () => {
       });
 
       it('should map the attribute params', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Conv2D'].attrParams['strides'].value)
             .toEqual([1, 2, 2, 1]);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Conv2D'].attrParams['pad'].value)
             .toEqual('same');
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Conv2D'].attrParams['useCudnnOnGpu'].value)
             .toEqual(true);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Split'].attrParams['numOrSizeSplits'].value)
             .toEqual(3);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['FusedBatchNorm'].attrParams['epsilon'].value)
             .toEqual(0.0001);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Squeeze2'].attrParams['axis'].value)
             .toEqual([]);
       });
 
       it('should map the placeholder attribute params', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['image_placeholder'].attrParams['shape'].value)
             .toEqual([3, 3, 3, 1]);
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['image_placeholder'].attrParams['dtype'].value)
             .toEqual('float32');
       });
       it('should map params with deprecated name', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Squeeze'].attrParams['axis'].value)
             .toEqual([1, 2]);
       });
       it('should map params with int64 dtype', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Cast'].attrParams['dtype'].value)
             .toEqual('int32');
       });
       it('should map params with uint8 dtype', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Cast2'].attrParams['dtype'].value)
             .toEqual('int32');
       });
       it('should map params with half dtype', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Cast3'].attrParams['dtype'].value)
             .toEqual('float32');
       });
       it('should map params with complex64 dtype', () => {
-        expect<string|number|boolean|object>(
+        expect(
             convertedGraph.nodes['Cast4'].attrParams['dtype'].value)
             .toEqual('complex64');
       });

@@ -21,21 +21,21 @@ import {NamedTensorsMap} from '../../data/types';
 import {ExecutionContext} from '../../executor/execution_context';
 import {getTensor} from '../executors/utils';
 import {getBoolArrayParam, getBoolParam, getDtypeArrayParam, getDtypeParam, getNumberParam, getNumericArrayParam, getStringArrayParam, getStringParam, getTensorShapeArrayParam, getTensorShapeParam} from '../operation_mapper';
-import {GraphNode, Node, ValueType} from '../types';
+import {GraphNode, Node, AttributeValue} from '../types';
 
 /**
  * Helper class for lookup inputs and params for nodes in the model graph.
  */
 export class NodeValueImpl implements GraphNode {
   public readonly inputs: Tensor[] = [];
-  public readonly attrs: {[key: string]: ValueType} = {};
+  public readonly attrs: {[key: string]: AttributeValue} = {};
   constructor(
       private node: Node, private tensorMap: NamedTensorsMap,
       private context: ExecutionContext) {
     this.inputs = node.inputNames.map(name => this.getInput(name));
     if (node.rawAttrs != null) {
       this.attrs = Object.keys(node.rawAttrs)
-                       .reduce((attrs: {[key: string]: ValueType}, key) => {
+                       .reduce((attrs: {[key: string]: AttributeValue}, key) => {
                          attrs[key] = this.getAttr(key);
                          return attrs;
                        }, {});
@@ -54,7 +54,7 @@ export class NodeValueImpl implements GraphNode {
    * Return the value of the attribute or input param.
    * @param name String: name of attribute or input param.
    */
-  private getAttr(name: string, defaultValue?: ValueType): ValueType {
+  private getAttr(name: string, defaultValue?: AttributeValue): AttributeValue {
     const value = this.node.rawAttrs[name];
     if (value.tensor != null) {
       return getTensor(name, this.tensorMap, this.context);

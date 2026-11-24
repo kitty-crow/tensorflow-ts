@@ -35,7 +35,7 @@ export declare interface ParamMapper {
   // tensorflow.js name for the field, it should be in camelcase format.
   name: string;
   type: ParamType;
-  defaultValue?: ValueType;
+  defaultValue?: AttributeValue;
   notSupported?: boolean;
 }
 
@@ -123,10 +123,14 @@ export declare interface Graph {
   initNodes?: Node[];
 }
 
-export type ValueType = string|string[]|number|number[]|number[][]|
-    util.NestedNumericArray|boolean|boolean[]|Tensor|Tensor[];
+/** Values representable by the graph attribute schema. */
+export type AttributeValue =
+    string|string[]|number|number[]|number[][]|boolean|boolean[]|Tensor|Tensor[];
+
+/** Resolved op inputs may additionally contain numeric arrays of arbitrary rank. */
+export type ValueType = AttributeValue|util.NestedNumericArray;
 export declare interface ParamValue {
-  value?: ValueType;
+  value?: AttributeValue;
   type: ParamType;
 }
 
@@ -141,5 +145,5 @@ export interface OpExecutor {
 
 export interface GraphNode {
   inputs: Tensor[];
-  attrs: {[key: string]: ValueType};
+  attrs: {[key: string]: AttributeValue};
 }

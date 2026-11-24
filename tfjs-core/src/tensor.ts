@@ -518,7 +518,14 @@ Object.defineProperty(Tensor, Symbol.hasInstance, {
   }
 });
 
-export function getGlobalTensorClass() {
+/** The shared constructor remains generic, but its prototype has no fixed rank. */
+type GlobalTensorClass = Omit<typeof Tensor, 'prototype'> & {
+  new <R extends Rank = Rank>(
+      shape: ShapeMap[R], dtype: DataType, dataId: DataId, id: number): Tensor<R>;
+  readonly prototype: Tensor<Rank>;
+};
+
+export function getGlobalTensorClass(): GlobalTensorClass {
   // Use getGlobal so that we can augment the Tensor class across package
   // boundaries because the node resolution alg may result in different modules
   // being returned for this file depending on the path they are loaded from.
