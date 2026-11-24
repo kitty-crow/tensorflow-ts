@@ -24,6 +24,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Install TensorFlow dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Install Node source-check dependencies without native add-ons
+        shell: bash
+        run: |
+          deps="$RUNNER_TEMP/tfjs-node-source-deps"
+          mkdir -p "$deps"
+          printf '%s\n' '{"private":true,"dependencies":{"progress":"2.0.3","yargs":"17.7.2","@types/progress":"2.0.7","@types/yargs":"17.0.33"}}' > "$deps/package.json"
+          bun install --cwd "$deps" --ignore-scripts
+          ln -s "$deps/node_modules" tfjs-node/node_modules
       - name: Check source policy
         run: bun run check:source-policy
       - name: Check all eight TypeScript projects
