@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {Tensor} from '@tensorflow/tfjs-core';
+import {Tensor, util} from '@tensorflow/tfjs-core';
 // tslint:disable-next-line:no-imports-from-dist
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 
@@ -121,8 +121,8 @@ export declare interface Graph {
   initNodes?: Node[];
 }
 
-export type ValueType = string|string[]|number|number[]|number[][]|boolean|
-    boolean[]|Tensor|Tensor[];
+export type ValueType = string|string[]|number|number[]|number[][]|
+    util.NestedNumericArray|boolean|boolean[]|Tensor|Tensor[];
 export declare interface ParamValue {
   value?: ValueType;
   type: ParamType;

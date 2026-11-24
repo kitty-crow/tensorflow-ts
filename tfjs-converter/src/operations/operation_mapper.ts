@@ -75,17 +75,21 @@ export class OperationMapper {
       graph: tensorflow.IGraphDef,
       signature: tensorflow.ISignatureDef = {}): Graph {
     const tfNodes = graph.node;
+    if (tfNodes == null) {
+      throw new Error('Graph definition is missing its node list.');
+    }
     const placeholders: Node[] = [];
     const weights: Node[] = [];
     const initNodes: Node[] = [];
     const nodes = tfNodes.reduce<{[key: string]: Node}>((map, node) => {
-      map[node.name] = this.mapNode(node);
-      if (node.op.startsWith('Placeholder')) {
-        placeholders.push(map[node.name]);
-      } else if (node.op === 'Const') {
-        weights.push(map[node.name]);
-      } else if (node.input == null || node.input.length === 0) {
-        initNodes.push(map[node.name]);
+      const mapped = this.mapNode(node);
+      map[mapped.name] = mapped;
+      if (mapped.op.startsWith('Placeholder')) {
+        placeholders.push(mapped);
+      } else if (mapped.op === 'Const') {
+        weights.push(mapped);
+      } else if (mapped.inputNames.length === 0) {
+        initNodes.push(mapped);
       }
       return map;
     }, {});
@@ -98,30 +102,12 @@ export class OperationMapper {
       inputNodeNameToKey = this.mapSignatureEntries(signature.inputs);
       outputNodeNameToKey = this.mapSignatureEntries(signature.outputs);
     }
-    const allNodes = Object.keys(nodes);
-    allNodes.forEach(key => {
-      const node = nodes[key];
-      node.inputNames.forEach((name, index) => {
-        const [nodeName, , outputName] = getNodeNameAndIndex(name);
-        const inputNode = nodes[nodeName];
-        if (inputNode.outputs != null) {
-          const outputIndex = inputNode.outputs.indexOf(outputName);
-          if (outputIndex !== -1) {
-            const inputName = `${nodeName}:${outputIndex}`;
-            // update the input name to use the mapped output index directly.
-            node.inputNames[index] = inputName;
-          }
-        }
-        node.inputs.push(inputNode);
-        inputNode.children.push(node);
-      });
-    });
+    this.linkNodes(nodes);
 
     // if signature has not outputs set, add any node that does not have
     // outputs.
     if (Object.keys(outputNodeNameToKey).length === 0) {
-      allNodes.forEach(key => {
-        const node = nodes[key];
+      Object.values(nodes).forEach(node => {
         if (node.children.length === 0) {
           outputs.push(node);
         }
@@ -150,12 +136,15 @@ export class OperationMapper {
       inputs = placeholders;
     }
 
-    let functions = {};
+    const functions: {[key: string]: Graph} = {};
     if (graph.library != null && graph.library.function != null) {
-      functions = graph.library.function.reduce((functions, func) => {
-        functions[func.signature.name] = this.mapFunction(func);
-        return functions;
-      }, {} as {[key: string]: Graph});
+      for (const func of graph.library.function) {
+        const name = func.signature?.name;
+        if (name == null) {
+          throw new Error('Graph function is missing its signature name.');
+        }
+        functions[name] = this.mapFunction(func);
+      }
     }
 
     const result: Graph =
@@ -168,26 +157,55 @@ export class OperationMapper {
     return result;
   }
 
+  /** Resolve edges once, after every node has been registered. */
+  private linkNodes(nodes: {[key: string]: Node}): void {
+    for (const node of Object.values(nodes)) {
+      node.inputNames.forEach((name, index) => {
+        const [nodeName, , outputName] = getNodeNameAndIndex(name);
+        const inputNode = nodes[nodeName];
+        if (inputNode == null) {
+          throw new Error(`Missing input node "${nodeName}" for "${node.name}".`);
+        }
+        if (inputNode.outputs != null) {
+          const outputIndex = inputNode.outputs.indexOf(outputName);
+          if (outputIndex !== -1) {
+            node.inputNames[index] = `${nodeName}:${outputIndex}`;
+          }
+        }
+        node.inputs.push(inputNode);
+        inputNode.children.push(node);
+      });
+    }
+  }
+
   private mapSignatureEntries(entries: {[k: string]: tensorflow.ITensorInfo}) {
-    return Object.keys(entries || {})
-        .reduce<{[key: string]: string}>((prev, curr) => {
-          prev[entries[curr].name] = curr;
+    return Object.entries(entries || {})
+        .reduce<{[key: string]: string}>((prev, [key, entry]) => {
+          if (entry.name == null) {
+            throw new Error(`Signature entry "${key}" is missing its tensor name.`);
+          }
+          prev[entry.name] = key;
           return prev;
         }, {});
   }
 
   private mapNode(node: tensorflow.INodeDef): Node {
+    const {name, op} = node;
+    if (name == null || op == null) {
+      throw new Error('A graph node requires both a name and an operation.');
+    }
     // Unsupported ops will cause an error at run-time (not parse time), since
     // they may not be used by the actual execution subgraph.
-    const mapper =
-        getRegisteredOp(node.op) || this.opMappers[node.op] || {} as OpMapper;
+    const mapper: OpMapper =
+        getRegisteredOp(op) || this.opMappers[op] || {tfOpName: op};
     if (node.attr == null) {
       node.attr = {};
     }
+    const attrs = node.attr;
 
     const newNode: Node = {
-      name: node.name,
-      op: node.op,
+      name,
+      op,
       category: mapper.category,
       inputNames:
           (node.input ||
@@ -196,7 +214,7 @@ export class OperationMapper {
       children: [],
       inputParams: {},
       attrParams: {},
-      rawAttrs: node.attr,
+      rawAttrs: attrs,
       outputs: mapper.outputs
     };
 
@@ -217,107 +235,107 @@ export class OperationMapper {
       newNode.attrParams =
           mapper.attrs.reduce<{[key: string]: ParamValue}>((map, param) => {
             const type = param.type;
-            let value = undefined;
+            let value: ParamValue['value'];
             switch (param.type) {
               case 'string':
                 value = getStringParam(
-                    node.attr, param.tfName, param.defaultValue as string);
+                    attrs, param.tfName, param.defaultValue as string);
 
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getStringParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as string);
                 }
                 break;
               case 'string[]':
                 value = getStringArrayParam(
-                    node.attr, param.tfName, param.defaultValue as string[]);
+                    attrs, param.tfName, param.defaultValue as string[]);
 
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getStringArrayParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as string[]);
                 }
                 break;
               case 'number':
                 value = getNumberParam(
-                    node.attr, param.tfName,
+                    attrs, param.tfName,
                     (param.defaultValue || 0) as number);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getNumberParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as number);
                 }
                 break;
               case 'number[]':
                 value = getNumericArrayParam(
-                    node.attr, param.tfName, param.defaultValue as number[]);
+                    attrs, param.tfName, param.defaultValue as number[]);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getNumericArrayParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as number[]);
                 }
                 break;
               case 'bool':
                 value = getBoolParam(
-                    node.attr, param.tfName, param.defaultValue as boolean);
+                    attrs, param.tfName, param.defaultValue as boolean);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getBoolParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as boolean);
                 }
                 break;
               case 'bool[]':
                 value = getBoolArrayParam(
-                    node.attr, param.tfName, param.defaultValue as boolean[]);
+                    attrs, param.tfName, param.defaultValue as boolean[]);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getBoolArrayParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as boolean[]);
                 }
                 break;
               case 'shape':
                 value = getTensorShapeParam(
-                    node.attr, param.tfName, param.defaultValue as number[]);
+                    attrs, param.tfName, param.defaultValue as number[]);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getTensorShapeParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as number[]);
                 }
                 break;
               case 'shape[]':
                 value = getTensorShapeArrayParam(
-                    node.attr, param.tfName, param.defaultValue as number[][]);
+                    attrs, param.tfName, param.defaultValue as number[][]);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getTensorShapeArrayParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as number[][]);
                 }
                 break;
               case 'dtype':
                 value = getDtypeParam(
-                    node.attr, param.tfName, param.defaultValue as DataType);
+                    attrs, param.tfName, param.defaultValue as DataType);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getDtypeParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as DataType);
                 }
                 break;
               case 'dtype[]':
                 value = getDtypeArrayParam(
-                    node.attr, param.tfName, param.defaultValue as DataType[]);
+                    attrs, param.tfName, param.defaultValue as DataType[]);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getDtypeArrayParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as DataType[]);
                 }
                 break;
               case 'func':
                 value = getFuncParam(
-                    node.attr, param.tfName, param.defaultValue as string);
+                    attrs, param.tfName, param.defaultValue as string);
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getFuncParam(
-                      node.attr, param.tfDeprecatedName,
+                      attrs, param.tfDeprecatedName,
                       param.defaultValue as string);
                 }
                 break;
@@ -343,9 +361,10 @@ export class OperationMapper {
     let nodes: {[key: string]: Node} = {};
     if (tfNodes != null) {
       nodes = tfNodes.reduce<{[key: string]: Node}>((map, node) => {
-        map[node.name] = this.mapNode(node);
-        if (node.op === 'Const') {
-          weights.push(map[node.name]);
+        const mapped = this.mapNode(node);
+        map[mapped.name] = mapped;
+        if (mapped.op === 'Const') {
+          weights.push(mapped);
         }
         return map;
       }, {});
@@ -370,24 +389,7 @@ export class OperationMapper {
       nodes[nodeName] = node;
     });
 
-    const allNodes = Object.keys(nodes);
-    allNodes.forEach(key => {
-      const node = nodes[key];
-      node.inputNames.forEach((name, index) => {
-        const [nodeName, , outputName] = getNodeNameAndIndex(name);
-        const inputNode = nodes[nodeName];
-        if (inputNode.outputs != null) {
-          const outputIndex = inputNode.outputs.indexOf(outputName);
-          if (outputIndex !== -1) {
-            const inputName = `${nodeName}:${outputIndex}`;
-            // update the input name to use the mapped output index directly.
-            node.inputNames[index] = inputName;
-          }
-        }
-        node.inputs.push(inputNode);
-        inputNode.children.push(node);
-      });
-    });
+    this.linkNodes(nodes);
 
     const returnNodeMap = functionDef.ret;
 
@@ -481,9 +483,12 @@ export function getNumberParam(
 }
 
 export function parseDtypeParam(value: string|tensorflow.DataType): DataType {
-  if (typeof (value) === 'string') {
-    // tslint:disable-next-line:no-any
-    value = tensorflow.DataType[value as any];
+  if (typeof value === 'string') {
+    const resolved = tensorflow.DataType[value as keyof typeof tensorflow.DataType];
+    if (typeof resolved !== 'number') {
+      return null;
+    }
+    value = resolved;
   }
   switch (value) {
     case tensorflow.DataType.DT_FLOAT:

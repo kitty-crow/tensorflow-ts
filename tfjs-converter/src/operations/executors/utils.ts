@@ -151,8 +151,8 @@ export function parseNodeName(
   return result;
 }
 
-export function split(arr: number[], size: number) {
-  const res = [];
+export function split(arr: number[], size: number): number[][] {
+  const res: number[][] = [];
   for (let i = 0; i < arr.length; i += size) {
     res.push(arr.slice(i, i + size));
   }

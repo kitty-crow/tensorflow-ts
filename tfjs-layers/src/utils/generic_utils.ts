@@ -20,20 +20,15 @@ import {AssertionError, ValueError} from '../errors';
  * If `value` is an Array, equivalent to Python's `value * numValues`.
  * If `value` is not an Array, equivalent to Python's `[value] * numValues`
  */
-// tslint:disable-next-line:no-any
-export function pyListRepeat(value: any, numValues: number): any[] {
+export function pyListRepeat<T>(value: T|T[], numValues: number): T[] {
   if (Array.isArray(value)) {
-    // tslint:disable-next-line:no-any
-    let newArray: any[] = [];
+    let newArray: T[] = [];
     for (let i = 0; i < numValues; i++) {
       newArray = newArray.concat(value);
     }
     return newArray;
-  } else {
-    const newArray = new Array(numValues);
-    newArray.fill(value);
-    return newArray;
   }
+  return new Array<T>(numValues).fill(value);
 }
 
 export function assert(val: boolean, message?: string): void {
