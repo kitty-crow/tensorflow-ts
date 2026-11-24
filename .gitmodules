@@ -1,4 +1,3 @@
-[submodule "vendor/code-guards"]
-	path = vendor/code-guards
-	url = https://github.com/kitty-crow/code-guards.git
-	branch = optimisation/inference
+[submodule "vendor/auto-checker"]
+	path = vendor/auto-checker
+	url = https://github.com/kitty-crow/auto-checker.git

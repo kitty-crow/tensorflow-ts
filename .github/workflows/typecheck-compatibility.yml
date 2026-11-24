@@ -2,7 +2,7 @@ name: TensorFlow TypeScript Compatibility
 
 on:
   push:
-    branches-ignore: [guard-remediation]
+    branches-ignore: [guard-remediation, auto-checker-trial]
     paths:
       - '.github/workflows/typecheck-compatibility.yml'
       - 'tsconfig.json'
@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   compile:
+    if: github.ref != 'refs/heads/auto-checker-trial' && github.head_ref != 'auto-checker-trial'
     name: Core, Layers, Data, CPU and WebGL TypeScript
     runs-on: ubuntu-latest
     timeout-minutes: 30

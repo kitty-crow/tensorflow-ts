@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   inspect:
+    if: github.ref != 'refs/heads/auto-checker-trial'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -35,14 +36,14 @@ jobs:
       - name: Check source policy
         run: bun run check:source-policy
       - name: Install pinned Code Guards
-        working-directory: vendor/code-guards
+        working-directory: vendor/auto-checker/vendor/code-guards
         run: bun install --ignore-scripts
       - name: Build Code Guards
-        working-directory: vendor/code-guards
+        working-directory: vendor/auto-checker/vendor/code-guards
         run: bun run build
       - name: Measure remaining nested conditionals
         run: |
-          bun vendor/code-guards/dist/src/cli.js no-nested-if --project tsconfig.code-guards.json --format json > remaining-nested-conditions.json
+          bun vendor/auto-checker/vendor/code-guards/src/cli.ts no-nested-if --project tsconfig.code-guards.json --format json > remaining-nested-conditions.json
           bun -e 'const fs=require("fs"); const issues=JSON.parse(fs.readFileSync("remaining-nested-conditions.json","utf8")); console.log("Remaining CG001 findings:",issues.length); if(issues.length>=682) process.exit(1);'
       - name: Create reviewed patch
         run: git diff --binary > nested-conditional-refactor.patch

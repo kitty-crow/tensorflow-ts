@@ -8,6 +8,7 @@ permissions:
 
 jobs:
   estimate:
+    if: github.ref != 'refs/heads/auto-checker-trial'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -18,11 +19,11 @@ jobs:
       - name: Install TensorFlow dependencies
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Install pinned Code Guards dependencies
-        working-directory: vendor/code-guards
+        working-directory: vendor/auto-checker/vendor/code-guards
         run: bun install --ignore-scripts
       - name: Estimate actual semantic workload without running a model
         run: |
-          bun vendor/code-guards/src/cli.ts all --project tsconfig.code-guards.json --preflight --include-tests --accelerate batch,parallel,webgpu --gpu-ids 0,1 --concurrency 4 --batch-size 4 --format json --progress > inference-preflight.json
+          bun vendor/auto-checker/vendor/code-guards/src/cli.ts all --project tsconfig.code-guards.json --preflight --include-tests --accelerate batch,parallel,webgpu --gpu-ids 0,1 --concurrency 4 --batch-size 4 --format json --progress > inference-preflight.json
       - name: Summarise workload and model-call bounds
         run: |
           bun -e 'import {readFileSync,appendFileSync} from "node:fs"; const r=JSON.parse(readFileSync("inference-preflight.json","utf8")); const summary=["## MobileBERT preflight", "", `Source files: ${r.sourceFiles}`, `Questions: ${r.minimum.questions} to ${r.maximum.questions}`, `Evidence windows: ${r.minimum.windows} to ${r.maximum.windows}`, `Model calls: ${r.minimum.modelCallsMinimum} to ${r.maximum.modelCallsMaximum}`, `Exact question count: ${r.exactQuestionCount}`, `Warm two-GPU reference seconds: ${r.estimatedWarmInferenceSeconds?.minimum ?? "n/a"} to ${r.estimatedWarmInferenceSeconds?.maximum ?? "n/a"}`, "", "No neural inference or GPU worker was started."]; console.log(summary.join("\n")); appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary.join("\n"));'

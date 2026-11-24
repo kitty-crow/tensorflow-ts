@@ -53,7 +53,7 @@ jobs:
           python-version: '3.11'
       - name: Install native Code Guards runtime
         run: |
-          bun install --cwd vendor/code-guards --ignore-scripts
+          bun install --cwd vendor/auto-checker/vendor/code-guards --ignore-scripts
           python3 -m pip install onnxruntime==1.23.2 tokenizers==0.22.1 huggingface-hub==0.36.0 numpy==2.2.6
       - name: Restore model downloads
         uses: actions/cache@v4
@@ -71,7 +71,7 @@ jobs:
           export GIT_CONFIG_VALUE_0="$header"
           export CODE_GUARDS_WEBGPU_PYTHON="$(command -v python3)"
           result=0
-          bun vendor/code-guards/src/cli.ts all --project tsconfig.code-guards.json --strict --include-tests --progress --native-cpu --accelerate cache,batch,parallel --concurrency 4 --batch-size 4 --inference-cache-dir "$RUNNER_TEMP/code-guards-inference" --cache-remote "$(git remote get-url origin)" --sync-inference-cache --format json > "$RUNNER_TEMP/findings.json" || result=$?
+          bun vendor/auto-checker/vendor/code-guards/src/cli.ts all --project tsconfig.code-guards.json --strict --include-tests --progress --native-cpu --accelerate cache,batch,parallel --concurrency 4 --batch-size 4 --inference-cache-dir "$RUNNER_TEMP/code-guards-inference" --cache-remote "$(git remote get-url origin)" --sync-inference-cache --format json > "$RUNNER_TEMP/findings.json" || result=$?
           if [ "$result" -gt 1 ]; then exit "$result"; fi
           # A valid nonempty report is a successful measurement, not a clean scan.
           bun -e 'const f=await Bun.file(process.env.RUNNER_TEMP+"/findings.json").json(); if(!Array.isArray(f)) throw Error("Invalid guard report"); console.log("Total findings:",f.length);'
@@ -83,7 +83,7 @@ jobs:
           git fetch --depth=1 origin refs/heads/inference-cache
           git worktree add --detach "$work" FETCH_HEAD
           trap 'git worktree remove --force "$work"' EXIT
-          bun .github/scripts/index-guard-report.ts "$RUNNER_TEMP/findings.json" "$work" "$GITHUB_SHA" "$(git -C vendor/code-guards rev-parse HEAD)" "$GITHUB_RUN_ID"
+          bun .github/scripts/index-guard-report.ts "$RUNNER_TEMP/findings.json" "$work" "$GITHUB_SHA" "$(git -C vendor/auto-checker/vendor/code-guards rev-parse HEAD)" "$GITHUB_RUN_ID"
           git -C "$work" add reports
           if ! git -C "$work" diff --cached --quiet; then
             git -C "$work" -c user.name="Code Guards Reports" -c user.email="code-guards-reports@users.noreply.github.com" commit -m "Report $GITHUB_SHA [skip ci]"

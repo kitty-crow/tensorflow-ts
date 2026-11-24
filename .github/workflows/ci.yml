@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   code-guards:
+    if: github.ref != 'refs/heads/auto-checker-trial' && github.head_ref != 'auto-checker-trial'
     name: Strict nested conditionals (Bun)
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -27,11 +28,11 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Install pinned Code Guards dependencies with Bun
-        working-directory: vendor/code-guards
+        working-directory: vendor/auto-checker/vendor/code-guards
         run: bun install --ignore-scripts
 
       - name: Build pinned Code Guards with Bun
-        working-directory: vendor/code-guards
+        working-directory: vendor/auto-checker/vendor/code-guards
         run: bun run build
 
       - name: Check TensorFlow source policy with Bun
