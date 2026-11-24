@@ -80,36 +80,36 @@ describe('NodeValueImpl', () => {
   });
   describe('getAttr', () => {
     it('should parse number', () => {
-      expect(nodeValue.attrs['d']).toEqual(3);
-      expect(nodeValue.attrs['h']).toEqual(4.5);
+      expect<string|number|boolean|object>(nodeValue.attrs['d']).toEqual(3);
+      expect<string|number|boolean|object>(nodeValue.attrs['h']).toEqual(4.5);
     });
     it('should parse number[]', () => {
-      expect(nodeValue.attrs['i']).toEqual([3, 6, 0]);
-      expect(nodeValue.attrs['j']).toEqual([4.5, 5.5, 0.0]);
+      expect<string|number|boolean|object>(nodeValue.attrs['i']).toEqual([3, 6, 0]);
+      expect<string|number|boolean|object>(nodeValue.attrs['j']).toEqual([4.5, 5.5, 0.0]);
     });
     it('should parse string', () => {
-      expect(nodeValue.attrs['e']).toEqual('nhwc');
+      expect<string|number|boolean|object>(nodeValue.attrs['e']).toEqual('nhwc');
     });
     it('should parse string[]', () => {
-      expect(nodeValue.attrs['k']).toEqual(['nhwc', 'nhwc', '']);
+      expect<string|number|boolean|object>(nodeValue.attrs['k']).toEqual(['nhwc', 'nhwc', '']);
     });
     it('should parse boolean', () => {
-      expect(nodeValue.attrs['g']).toEqual(true);
+      expect<string|number|boolean|object>(nodeValue.attrs['g']).toEqual(true);
     });
     it('should parse boolean[]', () => {
-      expect(nodeValue.attrs['o']).toEqual([true, false]);
+      expect<string|number|boolean|object>(nodeValue.attrs['o']).toEqual([true, false]);
     });
     it('should parse dtype', () => {
-      expect(nodeValue.attrs['f']).toEqual('float32');
+      expect<string|number|boolean|object>(nodeValue.attrs['f']).toEqual('float32');
     });
     it('should parse dtype[]', () => {
-      expect(nodeValue.attrs['l']).toEqual(['float32', 'int32']);
+      expect<string|number|boolean|object>(nodeValue.attrs['l']).toEqual(['float32', 'int32']);
     });
     it('should parse tensor shape', () => {
-      expect(nodeValue.attrs['m']).toEqual([1, 2]);
+      expect<string|number|boolean|object>(nodeValue.attrs['m']).toEqual([1, 2]);
     });
     it('should parse tensor shape[]', () => {
-      expect(nodeValue.attrs['n']).toEqual([[1, 2], [2, 3]]);
+      expect<string|number|boolean|object>(nodeValue.attrs['n']).toEqual([[1, 2], [2, 3]]);
     });
   });
 });

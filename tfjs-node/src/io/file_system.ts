@@ -114,8 +114,21 @@ export class NodeFileSystem implements tf.io.IOHandler {
       }
       const modelJSONPath = join(this.path, this.MODEL_JSON_FILENAME);
       await writeFile(modelJSONPath, JSON.stringify(modelJSON), 'utf8');
-      await writeFile(
-          weightsBinPath, Buffer.from(modelArtifacts.weightData), 'binary');
+      const weightData = modelArtifacts.weightData;
+      const shards = Array.isArray(weightData) ? weightData : [weightData];
+      // Write shards in order without allocating a second, contiguous copy
+      // of the entire model's weights.
+      const weightsFile = await fs.promises.open(weightsBinPath, 'w');
+      try {
+        for (const shard of shards) {
+          if (shard == null) {
+            throw new Error('Cannot save a model with missing weight data.');
+          }
+          await weightsFile.writeFile(Buffer.from(shard));
+        }
+      } finally {
+        await weightsFile.close();
+      }
 
       return {
         // TODO(cais): Use explicit tf.io.ModelArtifactsInfo type below once it

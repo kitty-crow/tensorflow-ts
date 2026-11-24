@@ -25,7 +25,7 @@ import '@tensorflow/tfjs-core/dist/register_all_gradients';
 import * as tf from '@tensorflow/tfjs';
 // tslint:disable-next-line:no-imports-from-dist
 import * as jasmine_util from '@tensorflow/tfjs-core/dist/jasmine_util';
-import {argv} from 'yargs';
+import yargs = require('yargs/yargs');
 
 import {NodeJSKernelBackend} from './nodejs_kernel_backend';
 
@@ -190,7 +190,10 @@ if (process.platform === 'win32') {
       'maxPool test-tensorflow {} [x=[3,3,1] f=[2,2] s=1 ignores NaNs');
 }
 
-const grepRegex = new RegExp(argv.grep as string);
+const {grep} = yargs(process.argv.slice(2))
+    .option('grep', {type: 'string', default: ''})
+    .parseSync();
+const grepRegex = new RegExp(grep);
 const runner = new jasmineCtor();
 runner.loadConfig({
   spec_files: ['src/**/*_test.ts'],

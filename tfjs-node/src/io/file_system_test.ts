@@ -120,6 +120,20 @@ describe('File system IOHandler', () => {
     weightData.forEach(value => expect(value).toEqual(0));
   });
 
+  it('saves multiple weight data shards in order', async () => {
+    const handler = new NodeFileSystem(testDir);
+    const first = new Float32Array([1, 2, 3]);
+    const second = new Float32Array([4]);
+    await handler.save({
+      modelTopology: modelTopology1,
+      weightSpecs: weightSpecs1,
+      weightData: [first.buffer, second.buffer],
+    });
+    const data = await readFile(path.join(testDir, 'weights.bin'));
+    expect(Array.from(data)).toEqual(
+        Array.from(new Uint8Array(new Float32Array([1, 2, 3, 4]).buffer)));
+  });
+
   it('save fails if path exists as a file', async () => {
     const dir = path.join(testDir, 'save-destination');
     // Create a file at the locatin.
