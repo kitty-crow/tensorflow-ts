@@ -115,13 +115,13 @@ class FakeNumericIterator extends LazyIterator<FitDatasetElement> {
   async next(): Promise<IteratorResult<FitDatasetElement, null>> {
     const done = ++this.batchCount > this.numBatches;
     if (done) {
-      return {done, value: null};
+      return {done: true, value: null};
     }
     if (this.xTensorsFunc == null) {
       // Generate data randomly.
       return {
-        done,
-        value: done ? null : {
+        done: false,
+        value: {
           xs: generateRandomTensorContainer(this.xBatchShape),
           ys: generateRandomTensorContainer(this.yBatchShape)
         }
@@ -180,7 +180,7 @@ class FakeNumericIterator extends LazyIterator<FitDatasetElement> {
         }
       }
 
-      return {done, value: {xs, ys}};
+      return {done: false, value: {xs, ys}};
     }
   }
 }
