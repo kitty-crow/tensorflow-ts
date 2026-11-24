@@ -29,14 +29,14 @@ describeWithFlags('batchNorm4D', ALL_ENVS, () => {
     const result = tf.batchNorm4d(
         xT, meanT, varianceT, undefined, undefined, varianceEpsilon);
 
-    const x = await xT.array();
-    const mean = await meanT.array();
-    const variance = await varianceT.array();
+    const x = await xT.buffer();
+    const mean = await meanT.buffer();
+    const variance = await varianceT.buffer();
     expectArraysClose(await result.data(), [
-      (x[0][0][0][0] - mean[0]) * 1 / Math.sqrt(variance[0] + varianceEpsilon),
-      (x[0][0][0][1] - mean[1]) * 1 / Math.sqrt(variance[1] + varianceEpsilon),
-      (x[1][0][0][0] - mean[0]) * 1 / Math.sqrt(variance[0] + varianceEpsilon),
-      (x[1][0][0][1] - mean[1]) * 1 / Math.sqrt(variance[1] + varianceEpsilon)
+      (x.get(0, 0, 0, 0) - mean.get(0)) * 1 / Math.sqrt(variance.get(0) + varianceEpsilon),
+      (x.get(0, 0, 0, 1) - mean.get(1)) * 1 / Math.sqrt(variance.get(1) + varianceEpsilon),
+      (x.get(1, 0, 0, 0) - mean.get(0)) * 1 / Math.sqrt(variance.get(0) + varianceEpsilon),
+      (x.get(1, 0, 0, 1) - mean.get(1)) * 1 / Math.sqrt(variance.get(1) + varianceEpsilon)
     ]);
   });
 
@@ -131,11 +131,12 @@ describeWithFlags('batchNorm4D', ALL_ENVS, () => {
   });
 
   it('accepts a tensor-like object', async () => {
-    const x = [[[[2, 4]]], [[[9, 23]]]];  // 2x1x1x2
-    const mean = [1, 2];
-    const variance = [2, 3];
-    const offset = [3, 4];
-    const scale = [4, 5];
+    const x: [[[[number, number]]], [[[number, number]]]] =
+        [[[[2, 4]]], [[[9, 23]]]];  // 2x1x1x2
+    const mean: [number, number] = [1, 2];
+    const variance: [number, number] = [2, 3];
+    const offset: [number, number] = [3, 4];
+    const scale: [number, number] = [4, 5];
 
     const varianceEpsilon = .001;
 
@@ -348,11 +349,12 @@ describeWithFlags('batchNorm3D', ALL_ENVS, () => {
   });
 
   it('accepts a tensor-like object', async () => {
-    const x = [[[2, 4]], [[9, 23]]];  // 2x1x2
-    const mean = [1, 2];
-    const variance = [2, 3];
-    const offset = [3, 4];
-    const scale = [4, 5];
+    const x: [[[number, number]], [[number, number]]] =
+        [[[2, 4]], [[9, 23]]];  // 2x1x2
+    const mean: [number, number] = [1, 2];
+    const variance: [number, number] = [2, 3];
+    const offset: [number, number] = [3, 4];
+    const scale: [number, number] = [4, 5];
 
     const varianceEpsilon = .001;
 
@@ -571,20 +573,20 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
     const result = tf.batchNorm2d(
         xT, meanT, varianceT, offsetT, undefined, varianceEpsilon);
 
-    const offset = await offsetT.array();
-    const mean = await meanT.array();
-    const variance = await varianceT.array();
-    const x = await xT.array();
+    const offset = await offsetT.buffer();
+    const mean = await meanT.buffer();
+    const variance = await varianceT.buffer();
+    const x = await xT.buffer();
 
     expectArraysClose(await result.data(), [
-      offset[0] +
-          (x[0][0] - mean[0]) * 1 / Math.sqrt(variance[0] + varianceEpsilon),
-      offset[1] +
-          (x[0][1] - mean[1]) * 1 / Math.sqrt(variance[1] + varianceEpsilon),
-      offset[0] +
-          (x[1][0] - mean[0]) * 1 / Math.sqrt(variance[0] + varianceEpsilon),
-      offset[1] +
-          (x[1][1] - mean[1]) * 1 / Math.sqrt(variance[1] + varianceEpsilon)
+      offset.get(0) +
+          (x.get(0, 0) - mean.get(0)) * 1 / Math.sqrt(variance.get(0) + varianceEpsilon),
+      offset.get(1) +
+          (x.get(0, 1) - mean.get(1)) * 1 / Math.sqrt(variance.get(1) + varianceEpsilon),
+      offset.get(0) +
+          (x.get(1, 0) - mean.get(0)) * 1 / Math.sqrt(variance.get(0) + varianceEpsilon),
+      offset.get(1) +
+          (x.get(1, 1) - mean.get(1)) * 1 / Math.sqrt(variance.get(1) + varianceEpsilon)
     ]);
   });
 
@@ -600,25 +602,25 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
     const result =
         tf.batchNorm2d(xT, meanT, varianceT, offsetT, scaleT, varianceEpsilon);
 
-    const offset = await offsetT.array();
-    const mean = await meanT.array();
-    const variance = await varianceT.array();
-    const scale = await scaleT.array();
-    const x = await xT.array();
+    const offset = await offsetT.buffer();
+    const mean = await meanT.buffer();
+    const variance = await varianceT.buffer();
+    const scale = await scaleT.buffer();
+    const x = await xT.buffer();
 
     expectArraysClose(await result.data(), [
-      offset[0] +
-          (x[0][0] - mean[0]) * scale[0] /
-              Math.sqrt(variance[0] + varianceEpsilon),
-      offset[1] +
-          (x[0][1] - mean[1]) * scale[1] /
-              Math.sqrt(variance[1] + varianceEpsilon),
-      offset[0] +
-          (x[1][0] - mean[0]) * scale[0] /
-              Math.sqrt(variance[0] + varianceEpsilon),
-      offset[1] +
-          (x[1][1] - mean[1]) * scale[1] /
-              Math.sqrt(variance[1] + varianceEpsilon)
+      offset.get(0) +
+          (x.get(0, 0) - mean.get(0)) * scale.get(0) /
+              Math.sqrt(variance.get(0) + varianceEpsilon),
+      offset.get(1) +
+          (x.get(0, 1) - mean.get(1)) * scale.get(1) /
+              Math.sqrt(variance.get(1) + varianceEpsilon),
+      offset.get(0) +
+          (x.get(1, 0) - mean.get(0)) * scale.get(0) /
+              Math.sqrt(variance.get(0) + varianceEpsilon),
+      offset.get(1) +
+          (x.get(1, 1) - mean.get(1)) * scale.get(1) /
+              Math.sqrt(variance.get(1) + varianceEpsilon)
     ]);
   });
 
@@ -809,10 +811,10 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
 
   it('accepts a tensor-like object', async () => {
     const x = [[2, 4], [9, 23]];
-    const mean = [1, 2];
-    const variance = [2, 3];
-    const offset = [3, 4];
-    const scale = [4, 5];
+    const mean: [number, number] = [1, 2];
+    const variance: [number, number] = [2, 3];
+    const offset: [number, number] = [3, 4];
+    const scale: [number, number] = [4, 5];
 
     const varianceEpsilon = .001;
 
@@ -836,10 +838,10 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
   });
 
   it('throws error when x is a string tensor', () => {
-    const mean = [1, 2];
-    const variance = [2, 3];
-    const offset = [3, 4];
-    const scale = [4, 5];
+    const mean: [number, number] = [1, 2];
+    const variance: [number, number] = [2, 3];
+    const offset: [number, number] = [3, 4];
+    const scale: [number, number] = [4, 5];
 
     const varianceEpsilon = .001;
 
@@ -852,9 +854,9 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
 
   it('throws error when mean is a string tensor', () => {
     const x = [[2, 4], [9, 23]];
-    const variance = [2, 3];
-    const offset = [3, 4];
-    const scale = [4, 5];
+    const variance: [number, number] = [2, 3];
+    const offset: [number, number] = [3, 4];
+    const scale: [number, number] = [4, 5];
 
     const varianceEpsilon = .001;
 
@@ -866,9 +868,9 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
 
   it('throws error when variance is a string tensor', () => {
     const x = [[2, 4], [9, 23]];
-    const mean = [1, 2];
-    const offset = [3, 4];
-    const scale = [4, 5];
+    const mean: [number, number] = [1, 2];
+    const offset: [number, number] = [3, 4];
+    const scale: [number, number] = [4, 5];
 
     const varianceEpsilon = .001;
 
@@ -879,9 +881,9 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
 
   it('throws error when scale is a string tensor', () => {
     const x = [[2, 4], [9, 23]];
-    const mean = [1, 2];
-    const variance = [2, 3];
-    const offset = [3, 4];
+    const mean: [number, number] = [1, 2];
+    const variance: [number, number] = [2, 3];
+    const offset: [number, number] = [3, 4];
 
     const varianceEpsilon = .001;
 
@@ -892,9 +894,9 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
 
   it('throws error when offset is a string tensor', () => {
     const x = [[2, 4], [9, 23]];
-    const mean = [1, 2];
-    const variance = [2, 3];
-    const scale = [4, 5];
+    const mean: [number, number] = [1, 2];
+    const variance: [number, number] = [2, 3];
+    const scale: [number, number] = [4, 5];
 
     const varianceEpsilon = .001;
 

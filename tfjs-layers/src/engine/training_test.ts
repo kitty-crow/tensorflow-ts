@@ -23,7 +23,7 @@ import {Logs, UnresolvedLogs} from '../logs';
 import {Regularizer} from '../regularizers';
 import {Kwargs} from '../types';
 import {pyListRepeat, stringsEqual, unique} from '../utils/generic_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathGPU, expectTensorsClose, StopAfterNBatches} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathGPU, expectTensorsClose, StopAfterNBatches, historyMetric, historyMetricAt} from '../utils/test_utils';
 
 // TODO(bileschi): Use external version of Layer.
 import {Layer, SymbolicTensor} from './topology';
@@ -532,11 +532,11 @@ describeMathCPUAndWebGL2('LayersModel.fit long', () => {
           validationSplit,
         });
     expectTensorsClose(
-        history.history['loss'] as number[], [1.3862943649291992]);
+        historyMetric(history, 'loss'), [1.3862943649291992]);
     expectTensorsClose(
-        history.history['val_loss'] as number[], [1.3862943649291992]);
-    expectTensorsClose(history.history['acc'] as number[], [1.0]);
-    expectTensorsClose(history.history['val_acc'] as number[], [1.0]);
+        historyMetric(history, 'val_loss'), [1.3862943649291992]);
+    expectTensorsClose(historyMetric(history, 'acc'), [1.0]);
+    expectTensorsClose(historyMetric(history, 'val_acc'), [1.0]);
   });
 });
 describeMathCPUAndWebGL2('LayersModel.fit', () => {
@@ -662,8 +662,8 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       expect(memory().numTensors).toEqual(numTensors0);
       // Assert no memory leak.
       expect(history.epoch).toEqual([0, 1]);
-      expect(history.history.loss.length).toEqual(2);
-      expect(history.history.val_loss.length).toEqual(2);
+      expect(historyMetric(history, 'loss').length).toEqual(2);
+      expect(historyMetric(history, 'val_loss').length).toEqual(2);
     }
   });
 
@@ -675,13 +675,13 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
         inputs, targets,
         {batchSize: numSamples, epochs: 2, validationSplit: 0.2});
     expect(history.epoch).toEqual([0, 1]);
-    expect(history.history.loss.length).toEqual(2);
-    expect(history.history.val_loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
+    expect(historyMetric(history, 'val_loss').length).toEqual(2);
     test_util.expectArraysClose(
-        history.history['loss'] as number[],
+        historyMetric(history, 'loss'),
         [-0.70710688829422, -0.7077317237854004]);
     test_util.expectArraysClose(
-        history.history['val_loss'] as number[],
+        historyMetric(history, 'val_loss'),
         [-0.70710688829422, -0.7077317237854004]);
   });
 
@@ -720,9 +720,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     const history = await model.fit(
         inputs, targets,
         {batchSize: numSamples, epochs: 2, validationSplit: 0.2});
-    test_util.expectArraysClose(history.history['loss'] as number[], [3, 2.96]);
+    test_util.expectArraysClose(historyMetric(history, 'loss'), [3, 2.96]);
     test_util.expectArraysClose(
-        history.history['val_loss'] as number[], [2.96, 2.92]);
+        historyMetric(history, 'val_loss'), [2.96, 2.92]);
   });
 
   it('Using only x and y input arguments', async () => {
@@ -766,7 +766,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
            inputs, targets,
            {batchSize: numSamples, epochs: 2, initialEpoch: 1});
        expect(history.epoch).toEqual([1]);
-       expect(history.history.loss.length).toEqual(1);
+       expect(historyMetric(history, 'loss').length).toEqual(1);
      });
 
   it('Training with Dropout layer', async () => {
@@ -817,9 +817,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       const history = await model.fit(
           inputs, targets, {batchSize: numSamples, epochs: 2, validationSplit});
       expect(history.epoch).toEqual([0, 1]);
-      const losses = history.history['loss'];
+      const losses = historyMetric(history, 'loss');
       expect(losses.length).toEqual(2);
-      const valLosses = history.history['val_loss'];
+      const valLosses = historyMetric(history, 'val_loss');
       expect(valLosses.length).toEqual(2);
       // Reference values of the losses can be obtained from PyKeras:
       // ```python
@@ -855,9 +855,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
          validationData: [zeros(inputs.shape as [number, number]), targets]
        });
        expect(history.epoch).toEqual([0, 1]);
-       const losses = history.history['loss'];
+       const losses = historyMetric(history, 'loss');
        expect(losses.length).toEqual(2);
-       const valLosses = history.history['val_loss'];
+       const valLosses = historyMetric(history, 'val_loss');
        expect(valLosses.length).toEqual(2);
        expectTensorsClose(losses as number[], [9, 7.617599964141846]);
      });
@@ -876,9 +876,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
        });
 
        expect(history.epoch).toEqual([0, 1]);
-       const losses = history.history['loss'];
+       const losses = historyMetric(history, 'loss');
        expect(losses.length).toEqual(2);
-       const valLosses = history.history['val_loss'];
+       const valLosses = historyMetric(history, 'val_loss');
        expect(valLosses.length).toEqual(2);
        expectTensorsClose(losses as number[], [9, 7.617599964141846]);
        expectTensorsClose(
@@ -905,15 +905,15 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       const history = await model.fit(
           inputs, targets,
           {batchSize: numSamples, epochs: 2, validationSplit: 0.2});
-      const losses = history.history['loss'];
+      const losses = historyMetric(history, 'loss');
       expectTensorsClose(
           losses as number[], [0.6931471824645996, 0.6918979287147522]);
-      const valLosses = history.history['val_loss'];
+      const valLosses = historyMetric(history, 'val_loss');
       expectTensorsClose(
           valLosses as number[], [0.6918979287147522, 0.6906517744064331]);
-      const acc = history.history['acc'];
+      const acc = historyMetric(history, 'acc');
       expectTensorsClose(acc as number[], [0, 1]);
-      const valAcc = history.history['val_acc'];
+      const valAcc = historyMetric(history, 'val_acc');
       expectTensorsClose(valAcc as number[], [1, 1]);
     });
   }
@@ -931,10 +931,10 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
        const history = await model.fit(
            inputs, targets,
            {batchSize: numSamples, epochs: 2, validationSplit: 0.2});
-       const losses = history.history['loss'];
+       const losses = historyMetric(history, 'loss');
        expectTensorsClose(
            losses as number[], [0.6931471824645996, 0.6918979287147522]);
-       const meanSquareError = history.history['meanSquaredError'];
+       const meanSquareError = historyMetric(history, 'meanSquaredError');
        expectTensorsClose(
            meanSquareError as number[], [12.5, 12.495024681091309]);
      });
@@ -952,13 +952,13 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
        const history = await model.fit(
            inputs, targets,
            {batchSize: numSamples, epochs: 2, validationSplit: 0.2});
-       const losses = history.history['loss'];
+       const losses = historyMetric(history, 'loss');
        expectTensorsClose(
            losses as number[], [0.6931471824645996, 0.6918979287147522]);
-       const meanSquareError = history.history['meanSquaredError'];
+       const meanSquareError = historyMetric(history, 'meanSquaredError');
        expectTensorsClose(
            meanSquareError as number[], [12.5, 12.495024681091309]);
-       const acc = history.history['acc'];
+       const acc = historyMetric(history, 'acc');
        expectTensorsClose(acc as number[], [0, 1]);
      });
 
@@ -1016,9 +1016,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     let history = await model.fit(
         inputs, targets,
         {batchSize: numSamples, epochs: 2, validationSplit: 0.2});
-    let losses = history.history['loss'];
+    let losses = historyMetric(history, 'loss');
     expectTensorsClose(losses as number[], [1521.0, 386.35842895507812]);
-    let valLosses = history.history['val_loss'];
+    let valLosses = historyMetric(history, 'val_loss');
     expectTensorsClose(
         valLosses as number[], [386.35848999023438, 1808.7342529296875]);
     expectTensorsClose(
@@ -1033,10 +1033,10 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     history = await model.fit(
         inputs, targets,
         {batchSize: numSamples, epochs: 2, validationSplit: 0.2});
-    losses = history.history['loss'];
+    losses = historyMetric(history, 'loss');
     expectTensorsClose(
         losses as number[], [1808.7342529296875, 75.336509704589844]);
-    valLosses = history.history['val_loss'];
+    valLosses = historyMetric(history, 'val_loss');
     expectTensorsClose(
         valLosses as number[], [75.336524963378906, 3.1378798484802246]);
     // Expect no change in the value of layer1's kernel, due to the freezing.
@@ -1209,9 +1209,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     const ys1 = zeros([2, 1]);
     const ys2 = zeros([2, 1]);
     const history = await model.fit(xs, [ys1, ys2], {epochs: 1});
-    expect(history.history.loss[0]).toBeCloseTo(6);
-    expect(history.history[`${model.outputNames[0]}_loss`][0]).toBeCloseTo(4);
-    expect(history.history[`${model.outputNames[1]}_loss`][0]).toBeCloseTo(2);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(6);
+    expect(historyMetricAt(history, `${model.outputNames[0]}_loss`, 0)).toBeCloseTo(4);
+    expect(historyMetricAt(history, `${model.outputNames[1]}_loss`, 0)).toBeCloseTo(2);
   });
 
   it('2 inputs, 2 outputs, dense, optimizer object, 1 batch', async () => {
@@ -1344,9 +1344,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     expectTensorsClose(
         model.layers[1].getWeights()[0],
         tensor2d([0.829, 0.829, 0.829, 0.829], [4, 1]));
-    expect(history.history.loss.length).toEqual(2);
-    expect(history.history.loss[0]).toBeCloseTo(17);
-    expect(history.history.loss[1]).toBeCloseTo(13.92);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(17);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(13.92);
   });
 
   it('Using string regularizer', async () => {
@@ -1381,9 +1381,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     expectTensorsClose(
         model.layers[1].getWeights()[0],
         tensor2d([0.884, 0.884, 0.884, 0.884], [4, 1]));
-    expect(history.history.loss.length).toEqual(2);
-    expect(history.history.loss[0]).toBeCloseTo(9.08);
-    expect(history.history.loss[1]).toBeCloseTo(7.68);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(9.08);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(7.68);
   });
 
   it('and then set weights to new weights', async () => {
@@ -1481,7 +1481,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       epochs: 10,
       callbacks: [new StopAfterNEpochs(2)]
     });
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
   });
 
   it('Stop training at the end of a batch: Sequential model', async () => {
@@ -1499,7 +1499,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     const history = await sequentialModel.fit(
         inputs, targets,
         {batchSize: 1, epochs: 10, callbacks: [new StopAfterNBatches(2)]});
-    expect(history.history.loss.length).toEqual(1);
+    expect(historyMetric(history, 'loss').length).toEqual(1);
   });
 
   it('Stop LayersModel.fit() using non-class object callback function',
@@ -1523,11 +1523,11 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
          }
        });
        expect(numEpochsDone).toEqual(stopAfterEpoch + 1);
-       expect(history.history.loss.length).toEqual(stopAfterEpoch + 1);
+       expect(historyMetric(history, 'loss').length).toEqual(stopAfterEpoch + 1);
 
        // Check that model.fit can still be called after force stopping.
        history = await model.fit(inputs, targets, {epochs: 2});
-       expect(history.history.loss.length).toEqual(2);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
      });
 
   it('Stop training resets at start of LayersModel.fit()', async () => {
@@ -1545,12 +1545,12 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     let history = await sequentialModel.fit(
         inputs, targets,
         {batchSize: 1, epochs: 10, callbacks: [new StopAfterNBatches(2)]});
-    expect(history.history.loss.length).toEqual(1);
+    expect(historyMetric(history, 'loss').length).toEqual(1);
 
     // Running fit again should now run to completion
     history =
         await sequentialModel.fit(inputs, targets, {batchSize: 1, epochs: 10});
-    expect(history.history.loss.length).toEqual(10);
+    expect(historyMetric(history, 'loss').length).toEqual(10);
   });
 
   it('Model.dispose() cleans up owned optimizer: Functional', async () => {
@@ -2088,10 +2088,10 @@ describeMathCPUAndWebGL2('LayersModel.fit: No memory leak', () => {
          const history = await model.fit(
              inputs, targets,
              {batchSize, epochs: epochsPerIter, validationSplit});
-         expect(history.history['loss'].length).toEqual(epochsPerIter);
-         expect(history.history['val_loss'].length).toEqual(epochsPerIter);
-         expect(history.history['mse'].length).toEqual(epochsPerIter);
-         expect(history.history['val_mse'].length).toEqual(epochsPerIter);
+         expect(historyMetric(history, 'loss').length).toEqual(epochsPerIter);
+         expect(historyMetric(history, 'val_loss').length).toEqual(epochsPerIter);
+         expect(historyMetric(history, 'mse').length).toEqual(epochsPerIter);
+         expect(historyMetric(history, 'val_mse').length).toEqual(epochsPerIter);
          const numTensorsNow = memory().numTensors;
          if (numTensorsNow > numTensors0) {
            fail(
@@ -2261,7 +2261,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
         }
       }
     });
-    expect(history.history.loss.length).toEqual(epochs);
+    expect(historyMetric(history, 'loss').length).toEqual(epochs);
     // There are 5 batches in total (1 batch per epoch). We expect next frame
     // to be called twice, after epoch 1 and after epoch 2.
     expect(nextFrameCallCount).toBe(2);
@@ -2314,7 +2314,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
         }
       }
     });
-    expect(history.history.loss.length).toEqual(epochs);
+    expect(historyMetric(history, 'loss').length).toEqual(epochs);
     // There are 8 batches in total (2 batches per epoch). We expect next
     // frame to be called 3 times, after (epoch 0, batch 1), (epoch 1, batch 0)
     // (epoch 2, batch 0) and (epoch 2, batch 1).
@@ -2363,7 +2363,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
         }
       }
     });
-    expect(history.history.loss.length).toEqual(epochs);
+    expect(historyMetric(history, 'loss').length).toEqual(epochs);
     // There are 5 batches in total (1 batch per epoch). We expect next frame
     // to be called 3 times, after epoch 1, epoch 3 and epoch 4.
     expect(nextFrameCallCount).toBe(3);
@@ -2414,7 +2414,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
       yieldEvery: 'batch',
       callbacks: {nowFunc, nextFrameFunc}
     });
-    expect(history.history.loss.length).toEqual(epochs);
+    expect(historyMetric(history, 'loss').length).toEqual(epochs);
     // There are `ceil(10 / 4)` batches per epoch.
     expect(nextFrameCallCount).toEqual(Math.ceil(10 / 4) * epochs);
   });
@@ -2438,7 +2438,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
       batchSize: numExamples / 10,
       yieldEvery: 'epoch'
     });
-    expect(history.history.loss.length).toEqual(epochs);
+    expect(historyMetric(history, 'loss').length).toEqual(epochs);
     expect(nextFrameCallCount).toEqual(epochs);
   });
 
@@ -2461,7 +2461,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
       batchSize: numExamples / 2,
       yieldEvery: 'never'
     });
-    expect(history.history.loss.length).toEqual(epochs);
+    expect(historyMetric(history, 'loss').length).toEqual(epochs);
     // Due to yieldEvery = 'never', no `await nextFrame()` call should have
     // happened.
     expect(nextFrameCallCount).toEqual(0);

@@ -22,7 +22,7 @@ import {modelFromJSON} from '../models';
 import {L1L2, serializeRegularizer} from '../regularizers';
 import {getCartesianProductOfValues} from '../utils/generic_utils';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt} from '../utils/test_utils';
 
 import {ConvLSTM2DArgs, ConvLSTM2DCellArgs} from './convolutional_recurrent';
 
@@ -589,10 +589,10 @@ describeMathCPU('should run BPTT correctly', () => {
     const history =
         await model.fit(input, output, {batchSize, shuffle: false, epochs: 3});
 
-    expect(history.history.loss.length).toBe(3);
-    expect(history.history.loss[0]).toBeCloseTo(1.5441135168075562);
-    expect(history.history.loss[1]).toBeCloseTo(3.209195613861084);
-    expect(history.history.loss[2]).toBeCloseTo(3.7930736541748047);
+    expect(historyMetric(history, 'loss').length).toBe(3);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.5441135168075562);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(3.209195613861084);
+    expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(3.7930736541748047);
   });
 
   /**
@@ -659,10 +659,10 @@ describeMathCPU('should run BPTT correctly', () => {
     const history =
         await model.fit(input, output, {batchSize, shuffle: false, epochs: 3});
 
-    expect(history.history.loss.length).toBe(3);
-    expect(history.history.loss[0]).toBeCloseTo(1.367607831954956);
-    expect(history.history.loss[1]).toBeCloseTo(1.9423290491104126);
-    expect(history.history.loss[2]).toBeCloseTo(2.00433349609375);
+    expect(historyMetric(history, 'loss').length).toBe(3);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.367607831954956);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.9423290491104126);
+    expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(2.00433349609375);
   });
 
   /**
@@ -738,10 +738,10 @@ describeMathCPU('should run BPTT correctly', () => {
 
     // Assert no memory leak.
     expect(numTensors1).toEqual(numTensors0);
-    expect(history.history.loss.length).toEqual(3);
-    expect(history.history.loss[0]).toBeCloseTo(2.00433349609375);
-    expect(history.history.loss[1]).toBeCloseTo(2.0098776817321777);
-    expect(history.history.loss[2]).toBeCloseTo(2.0099055767059326);
+    expect(historyMetric(history, 'loss').length).toEqual(3);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(2.00433349609375);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(2.0098776817321777);
+    expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(2.0099055767059326);
   });
 });
 

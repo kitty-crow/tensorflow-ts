@@ -14,7 +14,7 @@ import {memory, ones, Tensor, tensor2d, train, zeros} from '@tensorflow/tfjs-cor
 
 import * as tfl from '../index';
 
-import {describeMathCPUAndWebGL2, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, checkedNumericAt} from '../utils/test_utils';
 import {FakeNumericDataset} from './dataset_fakes';
 import {ClassWeight, ClassWeightMap} from './training_utils';
 
@@ -75,14 +75,14 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
     const history = await model.fit(
         xs, ys, {epochs: 2, classWeight: [{0: 1, 1: 10, 2: 1}]});
     expect(memory().numTensors).toEqual(numTensors0);  // Assert no memory leak.
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
     // These loss values are different than what the values would be
     // if there is no class weighting.
-    expect(history.history.loss[0]).toBeCloseTo(4.3944);
-    expect(history.history.loss[1]).toBeCloseTo(5.3727);
-    expect(history.history.acc.length).toEqual(2);
-    expect(history.history.acc[0]).toBeCloseTo(0.3333);
-    expect(history.history.acc[1]).toBeCloseTo(0.6667);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(4.3944);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(5.3727);
+    expect(historyMetric(history, 'acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0.3333);
+    expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0.6667);
   });
 
   it('One output, multi-class, one-hot encoding, batchSize = 2', async () => {
@@ -110,14 +110,14 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
       classWeight: [{0: 1, 1: 10, 2: 1}]
     });
     expect(memory().numTensors).toEqual(numTensors0);  // Assert no memory leak.
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
     // These loss values are different than what the values would be
     // if there is no class weighting.
-    expect(history.history.loss[0]).toBeCloseTo(59.2691);
-    expect(history.history.loss[1]).toBeCloseTo(10.7454);
-    expect(history.history.acc.length).toEqual(2);
-    expect(history.history.acc[0]).toBeCloseTo(0.3333);
-    expect(history.history.acc[1]).toBeCloseTo(0.3333);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(59.2691);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(10.7454);
+    expect(historyMetric(history, 'acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0.3333);
+    expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0.3333);
   });
 
   it('One output, multi-class, one-hot encoding, validationData', async () => {
@@ -144,21 +144,21 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
       validationData: [xs, ys]
     });
     expect(memory().numTensors).toEqual(numTensors0);  // Assert no memory leak.
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
     // These loss values are different than what the values would be
     // if there is no class weighting.
-    expect(history.history.loss[0]).toBeCloseTo(4.3944);
-    expect(history.history.loss[1]).toBeCloseTo(5.3727);
-    expect(history.history.acc.length).toEqual(2);
-    expect(history.history.acc[0]).toBeCloseTo(0.3333);
-    expect(history.history.acc[1]).toBeCloseTo(0.6667);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(4.3944);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(5.3727);
+    expect(historyMetric(history, 'acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0.3333);
+    expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0.6667);
 
-    expect(history.history.val_loss.length).toEqual(2);
-    expect(history.history.val_loss[0]).toBeCloseTo(5.3727);
-    expect(history.history.val_loss[1]).toBeCloseTo(5.3727);
-    expect(history.history.val_acc.length).toEqual(2);
-    expect(history.history.val_acc[0]).toBeCloseTo(0.6667);
-    expect(history.history.val_acc[1]).toBeCloseTo(0.6667);
+    expect(historyMetric(history, 'val_loss').length).toEqual(2);
+    expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(5.3727);
+    expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(5.3727);
+    expect(historyMetric(history, 'val_acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(0.6667);
+    expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(0.6667);
   });
 
   it('One output, multi-class, one-hot encoding, validationSplit', async () => {
@@ -183,21 +183,21 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
         xs, ys,
         {epochs: 2, classWeight: [{0: 1, 1: 10, 2: 1}], validationSplit: 0.5});
     expect(memory().numTensors).toEqual(numTensors0);  // Assert no memory leak.
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
     // These loss values are different than what the values would be
     // if there is no class weighting.
-    expect(history.history.loss[0]).toBeCloseTo(4.3944);
-    expect(history.history.loss[1]).toBeCloseTo(10.7454);
-    expect(history.history.acc.length).toEqual(2);
-    expect(history.history.acc[0]).toBeCloseTo(0.6667);
-    expect(history.history.acc[1]).toBeCloseTo(0.3333);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(4.3944);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(10.7454);
+    expect(historyMetric(history, 'acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0.6667);
+    expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0.3333);
 
-    expect(history.history.val_loss.length).toEqual(2);
-    expect(history.history.val_loss[0]).toBeCloseTo(2.9903e-05);
-    expect(history.history.val_loss[1]).toBeCloseTo(2.9903e-05);
-    expect(history.history.val_acc.length).toEqual(2);
-    expect(history.history.val_acc[0]).toBeCloseTo(1);
-    expect(history.history.val_acc[1]).toBeCloseTo(1);
+    expect(historyMetric(history, 'val_loss').length).toEqual(2);
+    expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(2.9903e-05);
+    expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(2.9903e-05);
+    expect(historyMetric(history, 'val_acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1);
+    expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1);
   });
 
   it('One output, multi-class, sparse encoding', async () => {
@@ -217,11 +217,11 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
     const history =
         await model.fit(xs, ys, {epochs: 2, classWeight: {0: 1, 1: 10, 2: 1}});
     expect(memory().numTensors).toEqual(numTensors0);  // Assert no memory leak.
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
     // These loss values are different than what the values would be
     // if there is no class weighting.
-    expect(history.history.loss[0]).toBeCloseTo(4.3944);
-    expect(history.history.loss[1]).toBeCloseTo(5.3727);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(4.3944);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(5.3727);
   });
 
   // Reference Python code.
@@ -269,11 +269,11 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
     const history =
         await model.fit(xs, ys, {epochs: 2, classWeight: [{0: 0.1, 1: 0.9}]});
     expect(memory().numTensors).toEqual(numTensors0);  // Assert no memory leak.
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
     // These loss values are different than what the values would be
     // if there is no class weighting.
-    expect(history.history.loss[0]).toBeCloseTo(0.3466);
-    expect(history.history.loss[1]).toBeCloseTo(0.2611);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.3466);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.2611);
   });
 
   // Python Reference Code:
@@ -352,20 +352,20 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
         xs, [y1s, y2s],
         {epochs: 3, classWeight: [{0: 0.1, 1: 0.2, 2: 0.7}, {0: 0.1, 1: 0.9}]});
     expect(memory().numTensors).toEqual(numTensors0);  // Assert no memory leak.
-    expect(history.history.loss.length).toEqual(3);
-    expect(history.history.loss[0]).toBeCloseTo(0.8052);
-    expect(history.history.loss[1]).toBeCloseTo(1.4887);
-    expect(history.history.loss[2]).toBeCloseTo(1.4782);
+    expect(historyMetric(history, 'loss').length).toEqual(3);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.8052);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.4887);
+    expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(1.4782);
     const lossKey0 = `${model.outputNames[0]}_loss`;
-    expect(history.history[lossKey0].length).toEqual(3);
-    expect(history.history[lossKey0][0]).toBeCloseTo(0.3662);
-    expect(history.history[lossKey0][1]).toBeCloseTo(1.2553);
-    expect(history.history[lossKey0][2]).toBeCloseTo(1.2485);
+    expect(historyMetric(history, lossKey0).length).toEqual(3);
+    expect(historyMetricAt(history, lossKey0, 0)).toBeCloseTo(0.3662);
+    expect(historyMetricAt(history, lossKey0, 1)).toBeCloseTo(1.2553);
+    expect(historyMetricAt(history, lossKey0, 2)).toBeCloseTo(1.2485);
     const lossKey1 = `${model.outputNames[1]}_loss`;
-    expect(history.history[lossKey1].length).toEqual(3);
-    expect(history.history[lossKey1][0]).toBeCloseTo(0.4390);
-    expect(history.history[lossKey1][1]).toBeCloseTo(0.2333);
-    expect(history.history[lossKey1][2]).toBeCloseTo(0.2297);
+    expect(historyMetric(history, lossKey1).length).toEqual(3);
+    expect(historyMetricAt(history, lossKey1, 0)).toBeCloseTo(0.4390);
+    expect(historyMetricAt(history, lossKey1, 1)).toBeCloseTo(0.2333);
+    expect(historyMetricAt(history, lossKey1, 2)).toBeCloseTo(0.2297);
   });
 
   it('Two outputs, classWeight as array, one being null', async () => {
@@ -404,20 +404,20 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
     // Note that the following values don't match results from Python,
     // which is a bug in Python TensorFlow / tf.keras. But the final
     // kernel value does match Python results. (See b/136123157).
-    expect(history.history.loss.length).toEqual(3);
-    expect(history.history.loss[0]).toBeCloseTo(1.5376);
-    expect(history.history.loss[1]).toBeCloseTo(3.1466);
-    expect(history.history.loss[2]).toBeCloseTo(7.9620);
+    expect(historyMetric(history, 'loss').length).toEqual(3);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.5376);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(3.1466);
+    expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(7.9620);
     const lossKey0 = `${model.outputNames[0]}_loss`;
-    expect(history.history[lossKey0].length).toEqual(3);
-    expect(history.history[lossKey0][0]).toBeCloseTo(1.0986);
-    expect(history.history[lossKey0][1]).toBeCloseTo(2.9113);
-    expect(history.history[lossKey0][2]).toBeCloseTo(7.7323);
+    expect(historyMetric(history, lossKey0).length).toEqual(3);
+    expect(historyMetricAt(history, lossKey0, 0)).toBeCloseTo(1.0986);
+    expect(historyMetricAt(history, lossKey0, 1)).toBeCloseTo(2.9113);
+    expect(historyMetricAt(history, lossKey0, 2)).toBeCloseTo(7.7323);
     const lossKey1 = `${model.outputNames[1]}_loss`;
-    expect(history.history[lossKey1].length).toEqual(3);
-    expect(history.history[lossKey1][0]).toBeCloseTo(0.4390);
-    expect(history.history[lossKey1][1]).toBeCloseTo(0.2333);
-    expect(history.history[lossKey1][2]).toBeCloseTo(0.2298);
+    expect(historyMetric(history, lossKey1).length).toEqual(3);
+    expect(historyMetricAt(history, lossKey1, 0)).toBeCloseTo(0.4390);
+    expect(historyMetricAt(history, lossKey1, 1)).toBeCloseTo(0.2333);
+    expect(historyMetricAt(history, lossKey1, 2)).toBeCloseTo(0.2298);
     expectTensorsClose(model.getWeights()[0], tensor2d([
                          [-0.3333333, -0.03197281, 0.3653062],
                          [-2.0025878, 1.9823718, 0.02021614]
@@ -464,20 +464,20 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
     // Note that the following values don't match results from Python,
     // which is a bug in Python TensorFlow / tf.keras. But the final
     // kernel value does match Python results.
-    expect(history.history.loss.length).toEqual(3);
-    expect(history.history.loss[0]).toBeCloseTo(1.5376);
-    expect(history.history.loss[1]).toBeCloseTo(3.1466);
-    expect(history.history.loss[2]).toBeCloseTo(7.9620);
+    expect(historyMetric(history, 'loss').length).toEqual(3);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.5376);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(3.1466);
+    expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(7.9620);
     const lossKey0 = `${model.outputNames[0]}_loss`;
-    expect(history.history[lossKey0].length).toEqual(3);
-    expect(history.history[lossKey0][0]).toBeCloseTo(1.0986);
-    expect(history.history[lossKey0][1]).toBeCloseTo(2.9113);
-    expect(history.history[lossKey0][2]).toBeCloseTo(7.7323);
+    expect(historyMetric(history, lossKey0).length).toEqual(3);
+    expect(historyMetricAt(history, lossKey0, 0)).toBeCloseTo(1.0986);
+    expect(historyMetricAt(history, lossKey0, 1)).toBeCloseTo(2.9113);
+    expect(historyMetricAt(history, lossKey0, 2)).toBeCloseTo(7.7323);
     const lossKey1 = `${model.outputNames[1]}_loss`;
-    expect(history.history[lossKey1].length).toEqual(3);
-    expect(history.history[lossKey1][0]).toBeCloseTo(0.4390);
-    expect(history.history[lossKey1][1]).toBeCloseTo(0.2333);
-    expect(history.history[lossKey1][2]).toBeCloseTo(0.2298);
+    expect(historyMetric(history, lossKey1).length).toEqual(3);
+    expect(historyMetricAt(history, lossKey1, 0)).toBeCloseTo(0.4390);
+    expect(historyMetricAt(history, lossKey1, 1)).toBeCloseTo(0.2333);
+    expect(historyMetricAt(history, lossKey1, 2)).toBeCloseTo(0.2298);
     expectTensorsClose(model.getWeights()[0], tensor2d([
                          [-0.3333333, -0.03197281, 0.3653062],
                          [-2.0025878, 1.9823718, 0.02021614]
@@ -521,20 +521,20 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
       }
     });
     expect(memory().numTensors).toEqual(numTensors0);  // Assert no memory leak.
-    expect(history.history.loss.length).toEqual(3);
-    expect(history.history.loss[0]).toBeCloseTo(0.8052);
-    expect(history.history.loss[1]).toBeCloseTo(1.4887);
-    expect(history.history.loss[2]).toBeCloseTo(1.4782);
+    expect(historyMetric(history, 'loss').length).toEqual(3);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.8052);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.4887);
+    expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(1.4782);
     const lossKey0 = `${model.outputNames[0]}_loss`;
-    expect(history.history[lossKey0].length).toEqual(3);
-    expect(history.history[lossKey0][0]).toBeCloseTo(0.3662);
-    expect(history.history[lossKey0][1]).toBeCloseTo(1.2553);
-    expect(history.history[lossKey0][2]).toBeCloseTo(1.2485);
+    expect(historyMetric(history, lossKey0).length).toEqual(3);
+    expect(historyMetricAt(history, lossKey0, 0)).toBeCloseTo(0.3662);
+    expect(historyMetricAt(history, lossKey0, 1)).toBeCloseTo(1.2553);
+    expect(historyMetricAt(history, lossKey0, 2)).toBeCloseTo(1.2485);
     const lossKey1 = `${model.outputNames[1]}_loss`;
-    expect(history.history[lossKey1].length).toEqual(3);
-    expect(history.history[lossKey1][0]).toBeCloseTo(0.4390);
-    expect(history.history[lossKey1][1]).toBeCloseTo(0.2333);
-    expect(history.history[lossKey1][2]).toBeCloseTo(0.2297);
+    expect(historyMetric(history, lossKey1).length).toEqual(3);
+    expect(historyMetricAt(history, lossKey1, 0)).toBeCloseTo(0.4390);
+    expect(historyMetricAt(history, lossKey1, 1)).toBeCloseTo(0.2333);
+    expect(historyMetricAt(history, lossKey1, 2)).toBeCloseTo(0.2297);
   });
 });
 
@@ -617,13 +617,13 @@ describeMathCPUAndWebGL2('LayersModel.fitDataset() with classWeight', () => {
     expect(numTensors1).toEqual(numTensors0);
 
     // The loss and acc values are different if no classWeight is used.
-    expect(history.history.loss.length).toEqual(2);
-    expect(history.history.loss[0]).toBeCloseTo(0.0693);
-    expect(history.history.loss[1]).toBeCloseTo(1.3695);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.0693);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.3695);
 
-    expect(history.history.acc.length).toEqual(2);
-    expect(history.history.acc[0]).toBeCloseTo(1);
-    expect(history.history.acc[1]).toBeCloseTo(0.6667);
+    expect(historyMetric(history, 'acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(1);
+    expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0.6667);
   });
 
   // Reference Python code:
@@ -707,21 +707,21 @@ describeMathCPUAndWebGL2('LayersModel.fitDataset() with classWeight', () => {
     expect(numTensors1).toEqual(numTensors0);
 
     // The loss and acc values are different if no classWeight is used.
-    expect(history.history.loss.length).toEqual(2);
-    expect(history.history.loss[0]).toBeCloseTo(0.0693);
-    expect(history.history.loss[1]).toBeCloseTo(1.3695);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.0693);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.3695);
 
-    expect(history.history.acc.length).toEqual(2);
-    expect(history.history.acc[0]).toBeCloseTo(1);
-    expect(history.history.acc[1]).toBeCloseTo(0.6667);
+    expect(historyMetric(history, 'acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(1);
+    expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0.6667);
 
-    expect(history.history.val_loss.length).toEqual(2);
-    expect(history.history.val_loss[0]).toBeCloseTo(0.693148);
-    expect(history.history.val_loss[1]).toBeCloseTo(0.693546);
+    expect(historyMetric(history, 'val_loss').length).toEqual(2);
+    expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.693148);
+    expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.693546);
 
-    expect(history.history.val_acc.length).toEqual(2);
-    expect(history.history.val_acc[0]).toBeCloseTo(0.5);
-    expect(history.history.val_acc[1]).toBeCloseTo(0.5);
+    expect(historyMetric(history, 'val_acc').length).toEqual(2);
+    expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(0.5);
+    expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(0.5);
   });
 
   // Reference Python code:
@@ -838,19 +838,19 @@ describeMathCPUAndWebGL2('LayersModel.fitDataset() with classWeight', () => {
     expect(numTensors1).toEqual(numTensors0);
 
     // The loss and acc values are different if no classWeight is used.
-    const totalLoss = history.history.loss;
+    const totalLoss = historyMetric(history, 'loss');
     expect(totalLoss.length).toEqual(2);
-    expect(totalLoss[0]).toBeCloseTo(0.4146);
-    expect(totalLoss[1]).toBeCloseTo(4.7882);
+    expect(checkedNumericAt(totalLoss, 0)).toBeCloseTo(0.4146);
+    expect(checkedNumericAt(totalLoss, 1)).toBeCloseTo(4.7882);
 
-    const loss0 = history.history[`${model.outputNames[0]}_loss`];
+    const loss0 = historyMetric(history, `${model.outputNames[0]}_loss`);
     expect(loss0.length).toEqual(2);
-    expect(loss0[0]).toBeCloseTo(0.0693);
-    expect(loss0[1]).toBeCloseTo(1.3695);
+    expect(checkedNumericAt(loss0, 0)).toBeCloseTo(0.0693);
+    expect(checkedNumericAt(loss0, 1)).toBeCloseTo(1.3695);
 
-    const loss1 = history.history[`${model.outputNames[1]}_loss`];
+    const loss1 = historyMetric(history, `${model.outputNames[1]}_loss`);
     expect(loss1.length).toEqual(2);
-    expect(loss1[0]).toBeCloseTo(0.3453);
-    expect(loss1[1]).toBeCloseTo(3.4158);
+    expect(checkedNumericAt(loss1, 0)).toBeCloseTo(0.3453);
+    expect(checkedNumericAt(loss1, 1)).toBeCloseTo(3.4158);
   });
 });

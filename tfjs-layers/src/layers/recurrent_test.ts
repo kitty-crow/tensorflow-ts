@@ -25,7 +25,7 @@ import {ModelAndWeightsConfig, modelFromJSON} from '../models';
 import {L1L2, serializeRegularizer} from '../regularizers';
 import {Kwargs} from '../types';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathWebGL2, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathWebGL2, expectTensorsClose, historyMetric, historyMetricAt} from '../utils/test_utils';
 
 import {GRUCellLayerArgs, GRULayerArgs, LSTMCellLayerArgs, LSTMLayerArgs, rnn, RNN, RNNCell, SimpleRNNCellLayerArgs, SimpleRNNLayerArgs} from './recurrent';
 
@@ -866,7 +866,7 @@ describeMathCPUAndWebGL2('SimpleRNN Tensor', () => {
     expect(tfc.memory().numTensors).toEqual(numTensors0);
 
     const history = await model.fit(xs, ys, {epochs: 1, batchSize: 4});
-    expect(history.history.loss[0]).toBeGreaterThanOrEqual(23841822736384);
+    expect(historyMetricAt(history, 'loss', 0)).toBeGreaterThanOrEqual(23841822736384);
   });
 
   it('computeMask: returnSequence = false, returnState = false', () => {
@@ -968,7 +968,7 @@ describeMathCPUAndWebGL2('SimpleRNN Tensor', () => {
 
     const history = await model.fit(xs, ys, {batchSize, shuffle: false});
     // See code snippet above for the code used to obtain this loss value.
-    expect(history.history.loss[0]).toBeCloseTo(1.5262475);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.5262475);
   });
 
   it('BPTT', async () => {
@@ -1515,7 +1515,7 @@ describeMathCPUAndWebGL2('GRU Tensor', () => {
 
     const history = await model.fit(xs, ys, {batchSize, shuffle: false});
     // See code snippet above for the code used to obtain this loss value.
-    expect(history.history.loss[0]).toBeCloseTo(1.501);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.501);
   });
 
   it('BPTT', async () => {
@@ -2192,7 +2192,7 @@ describeMathCPUAndWebGL2('LSTM Tensor', () => {
 
       const history = await model.fit(xs, ys, {batchSize, shuffle: false});
       // See code snippet above for the code used to obtain this loss value.
-      expect(history.history.loss[0]).toBeCloseTo(5.8377);
+      expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(5.8377);
     });
 
     it('BPTT', async () => {
@@ -2500,9 +2500,9 @@ describeMathCPUAndWebGL2('LSTM Tensor', () => {
     const numTensors1 = tfc.memory().numTensors;
     // Assert no memory leak.
     expect(numTensors1).toEqual(numTensors0);
-    expect(history.history.loss.length).toEqual(2);
-    expect(history.history.loss[0]).toBeCloseTo(0.503677);
-    expect(history.history.loss[1]).toBeCloseTo(0.492173);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.503677);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.492173);
   });
 
   // Reference Python code:

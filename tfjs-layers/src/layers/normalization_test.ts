@@ -17,7 +17,7 @@ import {dispose, div, memory, onesLike, scalar, sub, Tensor, tensor1d, tensor2d,
 import {SymbolicTensor} from '../engine/topology';
 import * as tfl from '../index';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt} from '../utils/test_utils';
 
 import {batchNormalization, normalizeBatchInTraining} from './normalization';
 
@@ -418,8 +418,8 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     const xs1 = tensor2d([[1, 2, 3, 4], [2, 4, 6, 8], [12, 11, 10, 9]], [3, 4]);
     const ys = zeros([3, 4]);
     const history = await model.fit(xs1, ys, {epochs: 2, batchSize: 3});
-    expect(history.history['loss'][0]).toBeCloseTo(0.9998891353607178);
-    expect(history.history['loss'][1]).toBeCloseTo(0.9899163246154785);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.9998891353607178);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.9899163246154785);
     const gammaValue = layer1.getWeights()[0];
     expectTensorsClose(
         gammaValue, [0.9900254, 0.9900257, 0.9900262, 0.9900271]);
@@ -475,9 +475,9 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     const xs1 = tensor2d([[1, 2, 3, 4], [2, 4, 6, 8], [12, 11, 10, 9]], [3, 4]);
     const ys = zeros([3, 1]);
     const history = await model.fit(xs1, ys, {epochs: 3, batchSize: 3});
-    expect(history.history['loss'][0]).toBeCloseTo(15.999907493591309);
-    expect(history.history['loss'][1]).toBeCloseTo(0.025602197274565697);
-    expect(history.history['loss'][2]).toBeCloseTo(0.022478966042399406);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(15.999907493591309);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.025602197274565697);
+    expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(0.022478966042399406);
     const dense1KernelValue = layer1.getWeights()[0];
     expectTensorsClose(
         dense1KernelValue,
@@ -560,7 +560,7 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
 
     const h = await model.fit(xs, ys, {epochs: 2});
     expectTensorsClose(
-        h.history.loss as number[], [3332.9971, 2122.5361], 0.01);
+        historyMetric(h, 'loss'), [3332.9971, 2122.5361], 0.01);
   });
 
   // Reference Python code:
@@ -618,8 +618,8 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     const ys = tensor2d([0, 1], [2, 1]);
 
     const h = await model.fit(xs, ys, {epochs: 2});
-    expect(h.history.loss[0]).toBeCloseTo(13922.4492);
-    expect(h.history.loss[1]).toBeCloseTo(106532048, -3);
+    expect(historyMetricAt(h, 'loss', 0)).toBeCloseTo(13922.4492);
+    expect(historyMetricAt(h, 'loss', 1)).toBeCloseTo(106532048, -3);
     const weights = model.layers[1].getWeights();
     expect(weights.length).toEqual(4);
     expectTensorsClose(
@@ -663,8 +663,8 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
         [[[1, 2], [3, 4]], [[2, 4], [6, 8]], [[12, 11], [10, 9]]], [3, 2, 2]);
     const ys = zeros([3, 2, 2]);
     const history = await model.fit(xs1, ys, {epochs: 2, batchSize: 3});
-    expect(history.history['loss'][0]).toBeCloseTo(0.9999215006828308);
-    expect(history.history['loss'][1]).toBeCloseTo(0.980024516582489);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.9999215006828308);
+    expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.980024516582489);
     const gammaValue = layer1.getWeights()[0];
     expectTensorsClose(gammaValue, [0.98010117, 0.98010194]);
     const betaValue = layer1.getWeights()[1];
@@ -841,7 +841,7 @@ describeMathCPUAndGPU('LayerNormalization Layer: Tensor', () => {
     const xs = tensor2d([[1, 2, 3], [3, 6, 24], [10, 5, 0]]);
     const ys = tensor2d([[0], [-1], [2]]);
     const history = await model.fit(xs, ys, {epochs: 5});
-    test_util.expectArraysClose(history.history.loss as number[], [
+    test_util.expectArraysClose(historyMetric(history, 'loss'), [
       1.6666666269302368, 1.4296358823776245, 1.2372404336929321,
       1.0793765783309937, 0.9486551880836487
     ]);
@@ -873,7 +873,7 @@ describeMathCPUAndGPU('LayerNormalization Layer: Tensor', () => {
     const xs = tensor2d([[1, 2, 3], [3, 6, 24], [10, 5, 0], [2, 7, 8]]);
     const ys = tensor2d([[0], [-1], [2], [3]]);
     const history = await model.fit(xs, ys, {epochs: 5});
-    test_util.expectArraysClose(history.history.loss as number[], [
+    test_util.expectArraysClose(historyMetric(history, 'loss'), [
       3.5, 3.1083502769470215, 2.8706729412078857, 2.7243311405181885,
       2.6366190910339355
     ]);
@@ -917,7 +917,7 @@ describeMathCPUAndGPU('LayerNormalization Layer: Tensor', () => {
     const xs = tensor3d([[[1, 2, 3], [3, 6, 24]], [[10, 5, 0], [2, 7, 8]]]);
     const ys = tensor2d([[0], [-1]]);
     const history = await model.fit(xs, ys, {epochs: 5});
-    test_util.expectArraysClose(history.history.loss as number[], [
+    test_util.expectArraysClose(historyMetric(history, 'loss'), [
       0.5, 0.33119967579841614, 0.23371894657611847, 0.171361044049263,
       0.12831644713878632
     ]);
@@ -948,7 +948,7 @@ describeMathCPUAndGPU('LayerNormalization Layer: Tensor', () => {
     const xs = tensor3d([[[1, 2, 3], [3, 6, 24]], [[10, 5, 0], [2, 7, 8]]]);
     const ys = tensor2d([[0], [-1]]);
     const history = await model.fit(xs, ys, {epochs: 5});
-    test_util.expectArraysClose(history.history.loss as number[], [
+    test_util.expectArraysClose(historyMetric(history, 'loss'), [
       0.5, 0.3337608873844147, 0.23789873719215393, 0.17923809587955475,
       0.1408553570508957
     ]);

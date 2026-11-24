@@ -17,7 +17,7 @@ import {Reshape} from './layers/core';
 import {deserialize} from './layers/serialization';
 import {loadLayersModel, ModelAndWeightsConfig, modelFromJSON} from './models';
 import {convertPythonicToTs, convertTsToPythonic} from './utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose} from './utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, checkedNumericAt} from './utils/test_utils';
 import {version as layersVersion} from './version';
 
 const OCTET_STREAM_TYPE = 'application/octet-stream';
@@ -1379,7 +1379,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // Call fit() on the loaded model and assert that the effect is the
     // same as calling fit() again on the original model.
     const history = await model2.fit(xs, ys, {epochs: 1});
-    expect(history.history.loss[0]).toBeCloseTo(26.2144);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(26.2144);
   });
 
   it('RMSProp', async () => {
@@ -1440,7 +1440,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // Call fit() on the loaded model and assert that the effect is the
     // same as calling fit() again on the original model.
     const history = await model2.fit(xs, ys, {epochs: 1});
-    expect(history.history.loss[0]).toBeCloseTo(51.768246);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(51.768246);
   });
 
   it('Adadelta', async () => {
@@ -1499,7 +1499,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // Call fit() on the loaded model and assert that the effect is the
     // same as calling fit() again on the original model.
     const history = await model2.fit(xs, ys, {epochs: 1});
-    expect(history.history.loss[0]).toBeCloseTo(26.2144);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(26.2144);
   });
 
   it('Adagrad', async () => {
@@ -1559,7 +1559,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // Call fit() on the loaded model and assert that the effect is the
     // same as calling fit() again on the original model.
     const history = await model2.fit(xs, ys, {epochs: 1});
-    expect(history.history.loss[0]).toBeCloseTo(61.153225);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(61.153225);
   });
 
   it('Adam as explicit object', async () => {
@@ -1622,7 +1622,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // Call fit() on the loaded model and assert that the effect is the
     // same as calling fit() again on the original model.
     const history = await model2.fit(xs, ys, {epochs: 1});
-    expect(history.history.loss[0]).toBeCloseTo(61.1524);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(61.1524);
   });
 
   it('Adam as string name', async () => {
@@ -1679,7 +1679,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // Call fit() on the loaded model and assert that the effect is the
     // same as calling fit() again on the original model.
     const history = await model2.fit(xs, ys, {epochs: 1});
-    expect(history.history.loss[0]).toBeCloseTo(63.8561);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(63.8561);
   });
 
   it('Momentum', async () => {
@@ -1737,7 +1737,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // Call fit() on the loaded model and assert that the effect is the
     // same as calling fit() again on the original model.
     const history = await model2.fit(xs, ys, {epochs: 1});
-    expect(history.history.loss[0]).toBeCloseTo(26.2144);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(26.2144);
   });
 
   it('Saving model with metrics', async () => {
@@ -1754,8 +1754,8 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     const xs = ones([4, 8]);
     const ys = tensor2d([[0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1]]);
     let h = await model1.fit(xs, ys, {epochs: 1});
-    expect(h.history.loss[0]).toBeCloseTo(1.0986123);
-    expect(h.history.acc).toEqual([0]);
+    expect(historyMetricAt(h, 'loss', 0)).toBeCloseTo(1.0986123);
+    expect(historyMetric(h, 'acc')).toEqual([0]);
 
     let savedArtifacts: io.ModelArtifacts;
     await model1.save(
@@ -1771,9 +1771,9 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
     h = await model2.fit(xs, ys, {epochs: 1});
-    expect(h.history.loss.length).toEqual(1);
-    expect(h.history.loss[0]).toBeCloseTo(1.086648);
-    expect(h.history.acc).toEqual([1]);
+    expect(historyMetric(h, 'loss').length).toEqual(1);
+    expect(historyMetricAt(h, 'loss', 0)).toBeCloseTo(1.086648);
+    expect(historyMetric(h, 'acc')).toEqual([1]);
   });
 
   it('Saving model without calling fit first', async () => {
@@ -1804,9 +1804,9 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     const xs = ones([4, 8]);
     const ys = tensor2d([[0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1]]);
     const h = await model2.fit(xs, ys, {epochs: 1});
-    expect(h.history.loss.length).toEqual(1);
-    expect(h.history.loss[0]).toBeCloseTo(1.0986123);
-    expect(h.history.acc).toEqual([0]);
+    expect(historyMetric(h, 'loss').length).toEqual(1);
+    expect(historyMetricAt(h, 'loss', 0)).toBeCloseTo(1.0986123);
+    expect(historyMetric(h, 'acc')).toEqual([0]);
     expect(model2.optimizer.iterations).toEqual(1);
   });
 
@@ -1852,26 +1852,26 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
 
     h = await model2.fit(xs, [ys1, ys2], {epochs: 1});
-    expect(h.history.loss.length).toEqual(1);
-    expect(h.history.loss[0]).toBeCloseTo(1.044699);
+    expect(historyMetric(h, 'loss').length).toEqual(1);
+    expect(historyMetricAt(h, 'loss', 0)).toBeCloseTo(1.044699);
 
     const lossKey1 = `${outLayer1.name}_loss`;
-    const outputLoss1 = h.history[lossKey1] as number[];
+    const outputLoss1 = historyMetric(h, lossKey1);
     expect(outputLoss1.length).toEqual(1);
-    expect(outputLoss1[0]).toBeCloseTo(1.0446988);
+    expect(checkedNumericAt(outputLoss1, 0)).toBeCloseTo(1.0446988);
     const lossKey2 = `${outLayer2.name}_loss`;
-    const outputLoss2 = h.history[lossKey2] as number[];
+    const outputLoss2 = historyMetric(h, lossKey2);
     expect(outputLoss2.length).toEqual(1);
-    expect(outputLoss2[0]).toBeCloseTo(1.936124e-7);
+    expect(checkedNumericAt(outputLoss2, 0)).toBeCloseTo(1.936124e-7);
 
     const metricKey1 = `${outLayer1.name}_acc`;
-    const metricValues1 = h.history[metricKey1] as number[];
+    const metricValues1 = historyMetric(h, metricKey1);
     expect(metricValues1.length).toEqual(1);
-    expect(metricValues1[0]).toEqual(1);
+    expect(checkedNumericAt(metricValues1, 0)).toEqual(1);
     const metricKey2 = `${outLayer2.name}_acc`;
-    const metricValues2 = h.history[metricKey2] as number[];
+    const metricValues2 = historyMetric(h, metricKey2);
     expect(metricValues2.length).toEqual(1);
-    expect(metricValues2[0]).toBeCloseTo(1);
+    expect(checkedNumericAt(metricValues2, 0)).toBeCloseTo(1);
   });
 });
 
@@ -2194,7 +2194,7 @@ describeMathCPUAndGPU('Sequential', () => {
     model.compile({optimizer: 'sgd', loss: 'meanSquaredError'});
     const history = await model.fit(xs, ys, {batchSize, epochs: 2});
     expectTensorsClose(
-        history.history['loss'] as number[], [121, 0.015178224071860313]);
+        historyMetric(history, 'loss'), [121, 0.015178224071860313]);
   });
 
   it('calling fit twice in a row leads to error', async () => {
@@ -2246,11 +2246,11 @@ describeMathCPUAndGPU('Sequential', () => {
       }
     });
     expect(numEpochsDone).toEqual(stopAfterEpoch + 1);
-    expect(history.history.loss.length).toEqual(stopAfterEpoch + 1);
+    expect(historyMetric(history, 'loss').length).toEqual(stopAfterEpoch + 1);
 
     // Check that model.fit can still be called after force stopping.
     history = await model.fit(xs, ys, {epochs: 2});
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
   });
 
   it('Calling evaluate before compile leads to error', () => {

@@ -23,13 +23,20 @@ import {expectArraysClose, expectArraysEqual} from '../test_util';
 const sqArr = (arr: number[]) => arr.map(d => d * d);
 const sumArr = (arr: number[]) => arr.reduce((prev, curr) => prev + curr, 0);
 
-// tslint:disable-next-line:no-any
-const flatten = (arr: any): number[] => {
-  // tslint:disable-next-line:no-any
-  return arr.reduce((prev: any, curr: any) => {
-    return prev.concat(Array.isArray(curr) ? flatten(curr) : curr);
-  }, []);
-};
+type NumericNested = number | NumericNested[];
+
+function flatten(arr: NumericNested[]): number[] {
+  return arr.flatMap(value => typeof value === 'number' ? [value] : flatten(value));
+}
+
+/** Independent reference calculation for radius-one channel normalisation. */
+function expectedChannels(values: number[], factor: (...values: number[]) => number): number[] {
+  expect(values.length).toEqual(4);
+  return values.map((value, index) => {
+    const window = values.slice(Math.max(0, index - 1), index + 2);
+    return value * factor(...window);
+  });
+}
 
 describeWithFlags('localResponseNormalization with Tensor3D', ALL_ENVS, () => {
   it('throws error with invalid input', () => {
@@ -60,12 +67,8 @@ describeWithFlags('localResponseNormalization with Tensor3D', ALL_ENVS, () => {
         Math.pow(bias + alpha * sumArr(sqArr(vals)), -beta);
 
     const x = await xT.array();
-    expectArraysClose(await result.data(), [
-      x[0][0][0] * f(x[0][0][0], x[0][0][1]),
-      x[0][0][1] * f(x[0][0][0], x[0][0][1], x[0][0][2]),
-      x[0][0][2] * f(x[0][0][1], x[0][0][2], x[0][0][3]),
-      x[0][0][3] * f(x[0][0][2], x[0][0][3]),
-    ]);
+    expectArraysClose(await result.data(), x.flatMap(row =>
+        row.flatMap(channels => expectedChannels(channels, f))));
   });
 
   it('uses beta = 1.0 to test GPU optimization', async () => {
@@ -81,12 +84,8 @@ describeWithFlags('localResponseNormalization with Tensor3D', ALL_ENVS, () => {
         Math.pow(bias + alpha * sumArr(sqArr(vals)), -beta);
 
     const x = await xT.array();
-    expectArraysClose(await result.data(), [
-      x[0][0][0] * f(x[0][0][0], x[0][0][1]),
-      x[0][0][1] * f(x[0][0][0], x[0][0][1], x[0][0][2]),
-      x[0][0][2] * f(x[0][0][1], x[0][0][2], x[0][0][3]),
-      x[0][0][3] * f(x[0][0][2], x[0][0][3]),
-    ]);
+    expectArraysClose(await result.data(), x.flatMap(row =>
+        row.flatMap(channels => expectedChannels(channels, f))));
   });
 
   it('uses beta = 0.75 to test GPU optimization', async () => {
@@ -102,12 +101,8 @@ describeWithFlags('localResponseNormalization with Tensor3D', ALL_ENVS, () => {
         Math.pow(bias + alpha * sumArr(sqArr(vals)), -beta);
 
     const x = await xT.array();
-    expectArraysClose(await result.data(), [
-      x[0][0][0] * f(x[0][0][0], x[0][0][1]),
-      x[0][0][1] * f(x[0][0][0], x[0][0][1], x[0][0][2]),
-      x[0][0][2] * f(x[0][0][1], x[0][0][2], x[0][0][3]),
-      x[0][0][3] * f(x[0][0][2], x[0][0][3]),
-    ]);
+    expectArraysClose(await result.data(), x.flatMap(row =>
+        row.flatMap(channels => expectedChannels(channels, f))));
   });
 
   it('computes complex normalization across channels', async () => {
@@ -128,31 +123,8 @@ describeWithFlags('localResponseNormalization with Tensor3D', ALL_ENVS, () => {
     // o x . . | x o x . | . x o x | . . x o
 
     const x = await xT.array();
-    expectArraysClose(await result.data(), [
-      // 1 - 4
-      x[0][0][0] * f(x[0][0][0], x[0][0][1]),
-      x[0][0][1] * f(x[0][0][0], x[0][0][1], x[0][0][2]),
-      x[0][0][2] * f(x[0][0][1], x[0][0][2], x[0][0][3]),
-      x[0][0][3] * f(x[0][0][2], x[0][0][3]),
-
-      // 1 - 4
-      x[0][1][0] * f(x[0][1][0], x[0][1][1]),
-      x[0][1][1] * f(x[0][1][0], x[0][1][1], x[0][1][2]),
-      x[0][1][2] * f(x[0][1][1], x[0][1][2], x[0][1][3]),
-      x[0][1][3] * f(x[0][1][2], x[0][1][3]),
-
-      // 1 - 4
-      x[1][0][0] * f(x[1][0][0], x[1][0][1]),
-      x[1][0][1] * f(x[1][0][0], x[1][0][1], x[1][0][2]),
-      x[1][0][2] * f(x[1][0][1], x[1][0][2], x[1][0][3]),
-      x[1][0][3] * f(x[1][0][2], x[1][0][3]),
-
-      // 1 - 4
-      x[1][1][0] * f(x[1][1][0], x[1][1][1]),
-      x[1][1][1] * f(x[1][1][0], x[1][1][1], x[1][1][2]),
-      x[1][1][2] * f(x[1][1][1], x[1][1][2], x[1][1][3]),
-      x[1][1][3] * f(x[1][1][2], x[1][1][3]),
-    ]);
+    expectArraysClose(await result.data(), x.flatMap(row =>
+        row.flatMap(channels => expectedChannels(channels, f))));
   });
 
   it('yields same result as tensorflow', async () => {
@@ -277,12 +249,8 @@ describeWithFlags('localResponseNormalization with Tensor3D', ALL_ENVS, () => {
     const f = (...vals: number[]) =>
         Math.pow(bias + alpha * sumArr(sqArr(vals)), -beta);
 
-    expectArraysClose(await result.data(), [
-      x[0][0][0] * f(x[0][0][0], x[0][0][1]),
-      x[0][0][1] * f(x[0][0][0], x[0][0][1], x[0][0][2]),
-      x[0][0][2] * f(x[0][0][1], x[0][0][2], x[0][0][3]),
-      x[0][0][3] * f(x[0][0][2], x[0][0][3]),
-    ]);
+    expectArraysClose(await result.data(), x.flatMap(row =>
+        row.flatMap(channels => expectedChannels(channels, f))));
   });
 });
 
@@ -314,21 +282,9 @@ describeWithFlags('localResponseNormalization with Tensor4D', ALL_ENVS, () => {
     const f = (...vals: number[]) =>
         Math.pow(bias + alpha * sumArr(sqArr(vals)), -beta);
 
-    // Easier to read using these vars
-    const b0 = 0;
-    const b1 = 1;
     const x = await xT.array();
-    expectArraysClose(await result.data(), [
-      x[b0][0][0][0] * f(x[b0][0][0][0], x[b0][0][0][1]),
-      x[b0][0][0][1] * f(x[b0][0][0][0], x[b0][0][0][1], x[b0][0][0][2]),
-      x[b0][0][0][2] * f(x[b0][0][0][1], x[b0][0][0][2], x[b0][0][0][3]),
-      x[b0][0][0][3] * f(x[b0][0][0][2], x[b0][0][0][3]),
-
-      x[b1][0][0][0] * f(x[b1][0][0][0], x[b1][0][0][1]),
-      x[b1][0][0][1] * f(x[b1][0][0][0], x[b1][0][0][1], x[b1][0][0][2]),
-      x[b1][0][0][2] * f(x[b1][0][0][1], x[b1][0][0][2], x[b1][0][0][3]),
-      x[b1][0][0][3] * f(x[b1][0][0][2], x[b1][0][0][3]),
-    ]);
+    expectArraysClose(await result.data(), x.flatMap(batch =>
+        batch.flatMap(row => row.flatMap(channels => expectedChannels(channels, f)))));
   });
 
   it('yields same result as tensorflow', async () => {

@@ -19,7 +19,7 @@ import {LayersModel} from '../engine/training';
 import * as tfl from '../index';
 import {BidirectionalMergeMode, VALID_BIDIRECTIONAL_MERGE_MODES} from '../keras_format/common';
 import {convertPythonicToTs} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndWebGL2, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt} from '../utils/test_utils';
 
 import {Dense, Reshape} from './core';
 import {RNN, SimpleRNN} from './recurrent';
@@ -495,7 +495,7 @@ describeMathCPUAndWebGL2('Bidirectional Layer: Tensor', () => {
     expectTensorsClose(
         model.predict(x) as Tensor, tensor2d([[0.69299805, 0.66088]]));
     const history = await model.fit(x, y);
-    expect(history.history.loss[0]).toBeCloseTo(0.0901649);
+    expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.0901649);
     expectTensorsClose(
         model.predict(x) as Tensor, tensor2d([[0.6927189, 0.66077083]]));
   });
@@ -544,7 +544,7 @@ describeMathCPUAndWebGL2('Bidirectional Layer: Tensor', () => {
     expectTensorsClose(model.predict(x) as Tensor, tensor2d([[0.676939]]));
     model.fit(x, y)
         .then(history => {
-          expect(history.history.loss[0]).toBeCloseTo(0.0766952);
+          expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.0766952);
           expectTensorsClose(
               model.predict(x) as Tensor, tensor2d([[0.6767467]]));
           done();
@@ -770,11 +770,11 @@ describeMathCPUAndWebGL2('Bidirectional with masking', () => {
       const history = await model.fit(xs, ys, {epochs: 5});
       if (rnnLayerType.name === 'lstm') {
         expectTensorsClose(
-            history.history['loss'] as number[],
+            historyMetric(history, 'loss'),
             [33.318, 27.104, 22.058, 17.961, 14.634]);
       } else if (rnnLayerType.name === 'simpleRNN') {
         expectTensorsClose(
-            history.history['loss'] as number[],
+            historyMetric(history, 'loss'),
             [47.684, 35.741, 26.804, 20.115, 15.108]);
       } else {
         throw new Error(`Unexpected rnnLayerType name:

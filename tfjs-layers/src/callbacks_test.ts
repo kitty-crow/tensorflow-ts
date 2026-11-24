@@ -11,7 +11,7 @@
 import {tensor2d} from '@tensorflow/tfjs-core';
 
 import * as tfl from './index';
-import {describeMathCPUAndGPU} from './utils/test_utils';
+import {describeMathCPUAndGPU, historyMetric} from './utils/test_utils';
 
 describe('EarlyStopping', () => {
   function createDummyModel(): tfl.LayersModel {
@@ -236,7 +236,7 @@ describeMathCPUAndGPU('EarlyStopping LayersModel.fit() integration', () => {
       epochs: 10,
       callbacks: tfl.callbacks.earlyStopping({monitor: 'loss', minDelta: 0.25})
     });
-    expect(history.history.loss.length).toEqual(3);
+    expect(historyMetric(history, 'loss').length).toEqual(3);
   });
 
   it('Sequential model, monitor val_acc', async () => {
@@ -262,7 +262,7 @@ describeMathCPUAndGPU('EarlyStopping LayersModel.fit() integration', () => {
       validationData: [xsVal, ysVal],
       callbacks: tfl.callbacks.earlyStopping({monitor: 'val_acc'})
     });
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
   });
 
   it('Sequential model, monitor val_acc, custom patience', async () => {
@@ -289,6 +289,6 @@ describeMathCPUAndGPU('EarlyStopping LayersModel.fit() integration', () => {
       validationData: [xsVal, ysVal],
       callbacks: tfl.callbacks.earlyStopping({monitor: 'val_acc', patience: 4})
     });
-    expect(history.history.loss.length).toEqual(5);
+    expect(historyMetric(history, 'loss').length).toEqual(5);
   });
 });

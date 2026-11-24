@@ -16,10 +16,39 @@ import {memory, Tensor, test_util, util} from '@tensorflow/tfjs-core';
 // tslint:disable-next-line: no-imports-from-dist
 import {ALL_ENVS, describeWithFlags} from '@tensorflow/tfjs-core/dist/jasmine_util';
 
+import type {History} from '../base_callbacks';
 import {Callback} from '../callbacks';
 import {Layer, LayerArgs} from '../engine/topology';
 import {ValueError} from '../errors';
 import type {Logs} from '../logs';
+
+/** A completed fit must contain the requested metric with numeric values. */
+export function historyMetric(history: History, name: string): number[] {
+  const values = history.history[name];
+  if (values == null) {
+    throw new Error(`Training history is missing metric "${name}".`);
+  }
+  return values.map((value, index) => {
+    if (typeof value !== 'number') {
+      throw new Error(`Metric "${name}" at epoch ${index} has not been resolved.`);
+    }
+    return value;
+  });
+}
+
+/** Fail at the missing fixture value, not later in a numeric comparison. */
+export function checkedNumericAt(values: readonly number[], index: number): number {
+  const value = values[index];
+  if (typeof value !== 'number') {
+    throw new Error(`Expected a numeric value at index ${index}.`);
+  }
+  return value;
+}
+
+/** Read a required epoch value from a completed training history. */
+export function historyMetricAt(history: History, name: string, index: number): number {
+  return checkedNumericAt(historyMetric(history, name), index);
+}
 
 /** Minimal layer used by topology and container tests. */
 export class LayerForTest extends Layer {

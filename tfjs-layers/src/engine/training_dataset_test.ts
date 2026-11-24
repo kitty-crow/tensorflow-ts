@@ -18,7 +18,7 @@ import * as tfc from '@tensorflow/tfjs-core';
 import {CustomCallback, DEFAULT_YIELD_EVERY_MS} from '../base_callbacks';
 import * as tfl from '../index';
 import {Logs} from '../logs';
-import {describeMathCPUAndGPU, expectTensorsClose, StopAfterNBatches} from '../utils/test_utils';
+import {describeMathCPUAndGPU, expectTensorsClose, StopAfterNBatches, historyMetric, historyMetricAt} from '../utils/test_utils';
 
 import {FakeNumericDataset} from './dataset_fakes';
 
@@ -92,9 +92,9 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
        expect(Object.keys(history.history)).toEqual(['loss']);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
      });
@@ -134,9 +134,9 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
        expect(Object.keys(history.history)).toEqual(['loss']);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
      });
@@ -208,12 +208,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
        expect(Object.keys(history.history)).toEqual(['loss', 'acc']);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
      });
@@ -254,12 +254,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
        expect(Object.keys(history.history)).toEqual(['loss', 'acc']);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
      });
@@ -359,18 +359,18 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(Object.keys(history.history).sort()).toEqual([
          'loss', 'acc', 'val_loss', 'val_acc'
        ].sort());
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003321);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.011799);
-       expect(history.history.val_acc.length).toEqual(2);
-       expect(history.history.val_acc[0]).toBeCloseTo(1);
-       expect(history.history.val_acc[1]).toBeCloseTo(1);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.011799);
+       expect(historyMetric(history, 'val_acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1);
+       expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
@@ -435,18 +435,18 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(Object.keys(history.history).sort()).toEqual([
          'loss', 'acc', 'val_loss', 'val_acc'
        ].sort());
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003321);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.011799);
-       expect(history.history.val_acc.length).toEqual(2);
-       expect(history.history.val_acc[0]).toBeCloseTo(1);
-       expect(history.history.val_acc[1]).toBeCloseTo(1);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.011799);
+       expect(historyMetric(history, 'val_acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1);
+       expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
@@ -708,18 +708,18 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(Object.keys(history.history).sort()).toEqual([
          'loss', 'acc', 'val_loss', 'val_acc'
        ].sort());
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003321);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.011799);
-       expect(history.history.val_acc.length).toEqual(2);
-       expect(history.history.val_acc[0]).toBeCloseTo(1);
-       expect(history.history.val_acc[1]).toBeCloseTo(1);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.011799);
+       expect(historyMetric(history, 'val_acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1);
+       expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
@@ -799,18 +799,18 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(Object.keys(history.history).sort()).toEqual([
          'loss', 'acc', 'val_loss', 'val_acc'
        ].sort());
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003321);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.011799);
-       expect(history.history.val_acc.length).toEqual(2);
-       expect(history.history.val_acc[0]).toBeCloseTo(1);
-       expect(history.history.val_acc[1]).toBeCloseTo(1);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.011799);
+       expect(historyMetric(history, 'val_acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1);
+       expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
@@ -1004,12 +1004,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
        expect(Object.keys(history.history)).toEqual(['loss', 'acc']);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
@@ -1101,12 +1101,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
        expect(Object.keys(history.history)).toEqual(['loss', 'acc']);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.923649);
-       expect(history.history.loss[1]).toBeCloseTo(0.722993);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.923649);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
@@ -1215,12 +1215,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
        expect(Object.keys(history.history)).toEqual(['loss', 'acc']);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.888116);
-       expect(history.history.loss[1]).toBeCloseTo(0.612685);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.612685);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.103377, 0.103377]);
        expectTensorsClose(model.getWeights()[1], [0.103377]);
      });
@@ -1275,12 +1275,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
        expect(Object.keys(history.history)).toEqual(['loss', 'acc']);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.888116);
-       expect(history.history.loss[1]).toBeCloseTo(0.612685);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.612685);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.103377, 0.103377]);
        expectTensorsClose(model.getWeights()[1], [0.103377]);
      });
@@ -1402,18 +1402,18 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(Object.keys(history.history).sort()).toEqual([
          'acc', 'loss', 'val_acc', 'val_loss'
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.888116);
-       expect(history.history.loss[1]).toBeCloseTo(0.612685);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003189);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.010687);
-       expect(history.history.val_acc.length).toEqual(2);
-       expect(history.history.val_acc[0]).toBeCloseTo(1.0);
-       expect(history.history.val_acc[1]).toBeCloseTo(1.0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.612685);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003189);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.010687);
+       expect(historyMetric(history, 'val_acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1.0);
+       expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1.0);
        expectTensorsClose(model.getWeights()[0], [0.103377, 0.103377]);
        expectTensorsClose(model.getWeights()[1], [0.103377]);
      });
@@ -1486,18 +1486,18 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(Object.keys(history.history).sort()).toEqual([
          'acc', 'loss', 'val_acc', 'val_loss'
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.888116);
-       expect(history.history.loss[1]).toBeCloseTo(0.612685);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003189);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.010687);
-       expect(history.history.val_acc.length).toEqual(2);
-       expect(history.history.val_acc[0]).toBeCloseTo(1.0);
-       expect(history.history.val_acc[1]).toBeCloseTo(1.0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.612685);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003189);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.010687);
+       expect(historyMetric(history, 'val_acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1.0);
+       expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1.0);
        expectTensorsClose(model.getWeights()[0], [0.103377, 0.103377]);
        expectTensorsClose(model.getWeights()[1], [0.103377]);
      });
@@ -1622,18 +1622,18 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(Object.keys(history.history).sort()).toEqual([
          'acc', 'loss', 'val_acc', 'val_loss'
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.888116);
-       expect(history.history.loss[1]).toBeCloseTo(0.612685);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003189);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.010687);
-       expect(history.history.val_acc.length).toEqual(2);
-       expect(history.history.val_acc[0]).toBeCloseTo(1.0);
-       expect(history.history.val_acc[1]).toBeCloseTo(1.0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.612685);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003189);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.010687);
+       expect(historyMetric(history, 'val_acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1.0);
+       expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1.0);
        expectTensorsClose(model.getWeights()[0], [0.103377, 0.103377]);
        expectTensorsClose(model.getWeights()[1], [0.103377]);
      });
@@ -1707,18 +1707,18 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(Object.keys(history.history).sort()).toEqual([
          'acc', 'loss', 'val_acc', 'val_loss'
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(0.888116);
-       expect(history.history.loss[1]).toBeCloseTo(0.612685);
-       expect(history.history.acc.length).toEqual(2);
-       expect(history.history.acc[0]).toBeCloseTo(0);
-       expect(history.history.acc[1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003189);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.010687);
-       expect(history.history.val_acc.length).toEqual(2);
-       expect(history.history.val_acc[0]).toBeCloseTo(1.0);
-       expect(history.history.val_acc[1]).toBeCloseTo(1.0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.612685);
+       expect(historyMetric(history, 'acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'acc', 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, 'acc', 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003189);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.010687);
+       expect(historyMetric(history, 'val_acc').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_acc', 0)).toBeCloseTo(1.0);
+       expect(historyMetricAt(history, 'val_acc', 1)).toBeCloseTo(1.0);
        expectTensorsClose(model.getWeights()[0], [0.103377, 0.103377]);
        expectTensorsClose(model.getWeights()[1], [0.103377]);
      });
@@ -1932,21 +1932,21 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          'loss', output1LossName, output2LossName, output1AccName,
          output2AccName
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(1.847297);
-       expect(history.history.loss[1]).toBeCloseTo(1.445986);
-       expect(history.history[output1LossName].length).toEqual(2);
-       expect(history.history[output1LossName][0]).toBeCloseTo(0.923648);
-       expect(history.history[output1LossName][1]).toBeCloseTo(0.722993);
-       expect(history.history[output2LossName].length).toEqual(2);
-       expect(history.history[output2LossName][0]).toBeCloseTo(0.923648);
-       expect(history.history[output2LossName][1]).toBeCloseTo(0.722993);
-       expect(history.history[output1AccName].length).toEqual(2);
-       expect(history.history[output1AccName][0]).toBeCloseTo(0);
-       expect(history.history[output1AccName][1]).toBeCloseTo(0);
-       expect(history.history[output2AccName].length).toEqual(2);
-       expect(history.history[output2AccName][0]).toBeCloseTo(0);
-       expect(history.history[output2AccName][1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.847297);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.445986);
+       expect(historyMetric(history, output1LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output1LossName, 0)).toBeCloseTo(0.923648);
+       expect(historyMetricAt(history, output1LossName, 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, output2LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output2LossName, 0)).toBeCloseTo(0.923648);
+       expect(historyMetricAt(history, output2LossName, 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, output1AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output1AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output1AccName, 1)).toBeCloseTo(0);
+       expect(historyMetric(history, output2AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output2AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output2AccName, 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
        expectTensorsClose(model.getWeights()[2], [0.108621]);
@@ -2022,21 +2022,21 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          'loss', output1LossName, output2LossName, output1AccName,
          output2AccName
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(1.847297);
-       expect(history.history.loss[1]).toBeCloseTo(1.445986);
-       expect(history.history[output1LossName].length).toEqual(2);
-       expect(history.history[output1LossName][0]).toBeCloseTo(0.923648);
-       expect(history.history[output1LossName][1]).toBeCloseTo(0.722993);
-       expect(history.history[output2LossName].length).toEqual(2);
-       expect(history.history[output2LossName][0]).toBeCloseTo(0.923648);
-       expect(history.history[output2LossName][1]).toBeCloseTo(0.722993);
-       expect(history.history[output1AccName].length).toEqual(2);
-       expect(history.history[output1AccName][0]).toBeCloseTo(0);
-       expect(history.history[output1AccName][1]).toBeCloseTo(0);
-       expect(history.history[output2AccName].length).toEqual(2);
-       expect(history.history[output2AccName][0]).toBeCloseTo(0);
-       expect(history.history[output2AccName][1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.847297);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.445986);
+       expect(historyMetric(history, output1LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output1LossName, 0)).toBeCloseTo(0.923648);
+       expect(historyMetricAt(history, output1LossName, 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, output2LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output2LossName, 0)).toBeCloseTo(0.923648);
+       expect(historyMetricAt(history, output2LossName, 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, output1AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output1AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output1AccName, 1)).toBeCloseTo(0);
+       expect(historyMetric(history, output2AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output2AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output2AccName, 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
        expectTensorsClose(model.getWeights()[2], [0.108621]);
@@ -2179,36 +2179,36 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          valOutput2AccName, 'loss', output1LossName, output2LossName,
          output1AccName, output2AccName
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(1.847297);
-       expect(history.history.loss[1]).toBeCloseTo(1.445986);
-       expect(history.history[output1LossName].length).toEqual(2);
-       expect(history.history[output1LossName][0]).toBeCloseTo(0.923648);
-       expect(history.history[output1LossName][1]).toBeCloseTo(0.722993);
-       expect(history.history[output2LossName].length).toEqual(2);
-       expect(history.history[output2LossName][0]).toBeCloseTo(0.923648);
-       expect(history.history[output2LossName][1]).toBeCloseTo(0.722993);
-       expect(history.history[output1AccName].length).toEqual(2);
-       expect(history.history[output1AccName][0]).toBeCloseTo(0);
-       expect(history.history[output1AccName][1]).toBeCloseTo(0);
-       expect(history.history[output2AccName].length).toEqual(2);
-       expect(history.history[output2AccName][0]).toBeCloseTo(0);
-       expect(history.history[output2AccName][1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003321);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.011798);
-       expect(history.history[valOutput1LossName].length).toEqual(2);
-       expect(history.history[valOutput1LossName][0]).toBeCloseTo(0.006642);
-       expect(history.history[valOutput1LossName][1]).toBeCloseTo(0.023597);
-       expect(history.history[valOutput2LossName].length).toEqual(2);
-       expect(history.history[valOutput2LossName][0]).toBeCloseTo(0.003321);
-       expect(history.history[valOutput2LossName][1]).toBeCloseTo(0.011798);
-       expect(history.history[valOutput1AccName].length).toEqual(2);
-       expect(history.history[valOutput1AccName][0]).toBeCloseTo(0.003321);
-       expect(history.history[valOutput1AccName][1]).toBeCloseTo(0.011798);
-       expect(history.history[valOutput2AccName].length).toEqual(2);
-       expect(history.history[valOutput2AccName][0]).toBeCloseTo(1);
-       expect(history.history[valOutput2AccName][1]).toBeCloseTo(1);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.847297);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.445986);
+       expect(historyMetric(history, output1LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output1LossName, 0)).toBeCloseTo(0.923648);
+       expect(historyMetricAt(history, output1LossName, 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, output2LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output2LossName, 0)).toBeCloseTo(0.923648);
+       expect(historyMetricAt(history, output2LossName, 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, output1AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output1AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output1AccName, 1)).toBeCloseTo(0);
+       expect(historyMetric(history, output2AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output2AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output2AccName, 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.011798);
+       expect(historyMetric(history, valOutput1LossName).length).toEqual(2);
+       expect(historyMetricAt(history, valOutput1LossName, 0)).toBeCloseTo(0.006642);
+       expect(historyMetricAt(history, valOutput1LossName, 1)).toBeCloseTo(0.023597);
+       expect(historyMetric(history, valOutput2LossName).length).toEqual(2);
+       expect(historyMetricAt(history, valOutput2LossName, 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, valOutput2LossName, 1)).toBeCloseTo(0.011798);
+       expect(historyMetric(history, valOutput1AccName).length).toEqual(2);
+       expect(historyMetricAt(history, valOutput1AccName, 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, valOutput1AccName, 1)).toBeCloseTo(0.011798);
+       expect(historyMetric(history, valOutput2AccName).length).toEqual(2);
+       expect(historyMetricAt(history, valOutput2AccName, 0)).toBeCloseTo(1);
+       expect(historyMetricAt(history, valOutput2AccName, 1)).toBeCloseTo(1);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
        expectTensorsClose(model.getWeights()[2], [0.108621]);
@@ -2300,36 +2300,36 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          valOutput2AccName, 'loss', output1LossName, output2LossName,
          output1AccName, output2AccName
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(1.847297);
-       expect(history.history.loss[1]).toBeCloseTo(1.445986);
-       expect(history.history[output1LossName].length).toEqual(2);
-       expect(history.history[output1LossName][0]).toBeCloseTo(0.923648);
-       expect(history.history[output1LossName][1]).toBeCloseTo(0.722993);
-       expect(history.history[output2LossName].length).toEqual(2);
-       expect(history.history[output2LossName][0]).toBeCloseTo(0.923648);
-       expect(history.history[output2LossName][1]).toBeCloseTo(0.722993);
-       expect(history.history[output1AccName].length).toEqual(2);
-       expect(history.history[output1AccName][0]).toBeCloseTo(0);
-       expect(history.history[output1AccName][1]).toBeCloseTo(0);
-       expect(history.history[output2AccName].length).toEqual(2);
-       expect(history.history[output2AccName][0]).toBeCloseTo(0);
-       expect(history.history[output2AccName][1]).toBeCloseTo(0);
-       expect(history.history.val_loss.length).toEqual(2);
-       expect(history.history.val_loss[0]).toBeCloseTo(0.003321);
-       expect(history.history.val_loss[1]).toBeCloseTo(0.011798);
-       expect(history.history[valOutput1LossName].length).toEqual(2);
-       expect(history.history[valOutput1LossName][0]).toBeCloseTo(0.006642);
-       expect(history.history[valOutput1LossName][1]).toBeCloseTo(0.023597);
-       expect(history.history[valOutput2LossName].length).toEqual(2);
-       expect(history.history[valOutput2LossName][0]).toBeCloseTo(0.003321);
-       expect(history.history[valOutput2LossName][1]).toBeCloseTo(0.011798);
-       expect(history.history[valOutput1AccName].length).toEqual(2);
-       expect(history.history[valOutput1AccName][0]).toBeCloseTo(0.003321);
-       expect(history.history[valOutput1AccName][1]).toBeCloseTo(0.011798);
-       expect(history.history[valOutput2AccName].length).toEqual(2);
-       expect(history.history[valOutput2AccName][0]).toBeCloseTo(1);
-       expect(history.history[valOutput2AccName][1]).toBeCloseTo(1);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.847297);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.445986);
+       expect(historyMetric(history, output1LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output1LossName, 0)).toBeCloseTo(0.923648);
+       expect(historyMetricAt(history, output1LossName, 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, output2LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output2LossName, 0)).toBeCloseTo(0.923648);
+       expect(historyMetricAt(history, output2LossName, 1)).toBeCloseTo(0.722993);
+       expect(historyMetric(history, output1AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output1AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output1AccName, 1)).toBeCloseTo(0);
+       expect(historyMetric(history, output2AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output2AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output2AccName, 1)).toBeCloseTo(0);
+       expect(historyMetric(history, 'val_loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'val_loss', 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, 'val_loss', 1)).toBeCloseTo(0.011798);
+       expect(historyMetric(history, valOutput1LossName).length).toEqual(2);
+       expect(historyMetricAt(history, valOutput1LossName, 0)).toBeCloseTo(0.006642);
+       expect(historyMetricAt(history, valOutput1LossName, 1)).toBeCloseTo(0.023597);
+       expect(historyMetric(history, valOutput2LossName).length).toEqual(2);
+       expect(historyMetricAt(history, valOutput2LossName, 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, valOutput2LossName, 1)).toBeCloseTo(0.011798);
+       expect(historyMetric(history, valOutput1AccName).length).toEqual(2);
+       expect(historyMetricAt(history, valOutput1AccName, 0)).toBeCloseTo(0.003321);
+       expect(historyMetricAt(history, valOutput1AccName, 1)).toBeCloseTo(0.011798);
+       expect(historyMetric(history, valOutput2AccName).length).toEqual(2);
+       expect(historyMetricAt(history, valOutput2AccName, 0)).toBeCloseTo(1);
+       expect(historyMetricAt(history, valOutput2AccName, 1)).toBeCloseTo(1);
        expectTensorsClose(model.getWeights()[0], [0.108621]);
        expectTensorsClose(model.getWeights()[1], [0.108621]);
        expectTensorsClose(model.getWeights()[2], [0.108621]);
@@ -2586,21 +2586,21 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          'loss', output1LossName, output2LossName, output1AccName,
          output2AccName
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(1.776232);
-       expect(history.history.loss[1]).toBeCloseTo(1.225369);
-       expect(history.history[output1LossName].length).toEqual(2);
-       expect(history.history[output1LossName][0]).toBeCloseTo(0.888116);
-       expect(history.history[output1LossName][1]).toBeCloseTo(0.612684);
-       expect(history.history[output2LossName].length).toEqual(2);
-       expect(history.history[output2LossName][0]).toBeCloseTo(0.888116);
-       expect(history.history[output2LossName][1]).toBeCloseTo(0.612684);
-       expect(history.history[output1AccName].length).toEqual(2);
-       expect(history.history[output1AccName][0]).toBeCloseTo(0);
-       expect(history.history[output1AccName][1]).toBeCloseTo(0);
-       expect(history.history[output2AccName].length).toEqual(2);
-       expect(history.history[output2AccName][0]).toBeCloseTo(0);
-       expect(history.history[output2AccName][1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.776232);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.225369);
+       expect(historyMetric(history, output1LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output1LossName, 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, output1LossName, 1)).toBeCloseTo(0.612684);
+       expect(historyMetric(history, output2LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output2LossName, 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, output2LossName, 1)).toBeCloseTo(0.612684);
+       expect(historyMetric(history, output1AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output1AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output1AccName, 1)).toBeCloseTo(0);
+       expect(historyMetric(history, output2AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output2AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output2AccName, 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.103376, 0.103376]);
        expectTensorsClose(model.getWeights()[1], [0.103376]);
        expectTensorsClose(model.getWeights()[2], [0.103376, 0.103376]);
@@ -2686,21 +2686,21 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          'loss', output1LossName, output2LossName, output1AccName,
          output2AccName
        ]);
-       expect(history.history.loss.length).toEqual(2);
-       expect(history.history.loss[0]).toBeCloseTo(1.776232);
-       expect(history.history.loss[1]).toBeCloseTo(1.225369);
-       expect(history.history[output1LossName].length).toEqual(2);
-       expect(history.history[output1LossName][0]).toBeCloseTo(0.888116);
-       expect(history.history[output1LossName][1]).toBeCloseTo(0.612684);
-       expect(history.history[output2LossName].length).toEqual(2);
-       expect(history.history[output2LossName][0]).toBeCloseTo(0.888116);
-       expect(history.history[output2LossName][1]).toBeCloseTo(0.612684);
-       expect(history.history[output1AccName].length).toEqual(2);
-       expect(history.history[output1AccName][0]).toBeCloseTo(0);
-       expect(history.history[output1AccName][1]).toBeCloseTo(0);
-       expect(history.history[output2AccName].length).toEqual(2);
-       expect(history.history[output2AccName][0]).toBeCloseTo(0);
-       expect(history.history[output2AccName][1]).toBeCloseTo(0);
+       expect(historyMetric(history, 'loss').length).toEqual(2);
+       expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(1.776232);
+       expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(1.225369);
+       expect(historyMetric(history, output1LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output1LossName, 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, output1LossName, 1)).toBeCloseTo(0.612684);
+       expect(historyMetric(history, output2LossName).length).toEqual(2);
+       expect(historyMetricAt(history, output2LossName, 0)).toBeCloseTo(0.888116);
+       expect(historyMetricAt(history, output2LossName, 1)).toBeCloseTo(0.612684);
+       expect(historyMetric(history, output1AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output1AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output1AccName, 1)).toBeCloseTo(0);
+       expect(historyMetric(history, output2AccName).length).toEqual(2);
+       expect(historyMetricAt(history, output2AccName, 0)).toBeCloseTo(0);
+       expect(historyMetricAt(history, output2AccName, 1)).toBeCloseTo(0);
        expectTensorsClose(model.getWeights()[0], [0.103376, 0.103376]);
        expectTensorsClose(model.getWeights()[1], [0.103376]);
        expectTensorsClose(model.getWeights()[2], [0.103376, 0.103376]);
@@ -2730,7 +2730,7 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
     // Only the loss value from the first epoch should be logged.
     // The 2nd and 3rd epochs are cut short because of dataset iterator
     // exhaustion.
-    expect(history.history.loss.length).toEqual(1);
+    expect(historyMetric(history, 'loss').length).toEqual(1);
     expect(warningMessages.length).toEqual(2);
     expect(warningMessages[0])
         .toMatch(/You provided `batchesPerEpoch` as .* 9 batches/);
@@ -2854,11 +2854,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
     let history = await model.fitDataset(
         dataset,
         {batchesPerEpoch, epochs, callbacks: [new StopAfterNBatches(1)]});
-    expect(history.history.loss.length).toEqual(1);
+    expect(historyMetric(history, 'loss').length).toEqual(1);
 
     // Running fitDataset again should now run to completion
     history = await model.fitDataset(dataset, {batchesPerEpoch, epochs});
-    expect(history.history.loss.length).toEqual(2);
+    expect(historyMetric(history, 'loss').length).toEqual(2);
   });
 
   it('onYield with yieldEvery: auto', async () => {
@@ -2922,7 +2922,7 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
         }
       }
     });
-    expect(history.history.loss.length).toEqual(epochs);
+    expect(historyMetric(history, 'loss').length).toEqual(epochs);
     // There are 5 batches in total (1 batch per epoch). We expect next frame
     // to be called twice, after epoch 1 and after epoch 2.
     expect(nextFrameCallCount).toBe(2);
