@@ -16,7 +16,23 @@
  */
 
 import {ALL_ENVS, describeWithFlags} from './jasmine_util';
-import {expectArraysClose, expectArraysEqual} from './test_util';
+import {expectArraysClose, expectArraysEqual, requiredTestElement} from './test_util';
+
+describeWithFlags('requiredTestElement', ALL_ENVS, () => {
+  it('returns present values without replacing zero, false or null', () => {
+    expect(requiredTestElement([0, 1], 0)).toBe(0);
+    expect(requiredTestElement([false, true], 0)).toBe(false);
+    expect(requiredTestElement([null], 0)).toBeNull();
+    expect(requiredTestElement(new Float32Array([3, 4]), 1)).toBe(4);
+  });
+
+  it('rejects missing elements and sparse array holes', () => {
+    expect(() => requiredTestElement([1], 1)).toThrowError(/index 1/);
+    expect(() => requiredTestElement([1], -1)).toThrowError(/index -1/);
+    expect(() => requiredTestElement(new Array<number>(2), 0))
+        .toThrowError(/index 0/);
+  });
+});
 
 describeWithFlags('expectArraysEqual', ALL_ENVS, () => {
   it('same arrays', () => {

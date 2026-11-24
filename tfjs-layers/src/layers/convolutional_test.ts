@@ -19,7 +19,7 @@ import * as tfl from '../index';
 import {InitializerIdentifier} from '../initializers';
 import {ActivationIdentifier} from '../keras_format/activation_config';
 import {DataFormat, InterpolationFormat, PaddingMode, Shape} from '../keras_format/common';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathGPU, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathGPU, expectTensorsClose, requiredTestElement} from '../utils/test_utils';
 
 import {conv1d, conv1dWithBias, conv2d, conv2dWithBiasActivation, conv3d, conv3dWithBias} from './convolutional';
 
@@ -254,7 +254,7 @@ describeMathCPUAndGPU('conv2dWithBiasActivation', () => {
               }
             }
             for (let i = 0; i < yExpectedDataPerChannel.length; ++i) {
-              yExpectedDataPerChannel[i] += biasScalarData[0];
+              yExpectedDataPerChannel[i] += requiredTestElement(biasScalarData, 0);
             }
             let yExpectedData: number[] = [];
             for (let i = 0; i < outChannels; ++i) {
@@ -309,10 +309,10 @@ describeMathCPU('Conv2D Layers: Symbolic', () => {
                   conv2dLayer.apply(symbolicInput) as tfl.SymbolicTensor;
 
               const outputRows = convolutionOutputSize(
-                  11, kernelSize[0], stride === undefined ? kernelSize[0] : stride,
+                  11, requiredTestElement(kernelSize, 0), stride === undefined ? requiredTestElement(kernelSize, 0) : stride,
                   padding);
               const outputCols = convolutionOutputSize(
-                  9, kernelSize[1], stride === undefined ? kernelSize[1] : stride,
+                  9, requiredTestElement(kernelSize, 1), stride === undefined ? requiredTestElement(kernelSize, 1) : stride,
                   padding);
               const expectedShape: [number, number, number, number] =
                   dataFormat === 'channelsFirst' ?
@@ -635,7 +635,7 @@ describeMathCPUAndGPU('conv3d', () => {
               }
             }
             for (let i = 0; i < yExpectedDataPerChannel.length; ++i) {
-              yExpectedDataPerChannel[i] += biasScalarData[0];
+              yExpectedDataPerChannel[i] += requiredTestElement(biasScalarData, 0);
             }
             let yExpectedData: number[] = [];
             for (let i = 0; i < outChannels; ++i) {
@@ -690,13 +690,13 @@ describeMathCPU('Conv3D Layers: Symbolic', () => {
                   conv3dLayer.apply(symbolicInput) as tfl.SymbolicTensor;
 
               const outputRows = convolutionOutputSize(
-                  11, kernelSize[0], stride === undefined ? kernelSize[0] : stride,
+                  11, requiredTestElement(kernelSize, 0), stride === undefined ? requiredTestElement(kernelSize, 0) : stride,
                   padding);
               const outputCols = convolutionOutputSize(
-                  9, kernelSize[1], stride === undefined ? kernelSize[1] : stride,
+                  9, requiredTestElement(kernelSize, 1), stride === undefined ? requiredTestElement(kernelSize, 1) : stride,
                   padding);
               const outputDepth = convolutionOutputSize(
-                  9, kernelSize[2], stride === undefined ? kernelSize[2] : stride,
+                  9, requiredTestElement(kernelSize, 2), stride === undefined ? requiredTestElement(kernelSize, 2) : stride,
                   padding);
               const expectedShape: [number, number, number, number, number] =
                   dataFormat === 'channelsFirst' ?
@@ -955,10 +955,10 @@ describeMathCPU('Conv2DTranspose: Symbolic', () => {
                 [kernelSize, kernelSize] : kernelSize;
             const step = strides === undefined ? 1 : strides;
             const same = padding === 'same';
-            const expectedRows = (inputShape[1] - 1) * step +
-                (same ? step : dimensions[0]);
-            const expectedCols = (inputShape[2] - 1) * step +
-                (same ? step : dimensions[1]);
+            const expectedRows = (requiredTestElement(inputShape, 1) - 1) * step +
+                (same ? step : requiredTestElement(dimensions, 0));
+            const expectedCols = (requiredTestElement(inputShape, 2) - 1) * step +
+                (same ? step : requiredTestElement(dimensions, 1));
             const expectedShape: [number, number, number, number] =
                 [2, expectedRows, expectedCols, filters];
             expect(y.shape).toEqual(expectedShape);
@@ -974,8 +974,8 @@ describeMathCPU('Conv2DTranspose: Symbolic', () => {
     layer.apply(x);  // Let the layer build first.
 
     expect(layer.weights.length).toEqual(2);
-    expect(layer.weights[0].name.indexOf('/kernel')).toBeGreaterThan(0);
-    expect(layer.weights[1].name.indexOf('/bias')).toBeGreaterThan(0);
+    expect(requiredTestElement(layer.weights, 0).name.indexOf('/kernel')).toBeGreaterThan(0);
+    expect(requiredTestElement(layer.weights, 1).name.indexOf('/bias')).toBeGreaterThan(0);
   });
 });
 
@@ -1159,26 +1159,26 @@ function expectedSeparableShape(
   const kernelStride = stride === undefined;
   if (dilationRate == null && kernelStride) {
     return [
-      (kernelSize[0] === 2 ? 5 : 3) + (same ? 1 : 0),
-      (kernelSize[1] === 2 ? 4 : 2) + (same ? 1 : 0)
+      (requiredTestElement(kernelSize, 0) === 2 ? 5 : 3) + (same ? 1 : 0),
+      (requiredTestElement(kernelSize, 1) === 2 ? 4 : 2) + (same ? 1 : 0)
     ];
   }
   if (dilationRate == null) {
     return [
-      (kernelSize[0] === 2 ? 10 : 9) + (same ? kernelSize[0] - 1 : 0),
-      (kernelSize[1] === 2 ? 8 : 6) + (same ? kernelSize[1] - 1 : 0)
+      (requiredTestElement(kernelSize, 0) === 2 ? 10 : 9) + (same ? requiredTestElement(kernelSize, 0) - 1 : 0),
+      (requiredTestElement(kernelSize, 1) === 2 ? 8 : 6) + (same ? requiredTestElement(kernelSize, 1) - 1 : 0)
     ];
   }
   if (same && kernelStride) {
-    return [kernelSize[0] === 2 ? 6 : 4, kernelSize[1] === 2 ? 5 : 3];
+    return [requiredTestElement(kernelSize, 0) === 2 ? 6 : 4, requiredTestElement(kernelSize, 1) === 2 ? 5 : 3];
   }
   if (same) {
     return [11, 9];
   }
   if (kernelStride) {
-    return [kernelSize[0] === 2 ? 5 : 3, kernelSize[1] === 2 ? 4 : 1];
+    return [requiredTestElement(kernelSize, 0) === 2 ? 5 : 3, requiredTestElement(kernelSize, 1) === 2 ? 4 : 1];
   }
-  return [kernelSize[0] === 2 ? 9 : 7, kernelSize[1] === 2 ? 7 : 3];
+  return [requiredTestElement(kernelSize, 0) === 2 ? 9 : 7, requiredTestElement(kernelSize, 1) === 2 ? 7 : 3];
 }
 
 describeMathCPU('SeparableConv2D Layers: Symbolic', () => {
@@ -1462,8 +1462,8 @@ describeMathCPU('UpSampling2D Layer: Symbolic', () => {
             const output =
                 upSampling2dLayer.apply(symbolicInput) as tfl.SymbolicTensor;
 
-            const rowScale = size === undefined ? 2 : size[0];
-            const colScale = size === undefined ? 2 : size[1];
+            const rowScale = size === undefined ? 2 : requiredTestElement(size, 0);
+            const colScale = size === undefined ? 2 : requiredTestElement(size, 1);
             const outputRows = inputHeight == null ?
                 null : inputHeight * rowScale;
             const outputCols = inputWidth == null ?
@@ -1636,9 +1636,9 @@ describeMathCPU('Conv3DTranspose: Symbolic', () => {
 
             const expectedShape: [number, number, number, number, number] =
                 [1,
-                 transposedConvolutionOutputSize(2, kernelSize[0], strides, padding),
-                 transposedConvolutionOutputSize(11, kernelSize[1], strides, padding),
-                 transposedConvolutionOutputSize(9, kernelSize[2], strides, padding),
+                 transposedConvolutionOutputSize(2, requiredTestElement(kernelSize, 0), strides, padding),
+                 transposedConvolutionOutputSize(11, requiredTestElement(kernelSize, 1), strides, padding),
+                 transposedConvolutionOutputSize(9, requiredTestElement(kernelSize, 2), strides, padding),
                  filters];
             expect(y.shape).toEqual(expectedShape);
           });
@@ -1655,8 +1655,8 @@ describeMathCPU('Conv3DTranspose: Symbolic', () => {
     layer.apply(x);  // Let the layer build first.
 
     expect(layer.weights.length).toEqual(2);
-    expect(layer.weights[0].name.indexOf('/kernel')).toBeGreaterThan(0);
-    expect(layer.weights[1].name.indexOf('/bias')).toBeGreaterThan(0);
+    expect(requiredTestElement(layer.weights, 0).name.indexOf('/kernel')).toBeGreaterThan(0);
+    expect(requiredTestElement(layer.weights, 1).name.indexOf('/bias')).toBeGreaterThan(0);
   });
 });
 

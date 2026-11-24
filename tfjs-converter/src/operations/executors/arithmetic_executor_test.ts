@@ -28,9 +28,9 @@ import {RecursiveSpy, spyOnAllFunctions} from './spy_ops';
 
 describe('arithmetic', () => {
   let node: Node;
-  const input1 = [tfOps.scalar(1)];
-  const input2 = [tfOps.scalar(1)];
-  const input3 = [tfOps.scalar(4)];
+  const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+  const input2 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+  const input3 = [tfOps.scalar(4)] satisfies [ReturnType<typeof tfOps.scalar>];
   const context = new ExecutionContext({}, {}, {});
 
   beforeEach(() => {

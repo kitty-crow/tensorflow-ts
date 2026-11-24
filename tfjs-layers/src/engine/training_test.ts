@@ -23,7 +23,7 @@ import {Logs, UnresolvedLogs} from '../logs';
 import {Regularizer} from '../regularizers';
 import {Kwargs} from '../types';
 import {pyListRepeat, stringsEqual, unique} from '../utils/generic_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathGPU, expectTensorsClose, StopAfterNBatches, historyMetric, historyMetricAt} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathGPU, expectTensorsClose, StopAfterNBatches, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
 
 // TODO(bileschi): Use external version of Layer.
 import {Layer, SymbolicTensor} from './topology';
@@ -77,25 +77,25 @@ describeMathCPU('standardizeInputData', () => {
   it('Singleton Tensor, Array of one name', () => {
     const outputs = standardizeInputData(getX(), ['Foo']);
     expect(outputs.length).toEqual(1);
-    expectTensorsClose(outputs[0], getX());
+    expectTensorsClose(requiredTestElement(outputs, 0), getX());
   });
   it('Array of one Tensor, Array of one name', () => {
     const outputs = standardizeInputData([getX()], ['Foo']);
     expect(outputs.length).toEqual(1);
-    expectTensorsClose(outputs[0], getX());
+    expectTensorsClose(requiredTestElement(outputs, 0), getX());
   });
   it('Array of two Tensors, Array of two names', () => {
     const outputs = standardizeInputData([getX(), getY()], ['Foo', 'Bar']);
     expect(outputs.length).toEqual(2);
-    expectTensorsClose(outputs[0], getX());
-    expectTensorsClose(outputs[1], getY());
+    expectTensorsClose(requiredTestElement(outputs, 0), getX());
+    expectTensorsClose(requiredTestElement(outputs, 1), getY());
   });
   it('Dict of two Tensors, Array of two names', () => {
     const outputs =
         standardizeInputData({'Foo': getX(), 'Bar': getY()}, ['Foo', 'Bar']);
     expect(outputs.length).toEqual(2);
-    expectTensorsClose(outputs[0], getX());
-    expectTensorsClose(outputs[1], getY());
+    expectTensorsClose(requiredTestElement(outputs, 0), getX());
+    expectTensorsClose(requiredTestElement(outputs, 1), getY());
   });
   it('Unexpected data leads to exception: singleton Tensor', () => {
     expect(() => standardizeInputData(getX(), []))
@@ -156,81 +156,81 @@ describeMathCPUAndWebGL2('collectMetrics', () => {
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics(metrics, outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(1);
-    expect(collectedMetrics[0][0]).toEqual('mse');
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(1);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 0)).toEqual('mse');
   });
   it('metric function', () => {
     const metrics = tfl.metrics.meanSquaredError;
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics(metrics, outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(1);
-    expect(collectedMetrics[0][0]).toEqual(metrics);
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(1);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 0)).toEqual(metrics);
   });
   it('Array of shortcut string names', () => {
     const metrics = ['mse', 'crossentropy'];
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics(metrics, outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(2);
-    expect(collectedMetrics[0][0]).toEqual('mse');
-    expect(collectedMetrics[0][1]).toEqual('crossentropy');
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(2);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 0)).toEqual('mse');
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 1)).toEqual('crossentropy');
   });
   it('Array of metric functions', () => {
     const metrics = [tfl.metrics.meanSquaredError, tfl.metrics.precision];
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics(metrics, outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(2);
-    expect(collectedMetrics[0][0]).toEqual(metrics[0]);
-    expect(collectedMetrics[0][1]).toEqual(metrics[1]);
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(2);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 0)).toEqual(requiredTestElement(metrics, 0));
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 1)).toEqual(requiredTestElement(metrics, 1));
   });
   it('Array of mixing shortcut string names and metric functions', () => {
     const metrics = ['mse', tfl.metrics.precision];
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics(metrics, outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(2);
-    expect(collectedMetrics[0][0]).toEqual('mse');
-    expect(collectedMetrics[0][1]).toEqual(metrics[1]);
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(2);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 0)).toEqual('mse');
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 1)).toEqual(requiredTestElement(metrics, 1));
   });
   it('Dict of shortcut string names', () => {
     const metrics = {'output': 'mse'};
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics(metrics, outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(1);
-    expect(collectedMetrics[0][0]).toEqual('mse');
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(1);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 0)).toEqual('mse');
   });
   it('Dict of metric functions', () => {
     const metrics = {'output': tfl.metrics.meanSquaredError};
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics(metrics, outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(1);
-    expect(collectedMetrics[0][0]).toEqual(metrics['output']);
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(1);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 0)).toEqual(metrics['output']);
   });
   it('metrics null', () => {
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics(null, outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(0);
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(0);
   });
   it('metrics is array, length = 0', () => {
     const outputNames = ['output'];
     const collectedMetrics = collectMetrics([], outputNames);
     expect(collectedMetrics.length).toEqual(1);
-    expect(collectedMetrics[0].length).toEqual(0);
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(0);
   });
   it('multiple output names', () => {
     const metrics = ['mse'];
     const outputNames = ['output1', 'output2'];
     const collectedMetrics = collectMetrics(metrics, outputNames);
     expect(collectedMetrics.length).toEqual(2);
-    expect(collectedMetrics[0].length).toEqual(1);
-    expect(collectedMetrics[0][0]).toEqual('mse');
-    expect(collectedMetrics[1].length).toEqual(1);
-    expect(collectedMetrics[1][0]).toEqual('mse');
+    expect(requiredTestElement(collectedMetrics, 0).length).toEqual(1);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 0), 0)).toEqual('mse');
+    expect(requiredTestElement(collectedMetrics, 1).length).toEqual(1);
+    expect(requiredTestElement(requiredTestElement(collectedMetrics, 1), 0)).toEqual('mse');
   });
 });
 
@@ -247,8 +247,8 @@ describeMathCPUAndGPU('sliceArraysByIndices', () => {
     ];
     const ys = sliceArraysByIndices(xs, tensor1d([0, 2])) as Tensor[];
     expect(ys.length).toEqual(2);
-    expectTensorsClose(ys[0], tensor2d([[1, 2], [5, 6]], [2, 2]));
-    expectTensorsClose(ys[1], tensor2d([[10, 20], [50, 60]], [2, 2]));
+    expectTensorsClose(requiredTestElement(ys, 0), tensor2d([[1, 2], [5, 6]], [2, 2]));
+    expectTensorsClose(requiredTestElement(ys, 1), tensor2d([[10, 20], [50, 60]], [2, 2]));
   });
   it('Array of two 3Ds', () => {
     const xs = [
@@ -257,8 +257,8 @@ describeMathCPUAndGPU('sliceArraysByIndices', () => {
     ];
     const ys = sliceArraysByIndices(xs, tensor1d([0, 2])) as Tensor[];
     expect(ys.length).toEqual(2);
-    expectTensorsClose(ys[0], tensor3d([[[1]], [[3]]], [2, 1, 1]));
-    expectTensorsClose(ys[1], tensor3d([[[10]], [[30]]], [2, 1, 1]));
+    expectTensorsClose(requiredTestElement(ys, 0), tensor3d([[[1]], [[3]]], [2, 1, 1]));
+    expectTensorsClose(requiredTestElement(ys, 1), tensor3d([[[10]], [[30]]], [2, 1, 1]));
   });
   it('null array input', () => {
     expect(sliceArraysByIndices(null, tensor1d([0, 2]))).toBeNull();
@@ -350,8 +350,8 @@ describeMathCPUAndGPU('LayersModel.predict', () => {
     const xs = ones([10, 3, 4]);
     const ys = model.predict(xs, {batchSize: 4}) as Tensor[];
     expect(ys.length).toEqual(2);
-    expectTensorsClose(ys[0], ones([10, 2, 6]));
-    expectTensorsClose(ys[1], ones([10, 12]));
+    expectTensorsClose(requiredTestElement(ys, 0), ones([10, 2, 6]));
+    expectTensorsClose(requiredTestElement(ys, 1), ones([10, 12]));
   });
 
   it('2 inputs, 2 outputs', () => {
@@ -372,8 +372,8 @@ describeMathCPUAndGPU('LayersModel.predict', () => {
     const xs2 = ones([10, 3, 3]);
     const ys = model.predict([xs1, xs2], {batchSize: 4}) as Tensor[];
     expect(ys.length).toEqual(2);
-    expectTensorsClose(ys[0], ones([10, 2, 6]));
-    expectTensorsClose(ys[1], ones([10, 9]));
+    expectTensorsClose(requiredTestElement(ys, 0), ones([10, 2, 6]));
+    expectTensorsClose(requiredTestElement(ys, 1), ones([10, 9]));
   });
 
   it('Incorrect number of inputs leads to exception: 1 vs 2', () => {
@@ -624,7 +624,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
            await model.fit(inputs, targets, {batchSize: numSamples, epochs: 1});
 
        expect(history.epoch).toEqual([0]);
-       const newWeightsValue = model.trainableWeights[0].read();
+       const newWeightsValue = requiredTestElement(model.trainableWeights, 0).read();
 
        const lr = 0.01;  // This is the default learning rate of SGD.
        const expectedValueArray =
@@ -743,7 +743,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     model.compile({optimizer: 'SGD', loss: 'meanSquaredError'});
     const history = await model.fit(inputs, targets);
     expect(history.epoch.length).toEqual(1);
-    expect(history.epoch[0]).toEqual(0);
+    expect(requiredTestElement(history.epoch, 0)).toEqual(0);
   });
 
   it('1 input, 1 output, dense, 1 weight, string optimizer, 2 epochs',
@@ -1068,18 +1068,18 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       callbacks: {
         onEpochEnd: async (epoch, logs) => {
           layer1KernelValues.push(
-              model.layers[0].getWeights()[0].dataSync() as Float32Array);
+              requiredTestElement(model.layers, 0).getWeights()[0].dataSync() as Float32Array);
           layer2KernelValues.push(
-              model.layers[1].getWeights()[0].dataSync() as Float32Array);
+              requiredTestElement(model.layers, 1).getWeights()[0].dataSync() as Float32Array);
           // Freeze the first dense layer after the 2nd epoch and unfreeze it
           // after the 3rd epoch.
           switch (epoch) {
             case 1: {
-              model.layers[0].trainable = false;
+              requiredTestElement(model.layers, 0).trainable = false;
               break;
             }
             case 2: {
-              model.layers[0].trainable = true;
+              requiredTestElement(model.layers, 0).trainable = true;
               break;
             }
           }
@@ -1138,12 +1138,12 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
 
        expect(model.trainableWeights.length).toEqual(2);
        const lr = 0.01;  // This is the default learning rate of SGD.
-       const newKernelValue = model.trainableWeights[0].read();
+       const newKernelValue = requiredTestElement(model.trainableWeights, 0).read();
        const expectedKernelArray =
            pyListRepeat([1.0 - (inputSize - 1) * 2 * lr], inputSize);
        expectTensorsClose(
            newKernelValue, tensor2d(expectedKernelArray, [inputSize, 1]));
-       const newBiasValue = model.trainableWeights[1].read();
+       const newBiasValue = requiredTestElement(model.trainableWeights, 1).read();
        const expectedBiasArray = [0.0 - (inputSize - 1) * 2 * lr];
        expectTensorsClose(newBiasValue, tensor1d(expectedBiasArray));
      });
@@ -1159,7 +1159,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
        const history =
            await model.fit(inputs, targets, {batchSize: numSamples, epochs: 1});
        expect(history.epoch).toEqual([0]);
-       const newWeightsValue = model.trainableWeights[0].read();
+       const newWeightsValue = requiredTestElement(model.trainableWeights, 0).read();
 
        const expectedValueArray =
            pyListRepeat([1.0 - (inputSize - 1) * 2 * lr], inputSize);
@@ -1201,8 +1201,8 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
             .apply(input1) as SymbolicTensor;
     const model = tfl.model({inputs: input1, outputs: [output1, output2]});
     const loss: {[outputName: string]: string} = {};
-    loss[model.outputNames[0]] = 'meanSquaredError';
-    loss[model.outputNames[1]] = 'meanAbsoluteError';
+    loss[requiredTestElement(model.outputNames, 0)] = 'meanSquaredError';
+    loss[requiredTestElement(model.outputNames, 1)] = 'meanAbsoluteError';
     model.compile({loss, optimizer: 'sgd'});
 
     const xs = ones([2, 2]);
@@ -1210,8 +1210,8 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     const ys2 = zeros([2, 1]);
     const history = await model.fit(xs, [ys1, ys2], {epochs: 1});
     expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(6);
-    expect(historyMetricAt(history, `${model.outputNames[0]}_loss`, 0)).toBeCloseTo(4);
-    expect(historyMetricAt(history, `${model.outputNames[1]}_loss`, 0)).toBeCloseTo(2);
+    expect(historyMetricAt(history, `${requiredTestElement(model.outputNames, 0)}_loss`, 0)).toBeCloseTo(4);
+    expect(historyMetricAt(history, `${requiredTestElement(model.outputNames, 1)}_loss`, 0)).toBeCloseTo(2);
   });
 
   it('2 inputs, 2 outputs, dense, optimizer object, 1 batch', async () => {
@@ -1223,15 +1223,15 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       loss: ['meanSquaredError', 'meanSquaredError']
     });
     const trainableWeights = twoOutputModel.trainableWeights;
-    let newWeightsValue1 = trainableWeights[0].read();
-    let newWeightsValue2 = trainableWeights[1].read();
+    let newWeightsValue1 = requiredTestElement(trainableWeights, 0).read();
+    let newWeightsValue2 = requiredTestElement(trainableWeights, 1).read();
     await twoOutputModel.fit(
         [inputs1, inputs2], [targets1, targets2],
         {batchSize: numSamples, epochs: 1});
 
     expect(twoOutputModel.trainableWeights.length).toEqual(2);
-    newWeightsValue1 = twoOutputModel.trainableWeights[0].read();
-    newWeightsValue2 = twoOutputModel.trainableWeights[1].read();
+    newWeightsValue1 = requiredTestElement(twoOutputModel.trainableWeights, 0).read();
+    newWeightsValue2 = requiredTestElement(twoOutputModel.trainableWeights, 1).read();
 
     // Check the weight updates to layer1.
     const expectedValueArray1 =
@@ -1307,7 +1307,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
           expect(batchEndLosses[i]).toBeLessThan(batchEndLosses[i - 1]);
         }
         expect(epochEndLosses.length).toEqual(2);
-        expect(epochEndLosses[1]).toBeLessThan(epochEndLosses[0]);
+        expect(requiredTestElement(epochEndLosses, 1)).toBeLessThan(requiredTestElement(epochEndLosses, 0));
       });
     }
   }
@@ -1342,7 +1342,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     const history =
         await model.fit(inputs, targets, {batchSize: numSamples, epochs: 2});
     expectTensorsClose(
-        model.layers[1].getWeights()[0],
+        requiredTestElement(model.layers, 1).getWeights()[0],
         tensor2d([0.829, 0.829, 0.829, 0.829], [4, 1]));
     expect(historyMetric(history, 'loss').length).toEqual(2);
     expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(17);
@@ -1379,7 +1379,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     const history =
         await model.fit(inputs, targets, {batchSize: numSamples, epochs: 2});
     expectTensorsClose(
-        model.layers[1].getWeights()[0],
+        requiredTestElement(model.layers, 1).getWeights()[0],
         tensor2d([0.884, 0.884, 0.884, 0.884], [4, 1]));
     expect(historyMetric(history, 'loss').length).toEqual(2);
     expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(9.08);
@@ -1391,17 +1391,17 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     model.compile({optimizer: 'SGD', loss: 'meanSquaredError'});
     await model.fit(inputs, targets, {batchSize: numSamples, epochs: 2});
     const w = zeros([4, 1]);
-    model.layers[1].setWeights([w]);
-    expectTensorsClose(model.layers[1].getWeights()[0], w);
+    requiredTestElement(model.layers, 1).setWeights([w]);
+    expectTensorsClose(requiredTestElement(model.layers, 1).getWeights()[0], w);
   });
 
   it('and then set weights to own weights', async () => {
     createDenseModelAndData(false, 'l1l2');
     model.compile({optimizer: 'SGD', loss: 'meanSquaredError'});
     await model.fit(inputs, targets, {batchSize: numSamples, epochs: 2});
-    const w = model.layers[1].getWeights()[0];
-    model.layers[1].setWeights([w]);
-    expectTensorsClose(model.layers[1].getWeights()[0], w);
+    const w = requiredTestElement(model.layers, 1).getWeights()[0];
+    requiredTestElement(model.layers, 1).setWeights([w]);
+    expectTensorsClose(requiredTestElement(model.layers, 1).getWeights()[0], w);
   });
 
   class CustomCallbackForTest extends tfl.CustomCallback {
@@ -1425,13 +1425,13 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       batchSize,
       callbacks: new CustomCallbackForTest(recordedParams)
     });
-    expect(recordedParams[0].epochs).toEqual(epochs);
-    expect(recordedParams[0].initialEpoch).toEqual(0);
-    expect(recordedParams[0].samples).toEqual(inputs.shape[0]);
-    expect(recordedParams[0].steps).toEqual(null);
-    expect(recordedParams[0].batchSize).toEqual(batchSize);
-    expect(recordedParams[0].doValidation).toEqual(false);
-    expect(recordedParams[0].metrics).toEqual(['loss']);
+    expect(requiredTestElement(recordedParams, 0).epochs).toEqual(epochs);
+    expect(requiredTestElement(recordedParams, 0).initialEpoch).toEqual(0);
+    expect(requiredTestElement(recordedParams, 0).samples).toEqual(inputs.shape[0]);
+    expect(requiredTestElement(recordedParams, 0).steps).toEqual(null);
+    expect(requiredTestElement(recordedParams, 0).batchSize).toEqual(batchSize);
+    expect(requiredTestElement(recordedParams, 0).doValidation).toEqual(false);
+    expect(requiredTestElement(recordedParams, 0).metrics).toEqual(['loss']);
   });
 
   it('Custom callback params: has validation', async () => {
@@ -1447,14 +1447,14 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       validationSplit,
       callbacks: new CustomCallbackForTest(recordedParams)
     });
-    expect(recordedParams[0].epochs).toEqual(epochs);
-    expect(recordedParams[0].initialEpoch).toEqual(0);
-    expect(recordedParams[0].samples)
+    expect(requiredTestElement(recordedParams, 0).epochs).toEqual(epochs);
+    expect(requiredTestElement(recordedParams, 0).initialEpoch).toEqual(0);
+    expect(requiredTestElement(recordedParams, 0).samples)
         .toEqual(Math.round(inputs.shape[0] * (1 - validationSplit)));
-    expect(recordedParams[0].steps).toEqual(null);
-    expect(recordedParams[0].batchSize).toEqual(batchSize);
-    expect(recordedParams[0].doValidation).toEqual(true);
-    expect(recordedParams[0].metrics).toEqual(['loss', 'val_loss']);
+    expect(requiredTestElement(recordedParams, 0).steps).toEqual(null);
+    expect(requiredTestElement(recordedParams, 0).batchSize).toEqual(batchSize);
+    expect(requiredTestElement(recordedParams, 0).doValidation).toEqual(true);
+    expect(requiredTestElement(recordedParams, 0).metrics).toEqual(['loss', 'val_loss']);
   });
 
   class StopAfterNEpochs extends tfl.Callback {
@@ -2579,19 +2579,19 @@ describeMathCPUAndWebGL2('LayersModel.trainOnBatch', () => {
     const ys2 = tfc.ones([batchSize, 1]);
     let losses = await model.trainOnBatch([xs1, xs2], [ys1, ys2]) as number[];
     expect(losses.length).toEqual(3);
-    expect(losses[0]).toBeCloseTo(1.6931472);
-    expect(losses[1]).toBeCloseTo(1.0);
-    expect(losses[2]).toBeCloseTo(0.6931472);
+    expect(requiredTestElement(losses, 0)).toBeCloseTo(1.6931472);
+    expect(requiredTestElement(losses, 1)).toBeCloseTo(1.0);
+    expect(requiredTestElement(losses, 2)).toBeCloseTo(0.6931472);
     losses = await model.trainOnBatch([xs1, xs2], [ys1, ys2]) as number[];
     expect(losses.length).toEqual(3);
-    expect(losses[0]).toBeCloseTo(1.3531253);
-    expect(losses[1]).toBeCloseTo(0.6724);
-    expect(losses[2]).toBeCloseTo(0.68072534);
+    expect(requiredTestElement(losses, 0)).toBeCloseTo(1.3531253);
+    expect(requiredTestElement(losses, 1)).toBeCloseTo(0.6724);
+    expect(requiredTestElement(losses, 2)).toBeCloseTo(0.68072534);
     losses = await model.trainOnBatch([xs1, xs2], [ys1, ys2]) as number[];
     expect(losses.length).toEqual(3);
-    expect(losses[0]).toBeCloseTo(1.1207337);
-    expect(losses[1]).toBeCloseTo(0.45212176);
-    expect(losses[2]).toBeCloseTo(0.66861194);
+    expect(requiredTestElement(losses, 0)).toBeCloseTo(1.1207337);
+    expect(requiredTestElement(losses, 1)).toBeCloseTo(0.45212176);
+    expect(requiredTestElement(losses, 2)).toBeCloseTo(0.66861194);
   });
 
   // Reference Python Keras code.
@@ -2755,8 +2755,8 @@ describeMathCPUAndGPU('LayersModel.evaluate', () => {
         } else {
           const lossesArray = losses as Scalar[];
           expect(lossesArray.length).toEqual(2);
-          expectTensorsClose(lossesArray[0], scalar(1));
-          expectTensorsClose(lossesArray[1], scalar(1));
+          expectTensorsClose(requiredTestElement(lossesArray, 0), scalar(1));
+          expectTensorsClose(requiredTestElement(lossesArray, 1), scalar(1));
         }
       });
     }
@@ -2775,8 +2775,8 @@ describeMathCPUAndGPU('LayersModel.evaluate', () => {
     const numTensors0 = memory().numTensors;
     const evalOuts = model.evaluate(xs, ys, {batchSize: 4}) as Tensor[];
     expect(evalOuts.length).toEqual(2);     // Loss and acc.
-    expect(evalOuts[0].shape).toEqual([]);  // Loss as a scalar.
-    expect(evalOuts[1].shape).toEqual([]);  // Acc as a scalar.
+    expect(requiredTestElement(evalOuts, 0).shape).toEqual([]);  // Loss as a scalar.
+    expect(requiredTestElement(evalOuts, 1).shape).toEqual([]);  // Acc as a scalar.
     tfc.dispose(evalOuts);
     // Assert no memory leak.
     expect(memory().numTensors).toEqual(numTensors0);
@@ -2815,15 +2815,15 @@ describe('LayersModel trainable setter and getter', () => {
     model.trainable = false;
     expect(model.trainable).toEqual(false);
     // The trainable property of the layers should be unaffected.
-    expect(model.layers[0].trainable).toEqual(true);
-    expect(model.layers[1].trainable).toEqual(false);
-    expect(model.layers[2].trainable).toEqual(true);
+    expect(requiredTestElement(model.layers, 0).trainable).toEqual(true);
+    expect(requiredTestElement(model.layers, 1).trainable).toEqual(false);
+    expect(requiredTestElement(model.layers, 2).trainable).toEqual(true);
 
     model.trainable = true;
     expect(model.trainable).toEqual(true);
-    expect(model.layers[0].trainable).toEqual(true);
-    expect(model.layers[1].trainable).toEqual(false);
-    expect(model.layers[2].trainable).toEqual(true);
+    expect(requiredTestElement(model.layers, 0).trainable).toEqual(true);
+    expect(requiredTestElement(model.layers, 1).trainable).toEqual(false);
+    expect(requiredTestElement(model.layers, 2).trainable).toEqual(true);
   });
 
   it('Setting trainable of model sets trainable bit of Variable', async () => {
@@ -2832,15 +2832,15 @@ describe('LayersModel trainable setter and getter', () => {
         tfl.layers.dense({units: 3, activation: 'relu', inputShape: [4]}));
     model.add(tfl.layers.dense({units: 1, kernelInitializer: 'ones'}));
     model.trainable = false;
-    expect(model.layers[0].weights[0].trainable).toEqual(false);
-    expect(model.layers[0].weights[1].trainable).toEqual(false);
-    expect(model.layers[1].weights[0].trainable).toEqual(false);
-    expect(model.layers[1].weights[1].trainable).toEqual(false);
+    expect(requiredTestElement(model.layers, 0).weights[0].trainable).toEqual(false);
+    expect(requiredTestElement(model.layers, 0).weights[1].trainable).toEqual(false);
+    expect(requiredTestElement(model.layers, 1).weights[0].trainable).toEqual(false);
+    expect(requiredTestElement(model.layers, 1).weights[1].trainable).toEqual(false);
     model.trainable = true;
-    expect(model.layers[0].weights[0].trainable).toEqual(true);
-    expect(model.layers[0].weights[1].trainable).toEqual(true);
-    expect(model.layers[1].weights[0].trainable).toEqual(true);
-    expect(model.layers[1].weights[1].trainable).toEqual(true);
+    expect(requiredTestElement(model.layers, 0).weights[0].trainable).toEqual(true);
+    expect(requiredTestElement(model.layers, 0).weights[1].trainable).toEqual(true);
+    expect(requiredTestElement(model.layers, 1).weights[0].trainable).toEqual(true);
+    expect(requiredTestElement(model.layers, 1).weights[1].trainable).toEqual(true);
   });
 
   it('model.trainable respects layer.trainable', async () => {
@@ -2849,13 +2849,13 @@ describe('LayersModel trainable setter and getter', () => {
         tfl.layers.dense({units: 3, activation: 'relu', inputShape: [4]}));
     model.add(tfl.layers.dense({units: 1}));
     expect(model.trainableWeights.length).toEqual(4);
-    model.layers[0].trainable = false;
+    requiredTestElement(model.layers, 0).trainable = false;
     expect(model.trainableWeights.length).toEqual(2);
     model.trainable = false;
     expect(model.trainableWeights.length).toEqual(0);
     model.trainable = true;
     expect(model.trainableWeights.length).toEqual(2);
-    model.layers[0].trainable = true;
+    requiredTestElement(model.layers, 0).trainable = true;
     expect(model.trainableWeights.length).toEqual(4);
     model.trainable = false;
     expect(model.trainableWeights.length).toEqual(0);
@@ -2905,29 +2905,29 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
     const outputs = model.execute(inputs, [
       layers['reshape1'].name, layers['concat'].name, layers['input2'].name
     ]) as Tensor[];
-    expectTensorsClose(outputs[0], zeros([1, 3, 2]));
-    expectTensorsClose(outputs[1], zeros([1, 3, 6]));
-    expectTensorsClose(outputs[2], zeros([1, 3, 4]));
+    expectTensorsClose(requiredTestElement(outputs, 0), zeros([1, 3, 2]));
+    expectTensorsClose(requiredTestElement(outputs, 1), zeros([1, 3, 6]));
+    expectTensorsClose(requiredTestElement(outputs, 2), zeros([1, 3, 4]));
   });
 
   it('Functional model: Dictionary of inputs', () => {
     const [model, layers] = createFunctionalModel();
-    const inputName1 = model.inputs[0].name;
-    const inputName2 = model.inputs[1].name;
+    const inputName1 = requiredTestElement(model.inputs, 0).name;
+    const inputName2 = requiredTestElement(model.inputs, 1).name;
     const inputs: NamedTensorMap = {};
     inputs[inputName1] = zeros([1, 2, 3]);
     inputs[inputName2] = zeros([1, 3, 4]);
     const outputs = model.execute(inputs, [
       layers['reshape1'].name, layers['concat'].name, layers['input2'].name
     ]) as Tensor[];
-    expectTensorsClose(outputs[0], zeros([1, 3, 2]));
-    expectTensorsClose(outputs[1], zeros([1, 3, 6]));
-    expectTensorsClose(outputs[2], zeros([1, 3, 4]));
+    expectTensorsClose(requiredTestElement(outputs, 0), zeros([1, 3, 2]));
+    expectTensorsClose(requiredTestElement(outputs, 1), zeros([1, 3, 6]));
+    expectTensorsClose(requiredTestElement(outputs, 2), zeros([1, 3, 4]));
   });
 
   it('Functional model: missing input in dictionary throws Error', () => {
     const [model, layers] = createFunctionalModel();
-    const inputName2 = model.inputs[1].name;
+    const inputName2 = requiredTestElement(model.inputs, 1).name;
     const inputs: NamedTensorMap = {};
     inputs[inputName2] = zeros([1, 3, 4]);
     expect(() => model.execute(inputs, layers['reshape1'].name))
@@ -2963,13 +2963,13 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
     const model = createSequentialModel();
     const input = zeros([2, 4]);
     const outputs = model.execute(input, [
-      (model.layers[2].output as tfl.SymbolicTensor).name,
-      (model.layers[1].output as tfl.SymbolicTensor).name,
-      (model.layers[0].output as tfl.SymbolicTensor).name,
+      (requiredTestElement(model.layers, 2).output as tfl.SymbolicTensor).name,
+      (requiredTestElement(model.layers, 1).output as tfl.SymbolicTensor).name,
+      (requiredTestElement(model.layers, 0).output as tfl.SymbolicTensor).name,
     ]) as Tensor[];
-    expectTensorsClose(outputs[0], zeros([2, 1]));
-    expectTensorsClose(outputs[1], zeros([2, 3]));
-    expectTensorsClose(outputs[2], zeros([2, 6]));
+    expectTensorsClose(requiredTestElement(outputs, 0), zeros([2, 1]));
+    expectTensorsClose(requiredTestElement(outputs, 1), zeros([2, 3]));
+    expectTensorsClose(requiredTestElement(outputs, 2), zeros([2, 6]));
   });
 
   it('Sequential model: length-1 Array input', () => {
@@ -2977,7 +2977,7 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
     const input = [zeros([2, 4])];
     const output = model.execute(
                        input,
-                       (model.layers[1].output as tfl.SymbolicTensor).name,
+                       (requiredTestElement(model.layers, 1).output as tfl.SymbolicTensor).name,
                        ) as Tensor;
     expectTensorsClose(output, zeros([2, 3]));
   });
@@ -2988,7 +2988,7 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
     inputs[(model.input as SymbolicTensor).name] = zeros([2, 4]);
     const output = model.execute(
                        inputs,
-                       (model.layers[1].output as tfl.SymbolicTensor).name,
+                       (requiredTestElement(model.layers, 1).output as tfl.SymbolicTensor).name,
                        ) as Tensor;
     expectTensorsClose(output, zeros([2, 3]));
   });

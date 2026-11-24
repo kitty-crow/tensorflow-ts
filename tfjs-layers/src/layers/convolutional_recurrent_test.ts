@@ -22,7 +22,7 @@ import {modelFromJSON} from '../models';
 import {L1L2, serializeRegularizer} from '../regularizers';
 import {getCartesianProductOfValues} from '../utils/generic_utils';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
 
 import {ConvLSTM2DArgs, ConvLSTM2DCellArgs} from './convolutional_recurrent';
 
@@ -146,7 +146,7 @@ describeMathCPU('ConvLSTM2D Symbolic', () => {
   const filters = 5;
   const kernelSize = [3, 3];
 
-  const outputSize = inputSize - kernelSize[0] + 1;
+  const outputSize = inputSize - requiredTestElement(kernelSize, 0) + 1;
 
   describe('should return the correct output shape', () => {
     it('for returnSequences=false, returnState=false', () => {
@@ -170,9 +170,9 @@ describeMathCPU('ConvLSTM2D Symbolic', () => {
       const outputShape = [batchSize, outputSize, outputSize, filters];
 
       expect(output.length).toEqual(3);
-      expect(output[0].shape).toEqual(outputShape);
-      expect(output[1].shape).toEqual(outputShape);
-      expect(output[2].shape).toEqual(outputShape);
+      expect(requiredTestElement(output, 0).shape).toEqual(outputShape);
+      expect(requiredTestElement(output, 1).shape).toEqual(outputShape);
+      expect(requiredTestElement(output, 2).shape).toEqual(outputShape);
     });
 
     it('for returnSequences=true, returnState=false', () => {
@@ -208,9 +208,9 @@ describeMathCPU('ConvLSTM2D Symbolic', () => {
       const stateShape = [batchSize, outputSize, outputSize, filters];
 
       expect(output.length).toEqual(3);
-      expect(output[0].shape).toEqual(outputShape);
-      expect(output[1].shape).toEqual(stateShape);
-      expect(output[2].shape).toEqual(stateShape);
+      expect(requiredTestElement(output, 0).shape).toEqual(outputShape);
+      expect(requiredTestElement(output, 1).shape).toEqual(stateShape);
+      expect(requiredTestElement(output, 2).shape).toEqual(stateShape);
     });
   });
 
@@ -284,8 +284,8 @@ describeMathCPU('ConvLSTM2D Symbolic', () => {
 
       const yPrime = loadedModel.predict(x) as tfc.Tensor;
 
-      expect(model.inputs[0].shape).toEqual(loadedModel.inputs[0].shape);
-      expect(model.outputs[0].shape).toEqual(loadedModel.outputs[0].shape);
+      expect(requiredTestElement(model.inputs, 0).shape).toEqual(requiredTestElement(loadedModel.inputs, 0).shape);
+      expect(requiredTestElement(model.outputs, 0).shape).toEqual(requiredTestElement(loadedModel.outputs, 0).shape);
       expectTensorsClose(yPrime, y);
     });
 
@@ -318,8 +318,8 @@ describeMathCPU('ConvLSTM2D Symbolic', () => {
 
       const yPrime = loadedModel.predict(x) as tfc.Tensor;
 
-      expect(model.inputs[0].shape).toEqual(loadedModel.inputs[0].shape);
-      expect(model.outputs[0].shape).toEqual(loadedModel.outputs[0].shape);
+      expect(requiredTestElement(model.inputs, 0).shape).toEqual(requiredTestElement(loadedModel.inputs, 0).shape);
+      expect(requiredTestElement(model.outputs, 0).shape).toEqual(requiredTestElement(loadedModel.outputs, 0).shape);
       expectTensorsClose(yPrime, y);
     });
   });
@@ -461,15 +461,15 @@ describeMathCPUAndWebGL2('ConvLSTM2D Tensor', () => {
 
           expect(output.length).toEqual(3);
 
-          expectTensorsClose(output[0], expectedOutput);
+          expectTensorsClose(requiredTestElement(output, 0), expectedOutput);
 
           expectTensorsClose(
-              output[1],
+              requiredTestElement(output, 1),
               tfc.mul(
                   tfc.scalar(expectedH),
                   tfc.ones([batchSize, outputSize, outputSize, filters])));
           expectTensorsClose(
-              output[2],
+              requiredTestElement(output, 2),
               tfc.mul(
                   tfc.scalar(expectedC),
                   tfc.ones([batchSize, outputSize, outputSize, filters])));

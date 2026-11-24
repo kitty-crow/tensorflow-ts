@@ -17,31 +17,31 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('unstack', ALL_ENVS, () => {
   it('unstack by default', async () => {
     const x = tf.tensor2d([1, 2, 3, 4, 5, 6, 7, 8], [2, 4]);
     const res = tf.unstack(x);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(1);
-    expect(res[0].shape).toEqual([4]);
-    expectArraysClose(await res[0].data(), [1, 2, 3, 4]);
-    expect(res[1].rank).toEqual(1);
-    expect(res[1].shape).toEqual([4]);
-    expectArraysClose(await res[1].data(), [5, 6, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(1);
+    expect(requiredTestElement(res, 0).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 3, 4]);
+    expect(requiredTestElement(res, 1).rank).toEqual(1);
+    expect(requiredTestElement(res, 1).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [5, 6, 7, 8]);
   });
 
   it('chain api', async () => {
     const x = tf.tensor2d([1, 2, 3, 4, 5, 6, 7, 8], [2, 4]);
     const res = x.unstack();
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(1);
-    expect(res[0].shape).toEqual([4]);
-    expectArraysClose(await res[0].data(), [1, 2, 3, 4]);
-    expect(res[1].rank).toEqual(1);
-    expect(res[1].shape).toEqual([4]);
-    expectArraysClose(await res[1].data(), [5, 6, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(1);
+    expect(requiredTestElement(res, 0).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 3, 4]);
+    expect(requiredTestElement(res, 1).rank).toEqual(1);
+    expect(requiredTestElement(res, 1).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [5, 6, 7, 8]);
   });
 
   it('unstack with negative integer axis', async () => {
@@ -49,141 +49,141 @@ describeWithFlags('unstack', ALL_ENVS, () => {
 
     let res = tf.unstack(x, -1);
     expect(res.length).toEqual(4);
-    expect(res[0].rank).toEqual(1);
-    expect(res[0].shape).toEqual([2]);
-    expectArraysClose(await res[0].data(), [1, 5]);
-    expect(res[1].rank).toEqual(1);
-    expect(res[1].shape).toEqual([2]);
-    expectArraysClose(await res[1].data(), [2, 6]);
-    expect(res[2].rank).toEqual(1);
-    expect(res[2].shape).toEqual([2]);
-    expectArraysClose(await res[2].data(), [3, 7]);
-    expect(res[3].rank).toEqual(1);
-    expect(res[3].shape).toEqual([2]);
-    expectArraysClose(await res[3].data(), [4, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(1);
+    expect(requiredTestElement(res, 0).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 5]);
+    expect(requiredTestElement(res, 1).rank).toEqual(1);
+    expect(requiredTestElement(res, 1).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [2, 6]);
+    expect(requiredTestElement(res, 2).rank).toEqual(1);
+    expect(requiredTestElement(res, 2).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 2).data(), [3, 7]);
+    expect(requiredTestElement(res, 3).rank).toEqual(1);
+    expect(requiredTestElement(res, 3).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 3).data(), [4, 8]);
 
     res = tf.unstack(x, -2);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(1);
-    expect(res[0].shape).toEqual([4]);
-    expectArraysClose(await res[0].data(), [1, 2, 3, 4]);
-    expect(res[1].rank).toEqual(1);
-    expect(res[1].shape).toEqual([4]);
-    expectArraysClose(await res[1].data(), [5, 6, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(1);
+    expect(requiredTestElement(res, 0).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 3, 4]);
+    expect(requiredTestElement(res, 1).rank).toEqual(1);
+    expect(requiredTestElement(res, 1).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [5, 6, 7, 8]);
   });
 
   it('unstack into 3 tensors', async () => {
     const x = tf.tensor2d([1, 2, 3, 4, 5, 6], [3, 2]);
     const res = tf.unstack(x, 0);
     expect(res.length).toEqual(3);
-    expect(res[0].rank).toEqual(1);
-    expect(res[0].shape).toEqual([2]);
-    expectArraysClose(await res[0].data(), [1, 2]);
-    expect(res[1].rank).toEqual(1);
-    expect(res[1].shape).toEqual([2]);
-    expectArraysClose(await res[1].data(), [3, 4]);
-    expect(res[2].rank).toEqual(1);
-    expect(res[2].shape).toEqual([2]);
-    expectArraysClose(await res[2].data(), [5, 6]);
+    expect(requiredTestElement(res, 0).rank).toEqual(1);
+    expect(requiredTestElement(res, 0).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2]);
+    expect(requiredTestElement(res, 1).rank).toEqual(1);
+    expect(requiredTestElement(res, 1).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [3, 4]);
+    expect(requiredTestElement(res, 2).rank).toEqual(1);
+    expect(requiredTestElement(res, 2).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 2).data(), [5, 6]);
   });
 
   it('unstack by axis=1', async () => {
     const x = tf.tensor2d([1, 2, 3, 4, 5, 6, 7, 8], [2, 4]);
     const res = tf.unstack(x, 1);
     expect(res.length).toEqual(4);
-    expect(res[0].rank).toEqual(1);
-    expect(res[0].shape).toEqual([2]);
-    expectArraysClose(await res[0].data(), [1, 5]);
-    expect(res[1].rank).toEqual(1);
-    expect(res[1].shape).toEqual([2]);
-    expectArraysClose(await res[1].data(), [2, 6]);
-    expect(res[2].rank).toEqual(1);
-    expect(res[2].shape).toEqual([2]);
-    expectArraysClose(await res[2].data(), [3, 7]);
-    expect(res[3].rank).toEqual(1);
-    expect(res[3].shape).toEqual([2]);
-    expectArraysClose(await res[3].data(), [4, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(1);
+    expect(requiredTestElement(res, 0).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 5]);
+    expect(requiredTestElement(res, 1).rank).toEqual(1);
+    expect(requiredTestElement(res, 1).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [2, 6]);
+    expect(requiredTestElement(res, 2).rank).toEqual(1);
+    expect(requiredTestElement(res, 2).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 2).data(), [3, 7]);
+    expect(requiredTestElement(res, 3).rank).toEqual(1);
+    expect(requiredTestElement(res, 3).shape).toEqual([2]);
+    expectArraysClose(await requiredTestElement(res, 3).data(), [4, 8]);
   });
 
   it('unstack rank 3 tensor', async () => {
     const x = tf.tensor3d([1, 2, 3, 4, 5, 6, 7, 8], [2, 2, 2]);
     const res = tf.unstack(x);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(2);
-    expect(res[0].shape).toEqual([2, 2]);
-    expectArraysClose(await res[0].data(), [1, 2, 3, 4]);
-    expect(res[1].rank).toEqual(2);
-    expect(res[1].shape).toEqual([2, 2]);
-    expectArraysClose(await res[1].data(), [5, 6, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(2);
+    expect(requiredTestElement(res, 0).shape).toEqual([2, 2]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 3, 4]);
+    expect(requiredTestElement(res, 1).rank).toEqual(2);
+    expect(requiredTestElement(res, 1).shape).toEqual([2, 2]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [5, 6, 7, 8]);
   });
 
   it('unstack rank 3 tensor with axis=1', async () => {
     const x = tf.tensor3d([1, 2, 3, 4, 5, 6, 7, 8], [2, 2, 2]);
     const res = tf.unstack(x, 1);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(2);
-    expect(res[0].shape).toEqual([2, 2]);
-    expectArraysClose(await res[0].data(), [1, 2, 5, 6]);
-    expect(res[1].rank).toEqual(2);
-    expect(res[1].shape).toEqual([2, 2]);
-    expectArraysClose(await res[1].data(), [3, 4, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(2);
+    expect(requiredTestElement(res, 0).shape).toEqual([2, 2]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 5, 6]);
+    expect(requiredTestElement(res, 1).rank).toEqual(2);
+    expect(requiredTestElement(res, 1).shape).toEqual([2, 2]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [3, 4, 7, 8]);
   });
 
   it('unstack rank 3 tensor with axis=2', async () => {
     const x = tf.tensor3d([1, 2, 3, 4, 5, 6, 7, 8], [2, 2, 2]);
     const res = tf.unstack(x, 2);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(2);
-    expect(res[0].shape).toEqual([2, 2]);
-    expectArraysClose(await res[0].data(), [1, 3, 5, 7]);
-    expect(res[1].rank).toEqual(2);
-    expect(res[1].shape).toEqual([2, 2]);
-    expectArraysClose(await res[1].data(), [2, 4, 6, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(2);
+    expect(requiredTestElement(res, 0).shape).toEqual([2, 2]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 3, 5, 7]);
+    expect(requiredTestElement(res, 1).rank).toEqual(2);
+    expect(requiredTestElement(res, 1).shape).toEqual([2, 2]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [2, 4, 6, 8]);
   });
 
   it('unstack rank 4 tensor', async () => {
     const x = tf.tensor4d([1, 2, 3, 4, 5, 6, 7, 8], [2, 2, 2, 1]);
     const res = tf.unstack(x);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(3);
-    expect(res[0].shape).toEqual([2, 2, 1]);
-    expectArraysClose(await res[0].data(), [1, 2, 3, 4]);
-    expect(res[1].rank).toEqual(3);
-    expect(res[1].shape).toEqual([2, 2, 1]);
-    expectArraysClose(await res[1].data(), [5, 6, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(3);
+    expect(requiredTestElement(res, 0).shape).toEqual([2, 2, 1]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 3, 4]);
+    expect(requiredTestElement(res, 1).rank).toEqual(3);
+    expect(requiredTestElement(res, 1).shape).toEqual([2, 2, 1]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [5, 6, 7, 8]);
   });
 
   it('unstack rank 4 tensor with axis=1', async () => {
     const x = tf.tensor4d([1, 2, 3, 4, 5, 6, 7, 8], [2, 2, 2, 1]);
     const res = tf.unstack(x, 1);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(3);
-    expect(res[0].shape).toEqual([2, 2, 1]);
-    expectArraysClose(await res[0].data(), [1, 2, 5, 6]);
-    expect(res[1].rank).toEqual(3);
-    expect(res[1].shape).toEqual([2, 2, 1]);
-    expectArraysClose(await res[1].data(), [3, 4, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(3);
+    expect(requiredTestElement(res, 0).shape).toEqual([2, 2, 1]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 5, 6]);
+    expect(requiredTestElement(res, 1).rank).toEqual(3);
+    expect(requiredTestElement(res, 1).shape).toEqual([2, 2, 1]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [3, 4, 7, 8]);
   });
 
   it('unstack rank 4 tensor with axis=2', async () => {
     const x = tf.tensor4d([1, 2, 3, 4, 5, 6, 7, 8], [2, 2, 2, 1]);
     const res = tf.unstack(x, 2);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(3);
-    expect(res[0].shape).toEqual([2, 2, 1]);
-    expectArraysClose(await res[0].data(), [1, 3, 5, 7]);
-    expect(res[1].rank).toEqual(3);
-    expect(res[1].shape).toEqual([2, 2, 1]);
-    expectArraysClose(await res[1].data(), [2, 4, 6, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(3);
+    expect(requiredTestElement(res, 0).shape).toEqual([2, 2, 1]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 3, 5, 7]);
+    expect(requiredTestElement(res, 1).rank).toEqual(3);
+    expect(requiredTestElement(res, 1).shape).toEqual([2, 2, 1]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [2, 4, 6, 8]);
   });
 
   it('unstack rank 4 tensor with axis=3', async () => {
     const x = tf.tensor4d([1, 2, 3, 4, 5, 6, 7, 8], [2, 2, 2, 1]);
     const res = tf.unstack(x, 3);
     expect(res.length).toEqual(1);
-    expect(res[0].rank).toEqual(3);
-    expect(res[0].shape).toEqual([2, 2, 2]);
-    expectArraysClose(await res[0].data(), [1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(3);
+    expect(requiredTestElement(res, 0).shape).toEqual([2, 2, 2]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 3, 4, 5, 6, 7, 8]);
   });
 
   it('throws when passed a non-tensor', () => {
@@ -210,12 +210,12 @@ describeWithFlags('unstack', ALL_ENVS, () => {
     const x = [[1, 2, 3, 4], [5, 6, 7, 8]];
     const res = tf.unstack(x);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(1);
-    expect(res[0].shape).toEqual([4]);
-    expectArraysClose(await res[0].data(), [1, 2, 3, 4]);
-    expect(res[1].rank).toEqual(1);
-    expect(res[1].shape).toEqual([4]);
-    expectArraysClose(await res[1].data(), [5, 6, 7, 8]);
+    expect(requiredTestElement(res, 0).rank).toEqual(1);
+    expect(requiredTestElement(res, 0).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), [1, 2, 3, 4]);
+    expect(requiredTestElement(res, 1).rank).toEqual(1);
+    expect(requiredTestElement(res, 1).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), [5, 6, 7, 8]);
   });
 
   it('accepts string', async () => {
@@ -223,12 +223,12 @@ describeWithFlags('unstack', ALL_ENVS, () => {
         [['one', 'two', 'three', 'four'], ['five', 'six', 'seven', 'eight']];
     const res = tf.unstack(x);
     expect(res.length).toEqual(2);
-    expect(res[0].rank).toEqual(1);
-    expect(res[0].shape).toEqual([4]);
-    expectArraysClose(await res[0].data(), ['one', 'two', 'three', 'four']);
-    expect(res[1].rank).toEqual(1);
-    expect(res[1].shape).toEqual([4]);
-    expectArraysClose(await res[1].data(), ['five', 'six', 'seven', 'eight']);
+    expect(requiredTestElement(res, 0).rank).toEqual(1);
+    expect(requiredTestElement(res, 0).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 0).data(), ['one', 'two', 'three', 'four']);
+    expect(requiredTestElement(res, 1).rank).toEqual(1);
+    expect(requiredTestElement(res, 1).shape).toEqual([4]);
+    expectArraysClose(await requiredTestElement(res, 1).data(), ['five', 'six', 'seven', 'eight']);
   });
 
   it('grad of unstack axis=0', async () => {

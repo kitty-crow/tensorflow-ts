@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('softmax', ALL_ENVS, () => {
   it('regular test', async () => {
@@ -95,9 +95,9 @@ describeWithFlags('softmax', ALL_ENVS, () => {
     const yVals = await y.array();
     expect(dx.shape).toEqual(x.shape);
     expectArraysClose(await dx.data(), [
-      (dyVals[0] - sumVals) * yVals[0],
-      (dyVals[1] - sumVals) * yVals[1],
-      (dyVals[2] - sumVals) * yVals[2],
+      (requiredTestElement(dyVals, 0) - sumVals) * requiredTestElement(yVals, 0),
+      (requiredTestElement(dyVals, 1) - sumVals) * requiredTestElement(yVals, 1),
+      (requiredTestElement(dyVals, 2) - sumVals) * requiredTestElement(yVals, 2),
     ]);
   });
 
@@ -123,12 +123,12 @@ describeWithFlags('softmax', ALL_ENVS, () => {
 
     expect(dx.shape).toEqual(x.shape);
     expectArraysClose(await dx.data(), [
-      (dyVals[0][0] - sumVals[0]) * yVals[0][0],
-      (dyVals[0][1] - sumVals[0]) * yVals[0][1],
-      (dyVals[0][2] - sumVals[0]) * yVals[0][2],
-      (dyVals[1][0] - sumVals[1]) * yVals[1][0],
-      (dyVals[1][1] - sumVals[1]) * yVals[1][1],
-      (dyVals[1][2] - sumVals[1]) * yVals[1][2]
+      (requiredTestElement(requiredTestElement(dyVals, 0), 0) - requiredTestElement(sumVals, 0)) * requiredTestElement(requiredTestElement(yVals, 0), 0),
+      (requiredTestElement(requiredTestElement(dyVals, 0), 1) - requiredTestElement(sumVals, 0)) * requiredTestElement(requiredTestElement(yVals, 0), 1),
+      (requiredTestElement(requiredTestElement(dyVals, 0), 2) - requiredTestElement(sumVals, 0)) * requiredTestElement(requiredTestElement(yVals, 0), 2),
+      (requiredTestElement(requiredTestElement(dyVals, 1), 0) - requiredTestElement(sumVals, 1)) * requiredTestElement(requiredTestElement(yVals, 1), 0),
+      (requiredTestElement(requiredTestElement(dyVals, 1), 1) - requiredTestElement(sumVals, 1)) * requiredTestElement(requiredTestElement(yVals, 1), 1),
+      (requiredTestElement(requiredTestElement(dyVals, 1), 2) - requiredTestElement(sumVals, 1)) * requiredTestElement(requiredTestElement(yVals, 1), 2)
     ]);
   });
 

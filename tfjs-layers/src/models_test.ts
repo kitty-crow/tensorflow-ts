@@ -17,7 +17,7 @@ import {Reshape} from './layers/core';
 import {deserialize} from './layers/serialization';
 import {loadLayersModel, ModelAndWeightsConfig, modelFromJSON} from './models';
 import {convertPythonicToTs, convertTsToPythonic} from './utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, checkedNumericAt} from './utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, checkedNumericAt, requiredTestElement} from './utils/test_utils';
 import {version as layersVersion} from './version';
 
 const OCTET_STREAM_TYPE = 'application/octet-stream';
@@ -191,12 +191,12 @@ describeMathCPU('Nested model topology', () => {
         tfl.sequential({layers: [innerModel, tfl.layers.dense({units: 1})]});
     const weights = outerModel.getWeights();
     expect(weights.length).toEqual(6);
-    expect(weights[0].shape).toEqual([4, 4]);
-    expect(weights[1].shape).toEqual([4]);
-    expect(weights[2].shape).toEqual([4, 2]);
-    expect(weights[3].shape).toEqual([2]);
-    expect(weights[4].shape).toEqual([2, 1]);
-    expect(weights[5].shape).toEqual([1]);
+    expect(requiredTestElement(weights, 0).shape).toEqual([4, 4]);
+    expect(requiredTestElement(weights, 1).shape).toEqual([4]);
+    expect(requiredTestElement(weights, 2).shape).toEqual([4, 2]);
+    expect(requiredTestElement(weights, 3).shape).toEqual([2]);
+    expect(requiredTestElement(weights, 4).shape).toEqual([2, 1]);
+    expect(requiredTestElement(weights, 5).shape).toEqual([1]);
   });
 
   it('setWeights() works for nested sequential model', () => {
@@ -381,9 +381,9 @@ describeMathCPU('modelFromJSON', () => {
     expect(model.name).toEqual('test');
     expect(model.layers.length).toEqual(2);
     expect(model.inputs.length).toEqual(1);
-    expect(model.inputs[0].shape).toEqual([null, 32]);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 32]);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 32]);
+    expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 32]);
   });
 
   it('toJSON and modelFromJSON', async () => {
@@ -536,9 +536,9 @@ describeMathCPU('modelFromJSON', () => {
 
     expect(model.name.indexOf('BarSequential123')).toEqual(0);
     expect(model.inputs.length).toEqual(1);
-    expect(model.inputs[0].shape).toEqual([null, 4]);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 4]);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 1]);
+    expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 1]);
   });
 });
 
@@ -602,9 +602,9 @@ describeMathCPU('loadLayersModel from URL', () => {
         modelFromJSON({modelTopology, weightsManifest, pathPrefix})
             .then(model => {
               expectTensorsClose(
-                  model.weights[0].read(), ones([32, 32], 'float32'));
+                  requiredTestElement(model.weights, 0).read(), ones([32, 32], 'float32'));
               expectTensorsClose(
-                  model.weights[1].read(), ones([32], 'float32'));
+                  requiredTestElement(model.weights, 1).read(), ones([32], 'float32'));
             })
             .then(done)
             .catch(done.fail);
@@ -662,13 +662,13 @@ describeMathCPU('loadLayersModel from URL', () => {
     const model = await loadLayersModel('model/model.json');
     expect(model.layers.length).toEqual(2);
     expect(model.inputs.length).toEqual(1);
-    expect(model.inputs[0].shape).toEqual([null, 32]);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 32]);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 32]);
+    expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 32]);
     const weightValues = model.getWeights();
     expect(weightValues.length).toEqual(2);
-    expectTensorsClose(weightValues[0], ones([32, 32]));
-    expectTensorsClose(weightValues[1], zeros([32]));
+    expectTensorsClose(requiredTestElement(weightValues, 0), ones([32, 32]));
+    expectTensorsClose(requiredTestElement(weightValues, 1), zeros([32]));
   });
 
   it('loadLayersModel: with onProgress callback from relative path',
@@ -728,13 +728,13 @@ describeMathCPU('loadLayersModel from URL', () => {
        });
        expect(model.layers.length).toEqual(2);
        expect(model.inputs.length).toEqual(1);
-       expect(model.inputs[0].shape).toEqual([null, 32]);
+       expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 32]);
        expect(model.outputs.length).toEqual(1);
-       expect(model.outputs[0].shape).toEqual([null, 32]);
+       expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 32]);
        const weightValues = model.getWeights();
        expect(weightValues.length).toEqual(2);
-       expectTensorsClose(weightValues[0], ones([32, 32]));
-       expectTensorsClose(weightValues[1], zeros([32]));
+       expectTensorsClose(requiredTestElement(weightValues, 0), ones([32, 32]));
+       expectTensorsClose(requiredTestElement(weightValues, 1), zeros([32]));
        // There are three files: a JSON file and two weight files. So the
        // progress callback should have been called four times (twice the weight
        // files' number).
@@ -796,13 +796,13 @@ describeMathCPU('loadLayersModel from URL', () => {
     });
     expect(model.layers.length).toEqual(2);
     expect(model.inputs.length).toEqual(1);
-    expect(model.inputs[0].shape).toEqual([null, 32]);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 32]);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 32]);
+    expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 32]);
     const weightValues = model.getWeights();
     expect(weightValues.length).toEqual(2);
-    expectTensorsClose(weightValues[0], ones([32, 32]));
-    expectTensorsClose(weightValues[1], zeros([32]));
+    expectTensorsClose(requiredTestElement(weightValues, 0), ones([32, 32]));
+    expectTensorsClose(requiredTestElement(weightValues, 1), zeros([32]));
     // There are three files: a JSON file and two weight files. So the progress
     // callback should have been called four times (twice the weight files'
     // number).
@@ -999,15 +999,15 @@ describeMathCPU('loadLayersModel from URL', () => {
        const model = await loadLayersModel('model/model.json');
        expect(model.layers.length).toEqual(2);
        expect(model.inputs.length).toEqual(1);
-       expect(model.inputs[0].shape).toEqual([null, 10]);
+       expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 10]);
        expect(model.outputs.length).toEqual(1);
-       expect(model.outputs[0].shape).toEqual([null, 1]);
+       expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 1]);
        const weightValues = model.getWeights();
        expect(weightValues.length).toEqual(4);
-       expectTensorsClose(weightValues[0], ones([10, 2]));
-       expectTensorsClose(weightValues[1], zeros([2]));
-       expectTensorsClose(weightValues[2], zeros([2, 1]));
-       expectTensorsClose(weightValues[3], ones([1]));
+       expectTensorsClose(requiredTestElement(weightValues, 0), ones([10, 2]));
+       expectTensorsClose(requiredTestElement(weightValues, 1), zeros([2]));
+       expectTensorsClose(requiredTestElement(weightValues, 2), zeros([2, 1]));
+       expectTensorsClose(requiredTestElement(weightValues, 3), ones([1]));
      });
 
   it('load topology and weights: non-array Sequential config', async () => {
@@ -1081,15 +1081,15 @@ describeMathCPU('loadLayersModel from URL', () => {
     expect(model.name.indexOf('Foo123Sequential')).toEqual(0);
     expect(model.layers.length).toEqual(2);
     expect(model.inputs.length).toEqual(1);
-    expect(model.inputs[0].shape).toEqual([null, 10]);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 10]);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 1]);
+    expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 1]);
     const weightValues = model.getWeights();
     expect(weightValues.length).toEqual(4);
-    expectTensorsClose(weightValues[0], ones([10, 2]));
-    expectTensorsClose(weightValues[1], zeros([2]));
-    expectTensorsClose(weightValues[2], zeros([2, 1]));
-    expectTensorsClose(weightValues[3], ones([1]));
+    expectTensorsClose(requiredTestElement(weightValues, 0), ones([10, 2]));
+    expectTensorsClose(requiredTestElement(weightValues, 1), zeros([2]));
+    expectTensorsClose(requiredTestElement(weightValues, 2), zeros([2, 1]));
+    expectTensorsClose(requiredTestElement(weightValues, 3), ones([1]));
   });
 
   it('load topology and weights with browserHTTPRequest with requestInit',
@@ -1157,13 +1157,13 @@ describeMathCPU('loadLayersModel from URL', () => {
            }));
        expect(model.layers.length).toEqual(2);
        expect(model.inputs.length).toEqual(1);
-       expect(model.inputs[0].shape).toEqual([null, 32]);
+       expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 32]);
        expect(model.outputs.length).toEqual(1);
-       expect(model.outputs[0].shape).toEqual([null, 32]);
+       expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 32]);
        const weightValues = model.getWeights();
        expect(weightValues.length).toEqual(2);
-       expectTensorsClose(weightValues[0], ones([32, 32]));
-       expectTensorsClose(weightValues[1], zeros([32]));
+       expectTensorsClose(requiredTestElement(weightValues, 0), ones([32, 32]));
+       expectTensorsClose(requiredTestElement(weightValues, 1), zeros([32]));
 
        // Verify that the headers and credentials are sent via
        // `fetch` properly.
@@ -1225,13 +1225,13 @@ describeMathCPU('loadLayersModel from URL', () => {
              `${protocol}localhost:8888/models/model.json`);
          expect(model.layers.length).toEqual(2);
          expect(model.inputs.length).toEqual(1);
-         expect(model.inputs[0].shape).toEqual([null, 32]);
+         expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 32]);
          expect(model.outputs.length).toEqual(1);
-         expect(model.outputs[0].shape).toEqual([null, 32]);
+         expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 32]);
          const weightValues = model.getWeights();
          expect(weightValues.length).toEqual(2);
-         expectTensorsClose(weightValues[0], ones([32, 32]));
-         expectTensorsClose(weightValues[1], zeros([32]));
+         expectTensorsClose(requiredTestElement(weightValues, 0), ones([32, 32]));
+         expectTensorsClose(requiredTestElement(weightValues, 1), zeros([32]));
        });
   }
 
@@ -1290,12 +1290,12 @@ describeMathCPU('loadLayersModel from URL', () => {
     configJson['config']['layers'][1]['config']['name'] = denseLayerName;
     const model1 = await modelFromJSON(
         {modelTopology: configJson, weightsManifest, pathPrefix: '.'});
-    expect(model1.weights[0].name).toEqual('dense_uniqueify/kernel');
-    expect(model1.weights[0].originalName).toEqual('dense_uniqueify/kernel');
-    expect(model1.weights[1].name).toEqual('dense_uniqueify/bias');
-    expect(model1.weights[1].originalName).toEqual('dense_uniqueify/bias');
-    expectTensorsClose(model1.weights[0].read(), ones([32, 32], 'float32'));
-    expectTensorsClose(model1.weights[1].read(), ones([32], 'float32'));
+    expect(requiredTestElement(model1.weights, 0).name).toEqual('dense_uniqueify/kernel');
+    expect(requiredTestElement(model1.weights, 0).originalName).toEqual('dense_uniqueify/kernel');
+    expect(requiredTestElement(model1.weights, 1).name).toEqual('dense_uniqueify/bias');
+    expect(requiredTestElement(model1.weights, 1).originalName).toEqual('dense_uniqueify/bias');
+    expectTensorsClose(requiredTestElement(model1.weights, 0).read(), ones([32, 32], 'float32'));
+    expectTensorsClose(requiredTestElement(model1.weights, 1).read(), ones([32], 'float32'));
 
     // On the second load, the variable names will be uniqueified. This
     // test succeeds only because we maintain the name mapping, so we
@@ -1304,13 +1304,13 @@ describeMathCPU('loadLayersModel from URL', () => {
     const model2 = await modelFromJSON(
         {modelTopology: configJson, weightsManifest, pathPrefix: '.'});
     // note unique suffix
-    expect(model2.weights[0].name).toEqual('dense_uniqueify/kernel_1');
-    expect(model2.weights[0].originalName).toEqual('dense_uniqueify/kernel');
+    expect(requiredTestElement(model2.weights, 0).name).toEqual('dense_uniqueify/kernel_1');
+    expect(requiredTestElement(model2.weights, 0).originalName).toEqual('dense_uniqueify/kernel');
     // note unique suffix
-    expect(model2.weights[1].name).toEqual('dense_uniqueify/bias_1');
-    expect(model2.weights[1].originalName).toEqual('dense_uniqueify/bias');
-    expectTensorsClose(model2.weights[0].read(), ones([32, 32], 'float32'));
-    expectTensorsClose(model2.weights[1].read(), ones([32], 'float32'));
+    expect(requiredTestElement(model2.weights, 1).name).toEqual('dense_uniqueify/bias_1');
+    expect(requiredTestElement(model2.weights, 1).originalName).toEqual('dense_uniqueify/bias');
+    expectTensorsClose(requiredTestElement(model2.weights, 0).read(), ones([32, 32], 'float32'));
+    expectTensorsClose(requiredTestElement(model2.weights, 1).read(), ones([32], 'float32'));
   });
 
   it('Repeated saving and loading of LayersModel works', () => {
@@ -1355,7 +1355,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // The first two weights belong to the model proper.
     // The next weight is the iterations counter.
     expect(weightSpecs.length).toEqual(2 + 1);
-    expect(weightSpecs[2].name).toEqual('iter');
+    expect(requiredTestElement(weightSpecs, 2).name).toEqual('iter');
     // The first part comes from the kernel of the dense layer, which has a
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
@@ -1411,11 +1411,11 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
     expect(weightSpecs.length).toEqual(2 + 1 + 2 * 2);
-    expect(weightSpecs[2].name).toEqual('iter');
-    expect(weightSpecs[3].name).toEqual(`${weightSpecs[0].name}/rms`);
-    expect(weightSpecs[4].name).toEqual(`${weightSpecs[1].name}/rms`);
-    expect(weightSpecs[5].name).toEqual(`${weightSpecs[0].name}/momentum`);
-    expect(weightSpecs[6].name).toEqual(`${weightSpecs[1].name}/momentum`);
+    expect(requiredTestElement(weightSpecs, 2).name).toEqual('iter');
+    expect(requiredTestElement(weightSpecs, 3).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/rms`);
+    expect(requiredTestElement(weightSpecs, 4).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/rms`);
+    expect(requiredTestElement(weightSpecs, 5).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/momentum`);
+    expect(requiredTestElement(weightSpecs, 6).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/momentum`);
     // The first part comes from the kernel of the dense layer, which has a
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
@@ -1471,11 +1471,11 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
     expect(weightSpecs.length).toEqual(2 + 1 + 2 * 2);
-    expect(weightSpecs[2].name).toEqual('iter');
-    expect(weightSpecs[3].name).toEqual(`${weightSpecs[0].name}/accum_grad`);
-    expect(weightSpecs[4].name).toEqual(`${weightSpecs[1].name}/accum_grad`);
-    expect(weightSpecs[5].name).toEqual(`${weightSpecs[0].name}/accum_var`);
-    expect(weightSpecs[6].name).toEqual(`${weightSpecs[1].name}/accum_var`);
+    expect(requiredTestElement(weightSpecs, 2).name).toEqual('iter');
+    expect(requiredTestElement(weightSpecs, 3).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/accum_grad`);
+    expect(requiredTestElement(weightSpecs, 4).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/accum_grad`);
+    expect(requiredTestElement(weightSpecs, 5).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/accum_var`);
+    expect(requiredTestElement(weightSpecs, 6).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/accum_var`);
     // The first part comes from the kernel of the dense layer, which has a
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
@@ -1531,9 +1531,9 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // The next weight is the iterations counter.
     // The last two weights belong to the rmsprop optimizer.
     expect(weightSpecs.length).toEqual(2 + 1 + 2);
-    expect(weightSpecs[2].name).toEqual('iter');
-    expect(weightSpecs[3].name).toEqual(`${weightSpecs[0].name}/accumulator`);
-    expect(weightSpecs[4].name).toEqual(`${weightSpecs[1].name}/accumulator`);
+    expect(requiredTestElement(weightSpecs, 2).name).toEqual('iter');
+    expect(requiredTestElement(weightSpecs, 3).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/accumulator`);
+    expect(requiredTestElement(weightSpecs, 4).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/accumulator`);
     // The first part comes from the kernel of the dense layer, which has a
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
@@ -1592,11 +1592,11 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
     expect(weightSpecs.length).toEqual(2 + 1 + 2 * 2);
-    expect(weightSpecs[2].name).toEqual('iter');
-    expect(weightSpecs[3].name).toEqual(`${weightSpecs[0].name}/m`);
-    expect(weightSpecs[4].name).toEqual(`${weightSpecs[1].name}/m`);
-    expect(weightSpecs[5].name).toEqual(`${weightSpecs[0].name}/v`);
-    expect(weightSpecs[6].name).toEqual(`${weightSpecs[1].name}/v`);
+    expect(requiredTestElement(weightSpecs, 2).name).toEqual('iter');
+    expect(requiredTestElement(weightSpecs, 3).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/m`);
+    expect(requiredTestElement(weightSpecs, 4).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/m`);
+    expect(requiredTestElement(weightSpecs, 5).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/v`);
+    expect(requiredTestElement(weightSpecs, 6).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/v`);
     // The first part comes from the kernel of the dense layer, which has a
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
@@ -1651,11 +1651,11 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
     expect(weightSpecs.length).toEqual(2 + 1 + 2 * 2);
-    expect(weightSpecs[2].name).toEqual('iter');
-    expect(weightSpecs[3].name).toEqual(`${weightSpecs[0].name}/m`);
-    expect(weightSpecs[4].name).toEqual(`${weightSpecs[1].name}/m`);
-    expect(weightSpecs[5].name).toEqual(`${weightSpecs[0].name}/v`);
-    expect(weightSpecs[6].name).toEqual(`${weightSpecs[1].name}/v`);
+    expect(requiredTestElement(weightSpecs, 2).name).toEqual('iter');
+    expect(requiredTestElement(weightSpecs, 3).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/m`);
+    expect(requiredTestElement(weightSpecs, 4).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/m`);
+    expect(requiredTestElement(weightSpecs, 5).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/v`);
+    expect(requiredTestElement(weightSpecs, 6).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/v`);
     // The first part comes from the kernel of the dense layer, which has a
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
@@ -1711,9 +1711,9 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     // The next weight is the iterations counter.
     // The last four weights belong to the rmsprop optimizer.
     expect(weightSpecs.length).toEqual(2 + 1 + 2);
-    expect(weightSpecs[2].name).toEqual('iter');
-    expect(weightSpecs[3].name).toEqual(`${weightSpecs[0].name}/momentum`);
-    expect(weightSpecs[4].name).toEqual(`${weightSpecs[1].name}/momentum`);
+    expect(requiredTestElement(weightSpecs, 2).name).toEqual('iter');
+    expect(requiredTestElement(weightSpecs, 3).name).toEqual(`${requiredTestElement(weightSpecs, 0).name}/momentum`);
+    expect(requiredTestElement(weightSpecs, 4).name).toEqual(`${requiredTestElement(weightSpecs, 1).name}/momentum`);
     // The first part comes from the kernel of the dense layer, which has a
     // 8 elements and each is 4 bytes.
     // The second part comes from the bias of the dense layer, which has 1
@@ -1958,22 +1958,22 @@ describeMathCPU('loadLayersModel from IOHandler', () => {
     const model = await loadLayersModel(new IOHandlerForTest(true));
     expect(model.layers.length).toEqual(1);
     expect(model.inputs.length).toEqual(1);
-    expect(model.inputs[0].shape).toEqual([null, 4]);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 4]);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 1]);
+    expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 1]);
     const weightValues = model.getWeights();
     expect(weightValues.length).toEqual(2);
-    expectTensorsClose(weightValues[0], tensor2d([1.1, 2.2, 3.3, 4.4], [4, 1]));
-    expectTensorsClose(weightValues[1], tensor1d([5.5]));
+    expectTensorsClose(requiredTestElement(weightValues, 0), tensor2d([1.1, 2.2, 3.3, 4.4], [4, 1]));
+    expectTensorsClose(requiredTestElement(weightValues, 1), tensor1d([5.5]));
   });
 
   it('load topology only', async () => {
     const model = await loadLayersModel(new IOHandlerForTest(false));
     expect(model.layers.length).toEqual(1);
     expect(model.inputs.length).toEqual(1);
-    expect(model.inputs[0].shape).toEqual([null, 4]);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 4]);
     expect(model.outputs.length).toEqual(1);
-    expect(model.outputs[0].shape).toEqual([null, 1]);
+    expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 1]);
   });
 
   it('IOHandler without load method causes error', async () => {
@@ -3231,11 +3231,11 @@ describeMathCPU('Functional-model saving and loading', () => {
     const model2 = await modelFromJSON({modelTopology: model1JSON});
 
     expect(model2.inputs.length).toEqual(model1.inputs.length);
-    expect(model2.inputs[0].shape).toEqual(model1.inputs[0].shape);
-    expect(model2.inputs[1].shape).toEqual(model1.inputs[1].shape);
+    expect(requiredTestElement(model2.inputs, 0).shape).toEqual(requiredTestElement(model1.inputs, 0).shape);
+    expect(requiredTestElement(model2.inputs, 1).shape).toEqual(requiredTestElement(model1.inputs, 1).shape);
     expect(model2.outputs.length).toEqual(model1.outputs.length);
-    expect(model2.outputs[0].shape).toEqual(model1.outputs[0].shape);
-    expect(model2.outputs[1].shape).toEqual(model1.outputs[1].shape);
+    expect(requiredTestElement(model2.outputs, 0).shape).toEqual(requiredTestElement(model1.outputs, 0).shape);
+    expect(requiredTestElement(model2.outputs, 1).shape).toEqual(requiredTestElement(model1.outputs, 1).shape);
     expect(model2.toJSON(null, false)).toEqual(model1JSON);
 
     const x1 = randomNormal([1, 2, 3]);
@@ -3244,8 +3244,8 @@ describeMathCPU('Functional-model saving and loading', () => {
 
     const ys2 = model2.apply([x1, x2]) as Tensor[];
 
-    expectTensorsClose(ys1[0], ys2[0]);
-    expectTensorsClose(ys1[1], ys2[1]);
+    expectTensorsClose(requiredTestElement(ys1, 0), requiredTestElement(ys2, 0));
+    expectTensorsClose(requiredTestElement(ys1, 1), requiredTestElement(ys2, 1));
   });
 
   it('Save-load round trip: layer with loopy invocation', async () => {
@@ -3287,9 +3287,9 @@ describeMathCPU('Functional-model saving and loading', () => {
     const model = await modelFromJSON({modelTopology});
 
     expect(model.inputs.length).toEqual(3);
-    expect(model.inputs[0].shape).toEqual([null, 30, 38]);
-    expect(model.inputs[1].shape).toEqual([null, 64]);
-    expect(model.inputs[2].shape).toEqual([null, 64]);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 30, 38]);
+    expect(requiredTestElement(model.inputs, 1).shape).toEqual([null, 64]);
+    expect(requiredTestElement(model.inputs, 2).shape).toEqual([null, 64]);
     expect(model.outputs.length).toEqual(10);
     for (const output of model.outputs) {
       expect(output.shape).toEqual([null, 11]);

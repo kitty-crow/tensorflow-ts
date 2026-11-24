@@ -17,7 +17,7 @@ import {dispose, div, memory, onesLike, scalar, sub, Tensor, tensor1d, tensor2d,
 import {SymbolicTensor} from '../engine/topology';
 import * as tfl from '../index';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
 
 import {batchNormalization, normalizeBatchInTraining} from './normalization';
 
@@ -623,16 +623,16 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     const weights = model.layers[1].getWeights();
     expect(weights.length).toEqual(4);
     expectTensorsClose(
-        weights[0], tensor1d([7661.0874, 7661.0874, 7661.0874, 7661.0874]),
+        requiredTestElement(weights, 0), tensor1d([7661.0874, 7661.0874, 7661.0874, 7661.0874]),
         1e-2);
     expectTensorsClose(
-        weights[1], tensor1d([-118.35103, -118.35103, -118.35103, -118.35103]),
+        requiredTestElement(weights, 1), tensor1d([-118.35103, -118.35103, -118.35103, -118.35103]),
         1e-2);
     expectTensorsClose(
-        weights[2],
+        requiredTestElement(weights, 2),
         tensor1d([-0.00026271, -0.00026271, -0.00026271, -0.00026271]));
     expectTensorsClose(
-        weights[3], tensor1d([0.98333836, 0.98333836, 0.98333836, 0.98333836]));
+        requiredTestElement(weights, 3), tensor1d([0.98333836, 0.98333836, 0.98333836, 0.98333836]));
   });
 
   // Use the following Python code to get the reference values for assertion:

@@ -20,7 +20,7 @@ import * as tf from './index';
 import {ALL_ENVS, describeWithFlags} from './jasmine_util';
 import {zerosLike} from './ops/ops';
 import {backpropagateGradients, getFilteredNodesXToY, TapeNode} from './tape';
-import {expectArraysClose} from './test_util';
+import {expectArraysClose, requiredTestElement} from './test_util';
 
 describeWithFlags('getFilteredNodesXToY', ALL_ENVS, () => {
   it('no paths from x to y', () => {
@@ -103,7 +103,7 @@ describeWithFlags('getFilteredNodesXToY', ALL_ENVS, () => {
 
     expect(filteredTapeNodes.length).toBe(1);
     // x1 input should be pruned, we don't ask for the gradient of x1.
-    expect(filteredTapeNodes[0]).toEqual({
+    expect(requiredTestElement(filteredTapeNodes, 0)).toEqual({
       id: 0,
       kernelName: 'node0',
       inputs: {x0},
@@ -192,7 +192,7 @@ describeWithFlags('getFilteredNodesXToY', ALL_ENVS, () => {
 
     expect(filteredTapeNodes.length).toBe(1);
     // The orphan should be removed.
-    expect(filteredTapeNodes[0]).toEqual(tape[1]);
+    expect(requiredTestElement(filteredTapeNodes, 0)).toEqual(requiredTestElement(tape, 1));
   });
 
   it('x => y and orphan => y', () => {
@@ -212,7 +212,7 @@ describeWithFlags('getFilteredNodesXToY', ALL_ENVS, () => {
 
     expect(filteredTapeNodes.length).toBe(1);
     // The orphan should be pruned from the node's input.
-    expect(filteredTapeNodes[0]).toEqual({
+    expect(requiredTestElement(filteredTapeNodes, 0)).toEqual({
       id: 0,
       kernelName: 'node0',
       inputs: {x},
@@ -285,7 +285,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
       inputs: {x},
       outputs: [y],
       gradient: (dys: tf.Tensor[]) => {
-        return {x: () => dys[0].add(tf.scalar(1))};
+        return {x: () => requiredTestElement(dys, 0).add(tf.scalar(1))};
       }
     }];
 
@@ -313,7 +313,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
         inputs: {x},
         outputs: [intermediate],
         gradient: (dys: tf.Tensor[]) => {
-          return {x: () => dys[0].add(tf.scalar(1))};
+          return {x: () => requiredTestElement(dys, 0).add(tf.scalar(1))};
         }
       },
       {
@@ -322,7 +322,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
         inputs: {intermediate},
         outputs: [y],
         gradient: (dys: tf.Tensor[]) => {
-          return {intermediate: () => dys[0].add(tf.scalar(1))};
+          return {intermediate: () => requiredTestElement(dys, 0).add(tf.scalar(1))};
         }
       }
     ];
@@ -353,7 +353,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
         inputs: {x},
         outputs: [intermediate1],
         gradient: (dys: tf.Tensor[]) => {
-          return {x: () => dys[0].add(tf.scalar(1))};
+          return {x: () => requiredTestElement(dys, 0).add(tf.scalar(1))};
         }
       },
       {
@@ -362,7 +362,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
         inputs: {x},
         outputs: [intermediate2],
         gradient: (dys: tf.Tensor[]) => {
-          return {x: () => dys[0].add(tf.scalar(1))};
+          return {x: () => requiredTestElement(dys, 0).add(tf.scalar(1))};
         }
       },
       {
@@ -372,8 +372,8 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
         outputs: [y],
         gradient: (dys: tf.Tensor[]) => {
           return {
-            intermediate1: () => dys[0].add(tf.scalar(1)),
-            intermediate2: () => dys[0].add(tf.scalar(1))
+            intermediate1: () => requiredTestElement(dys, 0).add(tf.scalar(1)),
+            intermediate2: () => requiredTestElement(dys, 0).add(tf.scalar(1))
           };
         }
       }
@@ -416,8 +416,8 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
            accumulatedGradientsMap, tape, f => tf.tidy(f as ScopeFn<tf.Tensor>),
            add);
        expectArraysClose(await accumulatedGradientsMap[x.id].data(), [0, 5, 0]);
-       expectArraysClose(await dys[0].data(), [0]);
-       expectArraysClose(await dys[1].data(), [5]);
-       expectArraysClose(await dys[2].data(), [0]);
+       expectArraysClose(await requiredTestElement(dys, 0).data(), [0]);
+       expectArraysClose(await requiredTestElement(dys, 1).data(), [5]);
+       expectArraysClose(await requiredTestElement(dys, 2).data(), [0]);
      });
 });

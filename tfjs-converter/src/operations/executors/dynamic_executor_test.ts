@@ -28,7 +28,7 @@ import {createBoolAttr, createNumberAttrFromIndex, createTensorAttr, validatePar
 
 describe('dynamic', () => {
   let node: Node;
-  const input1 = [tfOps.tensor1d([1])];
+  const input1 = [tfOps.tensor1d([1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
   const context = new ExecutionContext({}, {}, {});
   let spyOps: RecursiveSpy<typeof tfOps>;
   let spyOpsAsTfOps: typeof tfOps;
@@ -58,7 +58,7 @@ describe('dynamic', () => {
         node.inputParams['iouThreshold'] = createNumberAttrFromIndex(3);
         node.inputParams['scoreThreshold'] = createNumberAttrFromIndex(4);
         node.inputNames = ['input1', 'input2', 'input3', 'input4', 'input5'];
-        const input2 = [tfOps.tensor1d([1])];
+        const input2 = [tfOps.tensor1d([1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.tensor1d([1])];
         const input4 = [tfOps.tensor1d([1])];
         const input5 = [tfOps.tensor1d([1])];
@@ -93,7 +93,7 @@ describe('dynamic', () => {
         node.inputParams['iouThreshold'] = createNumberAttrFromIndex(3);
         node.inputParams['scoreThreshold'] = createNumberAttrFromIndex(4);
         node.inputNames = ['input1', 'input2', 'input3', 'input4', 'input5'];
-        const input2 = [tfOps.tensor1d([1])];
+        const input2 = [tfOps.tensor1d([1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.tensor1d([1])];
         const input4 = [tfOps.tensor1d([1])];
         const input5 = [tfOps.tensor1d([1])];
@@ -130,7 +130,7 @@ describe('dynamic', () => {
         node.inputParams['scoreThreshold'] = createNumberAttrFromIndex(4);
         node.attrParams['padToMaxOutputSize'] = createBoolAttr(true);
         node.inputNames = ['input1', 'input2', 'input3', 'input4', 'input5'];
-        const input2 = [tfOps.tensor1d([1])];
+        const input2 = [tfOps.tensor1d([1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.tensor1d([1])];
         const input4 = [tfOps.tensor1d([1])];
         const input5 = [tfOps.tensor1d([1])];
@@ -170,7 +170,7 @@ describe('dynamic', () => {
         node.inputParams['softNmsSigma'] = createNumberAttrFromIndex(5);
         node.inputNames =
             ['input1', 'input2', 'input3', 'input4', 'input5', 'input6'];
-        const input2 = [tfOps.tensor1d([1])];
+        const input2 = [tfOps.tensor1d([1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.tensor1d([1])];
         const input4 = [tfOps.tensor1d([1])];
         const input5 = [tfOps.tensor1d([1])];
@@ -203,7 +203,7 @@ describe('dynamic', () => {
       it('should call tfOps.whereAsync', async () => {
         node.op = 'Where';
         node.inputParams = {'condition': createTensorAttr(0)};
-        const input1 = [tfOps.scalar(1)];
+        const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
         // spyOn(tfOps, 'whereAsync');
 
         const result =
@@ -223,7 +223,7 @@ describe('dynamic', () => {
       it('should not have memory leak', async () => {
         node.op = 'Where';
         node.inputParams = {'condition': createTensorAttr(0)};
-        const input1 = [tfOps.scalar(1)];
+        const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
 
         const prevCount = memory().numTensors;
         await executeOp(node, {input1}, context);
@@ -237,8 +237,8 @@ describe('dynamic', () => {
         node.op = 'ListDiff';
         node.inputNames = ['input1', 'input2'];
         node.inputParams = {'x': createTensorAttr(0), 'y': createTensorAttr(1)};
-        const input1 = [tfOps.scalar(1)];
-        const input2 = [tfOps.scalar(1)];
+        const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
         spyOps.setdiff1dAsync.and.returnValue({});
 
         const result = executeOp(

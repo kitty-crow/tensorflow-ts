@@ -19,7 +19,7 @@ import {LayersModel} from '../engine/training';
 import * as tfl from '../index';
 import {BidirectionalMergeMode, VALID_BIDIRECTIONAL_MERGE_MODES} from '../keras_format/common';
 import {convertPythonicToTs} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
 
 import {Dense, Reshape} from './core';
 import {RNN, SimpleRNN} from './recurrent';
@@ -260,8 +260,8 @@ describeMathCPU('Bidirectional Layer: Symbolic', () => {
           if (mergeMode === null) {
             outputs = outputs as tfl.SymbolicTensor[];
             expect(outputs.length).toEqual(2);
-            expect(outputs[0].shape).toEqual([10, 3]);
-            expect(outputs[1].shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 0).shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 1).shape).toEqual([10, 3]);
           } else if (mergeMode === 'concat') {
             outputs = outputs as tfl.SymbolicTensor;
             expect(outputs.shape).toEqual([10, 6]);
@@ -273,22 +273,22 @@ describeMathCPU('Bidirectional Layer: Symbolic', () => {
           if (mergeMode === null) {
             outputs = outputs as tfl.SymbolicTensor[];
             expect(outputs.length).toEqual(4);
-            expect(outputs[0].shape).toEqual([10, 3]);
-            expect(outputs[1].shape).toEqual([10, 3]);
-            expect(outputs[2].shape).toEqual([10, 3]);
-            expect(outputs[3].shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 0).shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 1).shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 2).shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 3).shape).toEqual([10, 3]);
           } else if (mergeMode === 'concat') {
             outputs = outputs as tfl.SymbolicTensor[];
             expect(outputs.length).toEqual(3);
-            expect(outputs[0].shape).toEqual([10, 6]);
-            expect(outputs[1].shape).toEqual([10, 3]);
-            expect(outputs[2].shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 0).shape).toEqual([10, 6]);
+            expect(requiredTestElement(outputs, 1).shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 2).shape).toEqual([10, 3]);
           } else {
             outputs = outputs as tfl.SymbolicTensor[];
             expect(outputs.length).toEqual(3);
-            expect(outputs[0].shape).toEqual([10, 3]);
-            expect(outputs[1].shape).toEqual([10, 3]);
-            expect(outputs[2].shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 0).shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 1).shape).toEqual([10, 3]);
+            expect(requiredTestElement(outputs, 2).shape).toEqual([10, 3]);
           }
         }
       });
@@ -307,9 +307,9 @@ describeMathCPU('Bidirectional Layer: Symbolic', () => {
     });
     const outputs = bidi.apply(input) as tfl.SymbolicTensor[];
     expect(outputs.length).toEqual(3);
-    expect(outputs[0].shape).toEqual([10, 8, 3]);
-    expect(outputs[1].shape).toEqual([10, 3]);
-    expect(outputs[2].shape).toEqual([10, 3]);
+    expect(requiredTestElement(outputs, 0).shape).toEqual([10, 8, 3]);
+    expect(requiredTestElement(outputs, 1).shape).toEqual([10, 3]);
+    expect(requiredTestElement(outputs, 2).shape).toEqual([10, 3]);
   });
   it('Serialization round trip', () => {
     const layer = tfl.layers.bidirectional({
@@ -323,7 +323,7 @@ describeMathCPU('Bidirectional Layer: Symbolic', () => {
     const modelPrime = deserialize(
                            convertPythonicToTs(modelJSON) as
                            serialization.ConfigDict) as tfl.Sequential;
-    expect((modelPrime.layers[0] as Bidirectional).getConfig().mergeMode)
+    expect((requiredTestElement(modelPrime.layers, 0) as Bidirectional).getConfig().mergeMode)
         .toEqual('concat');
   });
   it('mergeMode defaults to concat', () => {
@@ -419,9 +419,9 @@ describeMathCPUAndWebGL2('Bidirectional Layer: Tensor', () => {
         y = y as Tensor[];
         expect(y.length).toEqual(2);
         expectTensorsClose(
-            y[0], tensor2d([[0.9440416, 0.9440416, 0.9440416]], [1, 3]));
+            requiredTestElement(y, 0), tensor2d([[0.9440416, 0.9440416, 0.9440416]], [1, 3]));
         expectTensorsClose(
-            y[1], tensor2d([[-0.9842659, -0.9842659, -0.9842659]], [1, 3]));
+            requiredTestElement(y, 1), tensor2d([[-0.9842659, -0.9842659, -0.9842659]], [1, 3]));
       } else if (mergeMode === undefined || mergeMode === 'concat') {
         y = y as Tensor;
         expectTensorsClose(
@@ -444,11 +444,11 @@ describeMathCPUAndWebGL2('Bidirectional Layer: Tensor', () => {
     const y = bidi.apply(x) as Tensor[];
     expect(y.length).toEqual(3);
     expectTensorsClose(
-        y[0], tensor2d([[-0.02011216, -0.02011216, -0.02011216]], [1, 3]));
+        requiredTestElement(y, 0), tensor2d([[-0.02011216, -0.02011216, -0.02011216]], [1, 3]));
     expectTensorsClose(
-        y[1], tensor2d([[0.9440416, 0.9440416, 0.9440416]], [1, 3]));
+        requiredTestElement(y, 1), tensor2d([[0.9440416, 0.9440416, 0.9440416]], [1, 3]));
     expectTensorsClose(
-        y[2], tensor2d([[-0.9842659, -0.9842659, -0.9842659]], [1, 3]));
+        requiredTestElement(y, 2), tensor2d([[-0.9842659, -0.9842659, -0.9842659]], [1, 3]));
   });
 
   // The golden values in the test below can be obtained with the following
@@ -589,10 +589,10 @@ describeMathCPUAndWebGL2('Bidirectional with initial state', () => {
   it('Correct shapes', () => {
     const layerAndTensors = createLayerAndTensors();
     expect(layerAndTensors.outputTensors.length).toEqual(2);
-    expect(layerAndTensors.outputTensors[0].shape).toEqual([
+    expect(requiredTestElement(layerAndTensors.outputTensors, 0).shape).toEqual([
       null, recurrentUnits
     ]);
-    expect(layerAndTensors.outputTensors[1].shape).toEqual([
+    expect(requiredTestElement(layerAndTensors.outputTensors, 1).shape).toEqual([
       null, recurrentUnits
     ]);
   });
@@ -607,8 +607,8 @@ describeMathCPUAndWebGL2('Bidirectional with initial state', () => {
             xVal, {initialState: [initState1Val, initState2Val]}) as Tensor[];
     expect(yVals.length).toEqual(2);
     expectTensorsClose(
-        yVals[0], tensor2d([[0.33863544, 0.33863544, 0.33863544]]));
-    expectTensorsClose(yVals[1], tensor2d([[0.8188354, 0.8188354, 0.8188354]]));
+        requiredTestElement(yVals, 0), tensor2d([[0.33863544, 0.33863544, 0.33863544]]));
+    expectTensorsClose(requiredTestElement(yVals, 1), tensor2d([[0.8188354, 0.8188354, 0.8188354]]));
   });
 
   it('LayersModel predict', () => {
@@ -627,8 +627,8 @@ describeMathCPUAndWebGL2('Bidirectional with initial state', () => {
         model.predict([xVal, initState1Val, initState2Val]) as Tensor[];
     expect(yVals.length).toEqual(2);
     expectTensorsClose(
-        yVals[0], tensor2d([[0.33863544, 0.33863544, 0.33863544]]));
-    expectTensorsClose(yVals[1], tensor2d([[0.8188354, 0.8188354, 0.8188354]]));
+        requiredTestElement(yVals, 0), tensor2d([[0.33863544, 0.33863544, 0.33863544]]));
+    expectTensorsClose(requiredTestElement(yVals, 1), tensor2d([[0.8188354, 0.8188354, 0.8188354]]));
   });
 
   it('LayersModel serialization round trip', () => {

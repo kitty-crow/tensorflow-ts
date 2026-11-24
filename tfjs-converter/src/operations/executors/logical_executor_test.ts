@@ -26,8 +26,8 @@ import {createTensorAttr, uncapitalize} from './test_helper';
 
 describe('logical', () => {
   let node: Node;
-  const input1 = [tfOps.scalar(1)];
-  const input2 = [tfOps.scalar(2)];
+  const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+  const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
   const context = new ExecutionContext({}, {}, {});
 
   beforeEach(() => {
@@ -82,7 +82,7 @@ describe('logical', () => {
         node.op = 'Select';
         node.inputNames = ['input1', 'input2', 'input3'];
         node.inputParams.condition = createTensorAttr(2);
-        const input3 = [tfOps.scalar(1)];
+        const input3 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
         spyOps.where.and.returnValue({});
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 
@@ -96,7 +96,7 @@ describe('logical', () => {
         node.op = 'SelectV2';
         node.inputNames = ['input1', 'input2', 'input3'];
         node.inputParams.condition = createTensorAttr(2);
-        const input3 = [tfOps.scalar(1)];
+        const input3 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
         spyOps.where.and.returnValue({});
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 

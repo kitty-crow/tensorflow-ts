@@ -29,8 +29,8 @@ import {createBoolAttr, createNumberAttr, createNumericArrayAttr, createStrArray
 
 describe('matrices', () => {
   let node: Node;
-  const input1 = [tfOps.scalar(1)];
-  const input2 = [tfOps.scalar(2)];
+  const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+  const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
   const context = new ExecutionContext({}, {}, {});
   let spyOps: RecursiveSpy<typeof tfOps>;
   let spyOpsAsTfOps: typeof tfOps;
@@ -71,7 +71,7 @@ describe('matrices', () => {
         node.attrParams['numArgs'] = createNumberAttr(1);
         node.attrParams.transposeA = createBoolAttr(true);
         node.attrParams.transposeB = createBoolAttr(false);
-        const input3 = [tfOps.scalar(3.0)];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2', 'input3'];
         spyOps.fused.matMul.and.returnValue({});
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -94,8 +94,8 @@ describe('matrices', () => {
         node.attrParams['numArgs'] = createNumberAttr(2);
         node.attrParams.transposeA = createBoolAttr(true);
         node.attrParams.transposeB = createBoolAttr(false);
-        const input3 = [tfOps.scalar(3.0)];
-        const input4 = [tfOps.scalar(4.0)];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input4 = [tfOps.scalar(4.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2', 'input3', 'input4'];
         spyOps.fused.matMul.and.returnValue({});
         executeOp(
@@ -121,7 +121,7 @@ describe('matrices', () => {
         node.attrParams.transposeA = createBoolAttr(true);
         node.attrParams.transposeB = createBoolAttr(false);
         node.attrParams.leakyreluAlpha = createNumberAttr(0.3);
-        const input3 = [tfOps.scalar(3.0)];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2', 'input3'];
         spyOps.fused.matMul.and.returnValue({});
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -206,7 +206,7 @@ describe('matrices', () => {
         node.inputParams.a = createTensorAttr(0);
         node.inputParams.numLower = createTensorAttr(1);
         node.inputParams.numUpper = createTensorAttr(2);
-        const input3 = [tfOps.scalar(3.0)];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         spyOps.linalg.bandPart.and.returnValue({});
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 

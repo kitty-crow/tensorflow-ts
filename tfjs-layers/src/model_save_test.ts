@@ -12,7 +12,7 @@ import {io, linalg, randomNormal, Tensor, zeros} from '@tensorflow/tfjs-core';
 
 import * as tfl from './index';
 // tslint:disable-next-line:max-line-length
-import {describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose} from './utils/test_utils';
+import {describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, requiredTestElement} from './utils/test_utils';
 import {version} from './version';
 
 describeMathCPUAndGPU('LayersModel.save', () => {
@@ -62,14 +62,14 @@ describeMathCPUAndGPU('LayersModel.save', () => {
     expect(handler.savedArtifacts.modelTopology)
         .toEqual(model.toJSON(null, false));
     expect(handler.savedArtifacts.weightSpecs.length).toEqual(2);
-    expect(handler.savedArtifacts.weightSpecs[0].name.indexOf('/kernel'))
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).name.indexOf('/kernel'))
         .toBeGreaterThan(0);
-    expect(handler.savedArtifacts.weightSpecs[0].shape).toEqual([5, 3]);
-    expect(handler.savedArtifacts.weightSpecs[0].dtype).toEqual('float32');
-    expect(handler.savedArtifacts.weightSpecs[1].name.indexOf('/bias'))
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).shape).toEqual([5, 3]);
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).dtype).toEqual('float32');
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).name.indexOf('/bias'))
         .toBeGreaterThan(0);
-    expect(handler.savedArtifacts.weightSpecs[1].shape).toEqual([3]);
-    expect(handler.savedArtifacts.weightSpecs[1].dtype).toEqual('float32');
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).shape).toEqual([3]);
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).dtype).toEqual('float32');
   });
 
   it('Saving only trainable weights succeeds', async () => {
@@ -84,14 +84,14 @@ describeMathCPUAndGPU('LayersModel.save', () => {
     // Verify that only the trainable weights (i.e., weights from the
     // 2nd, trainable Dense layer) are saved.
     expect(handler.savedArtifacts.weightSpecs.length).toEqual(2);
-    expect(handler.savedArtifacts.weightSpecs[0].name.indexOf('/kernel'))
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).name.indexOf('/kernel'))
         .toBeGreaterThan(0);
-    expect(handler.savedArtifacts.weightSpecs[0].shape).toEqual([3, 2]);
-    expect(handler.savedArtifacts.weightSpecs[0].dtype).toEqual('float32');
-    expect(handler.savedArtifacts.weightSpecs[1].name.indexOf('/bias'))
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).shape).toEqual([3, 2]);
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 0).dtype).toEqual('float32');
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).name.indexOf('/bias'))
         .toBeGreaterThan(0);
-    expect(handler.savedArtifacts.weightSpecs[1].shape).toEqual([2]);
-    expect(handler.savedArtifacts.weightSpecs[1].dtype).toEqual('float32');
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).shape).toEqual([2]);
+    expect(requiredTestElement(handler.savedArtifacts.weightSpecs, 1).dtype).toEqual('float32');
   });
 
   it('Saving to a handler without save method fails', async () => {
@@ -453,7 +453,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
         await tfl.loadLayersModel(io.fromMemory(savedArtifacts), {strict});
     const weightsPrime = modelPrime.getWeights();
     expect(weightsPrime.length).toEqual(weights.length);
-    expectTensorsClose(weightsPrime[0], weights[0]);
+    expectTensorsClose(requiredTestElement(weightsPrime, 0), requiredTestElement(weights, 0));
     // Assert the orthogonal initializer has been called.
     expect(qrSpy).toHaveBeenCalled();
   });
@@ -484,7 +484,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
         await tfl.loadLayersModel(io.fromMemory(savedArtifacts), {strict});
     const weightsPrime = modelPrime.getWeights();
     expect(weightsPrime.length).toEqual(weights.length);
-    expectTensorsClose(weightsPrime[0], weights[0]);
+    expectTensorsClose(requiredTestElement(weightsPrime, 0), requiredTestElement(weights, 0));
     // Assert the orthogonal initializer has been called.
     expect(qrSpy).toHaveBeenCalled();
   });
@@ -567,9 +567,9 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
     const model =
         await tfl.models.modelFromJSON({modelTopology: JSON.parse(modelJSON)});
     expect(model.layers.length).toEqual(3);
-    expect(model.layers[1].getConfig().maxValue).toEqual(6);
+    expect(requiredTestElement(model.layers, 1).getConfig().maxValue).toEqual(6);
 
-    const xs = randomNormal([5].concat(model.inputs[0].shape.slice(1)));
+    const xs = randomNormal([5].concat(requiredTestElement(model.inputs, 0).shape.slice(1)));
     const ys = model.predict(xs) as Tensor;
     expect(ys.shape).toEqual([5, 1]);
   });

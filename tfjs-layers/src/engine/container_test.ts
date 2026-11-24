@@ -12,7 +12,7 @@ import {memory, ones, scalar, Tensor, zeros} from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
 import {Kwargs} from '../types';
-import {describeMathCPUAndGPU, expectTensorsClose, LayerForTest} from '../utils/test_utils';
+import {describeMathCPUAndGPU, expectTensorsClose, LayerForTest, requiredTestElement} from '../utils/test_utils';
 
 import {Container, ContainerArgs} from './container';
 import {execute, FeedDict} from './executor';
@@ -248,9 +248,9 @@ describeMathCPUAndGPU('Container', () => {
     const container =
         new ContainerForTest({inputs: [inputLayer], outputs: [output]});
     expect(container.weights.length).toEqual(3);
-    expect(container.weights[0].name).toEqual(layer1.weights[0].name);
-    expect(container.weights[1].name).toEqual(layer2.weights[0].name);
-    expect(container.weights[2].name).toEqual(layer2.weights[1].name);
+    expect(requiredTestElement(container.weights, 0).name).toEqual(requiredTestElement(layer1.weights, 0).name);
+    expect(requiredTestElement(container.weights, 1).name).toEqual(requiredTestElement(layer2.weights, 0).name);
+    expect(requiredTestElement(container.weights, 2).name).toEqual(requiredTestElement(layer2.weights, 1).name);
   });
 
   it('trainableWeights and nonTrainableWeights.', () => {
@@ -263,9 +263,9 @@ describeMathCPUAndGPU('Container', () => {
     const container =
         new ContainerForTest({inputs: [inputLayer], outputs: [output]});
     expect(container.trainableWeights.length).toEqual(3);
-    expect(container.trainableWeights[0].name).toEqual(layer1.weights[0].name);
-    expect(container.trainableWeights[1].name).toEqual(layer2.weights[0].name);
-    expect(container.trainableWeights[2].name).toEqual(layer2.weights[1].name);
+    expect(requiredTestElement(container.trainableWeights, 0).name).toEqual(requiredTestElement(layer1.weights, 0).name);
+    expect(requiredTestElement(container.trainableWeights, 1).name).toEqual(requiredTestElement(layer2.weights, 0).name);
+    expect(requiredTestElement(container.trainableWeights, 2).name).toEqual(requiredTestElement(layer2.weights, 1).name);
     expect(container.nonTrainableWeights.length).toEqual(0);
   });
 
@@ -282,7 +282,7 @@ describeMathCPUAndGPU('Container', () => {
         new ContainerForTest({inputs: [inputLayer], outputs: [output]});
     const result = container.call(ones([1, 1, 6]), {}) as Tensor[];
     const resultShape = [1].concat(finalShape);
-    expectTensorsClose(result[0], ones(resultShape));
+    expectTensorsClose(requiredTestElement(result, 0), ones(resultShape));
   });
 
   it('apply() executes all layers with concrete tensors.', () => {
@@ -367,35 +367,35 @@ describeMathCPUAndGPU('Container', () => {
     const layer2Output = layer2.apply(layer1Output) as tfl.SymbolicTensor;
     const container =
         new ContainerForTest({inputs: [inputLayer], outputs: [layer2Output]});
-    return [container, [container.inputLayers[0], layer1, layer2]];
+    return [container, [requiredTestElement(container.inputLayers, 0), layer1, layer2]];
   }
 
   it('getLayer works by name', () => {
     const [container, layers] = createSimpleTwoLayerContainer();
-    expect(container.getLayer(layers[0].name)).toEqual(layers[0]);
-    expect(container.getLayer(layers[1].name)).toEqual(layers[1]);
-    expect(container.getLayer(layers[2].name)).toEqual(layers[2]);
+    expect(container.getLayer(requiredTestElement(layers, 0).name)).toEqual(requiredTestElement(layers, 0));
+    expect(container.getLayer(requiredTestElement(layers, 1).name)).toEqual(requiredTestElement(layers, 1));
+    expect(container.getLayer(requiredTestElement(layers, 2).name)).toEqual(requiredTestElement(layers, 2));
   });
 
   it('getLayer works by index', () => {
     const [container, layers] = createSimpleTwoLayerContainer();
-    expect(container.getLayer(null, 0)).toEqual(layers[0]);
-    expect(container.getLayer(null, 1)).toEqual(layers[1]);
-    expect(container.getLayer(null, 2)).toEqual(layers[2]);
+    expect(container.getLayer(null, 0)).toEqual(requiredTestElement(layers, 0));
+    expect(container.getLayer(null, 1)).toEqual(requiredTestElement(layers, 1));
+    expect(container.getLayer(null, 2)).toEqual(requiredTestElement(layers, 2));
   });
 
   it('getLayer works by index when index is the first argument', () => {
     const [container, layers] = createSimpleTwoLayerContainer();
-    expect(container.getLayer(0)).toEqual(layers[0]);
-    expect(container.getLayer(1)).toEqual(layers[1]);
-    expect(container.getLayer(2)).toEqual(layers[2]);
+    expect(container.getLayer(0)).toEqual(requiredTestElement(layers, 0));
+    expect(container.getLayer(1)).toEqual(requiredTestElement(layers, 1));
+    expect(container.getLayer(2)).toEqual(requiredTestElement(layers, 2));
   });
 
   it('getLayer throws error for nonexistent layer name', () => {
     const [container, layers] = createSimpleTwoLayerContainer();
     expect(
         () => container.getLayer(
-            layers[0].name + '_suffixToMakeLayerNameNonexistent'))
+            requiredTestElement(layers, 0).name + '_suffixToMakeLayerNameNonexistent'))
         .toThrowError(/No such layer/);
   });
 
@@ -438,8 +438,8 @@ describeMathCPUAndGPU('Container.calculateLosses', () => {
     const container = createSimpleOneLayerContainer(true)[0];
     const losses = container.calculateLosses();
     expect(losses.length).toEqual(2);
-    expectTensorsClose(losses[0], scalar(2 * (1 + 1 + 1 + 1)));
-    expectTensorsClose(losses[1], scalar(3 * (1 + 1)));
+    expectTensorsClose(requiredTestElement(losses, 0), scalar(2 * (1 + 1 + 1 + 1)));
+    expectTensorsClose(requiredTestElement(losses, 1), scalar(3 * (1 + 1)));
   });
 
   it('No regularizers', () => {
@@ -668,7 +668,7 @@ describeMathCPUAndGPU('LayersModel-dispose', () => {
     const ys = ones([3, 1]);
     await model.trainOnBatch(xs, ys);
     expect(kwargsArray.length).toEqual(1);
-    expect(kwargsArray[0]['training']).toEqual(true);
+    expect(requiredTestElement(kwargsArray, 0)['training']).toEqual(true);
   });
   it('Dispose Sequential model with a Dropout', () => {
     const numTensors0 = memory().numTensors;

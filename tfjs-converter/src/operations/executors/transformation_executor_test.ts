@@ -26,8 +26,8 @@ import {executeOp} from './transformation_executor';
 
 describe('transformation', () => {
   let node: Node;
-  const input1 = [tfOps.scalar(1)];
-  const input2 = [tfOps.tensor1d([1, 1])];
+  const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+  const input2 = [tfOps.tensor1d([1, 1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
   const context = new ExecutionContext({}, {}, {});
 
   beforeEach(() => {
@@ -150,7 +150,7 @@ describe('transformation', () => {
         node.inputParams.blockShape = createNumericArrayAttrFromIndex(1);
         node.inputParams.paddings = createNumericArrayAttrFromIndex(2);
         node.inputNames = ['input1', 'input2', 'input3'];
-        const input2 = [tfOps.tensor1d([1, 1, 2, 2])];
+        const input2 = [tfOps.tensor1d([1, 1, 2, 2])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.tensor2d([1, 2, 2, 3, 2, 3, 3, 4], [4, 2])];
         spyOps.spaceToBatchND.and.returnValue({});
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -166,7 +166,7 @@ describe('transformation', () => {
         node.inputParams.blockShape = createNumericArrayAttrFromIndex(1);
         node.inputParams.crops = createNumericArrayAttrFromIndex(2);
         node.inputNames = ['input1', 'input2', 'input3'];
-        const input2 = [tfOps.tensor1d([1, 1, 2, 2])];
+        const input2 = [tfOps.tensor1d([1, 1, 2, 2])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.tensor2d([1, 2, 2, 3, 2, 3, 3, 4], [4, 2])];
         spyOps.batchToSpaceND.and.returnValue({});
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -205,8 +205,8 @@ describe('transformation', () => {
         node.inputParams.s0 = createTensorAttr(0);
         node.inputParams.s1 = createTensorAttr(1);
         node.inputNames = ['input1', 'input2'];
-        const input1 = [tfOps.tensor1d([1, 1])];
-        const input2 = [tfOps.tensor1d([1, 1])];
+        const input1 = [tfOps.tensor1d([1, 1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
+        const input2 = [tfOps.tensor1d([1, 1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         spyOps.broadcastArgs.and.returnValue({});
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 

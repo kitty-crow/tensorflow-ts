@@ -22,6 +22,8 @@ import {Layer, LayerArgs} from '../engine/topology';
 import {ValueError} from '../errors';
 import type {Logs} from '../logs';
 
+export const requiredTestElement = test_util.requiredTestElement;
+
 /** A completed fit must contain the requested metric with numeric values. */
 export function historyMetric(history: History, name: string): number[] {
   const values = history.history[name];

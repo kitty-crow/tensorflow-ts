@@ -22,7 +22,7 @@
 import { Tensor, memory, tensor, test_util } from '@tensorflow/tfjs-core';
 
 import { BytePairTokenizer, Tokenizer } from './tokenizers';
-import { expectTensorsClose } from '../../utils/test_utils';
+import { expectTensorsClose , requiredTestElement} from '../../utils/test_utils';
 
 class SimpleTokenizer extends Tokenizer {
   /** @nocollapse */
@@ -55,10 +55,10 @@ describe('Tokenizer', () => {
     const callOutput = tokenizer.call(inputData) as Tensor[];
 
     expect(tokenizeOutput.length).toBe(1);
-    expectTensorsClose(tokenizeOutput[0], expectedOutput[0]);
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 0), requiredTestElement(expectedOutput, 0));
 
     expect(callOutput.length).toBe(1);
-    expectTensorsClose(callOutput[0], expectedOutput[0]);
+    expectTensorsClose(requiredTestElement(callOutput, 0), requiredTestElement(expectedOutput, 0));
   });
 
   it('detokenize', () => {
@@ -111,10 +111,10 @@ describe('BytePairTokenizer', () => {
     const callOutput = tokenizer.call(inputData) as Tensor[];
 
     expect(tokenizeOutput.length).toBe(1);
-    expectTensorsClose(tokenizeOutput[0], expectedOutput[0]);
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 0), requiredTestElement(expectedOutput, 0));
 
     expect(callOutput.length).toBe(1);
-    expectTensorsClose(callOutput[0], expectedOutput[0]);
+    expectTensorsClose(requiredTestElement(callOutput, 0), requiredTestElement(expectedOutput, 0));
 
     // If not setting special tokens, "sp" is one token.
     tokenizer = new BytePairTokenizer({
@@ -123,7 +123,7 @@ describe('BytePairTokenizer', () => {
     });
     const output = tokenizer.tokenize(inputData);
     expect(output.length).toBe(1);
-    expectTensorsClose(output[0], tensor([0]));
+    expectTensorsClose(requiredTestElement(output, 0), tensor([0]));
   });
 
   it('tokenize with merges', () => {
@@ -140,12 +140,12 @@ describe('BytePairTokenizer', () => {
     const callOutput = tokenizer.call(inputData) as Tensor[];
 
     expect(tokenizeOutput.length).toBe(2);
-    expectTensorsClose(tokenizeOutput[0], expectedOutput[0]);
-    expectTensorsClose(tokenizeOutput[1], expectedOutput[1]);
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 0), requiredTestElement(expectedOutput, 0));
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 1), requiredTestElement(expectedOutput, 1));
 
     expect(callOutput.length).toBe(2);
-    expectTensorsClose(callOutput[0], expectedOutput[0]);
-    expectTensorsClose(callOutput[1], expectedOutput[1]);
+    expectTensorsClose(requiredTestElement(callOutput, 0), requiredTestElement(expectedOutput, 0));
+    expectTensorsClose(requiredTestElement(callOutput, 1), requiredTestElement(expectedOutput, 1));
   });
 
   it('tokenize with prefix space', () => {
@@ -168,8 +168,8 @@ describe('BytePairTokenizer', () => {
     const tokenizeOutput = tokenizer.tokenize(inputData);
 
     expect(tokenizeOutput.length).toBe(2);
-    expectTensorsClose(tokenizeOutput[0], expectedOutput[0]);
-    expectTensorsClose(tokenizeOutput[1], expectedOutput[1]);
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 0), requiredTestElement(expectedOutput, 0));
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 1), requiredTestElement(expectedOutput, 1));
   });
 
   it('tokenize with whitespace split', () => {
@@ -182,7 +182,7 @@ describe('BytePairTokenizer', () => {
     const tokenizeOutput = tokenizer.tokenize(inputData);
 
     expect(tokenizeOutput.length).toBe(1);
-    expectTensorsClose(tokenizeOutput[0], expectedOutput[0]);
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 0), requiredTestElement(expectedOutput, 0));
   });
 
   it('tokenize with unsplittable tokens', () => {
@@ -196,7 +196,7 @@ describe('BytePairTokenizer', () => {
     const tokenizeOutput = tokenizer.tokenize(inputData);
 
     expect(tokenizeOutput.length).toBe(1);
-    expectTensorsClose(tokenizeOutput[0], expectedOutput[0]);
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 0), requiredTestElement(expectedOutput, 0));
   });
 
   it('tokenize with sequence length', () => {
@@ -210,9 +210,9 @@ describe('BytePairTokenizer', () => {
     const tokenizeOutput = tokenizer.tokenize(inputData);
 
     expect(tokenizeOutput.length).toBe(3);
-    expectTensorsClose(tokenizeOutput[0], expectedOutput[0]);
-    expectTensorsClose(tokenizeOutput[1], expectedOutput[1]);
-    expectTensorsClose(tokenizeOutput[2], expectedOutput[2]);
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 0), requiredTestElement(expectedOutput, 0));
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 1), requiredTestElement(expectedOutput, 1));
+    expectTensorsClose(requiredTestElement(tokenizeOutput, 2), requiredTestElement(expectedOutput, 2));
   });
 
   it('tokenize does not leak memory', () => {

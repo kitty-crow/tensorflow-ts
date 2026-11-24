@@ -17,7 +17,7 @@
 
 import * as tf from './index';
 import {ALL_ENVS, describeWithFlags, NODE_ENVS} from './jasmine_util';
-import {expectArraysClose} from './test_util';
+import {expectArraysClose, requiredTestElement} from './test_util';
 
 describe('deprecation warnings', () => {
   beforeEach(() => {
@@ -134,7 +134,7 @@ describeWithFlags('tidy', ALL_ENVS, () => {
       return {a: tf.scalar(1), b: 'hello', c: [tf.scalar(2), 'world']};
     });
     expectArraysClose(await res.a.data(), [1]);
-    expectArraysClose(await (res.c[0] as tf.Tensor).data(), [2]);
+    expectArraysClose(await (requiredTestElement(res.c, 0) as tf.Tensor).data(), [2]);
   });
 
   it('returns Tensor[]', async () => {
@@ -150,10 +150,10 @@ describeWithFlags('tidy', ALL_ENVS, () => {
 
       // the 2 results are new. All intermediates should be disposed.
       expect(tf.memory().numTensors).toBe(4);
-      expect(result[0].isDisposed).toBe(false);
-      expect(result[0].shape).toEqual([3]);
-      expect(result[1].isDisposed).toBe(false);
-      expect(result[1].shape).toEqual([3]);
+      expect(requiredTestElement(result, 0).isDisposed).toBe(false);
+      expect(requiredTestElement(result, 0).shape).toEqual([3]);
+      expect(requiredTestElement(result, 1).isDisposed).toBe(false);
+      expect(requiredTestElement(result, 1).shape).toEqual([3]);
       expect(tf.memory().numTensors).toBe(4);
     });
 
@@ -283,13 +283,13 @@ describeWithFlags('tidy', ALL_ENVS, () => {
       const res = tf.tidy(() => {
         return [tf.scalar(1), [[tf.scalar(2)]], {list: [tf.scalar(3)]}];
       });
-      expect((res[0] as tf.Tensor).isDisposed).toBe(false);
+      expect((requiredTestElement(res, 0) as tf.Tensor).isDisposed).toBe(false);
       // tslint:disable-next-line:no-any
-      expect((res[1] as any)[0][0].isDisposed).toBe(false);
+      expect((requiredTestElement(res, 1) as any)[0][0].isDisposed).toBe(false);
       // tslint:disable-next-line:no-any
-      expect((res[2] as any).list[0].isDisposed).toBe(false);
+      expect((requiredTestElement(res, 2) as any).list[0].isDisposed).toBe(false);
       expect(tf.memory().numTensors).toBe(3);
-      return res[0];
+      return requiredTestElement(res, 0);
     });
     // Everything but scalar(1) got disposed.
     expect(tf.memory().numTensors).toBe(1);

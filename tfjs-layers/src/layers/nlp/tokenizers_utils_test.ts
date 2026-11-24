@@ -20,7 +20,7 @@ import { tensor, test_util } from '@tensorflow/tfjs-core';
 import { BytePairTokenizerCache, SPLIT_PATTERN_1, bytesToUnicode,
   createAltsForUnsplittableTokens, createStaticHashtable, regexSplit,
   removeStringsFromInputs, splitStringsForBpe } from './tokenizers_utils';
-import { expectTensorsClose } from '../../utils/test_utils';
+import { expectTensorsClose , requiredTestElement} from '../../utils/test_utils';
 
 describe('bytesToUnicode', () => {
   it('returns correct output', () => {
@@ -124,8 +124,8 @@ describe('removeStringsFromInputs', () => {
     const result = removeStringsFromInputs(inputs, stringToRemove);
 
     expect(result.length).toBe(2);
-    expectTensorsClose(result[0], tensor(['butterfly']));
-    expectTensorsClose(result[1], tensor(['butter']));
+    expectTensorsClose(requiredTestElement(result, 0), tensor(['butterfly']));
+    expectTensorsClose(requiredTestElement(result, 1), tensor(['butter']));
   });
 
   it ('removes strings successfully', () => {
@@ -135,8 +135,8 @@ describe('removeStringsFromInputs', () => {
     const result = removeStringsFromInputs(inputs, stringToRemove);
 
     expect(result.length).toBe(2);
-    expectTensorsClose(result[0], tensor(['butterfly']));
-    expectTensorsClose(result[1], tensor([]));
+    expectTensorsClose(requiredTestElement(result, 0), tensor(['butterfly']));
+    expectTensorsClose(requiredTestElement(result, 1), tensor([]));
   });
 });
 
@@ -207,7 +207,7 @@ describe('splitStringsForBpe', () => {
     const result = splitStringsForBpe(inputs, unsplittableTokens);
 
     expect(result.length).toBe(1);
-    expectTensorsClose(result[0], tensor(['s', 'p']));
+    expectTensorsClose(requiredTestElement(result, 0), tensor(['s', 'p']));
   });
 
   it ('splits with multicharacter unsplittable tokens', () => {
@@ -217,7 +217,7 @@ describe('splitStringsForBpe', () => {
     const result = splitStringsForBpe(inputs, unsplittableTokens);
 
     expect(result.length).toBe(1);
-    expectTensorsClose(result[0], tensor(['butterfly', '<|endOfText|>']));
+    expectTensorsClose(requiredTestElement(result, 0), tensor(['butterfly', '<|endOfText|>']));
   });
 
   it ('splits with no unsplittable tokens', () => {
@@ -226,7 +226,7 @@ describe('splitStringsForBpe', () => {
     const result = splitStringsForBpe(inputs);
 
     expect(result.length).toBe(2);
-    expectTensorsClose(result[0], tensor(['brown', '.']));
-    expectTensorsClose(result[1], tensor(['black', '.']));
+    expectTensorsClose(requiredTestElement(result, 0), tensor(['brown', '.']));
+    expectTensorsClose(requiredTestElement(result, 1), tensor(['black', '.']));
   });
 });

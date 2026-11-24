@@ -27,7 +27,7 @@ import {createDtypeAttr, createNumberAttr, createNumberAttrFromIndex, createNume
 
 describe('creation', () => {
   let node: Node;
-  const input1 = [tfOps.tensor1d([1, 2, 3])];
+  const input1 = [tfOps.tensor1d([1, 2, 3])] satisfies [ReturnType<typeof tfOps.tensor1d>];
   const input2 = [tfOps.scalar(1)];
   const context = new ExecutionContext({}, {}, {});
   let spyOps: RecursiveSpy<typeof tfOps>;
@@ -77,7 +77,7 @@ describe('creation', () => {
         node.inputParams['stop'] = createNumberAttrFromIndex(1);
         node.inputParams['num'] = createNumberAttrFromIndex(2);
         node.inputNames = ['input', 'input2', 'input3'];
-        const input = [tfOps.scalar(0)];
+        const input = [tfOps.scalar(0)] satisfies [ReturnType<typeof tfOps.scalar>];
         const input3 = [tfOps.scalar(2)];
         executeOp(node, {input, input2, input3}, context, spyOpsAsTfOps);
 
@@ -101,7 +101,7 @@ describe('creation', () => {
         node.inputParams['offValue'] = createNumberAttrFromIndex(3);
         node.attrParams['dtype'] = createDtypeAttr('float32');
         node.inputNames = ['input', 'input2', 'input3', 'input4'];
-        const input = [tfOps.tensor1d([0])];
+        const input = [tfOps.tensor1d([0])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.scalar(2)];
         const input4 = [tfOps.scalar(3)];
         spyOps.oneHot.and.returnValue({});
@@ -162,7 +162,7 @@ describe('creation', () => {
         node.inputParams['step'] = createNumberAttrFromIndex(2);
         node.attrParams['dtype'] = createDtypeAttr('float32');
         node.inputNames = ['input', 'input2', 'input3'];
-        const input = [tfOps.scalar(0)];
+        const input = [tfOps.scalar(0)] satisfies [ReturnType<typeof tfOps.scalar>];
         const input3 = [tfOps.scalar(2)];
         executeOp(node, {input, input2, input3}, context, spyOpsAsTfOps);
 

@@ -26,7 +26,7 @@ import {createBoolAttr, createNumberAttrFromIndex, createTensorAttr} from './tes
 
 describe('evaluation', () => {
   let node: Node;
-  const input1 = [tfOps.tensor1d([1])];
+  const input1 = [tfOps.tensor1d([1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
   const input2 = [tfOps.scalar(1)];
   const context = new ExecutionContext({}, {}, {});
 
@@ -127,7 +127,7 @@ describe('evaluation', () => {
         node.op = 'UniqueV2';
         node.inputParams['x'] = createTensorAttr(0);
         node.inputParams['axis'] = createNumberAttrFromIndex(1);
-        const xInput = [tfOps.tensor2d([[1], [2]])];
+        const xInput = [tfOps.tensor2d([[1], [2]])] satisfies [ReturnType<typeof tfOps.tensor2d>];
         const axisInput = [tfOps.scalar(1)];
         executeOp(
             node, {'input1': xInput, 'input2': axisInput}, context,

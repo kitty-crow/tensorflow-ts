@@ -27,11 +27,11 @@ import {createBooleanArrayAttrFromIndex, createNumberAttr, createNumberAttrFromI
 
 describe('slice join', () => {
   let node: Node;
-  const input1 = [tfOps.scalar(1)];
-  const input2 = [tfOps.scalar(2)];
-  const input3 = [tfOps.scalar(3)];
+  const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+  const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
+  const input3 = [tfOps.scalar(3)] satisfies [ReturnType<typeof tfOps.scalar>];
   const input4 = [tfOps.tensor1d([3])];
-  const input5 = [tfOps.tensor1d([3, 4])];
+  const input5 = [tfOps.tensor1d([3, 4])] satisfies [ReturnType<typeof tfOps.tensor1d>];
   const context = new ExecutionContext({}, {}, {});
   let spyOps: RecursiveSpy<typeof tfOps>;
   let spyOpsAsTfOps: typeof tfOps;
@@ -288,7 +288,7 @@ describe('slice join', () => {
       it('should call tfOps.gather', () => {
         node.op = 'Gather';
         node.inputParams.indices = createTensorAttr(1);
-        const input5 = [tfOps.scalar(2, 'int32')];
+        const input5 = [tfOps.scalar(2, 'int32')] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input5'];
         spyOps.gather.and.returnValue({});
         executeOp(node, {input1, input5, input3}, context, spyOpsAsTfOps);
@@ -309,7 +309,7 @@ describe('slice join', () => {
         node.inputParams.indices = createTensorAttr(1);
         node.inputParams.axis = createNumberAttrFromIndex(2);
         node.attrParams.batchDims = createNumberAttr(1);
-        const input5 = [tfOps.scalar(2, 'int32')];
+        const input5 = [tfOps.scalar(2, 'int32')] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input5', 'input3'];
         spyOps.gather.and.returnValue({});
         executeOp(node, {input1, input5, input3}, context, spyOpsAsTfOps);
@@ -324,7 +324,7 @@ describe('slice join', () => {
         node.op = 'Gather';
         node.inputParams.indices = createTensorAttr(1);
         node.inputNames = ['input1', 'input5'];
-        const input5 = [tfOps.scalar(2, 'float32')];
+        const input5 = [tfOps.scalar(2, 'float32')] satisfies [ReturnType<typeof tfOps.scalar>];
         spyOps.gather.and.returnValue({});
         executeOp(node, {input1, input5}, context, spyOpsAsTfOps);
 
@@ -439,7 +439,7 @@ describe('slice join', () => {
         node.inputParams.sparseValues = createTensorAttr(2);
         node.inputParams.defaultValue = createTensorAttr(3);
         node.inputParams.indices = createTensorAttr(1);
-        const input5 = [tfOps.scalar(5, 'int32')];
+        const input5 = [tfOps.scalar(5, 'int32')] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input4', 'input3', 'input5'];
         spyOps.sparseToDense.and.returnValue({});
         executeOp(

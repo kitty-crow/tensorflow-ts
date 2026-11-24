@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {requiredTestElement} from '../test_util';
 import * as tf from '../index';
 import {BROWSER_ENVS, describeWithFlags} from '../jasmine_util';
 
@@ -52,8 +53,8 @@ describeWithFlags('IORouterRegistry', BROWSER_ENVS, () => {
       return null;
     }
     {
-      if (url[0].startsWith(scheme) && url[1].startsWith(scheme)) {
-        return new FakeIOHandler(url[0], url[1]);
+      if (requiredTestElement(url, 0).startsWith(scheme) && requiredTestElement(url, 1).startsWith(scheme)) {
+        return new FakeIOHandler(requiredTestElement(url, 0), requiredTestElement(url, 1));
       } else {
         return null;
       }
@@ -80,10 +81,10 @@ describeWithFlags('IORouterRegistry', BROWSER_ENVS, () => {
 
     const out1 = tf.io.getSaveHandlers('localstorage://foo-model');
     expect(out1.length).toEqual(1);
-    expect(out1[0] instanceof BrowserLocalStorage).toEqual(true);
+    expect(requiredTestElement(out1, 0) instanceof BrowserLocalStorage).toEqual(true);
     const out2 = tf.io.getSaveHandlers('indexeddb://foo-model');
     expect(out2.length).toEqual(1);
-    expect(out2[0] instanceof BrowserIndexedDB).toEqual(true);
+    expect(requiredTestElement(out2, 0) instanceof BrowserIndexedDB).toEqual(true);
   });
 
   it('getLoadHandler succeeds', () => {
@@ -92,17 +93,17 @@ describeWithFlags('IORouterRegistry', BROWSER_ENVS, () => {
 
     const out1 = tf.io.getLoadHandlers('localstorage://foo-model');
     expect(out1.length).toEqual(1);
-    expect(out1[0] instanceof BrowserLocalStorage).toEqual(true);
+    expect(requiredTestElement(out1, 0) instanceof BrowserLocalStorage).toEqual(true);
     const out2 = tf.io.getLoadHandlers('indexeddb://foo-model');
     expect(out2.length).toEqual(1);
-    expect(out2[0] instanceof BrowserIndexedDB).toEqual(true);
+    expect(requiredTestElement(out2, 0) instanceof BrowserIndexedDB).toEqual(true);
   });
 
   it('getLoadHandler with string array argument succeeds', () => {
     IORouterRegistry.registerLoadRouter(fakeMultiStringRouter);
     const loadHandler =
         IORouterRegistry.getLoadHandlers(['foo:///123', 'foo:///456']);
-    expect(loadHandler[0] instanceof FakeIOHandler).toEqual(true);
+    expect(requiredTestElement(loadHandler, 0) instanceof FakeIOHandler).toEqual(true);
 
     expect(IORouterRegistry.getLoadHandlers([
       'foo:///123', 'bar:///456'
@@ -141,9 +142,9 @@ describeWithFlags('IORouterRegistry', BROWSER_ENVS, () => {
     };
     const loadHandler = tf.io.getLoadHandlers('foo:///123', loadOptions);
     expect(loadHandler.length).toEqual(1);
-    expect(loadHandler[0] instanceof FakeLoadOptionsHandler).toEqual(true);
+    expect(requiredTestElement(loadHandler, 0) instanceof FakeLoadOptionsHandler).toEqual(true);
     // Check callback function passed to IOHandler
-    expect((loadHandler[0] as FakeLoadOptionsHandler).loadOptionsData)
+    expect((requiredTestElement(loadHandler, 0) as FakeLoadOptionsHandler).loadOptionsData)
         .toBe(loadOptions);
   });
 });

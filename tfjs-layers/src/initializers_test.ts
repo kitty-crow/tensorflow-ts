@@ -21,7 +21,7 @@ import {PyJsonDict} from './keras_format/types';
 import {deserialize} from './layers/serialization';
 import * as math_utils from './utils/math_utils';
 import {convertPythonicToTs} from './utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndWebGL2, expectNoLeakedTensors, expectTensorsClose, expectTensorsValuesInRange} from './utils/test_utils';
+import {describeMathCPU, describeMathCPUAndWebGL2, expectNoLeakedTensors, expectTensorsClose, expectTensorsValuesInRange, requiredTestElement} from './utils/test_utils';
 
 describeMathCPU('Zeros initializer', () => {
   it('1D', () => {
@@ -259,7 +259,7 @@ describeMathCPU('RandomNormal initializer', () => {
 
 describeMathCPU('HeNormal initializer', () => {
   const shape = [7, 2];
-  const stddev = Math.sqrt(2 / shape[0]);
+  const stddev = Math.sqrt(2 / requiredTestElement(shape, 0));
   it('default', () => {
     const init = getInitializer('heNormal');
     const weights = init.apply(shape, 'float32');
@@ -302,7 +302,7 @@ describeMathCPU('HeNormal initializer', () => {
 
 describeMathCPU('HeUniform initializer', () => {
   const shape = [7, 2];
-  const bound = Math.sqrt(6 / shape[0]);
+  const bound = Math.sqrt(6 / requiredTestElement(shape, 0));
   it('default', () => {
     const init = getInitializer('heUniform');
     const weights = init.apply(shape, 'float32');
@@ -345,7 +345,7 @@ describeMathCPU('HeUniform initializer', () => {
 
 describeMathCPU('LecunNormal initializer', () => {
   const shape = [7, 2];
-  const stddev = Math.sqrt(1 / shape[0]);
+  const stddev = Math.sqrt(1 / requiredTestElement(shape, 0));
   it('default', () => {
     const init = getInitializer('leCunNormal');
     const weights = init.apply(shape, 'float32');
@@ -388,7 +388,7 @@ describeMathCPU('LecunNormal initializer', () => {
 
 describeMathCPU('LeCunUniform initializer', () => {
   const shape = [7, 2];
-  const bound = Math.sqrt(3 / shape[0]);
+  const bound = Math.sqrt(3 / requiredTestElement(shape, 0));
   it('default', () => {
     const init = getInitializer('leCunUniform');
     const weights = init.apply(shape, 'float32');
@@ -823,11 +823,11 @@ describeMathCPUAndWebGL2('Orthogonal Initializer', () => {
 
     const model = deserialize(modelConfig as PyJsonDict) as tfl.LayersModel;
     expect(model.layers.length).toEqual(3);
-    expect(model.layers[0] instanceof tfl.LayersModel).toEqual(false);
-    expect(model.layers[1] instanceof tfl.LayersModel).toEqual(true);
-    expect(model.layers[2] instanceof tfl.LayersModel).toEqual(true);
-    expect(model.inputs[0].shape).toEqual([null, 128, 128, 1]);
-    expect(model.outputs[0].shape).toEqual([null, 128, 128, 1]);
+    expect(requiredTestElement(model.layers, 0) instanceof tfl.LayersModel).toEqual(false);
+    expect(requiredTestElement(model.layers, 1) instanceof tfl.LayersModel).toEqual(true);
+    expect(requiredTestElement(model.layers, 2) instanceof tfl.LayersModel).toEqual(true);
+    expect(requiredTestElement(model.inputs, 0).shape).toEqual([null, 128, 128, 1]);
+    expect(requiredTestElement(model.outputs, 0).shape).toEqual([null, 128, 128, 1]);
     expect((model.predict(randomNormal([1, 128, 128, 1])) as Tensor).shape)
         .toEqual([1, 128, 128, 1]);
   });

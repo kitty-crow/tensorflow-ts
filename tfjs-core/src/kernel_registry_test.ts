@@ -20,7 +20,7 @@ import {KernelBackend} from './index';
 import {ALL_ENVS, describeWithFlags, TestBackendWithId, TestEnv} from './jasmine_util';
 import { KernelFunc } from './kernel_registry';
 import { TensorInfo } from './tensor_info';
-import {expectArraysClose} from './test_util';
+import {expectArraysClose, requiredTestElement} from './test_util';
 
 describeWithFlags('kernel_registry', ALL_ENVS, (testEnv: TestEnv) => {
   afterEach(async () => {
@@ -209,7 +209,7 @@ describeWithFlags('gradient registry', ALL_ENVS, () => {
       inputsToSave: ['x'],
       gradFunc: (dy: tf.Tensor, saved) => {
         // Make sure saved input (x) was passed to the gradient function.
-        expect(saved[0].dataId).toEqual(x.dataId);
+        expect(requiredTestElement(saved, 0).dataId).toEqual(x.dataId);
         // Make sure dy matches the shape of the output.
         expect(dy.shape).toEqual([3, 3]);
         gradientWasCalled = true;
@@ -255,7 +255,7 @@ describeWithFlags('gradient registry', ALL_ENVS, () => {
          outputsToSave: [true],
          gradFunc: (dy: tf.Tensor, saved) => {
            // Make sure saved output was passed to the gradient function.
-           expect(saved[0].dataId).toEqual(forwardReturnDataId);
+           expect(requiredTestElement(saved, 0).dataId).toEqual(forwardReturnDataId);
            // Make sure dy matches the shape of the output.
            expect(dy.shape).toEqual([3, 3]);
            gradientWasCalled = true;
@@ -300,8 +300,8 @@ describeWithFlags('gradient registry', ALL_ENVS, () => {
         // Make sure saved input (x) was passed to the gradient function.
         const [$x0, $x1] = x;
         expect(saved.length).toEqual(x.length);
-        expect($x0.dataId).toEqual(x[0].dataId);
-        expect($x1.dataId).toEqual(x[1].dataId);
+        expect($x0.dataId).toEqual(requiredTestElement(x, 0).dataId);
+        expect($x1.dataId).toEqual(requiredTestElement(x, 1).dataId);
         gradientWasCalled = true;
         return {0: () => tf.fill([2, 2], 3), 1: () => tf.fill([2, 2], 3)};
       }
@@ -318,12 +318,12 @@ describeWithFlags('gradient registry', ALL_ENVS, () => {
     expect(kernelWasCalled).toBe(true);
     expect(gradientWasCalled).toBe(true);
     expect(dx.length).toEqual(2);
-    expect(dx[0].dtype).toBe('float32');
-    expect(dx[0].shape).toEqual([2, 2]);
-    expect(dx[1].dtype).toBe('float32');
-    expect(dx[1].shape).toEqual([2, 2]);
-    expectArraysClose(await dx[0].data(), [3, 3, 3, 3]);
-    expectArraysClose(await dx[1].data(), [3, 3, 3, 3]);
+    expect(requiredTestElement(dx, 0).dtype).toBe('float32');
+    expect(requiredTestElement(dx, 0).shape).toEqual([2, 2]);
+    expect(requiredTestElement(dx, 1).dtype).toBe('float32');
+    expect(requiredTestElement(dx, 1).shape).toEqual([2, 2]);
+    expectArraysClose(await requiredTestElement(dx, 0).data(), [3, 3, 3, 3]);
+    expectArraysClose(await requiredTestElement(dx, 1).data(), [3, 3, 3, 3]);
     tf.unregisterKernel(kernelName, tf.getBackend());
     tf.unregisterGradient(kernelName);
   });

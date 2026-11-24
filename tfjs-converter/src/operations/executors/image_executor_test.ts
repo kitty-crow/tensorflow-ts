@@ -27,7 +27,7 @@ import {spyOnAllFunctions, RecursiveSpy} from './spy_ops';
 
 describe('image', () => {
   let node: Node;
-  const input1 = [tfOps.tensor1d([1])];
+  const input1 = [tfOps.tensor1d([1])] satisfies [ReturnType<typeof tfOps.tensor1d>];
   const context = new ExecutionContext({}, {}, {});
   let spyOps: RecursiveSpy<typeof tfOps>;
   let spyOpsAsTfOps: typeof tfOps;
@@ -56,7 +56,7 @@ describe('image', () => {
         node.attrParams['alignCorners'] = createBoolAttr(true);
         node.attrParams['halfPixelCenters'] = createBoolAttr(true);
         node.inputNames = ['input1', 'input2'];
-        const input2 = [tfOps.tensor1d([1, 2])];
+        const input2 = [tfOps.tensor1d([1, 2])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         spyOps.image.resizeBilinear.and.returnValue({});
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -81,7 +81,7 @@ describe('image', () => {
         node.attrParams['alignCorners'] = createBoolAttr(true);
         node.attrParams['halfPixelCenters'] = createBoolAttr(true);
         node.inputNames = ['input1', 'input2'];
-        const input2 = [tfOps.tensor1d([1, 2])];
+        const input2 = [tfOps.tensor1d([1, 2])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         spyOps.image.resizeNearestNeighbor.and.returnValue({});
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -110,8 +110,8 @@ describe('image', () => {
         node.inputNames = ['input1', 'input2', 'input3', 'input4'];
 
         spyOps.image.cropAndResize.and.returnValue({});
-        const input2 = [tfOps.tensor1d([2])];
-        const input3 = [tfOps.tensor1d([3])];
+        const input2 = [tfOps.tensor1d([2])] satisfies [ReturnType<typeof tfOps.tensor1d>];
+        const input3 = [tfOps.tensor1d([3])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input4 = [tfOps.tensor1d([4, 5])];
 
         executeOp(node, {input1, input2, input3, input4}, context,
@@ -145,9 +145,9 @@ describe('image', () => {
         node.attrParams['fillMode'] = createStrAttr('constant');
         node.inputNames = ['input1', 'input2', 'input3', 'input4'];
 
-        const input1 = [tfOps.tensor4d([1], [1, 1, 1, 1])];
-        const input2 = [tfOps.tensor2d([1, 2, 3, 4, 5, 6, 7, 8], [1, 8])];
-        const input3 = [tfOps.tensor1d([4, 5])];
+        const input1 = [tfOps.tensor4d([1], [1, 1, 1, 1])] satisfies [ReturnType<typeof tfOps.tensor4d>];
+        const input2 = [tfOps.tensor2d([1, 2, 3, 4, 5, 6, 7, 8], [1, 8])] satisfies [ReturnType<typeof tfOps.tensor2d>];
+        const input3 = [tfOps.tensor1d([4, 5])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input4 = [tfOps.scalar(3)];
 
         executeOp(node, {input1, input2, input3, input4}, context,

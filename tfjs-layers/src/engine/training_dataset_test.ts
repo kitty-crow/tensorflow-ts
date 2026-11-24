@@ -18,7 +18,7 @@ import * as tfc from '@tensorflow/tfjs-core';
 import {CustomCallback, DEFAULT_YIELD_EVERY_MS} from '../base_callbacks';
 import * as tfl from '../index';
 import {Logs} from '../logs';
-import {describeMathCPUAndGPU, expectTensorsClose, StopAfterNBatches, historyMetric, historyMetricAt} from '../utils/test_utils';
+import {describeMathCPUAndGPU, expectTensorsClose, StopAfterNBatches, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
 
 import {FakeNumericDataset} from './dataset_fakes';
 
@@ -375,11 +375,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
        expect(epochEndValLosses.length).toEqual(2);
-       expect(epochEndValLosses[0]).toBeCloseTo(0.003321);
-       expect(epochEndValLosses[1]).toBeCloseTo(0.011799);
+       expect(requiredTestElement(epochEndValLosses, 0)).toBeCloseTo(0.003321);
+       expect(requiredTestElement(epochEndValLosses, 1)).toBeCloseTo(0.011799);
        expect(epochEndValAccs.length).toEqual(2);
-       expect(epochEndValAccs[0]).toBeCloseTo(1);
-       expect(epochEndValAccs[1]).toBeCloseTo(1);
+       expect(requiredTestElement(epochEndValAccs, 0)).toBeCloseTo(1);
+       expect(requiredTestElement(epochEndValAccs, 1)).toBeCloseTo(1);
      });
 
   it('1 input, 1 output, 1 metric, tensor validation, callback, ' +
@@ -451,11 +451,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
        expect(epochEndValLosses.length).toEqual(2);
-       expect(epochEndValLosses[0]).toBeCloseTo(0.003321);
-       expect(epochEndValLosses[1]).toBeCloseTo(0.011799);
+       expect(requiredTestElement(epochEndValLosses, 0)).toBeCloseTo(0.003321);
+       expect(requiredTestElement(epochEndValLosses, 1)).toBeCloseTo(0.011799);
        expect(epochEndValAccs.length).toEqual(2);
-       expect(epochEndValAccs[0]).toBeCloseTo(1);
-       expect(epochEndValAccs[1]).toBeCloseTo(1);
+       expect(requiredTestElement(epochEndValAccs, 0)).toBeCloseTo(1);
+       expect(requiredTestElement(epochEndValAccs, 1)).toBeCloseTo(1);
      });
 
   it('Earlier logs are not overwritten', async () => {
@@ -495,7 +495,7 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
     expect(trainLogs.length).toEqual(2);
     // Assert that the the first log and the second logs do not overwrite each
     // other.
-    expect(trainLogs[0].loss).not.toEqual(trainLogs[1].loss);
+    expect(requiredTestElement(trainLogs, 0).loss).not.toEqual(requiredTestElement(trainLogs, 1).loss);
   });
 
   it('dataset.size != null feeds stepPerEpoch to callbacks', async () => {
@@ -724,11 +724,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
        expect(epochEndValLosses.length).toEqual(2);
-       expect(epochEndValLosses[0]).toBeCloseTo(0.003321);
-       expect(epochEndValLosses[1]).toBeCloseTo(0.011799);
+       expect(requiredTestElement(epochEndValLosses, 0)).toBeCloseTo(0.003321);
+       expect(requiredTestElement(epochEndValLosses, 1)).toBeCloseTo(0.011799);
        expect(epochEndValAccs.length).toEqual(2);
-       expect(epochEndValAccs[0]).toBeCloseTo(1);
-       expect(epochEndValAccs[1]).toBeCloseTo(1);
+       expect(requiredTestElement(epochEndValAccs, 0)).toBeCloseTo(1);
+       expect(requiredTestElement(epochEndValAccs, 1)).toBeCloseTo(1);
      });
 
   it('1 input, 1 output, 1 metric, dataset validation, callback, ' +
@@ -815,11 +815,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expectTensorsClose(model.getWeights()[1], [0.108621]);
 
        expect(epochEndValLosses.length).toEqual(2);
-       expect(epochEndValLosses[0]).toBeCloseTo(0.003321);
-       expect(epochEndValLosses[1]).toBeCloseTo(0.011799);
+       expect(requiredTestElement(epochEndValLosses, 0)).toBeCloseTo(0.003321);
+       expect(requiredTestElement(epochEndValLosses, 1)).toBeCloseTo(0.011799);
        expect(epochEndValAccs.length).toEqual(2);
-       expect(epochEndValAccs[0]).toBeCloseTo(1);
-       expect(epochEndValAccs[1]).toBeCloseTo(1);
+       expect(requiredTestElement(epochEndValAccs, 0)).toBeCloseTo(1);
+       expect(requiredTestElement(epochEndValAccs, 1)).toBeCloseTo(1);
      });
 
   it('Memory leak check with metric and validation, with batchesPerEpoch',
@@ -1020,11 +1020,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(batchBeginBatches).toEqual([0, 1, 2, 0, 1, 2]);
        expect(batchEndBatches).toEqual([0, 1, 2, 0, 1, 2]);
        expect(epochEndLosses.length).toEqual(2);
-       expect(epochEndLosses[0]).toBeCloseTo(0.923649);
-       expect(epochEndLosses[1]).toBeCloseTo(0.722993);
+       expect(requiredTestElement(epochEndLosses, 0)).toBeCloseTo(0.923649);
+       expect(requiredTestElement(epochEndLosses, 1)).toBeCloseTo(0.722993);
        expect(epochEndAccs.length).toEqual(2);
-       expect(epochEndAccs[0]).toBeCloseTo(0);
-       expect(epochEndAccs[1]).toBeCloseTo(0);
+       expect(requiredTestElement(epochEndAccs, 0)).toBeCloseTo(0);
+       expect(requiredTestElement(epochEndAccs, 1)).toBeCloseTo(0);
        expectTensorsClose(
            batchEndLosses, [1, 0.9216, 0.849347, 0.782758, 0.721390, 0.664832]);
      });
@@ -1117,11 +1117,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(batchBeginBatches).toEqual([0, 1, 2, 0, 1, 2]);
        expect(batchEndBatches).toEqual([0, 1, 2, 0, 1, 2]);
        expect(epochEndLosses.length).toEqual(2);
-       expect(epochEndLosses[0]).toBeCloseTo(0.923649);
-       expect(epochEndLosses[1]).toBeCloseTo(0.722993);
+       expect(requiredTestElement(epochEndLosses, 0)).toBeCloseTo(0.923649);
+       expect(requiredTestElement(epochEndLosses, 1)).toBeCloseTo(0.722993);
        expect(epochEndAccs.length).toEqual(2);
-       expect(epochEndAccs[0]).toBeCloseTo(0);
-       expect(epochEndAccs[1]).toBeCloseTo(0);
+       expect(requiredTestElement(epochEndAccs, 0)).toBeCloseTo(0);
+       expect(requiredTestElement(epochEndAccs, 1)).toBeCloseTo(0);
        expectTensorsClose(
            batchEndLosses, [1, 0.9216, 0.849347, 0.782758, 0.721390, 0.664832]);
      });
@@ -1884,12 +1884,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
             tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])];
        const yTensorsFunc = () => {
          const output: {[name: string]: tfc.Tensor[]} = {};
-         output[model.outputNames[0]] = [
+         output[requiredTestElement(model.outputNames, 0)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])
          ];
-         output[model.outputNames[1]] = [
+         output[requiredTestElement(model.outputNames, 1)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])
@@ -1898,8 +1898,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
 
        const yShape: {[name: string]: number[]} = {};
-       yShape[model.outputNames[0]] = [1];
-       yShape[model.outputNames[1]] = [1];
+       yShape[requiredTestElement(model.outputNames, 0)] = [1];
+       yShape[requiredTestElement(model.outputNames, 1)] = [1];
        const dataset = new FakeNumericDataset({
          xShape: [1],
          yShape,
@@ -1923,10 +1923,10 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
 
-       const output1AccName = model.outputNames[0] + '_acc';
-       const output1LossName = model.outputNames[0] + '_loss';
-       const output2AccName = model.outputNames[1] + '_acc';
-       const output2LossName = model.outputNames[1] + '_loss';
+       const output1AccName = requiredTestElement(model.outputNames, 0) + '_acc';
+       const output1LossName = requiredTestElement(model.outputNames, 0) + '_loss';
+       const output2AccName = requiredTestElement(model.outputNames, 1) + '_acc';
+       const output2LossName = requiredTestElement(model.outputNames, 1) + '_loss';
 
        expect(Object.keys(history.history)).toEqual([
          'loss', output1LossName, output2LossName, output1AccName,
@@ -1977,11 +1977,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
            ])];
        const yTensorsFunc = () => {
          const output: {[name: string]: tfc.Tensor[]} = {};
-         output[model.outputNames[0]] = [
+         output[requiredTestElement(model.outputNames, 0)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1])
          ];
-         output[model.outputNames[1]] = [
+         output[requiredTestElement(model.outputNames, 1)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1])
          ];
@@ -1989,8 +1989,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
 
        const yShape: {[name: string]: number[]} = {};
-       yShape[model.outputNames[0]] = [1];
-       yShape[model.outputNames[1]] = [1];
+       yShape[requiredTestElement(model.outputNames, 0)] = [1];
+       yShape[requiredTestElement(model.outputNames, 1)] = [1];
        const dataset = new FakeNumericDataset({
          xShape: [1],
          yShape,
@@ -2013,10 +2013,10 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
 
-       const output1AccName = model.outputNames[0] + '_acc';
-       const output1LossName = model.outputNames[0] + '_loss';
-       const output2AccName = model.outputNames[1] + '_acc';
-       const output2LossName = model.outputNames[1] + '_loss';
+       const output1AccName = requiredTestElement(model.outputNames, 0) + '_acc';
+       const output1LossName = requiredTestElement(model.outputNames, 0) + '_loss';
+       const output2AccName = requiredTestElement(model.outputNames, 1) + '_acc';
+       const output2LossName = requiredTestElement(model.outputNames, 1) + '_loss';
 
        expect(Object.keys(history.history)).toEqual([
          'loss', output1LossName, output2LossName, output1AccName,
@@ -2115,12 +2115,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
             tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])];
        const yTensorsFunc = () => {
          const output: {[name: string]: tfc.Tensor[]} = {};
-         output[model.outputNames[0]] = [
+         output[requiredTestElement(model.outputNames, 0)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])
          ];
-         output[model.outputNames[1]] = [
+         output[requiredTestElement(model.outputNames, 1)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])
@@ -2129,8 +2129,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
 
        const yShape: {[name: string]: number[]} = {};
-       yShape[model.outputNames[0]] = [1];
-       yShape[model.outputNames[1]] = [1];
+       yShape[requiredTestElement(model.outputNames, 0)] = [1];
+       yShape[requiredTestElement(model.outputNames, 1)] = [1];
        const dataset = new FakeNumericDataset({
          xShape: [1],
          yShape,
@@ -2143,8 +2143,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        // Validation data.
        const valXs = tfc.zeros([batchSize, 1]);
        const valYs: tfc.NamedTensorMap = {};
-       valYs[model.outputNames[0]] = tfc.zeros([batchSize, 1]);
-       valYs[model.outputNames[1]] = tfc.zeros([batchSize, 1]);
+       valYs[requiredTestElement(model.outputNames, 0)] = tfc.zeros([batchSize, 1]);
+       valYs[requiredTestElement(model.outputNames, 1)] = tfc.zeros([batchSize, 1]);
 
        // Do a burn-in call to account for initialization of cached tensors (for
        // the memory-leak check below).
@@ -2165,10 +2165,10 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          validationBatchSize: batchSize
        });
 
-       const output1AccName = model.outputNames[0] + '_acc';
-       const output1LossName = model.outputNames[0] + '_loss';
-       const output2AccName = model.outputNames[1] + '_acc';
-       const output2LossName = model.outputNames[1] + '_loss';
+       const output1AccName = requiredTestElement(model.outputNames, 0) + '_acc';
+       const output1LossName = requiredTestElement(model.outputNames, 0) + '_loss';
+       const output2AccName = requiredTestElement(model.outputNames, 1) + '_acc';
+       const output2LossName = requiredTestElement(model.outputNames, 1) + '_loss';
        const valOutput1AccName = 'val_' + output1AccName;
        const valOutput1LossName = 'val_' + output1LossName;
        const valOutput2AccName = 'val_' + output2AccName;
@@ -2240,11 +2240,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
            ])];
        const yTensorsFunc = () => {
          const output: {[name: string]: tfc.Tensor[]} = {};
-         output[model.outputNames[0]] = [
+         output[requiredTestElement(model.outputNames, 0)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1])
          ];
-         output[model.outputNames[1]] = [
+         output[requiredTestElement(model.outputNames, 1)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1])
          ];
@@ -2252,8 +2252,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
 
        const yShape: {[name: string]: number[]} = {};
-       yShape[model.outputNames[0]] = [1];
-       yShape[model.outputNames[1]] = [1];
+       yShape[requiredTestElement(model.outputNames, 0)] = [1];
+       yShape[requiredTestElement(model.outputNames, 1)] = [1];
        const dataset = new FakeNumericDataset({
          xShape: [1],
          yShape,
@@ -2266,8 +2266,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        // Validation data.
        const valXs = tfc.zeros([batchSize, 1]);
        const valYs: tfc.NamedTensorMap = {};
-       valYs[model.outputNames[0]] = tfc.zeros([batchSize, 1]);
-       valYs[model.outputNames[1]] = tfc.zeros([batchSize, 1]);
+       valYs[requiredTestElement(model.outputNames, 0)] = tfc.zeros([batchSize, 1]);
+       valYs[requiredTestElement(model.outputNames, 1)] = tfc.zeros([batchSize, 1]);
 
        // Do a burn-in call to account for initialization of cached tensors (for
        // the memory-leak check below).
@@ -2286,10 +2286,10 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          validationBatchSize: batchSize
        });
 
-       const output1AccName = model.outputNames[0] + '_acc';
-       const output1LossName = model.outputNames[0] + '_loss';
-       const output2AccName = model.outputNames[1] + '_acc';
-       const output2LossName = model.outputNames[1] + '_loss';
+       const output1AccName = requiredTestElement(model.outputNames, 0) + '_acc';
+       const output1LossName = requiredTestElement(model.outputNames, 0) + '_loss';
+       const output2AccName = requiredTestElement(model.outputNames, 1) + '_acc';
+       const output2LossName = requiredTestElement(model.outputNames, 1) + '_loss';
        const valOutput1AccName = 'val_' + output1AccName;
        const valOutput1LossName = 'val_' + output1LossName;
        const valOutput2AccName = 'val_' + output2AccName;
@@ -2360,7 +2360,7 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
             tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])];
        const yTensorsFunc = () => {
          const output: {[name: string]: tfc.Tensor[]} = {};
-         output[model.outputNames[0]] = [
+         output[requiredTestElement(model.outputNames, 0)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])
@@ -2369,8 +2369,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
 
        const yShape: {[name: string]: number[]} = {};
-       yShape[model.outputNames[0]] = [1];
-       yShape[model.outputNames[1]] = [1];
+       yShape[requiredTestElement(model.outputNames, 0)] = [1];
+       yShape[requiredTestElement(model.outputNames, 1)] = [1];
        const dataset = new FakeNumericDataset({
          xShape: [1],
          yShape,
@@ -2389,7 +2389,7 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        expect(errorCaught.message)
            .toEqual(
                'The feature data generated by the dataset lacks the required ' +
-               `output key '${model.outputNames[1]}'.`);
+               `output key '${requiredTestElement(model.outputNames, 1)}'.`);
      });
 
   it('2 outputs, 1 missing output in dataset, no batchesPerEpoch', async () => {
@@ -2415,7 +2415,7 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])];
     const yTensorsFunc = () => {
       const output: {[name: string]: tfc.Tensor[]} = {};
-      output[model.outputNames[0]] = [
+      output[requiredTestElement(model.outputNames, 0)] = [
         tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
         tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
         tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])
@@ -2424,8 +2424,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
     };
 
     const yShape: {[name: string]: number[]} = {};
-    yShape[model.outputNames[0]] = [1];
-    yShape[model.outputNames[1]] = [1];
+    yShape[requiredTestElement(model.outputNames, 0)] = [1];
+    yShape[requiredTestElement(model.outputNames, 1)] = [1];
     const dataset = new FakeNumericDataset({
       xShape: [1],
       yShape,
@@ -2444,7 +2444,7 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
     expect(errorCaught.message)
         .toEqual(
             'The feature data generated by the dataset lacks the required ' +
-            `output key '${model.outputNames[1]}'.`);
+            `output key '${requiredTestElement(model.outputNames, 1)}'.`);
   });
 
   // Reference Python tf.keras code:
@@ -2538,12 +2538,12 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
        const yTensorsFunc = () => {
          const output: {[name: string]: tfc.Tensor[]} = {};
-         output[model.outputNames[0]] = [
+         output[requiredTestElement(model.outputNames, 0)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])
          ];
-         output[model.outputNames[1]] = [
+         output[requiredTestElement(model.outputNames, 1)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1])
@@ -2552,8 +2552,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
 
        const yShape: {[name: string]: number[]} = {};
-       yShape[model.outputNames[0]] = [1];
-       yShape[model.outputNames[1]] = [1];
+       yShape[requiredTestElement(model.outputNames, 0)] = [1];
+       yShape[requiredTestElement(model.outputNames, 1)] = [1];
        const dataset = new FakeNumericDataset({
          xShape: [1],
          yShape,
@@ -2577,10 +2577,10 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
 
-       const output1AccName = model.outputNames[0] + '_acc';
-       const output1LossName = model.outputNames[0] + '_loss';
-       const output2AccName = model.outputNames[1] + '_acc';
-       const output2LossName = model.outputNames[1] + '_loss';
+       const output1AccName = requiredTestElement(model.outputNames, 0) + '_acc';
+       const output1LossName = requiredTestElement(model.outputNames, 0) + '_loss';
+       const output2AccName = requiredTestElement(model.outputNames, 1) + '_acc';
+       const output2LossName = requiredTestElement(model.outputNames, 1) + '_loss';
 
        expect(Object.keys(history.history)).toEqual([
          'loss', output1LossName, output2LossName, output1AccName,
@@ -2641,11 +2641,11 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
        const yTensorsFunc = () => {
          const output: {[name: string]: tfc.Tensor[]} = {};
-         output[model.outputNames[0]] = [
+         output[requiredTestElement(model.outputNames, 0)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1])
          ];
-         output[model.outputNames[1]] = [
+         output[requiredTestElement(model.outputNames, 1)] = [
            tfc.ones([batchSize, 1]), tfc.ones([batchSize, 1]),
            tfc.ones([batchSize, 1])
          ];
@@ -2653,8 +2653,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        };
 
        const yShape: {[name: string]: number[]} = {};
-       yShape[model.outputNames[0]] = [1];
-       yShape[model.outputNames[1]] = [1];
+       yShape[requiredTestElement(model.outputNames, 0)] = [1];
+       yShape[requiredTestElement(model.outputNames, 1)] = [1];
        const dataset = new FakeNumericDataset({
          xShape: [1],
          yShape,
@@ -2677,10 +2677,10 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
        const numTensors1 = tfc.memory().numTensors;
        expect(numTensors1).toEqual(numTensors0);
 
-       const output1AccName = model.outputNames[0] + '_acc';
-       const output1LossName = model.outputNames[0] + '_loss';
-       const output2AccName = model.outputNames[1] + '_acc';
-       const output2LossName = model.outputNames[1] + '_loss';
+       const output1AccName = requiredTestElement(model.outputNames, 0) + '_acc';
+       const output1LossName = requiredTestElement(model.outputNames, 0) + '_loss';
+       const output2AccName = requiredTestElement(model.outputNames, 1) + '_acc';
+       const output2LossName = requiredTestElement(model.outputNames, 1) + '_loss';
 
        expect(Object.keys(history.history)).toEqual([
          'loss', output1LossName, output2LossName, output1AccName,
@@ -2732,9 +2732,9 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
     // exhaustion.
     expect(historyMetric(history, 'loss').length).toEqual(1);
     expect(warningMessages.length).toEqual(2);
-    expect(warningMessages[0])
+    expect(requiredTestElement(warningMessages, 0))
         .toMatch(/You provided `batchesPerEpoch` as .* 9 batches/);
-    expect(warningMessages[1])
+    expect(requiredTestElement(warningMessages, 1))
         .toMatch(/You provided `batchesPerEpoch` as .* 9 batches/);
   });
 
@@ -3133,8 +3133,8 @@ describeMathCPUAndGPU('LayersModel.evaluateDataset', () => {
     expect(evalOut.length).toEqual(2);
     const expectedLoss = tfc.scalar(1.0);
     const expectedAcc = tfc.scalar(0.0);
-    expectTensorsClose(evalOut[0], expectedLoss);
-    expectTensorsClose(evalOut[1], expectedAcc);
+    expectTensorsClose(requiredTestElement(evalOut, 0), expectedLoss);
+    expectTensorsClose(requiredTestElement(evalOut, 1), expectedAcc);
     tfc.dispose(evalOut);
     tfc.dispose([expectedLoss, expectedAcc]);
     const numTensors1 = tfc.memory().numTensors;
@@ -3174,8 +3174,8 @@ describeMathCPUAndGPU('LayersModel.evaluateDataset', () => {
     expect(evalOut.length).toEqual(2);
     const expectedLoss = tfc.scalar(1.0);
     const expectedAcc = tfc.scalar(0.0);
-    expectTensorsClose(evalOut[0], expectedLoss);
-    expectTensorsClose(evalOut[1], expectedAcc);
+    expectTensorsClose(requiredTestElement(evalOut, 0), expectedLoss);
+    expectTensorsClose(requiredTestElement(evalOut, 1), expectedAcc);
     tfc.dispose(evalOut);
     tfc.dispose([expectedLoss, expectedAcc]);
     const numTensors1 = tfc.memory().numTensors;
@@ -3216,8 +3216,8 @@ describeMathCPUAndGPU('LayersModel.evaluateDataset', () => {
     expect(evalOut.length).toEqual(2);
     const expectedLoss = tfc.scalar(1.0);
     const expectedAcc = tfc.scalar(0.0);
-    expectTensorsClose(evalOut[0], expectedLoss);
-    expectTensorsClose(evalOut[1], expectedAcc);
+    expectTensorsClose(requiredTestElement(evalOut, 0), expectedLoss);
+    expectTensorsClose(requiredTestElement(evalOut, 1), expectedAcc);
     tfc.dispose(evalOut);
     tfc.dispose([expectedLoss, expectedAcc]);
     const numTensors1 = tfc.memory().numTensors;
@@ -3248,7 +3248,7 @@ describeMathCPUAndGPU('LayersModel.evaluateDataset', () => {
     expect(numTensors1).toEqual(numTensors0);
 
     expect(warningMessages.length).toEqual(1);
-    expect(warningMessages[0])
+    expect(requiredTestElement(warningMessages, 0))
         .toMatch(
             /dataset iterator ran out of data during evaluate.* 5 batches/);
   });
@@ -3334,8 +3334,8 @@ describeMathCPUAndGPU('LayersModel.evaluateDataset', () => {
            await model.evaluateDataset(dataset, {batches}) as tfc.Scalar[];
        const expectedLoss = tfc.scalar(1.0);
        const expectedAcc = tfc.scalar(0.0);
-       expectTensorsClose(evalOut[0], expectedLoss);
-       expectTensorsClose(evalOut[1], expectedAcc);
+       expectTensorsClose(requiredTestElement(evalOut, 0), expectedLoss);
+       expectTensorsClose(requiredTestElement(evalOut, 1), expectedAcc);
        tfc.dispose(evalOut);
        tfc.dispose([expectedLoss, expectedAcc]);
        const numTensors1 = tfc.memory().numTensors;
@@ -3390,8 +3390,8 @@ describeMathCPUAndGPU('LayersModel.evaluateDataset', () => {
        const evalOut = await model.evaluateDataset(dataset, {}) as tfc.Scalar[];
        const expectedLoss = tfc.scalar(1.0);
        const expectedAcc = tfc.scalar(0.0);
-       expectTensorsClose(evalOut[0], expectedLoss);
-       expectTensorsClose(evalOut[1], expectedAcc);
+       expectTensorsClose(requiredTestElement(evalOut, 0), expectedLoss);
+       expectTensorsClose(requiredTestElement(evalOut, 1), expectedAcc);
        tfc.dispose(evalOut);
        tfc.dispose([expectedLoss, expectedAcc]);
        const numTensors1 = tfc.memory().numTensors;

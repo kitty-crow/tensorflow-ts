@@ -20,6 +20,23 @@ import {inferShape} from './tensor_util_env';
 import {RecursiveArray, TensorLike, TypedArray} from './types';
 import {arraysEqual, encodeString, flatten, isString, isTypedArray} from './util';
 
+/**
+ * Read an element that a test requires to exist. Fail at the missing fixture
+ * instead of passing an absent value into a later assertion or operation.
+ * Null elements are retained: some fixtures intentionally contain null.
+ */
+export function requiredTestElement<A extends ArrayLike<{}|null|undefined>>(
+    values: A, index: number): A[number] {
+  if (values == null) {
+    throw new Error('Expected an array-like test fixture.');
+  }
+  const value = values[index];
+  if (typeof value === 'undefined') {
+    throw new Error(`Missing required test element at index ${index}.`);
+  }
+  return value;
+}
+
 const TEST_EPSILON_FLOAT32 = 1e-3;
 export const TEST_EPSILON_FLOAT16 = 1e-1;
 

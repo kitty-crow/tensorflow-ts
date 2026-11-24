@@ -19,6 +19,7 @@
  * Unit tests for file-related IOHandlers.
  */
 
+import {requiredTestElement} from '../test_util';
 import * as tf from '../index';
 import {BROWSER_ENVS, describeWithFlags} from '../jasmine_util';
 import {browserDownloads, BrowserDownloads, browserDownloadsRouter} from './browser_files';
@@ -127,8 +128,8 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
         .toEqual(JSON.stringify(weightSpecs1).length);
     expect(saveResult.modelArtifactsInfo.weightDataBytes).toEqual(16);
 
-    const jsonAnchor = fakeAnchors[0];
-    const weightDataAnchor = fakeAnchors[1];
+    const jsonAnchor = requiredTestElement(fakeAnchors, 0);
+    const weightDataAnchor = requiredTestElement(fakeAnchors, 1);
     expect(jsonAnchor.download).toEqual('test-model.json');
     expect(weightDataAnchor.download).toEqual('test-model.weights.bin');
 
@@ -144,8 +145,8 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
 
     const weightsManifest = modelJSON.weightsManifest;
     expect(weightsManifest.length).toEqual(1);
-    expect(weightsManifest[0].paths).toEqual(['./test-model.weights.bin']);
-    expect(weightsManifest[0].weights).toEqual(weightSpecs1);
+    expect(requiredTestElement(weightsManifest, 0).paths).toEqual(['./test-model.weights.bin']);
+    expect(requiredTestElement(weightsManifest, 0).weights).toEqual(weightSpecs1);
 
     // Verify the content of the binary weights file.
     const response = await fetch(weightDataAnchor.href);
@@ -171,8 +172,8 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
         .toEqual(JSON.stringify(weightSpecs1).length);
     expect(saveResult.modelArtifactsInfo.weightDataBytes).toEqual(16);
 
-    const jsonAnchor = fakeAnchors[0];
-    const weightDataAnchor = fakeAnchors[1];
+    const jsonAnchor = requiredTestElement(fakeAnchors, 0);
+    const weightDataAnchor = requiredTestElement(fakeAnchors, 1);
     expect(jsonAnchor.download).toEqual('test-model.json');
     expect(weightDataAnchor.download).toEqual('test-model.weights.bin');
 
@@ -185,8 +186,8 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     const weightsManifest = modelTopologyAndWeightsManifest.weightsManifest as
         WeightsManifestConfig;
     expect(weightsManifest.length).toEqual(1);
-    expect(weightsManifest[0].paths).toEqual(['./test-model.weights.bin']);
-    expect(weightsManifest[0].weights).toEqual(weightSpecs1);
+    expect(requiredTestElement(weightsManifest, 0).paths).toEqual(['./test-model.weights.bin']);
+    expect(requiredTestElement(weightsManifest, 0).weights).toEqual(weightSpecs1);
 
     // Verify the content of the binary weights file.
     const response = await fetch(weightDataAnchor.href);
@@ -212,8 +213,8 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
         .toEqual(JSON.stringify(weightSpecs1).length);
     expect(saveResult.modelArtifactsInfo.weightDataBytes).toEqual(16);
 
-    const jsonAnchor = fakeAnchors[0];
-    const weightDataAnchor = fakeAnchors[1];
+    const jsonAnchor = requiredTestElement(fakeAnchors, 0);
+    const weightDataAnchor = requiredTestElement(fakeAnchors, 1);
 
     // Verify that the default file names are used.
     expect(jsonAnchor.download).toEqual('model.json');
@@ -228,8 +229,8 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     const weightsManifest = modelTopologyAndWeightsManifest.weightsManifest as
         WeightsManifestConfig;
     expect(weightsManifest.length).toEqual(1);
-    expect(weightsManifest[0].paths).toEqual(['./model.weights.bin']);
-    expect(weightsManifest[0].weights).toEqual(weightSpecs1);
+    expect(requiredTestElement(weightsManifest, 0).paths).toEqual(['./model.weights.bin']);
+    expect(requiredTestElement(weightsManifest, 0).weights).toEqual(weightSpecs1);
 
     // Verify the content of the binary weights file.
     const response = await fetch(weightDataAnchor.href);
@@ -253,8 +254,8 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     expect(saveResult.modelArtifactsInfo.weightSpecsBytes).toEqual(0);
     expect(saveResult.modelArtifactsInfo.weightDataBytes).toEqual(0);
 
-    const jsonAnchor = fakeAnchors[0];
-    const weightDataAnchor = fakeAnchors[1];
+    const jsonAnchor = requiredTestElement(fakeAnchors, 0);
+    const weightDataAnchor = requiredTestElement(fakeAnchors, 1);
 
     // Verify that the default file names are used.
     expect(jsonAnchor.download).toEqual('model.json');

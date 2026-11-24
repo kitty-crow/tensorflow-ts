@@ -27,7 +27,7 @@ import {spyOnAllFunctions, RecursiveSpy} from './spy_ops';
 
 describe('normalization', () => {
   let node: Node;
-  const input1 = [tfOps.scalar(1)];
+  const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
   const context = new ExecutionContext({}, {}, {});
   let spyOps: RecursiveSpy<typeof tfOps>;
   let spyOpsAsTfOps: typeof tfOps;
@@ -54,7 +54,7 @@ describe('normalization', () => {
         node.inputParams['axis'] = createNumericArrayAttrFromIndex(1);
         node.attrParams.keepDims = createBoolAttr(false);
         node.inputNames = ['input1', 'input2'];
-        const input2 = [tfOps.tensor1d([2])];
+        const input2 = [tfOps.tensor1d([2])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 
         expect(spyOps.euclideanNorm).toHaveBeenCalledWith(input1[0], [2],
@@ -78,10 +78,10 @@ describe('normalization', () => {
         node.inputParams.variance = createTensorAttr(4);
         node.attrParams.epsilon = createNumberAttr(5);
         node.inputNames = ['input1', 'input2', 'input3', 'input4', 'input5'];
-        const input2 = [tfOps.scalar(1)];
-        const input3 = [tfOps.scalar(2)];
-        const input4 = [tfOps.scalar(3)];
-        const input5 = [tfOps.scalar(4)];
+        const input2 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input4 = [tfOps.scalar(3)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input5 = [tfOps.scalar(4)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2, input3, input4, input5}, context,
                   spyOpsAsTfOps);
 
@@ -99,10 +99,10 @@ describe('normalization', () => {
         node.inputParams.variance = createTensorAttr(4);
         node.attrParams.epsilon = createNumberAttr(5);
         node.inputNames = ['input1', 'input2', 'input3', 'input4', 'input5'];
-        const input2 = [tfOps.scalar(1)];
-        const input3 = [tfOps.scalar(2)];
-        const input4 = [tfOps.scalar(3)];
-        const input5 = [tfOps.scalar(4)];
+        const input2 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input4 = [tfOps.scalar(3)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input5 = [tfOps.scalar(4)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2, input3, input4, input5}, context,
                   spyOpsAsTfOps);
 
@@ -120,10 +120,10 @@ describe('normalization', () => {
         node.inputParams.variance = createTensorAttr(4);
         node.attrParams.epsilon = createNumberAttr(5);
         node.inputNames = ['input1', 'input2', 'input3', 'input4', 'input5'];
-        const input2 = [tfOps.scalar(1)];
-        const input3 = [tfOps.scalar(2)];
-        const input4 = [tfOps.scalar(3)];
-        const input5 = [tfOps.scalar(4)];
+        const input2 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input4 = [tfOps.scalar(3)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input5 = [tfOps.scalar(4)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2, input3, input4, input5}, context,
                   spyOpsAsTfOps);
 

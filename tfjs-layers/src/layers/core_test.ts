@@ -21,7 +21,7 @@ import {ActivationIdentifier} from '../keras_format/activation_config';
 import {pyListRepeat} from '../utils/generic_utils';
 import {arrayProd} from '../utils/math_utils';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, requiredTestElement} from '../utils/test_utils';
 
 describe('Dropout Layer: Symbolic', () => {
   const dropoutRates = [0, 0.5];
@@ -69,14 +69,14 @@ describeMathCPUAndGPU('Dropout Layer', () => {
             const xValue = x.dataSync();
             const yValue = y.dataSync();
             let nKept = 0;
-            if (noiseShape === noiseShapes[2]) {  // customized noiseShape
-              for (let i = 0; i < x.shape[0]; ++i) {
-                for (let j = 0; j < x.shape[1]; ++j) {
+            if (noiseShape === requiredTestElement(noiseShapes, 2)) {  // customized noiseShape
+              for (let i = 0; i < requiredTestElement(x.shape, 0); ++i) {
+                for (let j = 0; j < requiredTestElement(x.shape, 1); ++j) {
                   const maskedValue =
-                      yValue[i * x.shape[1] * x.shape[2] + j * x.shape[2]];
-                  for (let k = 0; k < x.shape[2]; ++k) {
+                      yValue[i * requiredTestElement(x.shape, 1) * requiredTestElement(x.shape, 2) + j * requiredTestElement(x.shape, 2)];
+                  for (let k = 0; k < requiredTestElement(x.shape, 2); ++k) {
                     const indice =
-                        i * x.shape[1] * x.shape[2] + j * x.shape[2] + k;
+                        i * requiredTestElement(x.shape, 1) * requiredTestElement(x.shape, 2) + j * requiredTestElement(x.shape, 2) + k;
                     if (training) {
                       if (maskedValue === 0) {
                         expect(yValue[indice]).toEqual(0);
@@ -342,7 +342,7 @@ describeMathCPUAndGPU('Dense Layer: Tensor', () => {
                  expectedOutput = tensor2d(
                      pyListRepeat(
                          expectedElementValue, arrayProd(expectedShape)),
-                     [expectedShape[0], expectedShape[1]]);
+                     [requiredTestElement(expectedShape, 0), requiredTestElement(expectedShape, 1)]);
                }
                expectTensorsClose(
                    denseLayer.apply(input, null) as Tensor, expectedOutput);
@@ -416,7 +416,7 @@ describe('Flatten Layer: Symbolic', () => {
          const flattenLayer = tfl.layers.flatten();
          const output = flattenLayer.apply(symbolicInput) as tfl.SymbolicTensor;
          const expectedShape =
-             [symbolicInput.shape[0], arrayProd(symbolicInput.shape, 1)];
+             [requiredTestElement(symbolicInput.shape, 0), arrayProd(symbolicInput.shape, 1)];
          expect(output.shape).toEqual(expectedShape);
          expect(output.sourceLayer).toEqual(flattenLayer);
          expect(output.inputs).toEqual([symbolicInput]);
@@ -428,7 +428,7 @@ describe('Flatten Layer: Symbolic', () => {
          const flattenLayer = tfl.layers.flatten({});
          const output = flattenLayer.apply(symbolicInput) as tfl.SymbolicTensor;
          const expectedShape =
-             [symbolicInput.shape[0], arrayProd(symbolicInput.shape, 1)];
+             [requiredTestElement(symbolicInput.shape, 0), arrayProd(symbolicInput.shape, 1)];
          expect(output.shape).toEqual(expectedShape);
          expect(output.sourceLayer).toEqual(flattenLayer);
          expect(output.inputs).toEqual([symbolicInput]);

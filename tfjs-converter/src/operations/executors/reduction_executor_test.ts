@@ -27,7 +27,7 @@ import {createBoolAttr, createNumberAttr, createNumberAttrFromIndex, createNumer
 
 describe('reduction', () => {
   let node: Node;
-  const input1 = [tfOps.scalar(1)];
+  const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
   const context = new ExecutionContext({}, {}, {});
   let spyOps: RecursiveSpy<typeof tfOps>;
   let spyOpsAsTfOps: typeof tfOps;
@@ -90,7 +90,7 @@ describe('reduction', () => {
         node.attrParams.reverse = createBoolAttr(false);
         node.inputNames = ['input1', 'input2'];
         node.inputParams.axis = createNumberAttrFromIndex(1);
-        const input2 = [tfOps.scalar(2)];
+        const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 
         expect(spyOps.cumprod).toHaveBeenCalledWith(input1[0], 2, true, false);
@@ -103,7 +103,7 @@ describe('reduction', () => {
         node.attrParams.reverse = createBoolAttr(false);
         node.inputNames = ['input1', 'input2'];
         node.inputParams.axis = createNumberAttrFromIndex(1);
-        const input2 = [tfOps.scalar(2)];
+        const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 
         expect(spyOps.cumsum).toHaveBeenCalledWith(input1[0], 2, true, false);
@@ -115,9 +115,9 @@ describe('reduction', () => {
         node.inputNames = ['input4', 'input3', 'input2'];
         node.inputParams.size = createNumberAttrFromIndex(1);
         node.inputParams.weights = createTensorAttr(2);
-        const input4 = [tfOps.tensor1d([1, 1], 'int32')];
+        const input4 = [tfOps.tensor1d([1, 1], 'int32')] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.scalar(2)];
-        const input2 = [tfOps.tensor1d([])];
+        const input2 = [tfOps.tensor1d([])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         executeOp(node, {input4, input3, input2}, context, spyOpsAsTfOps);
 
         expect(spyOps.bincount).toHaveBeenCalledWith(input4[0], input2[0], 2);
@@ -138,9 +138,9 @@ describe('reduction', () => {
         node.inputParams.size = createNumberAttrFromIndex(1);
         node.inputParams.weights = createTensorAttr(2);
         node.attrParams.binaryOutput = createBoolAttr(true);
-        const input4 = [tfOps.tensor1d([1, 1], 'int32')];
+        const input4 = [tfOps.tensor1d([1, 1], 'int32')] satisfies [ReturnType<typeof tfOps.tensor1d>];
         const input3 = [tfOps.scalar(2)];
-        const input2 = [tfOps.tensor1d([])];
+        const input2 = [tfOps.tensor1d([])] satisfies [ReturnType<typeof tfOps.tensor1d>];
         executeOp(node, {input4, input3, input2}, context, spyOpsAsTfOps);
 
         expect(spyOps.denseBincount)

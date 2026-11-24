@@ -18,7 +18,7 @@ import {randomUniform, scalar, tensor1d, tensor2d, zeros} from '@tensorflow/tfjs
 import * as K from './backend/tfjs_backend';
 import {nameScope} from './common';
 import * as tfl from './index';
-import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose} from './utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose, requiredTestElement} from './utils/test_utils';
 import * as V from './variables';
 
 /**
@@ -399,12 +399,12 @@ describeMathCPUAndGPU('batchGetValue', () => {
     const v3 = V.variable(zeros([2, 2]));
     const values = V.batchGetValue([v1, v2, v3]);
     expect(values.length).toEqual(3);
-    expect(values[0].shape).toEqual([]);
-    expect(values[0].dataSync()).toEqual(new Float32Array([0]));
-    expect(values[1].shape).toEqual([2]);
-    expect(values[1].dataSync()).toEqual(new Float32Array([0, 0]));
-    expect(values[2].shape).toEqual([2, 2]);
-    expect(values[2].dataSync()).toEqual(new Float32Array([0, 0, 0, 0]));
+    expect(requiredTestElement(values, 0).shape).toEqual([]);
+    expect(requiredTestElement(values, 0).dataSync()).toEqual(new Float32Array([0]));
+    expect(requiredTestElement(values, 1).shape).toEqual([2]);
+    expect(requiredTestElement(values, 1).dataSync()).toEqual(new Float32Array([0, 0]));
+    expect(requiredTestElement(values, 2).shape).toEqual([2, 2]);
+    expect(requiredTestElement(values, 2).dataSync()).toEqual(new Float32Array([0, 0, 0, 0]));
   });
 });
 
@@ -440,7 +440,7 @@ describeMathCPUAndGPU('gradients', () => {
     const gradients = V.gradients(() => tfc.mean(var1.read()), [var1]);
     expect(gradients.length).toEqual(1);
     expectTensorsClose(
-        tensor2d([[0.25, 0.25], [0.25, 0.25]], [2, 2]), gradients[0]);
+        tensor2d([[0.25, 0.25], [0.25, 0.25]], [2, 2]), requiredTestElement(gradients, 0));
   });
   it('Simple matmul and mean: 2 variables', () => {
     const var1 = new V.LayerVariable(tensor2d([[1, 0], [0, 0]], [2, 2]));
@@ -450,8 +450,8 @@ describeMathCPUAndGPU('gradients', () => {
     expect(gradients.length).toEqual(2);
     // d(loss) / d(var1).
     expectTensorsClose(
-        tensor2d([[0.25, 0.25], [0.25, 0.25]], [2, 2]), gradients[0]);
+        tensor2d([[0.25, 0.25], [0.25, 0.25]], [2, 2]), requiredTestElement(gradients, 0));
     // d(loss) / d(var2).
-    expectTensorsClose(tensor2d([[0.25, 0.25], [0, 0]], [2, 2]), gradients[1]);
+    expectTensorsClose(tensor2d([[0.25, 0.25], [0, 0]], [2, 2]), requiredTestElement(gradients, 1));
   });
 });

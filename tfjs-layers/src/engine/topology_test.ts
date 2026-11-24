@@ -13,7 +13,7 @@ import {eye, memory, NamedTensorMap, ones, Tensor, tensor1d, tensor2d, zeros} fr
 import * as tfl from '../index';
 import * as initializers from '../initializers';
 import {Shape} from '../keras_format/common';
-import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose, LayerForTest} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose, LayerForTest, requiredTestElement} from '../utils/test_utils';
 import {LayerVariable, onesVariable, zerosVariable} from '../variables';
 
 import {InputSpec, Layer, LayerArgs, Node, SymbolicTensor} from './topology';
@@ -85,7 +85,7 @@ describe('Node', () => {
     expect(node.inputShapes).toEqual(inputShapes);
     expect(node.outputShapes).toEqual(outputShapes);
     expect(node.callArgs).toEqual(callArgs);
-    expect(inboundLayers[0].outboundNodes).toEqual([node]);
+    expect(requiredTestElement(inboundLayers, 0).outboundNodes).toEqual([node]);
     expect(node.outboundLayer.inboundNodes).toEqual([node]);
   });
 
@@ -412,14 +412,14 @@ describeMathCPU('Layer', () => {
     const layer1 = tfl.layers.dense({units: 3});
     layer1.build([4]);
     // The weights should start from a trainable = true state.
-    expect(layer1.weights[0].trainable).toEqual(true);
-    expect(layer1.weights[1].trainable).toEqual(true);
+    expect(requiredTestElement(layer1.weights, 0).trainable).toEqual(true);
+    expect(requiredTestElement(layer1.weights, 1).trainable).toEqual(true);
     layer1.trainable = false;
-    expect(layer1.weights[0].trainable).toEqual(false);
-    expect(layer1.weights[1].trainable).toEqual(false);
+    expect(requiredTestElement(layer1.weights, 0).trainable).toEqual(false);
+    expect(requiredTestElement(layer1.weights, 1).trainable).toEqual(false);
     layer1.trainable = true;
-    expect(layer1.weights[0].trainable).toEqual(true);
-    expect(layer1.weights[1].trainable).toEqual(true);
+    expect(requiredTestElement(layer1.weights, 0).trainable).toEqual(true);
+    expect(requiredTestElement(layer1.weights, 1).trainable).toEqual(true);
   });
 
   for (const trainable of [true, false]) {
@@ -711,7 +711,7 @@ describeMathCPU('Layer', () => {
         const layer = new LayerForTest();
         const result = layer.apply(inputs) as Tensor | Tensor[];
 
-        expect(result instanceof Tensor || (result[0] instanceof Tensor))
+        expect(result instanceof Tensor || (requiredTestElement(result, 0) instanceof Tensor))
             .toBe(true);
 
         expect(layer.built).toBe(true);
@@ -747,7 +747,7 @@ describeMathCPU('Layer', () => {
         expect(layer.weights.length).toEqual(0);
         layer.apply(inputs);
         expect(layer.weights.length).toEqual(1);
-        expectTensorsClose(layer.weights[0].read(), initialWeights);
+        expectTensorsClose(requiredTestElement(layer.weights, 0).read(), initialWeights);
       }
     });
   });
@@ -774,7 +774,7 @@ describeMathCPU('Layer', () => {
          layer.apply(input);
          expect(layer.inboundNodes.length).toEqual(1);
          expect(layer.outboundNodes.length).toEqual(0);
-         expect(layer.inboundNodes[0].outboundLayer).toEqual(layer);
+         expect(requiredTestElement(layer.inboundNodes, 0).outboundLayer).toEqual(layer);
        });
 
     it('updates inbound and outboundNodes when there are multiple layers',
@@ -790,7 +790,7 @@ describeMathCPU('Layer', () => {
          expect(firstLayer.outboundNodes.length).toEqual(1);
          expect(secondLayer.inboundNodes.length).toEqual(1);
          expect(secondLayer.outboundNodes.length).toEqual(0);
-         expect(firstLayer.outboundNodes[0].outboundLayer).toEqual(secondLayer);
+         expect(requiredTestElement(firstLayer.outboundNodes, 0).outboundLayer).toEqual(secondLayer);
        });
   });
 
@@ -878,7 +878,7 @@ describeMathCPU('Layer', () => {
       const onesTensor = ones([1]);
       layer.trainableWeights = [new LayerVariable(zeros([1]))];
       layer.setWeights([onesTensor]);
-      expectTensorsClose(layer.trainableWeights[0].read(), onesTensor);
+      expectTensorsClose(requiredTestElement(layer.trainableWeights, 0).read(), onesTensor);
     });
   });
 
@@ -1071,13 +1071,13 @@ describeMathCPUAndGPU('loadWeightsFromNamedTensorMap', () => {
     const model = tfl.model({inputs: inputTensor, outputs: output});
 
     const namedWeightsMap: NamedTensorMap = {};
-    namedWeightsMap[denseLayer.weights[0].originalName] =
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 0).originalName] =
         tensor2d([1, 2, 3, 4, 5, 6], [3, 2]);
-    namedWeightsMap[denseLayer.weights[1].originalName] = tensor1d([10, 20]);
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 1).originalName] = tensor1d([10, 20]);
     model.loadWeights(namedWeightsMap);
     expectTensorsClose(
-        denseLayer.weights[0].read(), tensor2d([1, 2, 3, 4, 5, 6], [3, 2]));
-    expectTensorsClose(denseLayer.weights[1].read(), tensor1d([10, 20]));
+        requiredTestElement(denseLayer.weights, 0).read(), tensor2d([1, 2, 3, 4, 5, 6], [3, 2]));
+    expectTensorsClose(requiredTestElement(denseLayer.weights, 1).read(), tensor1d([10, 20]));
   });
 
   it('load keras weights', () => {
@@ -1087,14 +1087,14 @@ describeMathCPUAndGPU('loadWeightsFromNamedTensorMap', () => {
     const model = tfl.model({inputs: inputTensor, outputs: output});
 
     const namedWeightsMap: NamedTensorMap = {};
-    namedWeightsMap[denseLayer.weights[0].originalName.split('/')[0] + '/0'] =
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 0).originalName.split('/')[0] + '/0'] =
         tensor2d([1, 2, 3, 4, 5, 6], [3, 2]);
-    namedWeightsMap[denseLayer.weights[1].originalName.split('/')[0] + '/1'] =
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 1).originalName.split('/')[0] + '/1'] =
         tensor1d([10, 20]);
     model.loadWeights(namedWeightsMap);
     expectTensorsClose(
-        denseLayer.weights[0].read(), tensor2d([1, 2, 3, 4, 5, 6], [3, 2]));
-    expectTensorsClose(denseLayer.weights[1].read(), tensor1d([10, 20]));
+        requiredTestElement(denseLayer.weights, 0).read(), tensor2d([1, 2, 3, 4, 5, 6], [3, 2]));
+    expectTensorsClose(requiredTestElement(denseLayer.weights, 1).read(), tensor1d([10, 20]));
   });
 
   it('Mismatching shape throws an error even in non-strict mode', () => {
@@ -1104,9 +1104,9 @@ describeMathCPUAndGPU('loadWeightsFromNamedTensorMap', () => {
     const model = tfl.model({inputs: inputTensor, outputs: output});
 
     const namedWeightsMap: NamedTensorMap = {};
-    namedWeightsMap[denseLayer.weights[0].originalName] =
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 0).originalName] =
         tensor2d([1, 2, 3, 4, 5, 6, 7, 8], [4, 2]);
-    namedWeightsMap[denseLayer.weights[1].originalName] = tensor1d([10, 20]);
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 1).originalName] = tensor1d([10, 20]);
     const strict = false;
     expect(() => model.loadWeights(namedWeightsMap, strict))
         .toThrowError('Shape mismatch: [3,2] vs. [4,2]');
@@ -1119,9 +1119,9 @@ describeMathCPUAndGPU('loadWeightsFromNamedTensorMap', () => {
     const model = tfl.model({inputs: inputTensor, outputs: output});
 
     const namedWeightsMap: NamedTensorMap = {};
-    namedWeightsMap[denseLayer.weights[0].originalName] =
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 0).originalName] =
         tensor2d([1, 2, 3, 4, 5, 6], [3, 2]);
-    namedWeightsMap[denseLayer.weights[1].originalName] = tensor1d([10, 20]);
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 1).originalName] = tensor1d([10, 20]);
     namedWeightsMap['extra'] = tensor1d([10, 20]);
     expect(() => model.loadWeights(namedWeightsMap))
         .toThrowError(/Provided weight data has no target variable: extra/);
@@ -1134,15 +1134,15 @@ describeMathCPUAndGPU('loadWeightsFromNamedTensorMap', () => {
     const model = tfl.model({inputs: inputTensor, outputs: output});
 
     const namedWeightsMap: NamedTensorMap = {};
-    namedWeightsMap[denseLayer.weights[0].originalName] =
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 0).originalName] =
         tensor2d([1, 2, 3, 4, 5, 6], [3, 2]);
-    namedWeightsMap[denseLayer.weights[1].originalName] = tensor1d([10, 20]);
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 1).originalName] = tensor1d([10, 20]);
     namedWeightsMap['extra'] = tensor1d([10, 20]);
     const strict = false;
     model.loadWeights(namedWeightsMap, strict);
     expectTensorsClose(
-        denseLayer.weights[0].read(), tensor2d([1, 2, 3, 4, 5, 6], [3, 2]));
-    expectTensorsClose(denseLayer.weights[1].read(), tensor1d([10, 20]));
+        requiredTestElement(denseLayer.weights, 0).read(), tensor2d([1, 2, 3, 4, 5, 6], [3, 2]));
+    expectTensorsClose(requiredTestElement(denseLayer.weights, 1).read(), tensor1d([10, 20]));
   });
 
   it('Unset weights leads to error', () => {
@@ -1152,7 +1152,7 @@ describeMathCPUAndGPU('loadWeightsFromNamedTensorMap', () => {
     const model = tfl.model({inputs: inputTensor, outputs: output});
 
     const namedWeightsMap: NamedTensorMap = {};
-    namedWeightsMap[denseLayer.weights[0].originalName] =
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 0).originalName] =
         tensor2d([1, 2, 3, 4, 5, 6], [3, 2]);
     expect(() => model.loadWeights(namedWeightsMap))
         .toThrowError(/1 of 2 weights are not set: .*bias.*/);
@@ -1165,7 +1165,7 @@ describeMathCPUAndGPU('loadWeightsFromNamedTensorMap', () => {
     const model = tfl.model({inputs: inputTensor, outputs: output});
 
     const namedWeightsMap: NamedTensorMap = {};
-    namedWeightsMap[denseLayer.weights[0].originalName] =
+    namedWeightsMap[requiredTestElement(denseLayer.weights, 0).originalName] =
         tensor2d([1, 2, 3, 4, 5, 6], [3, 2]);
     const strict = false;
     model.loadWeights(namedWeightsMap, strict);

@@ -22,7 +22,7 @@ import {KernelFunc} from './index';
 import {ALL_ENVS, describeWithFlags, TestKernelBackend, TestBackendWithId} from './jasmine_util';
 import { TensorInfo } from './tensor_info';
 import {Tensor} from './tensor';
-import {expectArraysClose} from './test_util';
+import {expectArraysClose, requiredTestElement} from './test_util';
 import {BackendValues, DataType} from './types';
 
 describe('Backend registration', () => {
@@ -397,14 +397,14 @@ describeWithFlags('profile', ALL_ENVS, () => {
 
     // Test the types for `kernelTimeMs` and `extraInfo` to confirm the promises
     // are resolved.
-    expect(profile.kernels[0].kernelTimeMs instanceof Promise).toBe(false);
-    expect(profile.kernels[0].extraInfo instanceof Promise).toBe(false);
-    expect(profile.kernels[1].kernelTimeMs instanceof Promise).toBe(false);
-    expect(profile.kernels[1].extraInfo instanceof Promise).toBe(false);
+    expect(requiredTestElement(profile.kernels, 0).kernelTimeMs instanceof Promise).toBe(false);
+    expect(requiredTestElement(profile.kernels, 0).extraInfo instanceof Promise).toBe(false);
+    expect(requiredTestElement(profile.kernels, 1).kernelTimeMs instanceof Promise).toBe(false);
+    expect(requiredTestElement(profile.kernels, 1).extraInfo instanceof Promise).toBe(false);
 
     // The specific values of `kernelTimeMs` and `extraInfo` are tested in the
     // tests of Profiler.profileKernel, so their values are not tested here.
-    expect(profile.kernels[0]).toEqual({
+    expect(requiredTestElement(profile.kernels, 0)).toEqual({
       'name': 'Square',
       'bytesAdded': 12,
       'totalBytesSnapshot': 24,
@@ -412,11 +412,11 @@ describeWithFlags('profile', ALL_ENVS, () => {
       'totalTensorsSnapshot': 2,
       'inputShapes': [[3]],
       'outputShapes': [[3]],
-      'kernelTimeMs': profile.kernels[0].kernelTimeMs,
-      'extraInfo': profile.kernels[0].extraInfo
+      'kernelTimeMs': requiredTestElement(profile.kernels, 0).kernelTimeMs,
+      'extraInfo': requiredTestElement(profile.kernels, 0).extraInfo
     });
 
-    expect(profile.kernels[1]).toEqual({
+    expect(requiredTestElement(profile.kernels, 1)).toEqual({
       'name': 'Square',
       'bytesAdded': 12,
       'totalBytesSnapshot': 24,
@@ -424,8 +424,8 @@ describeWithFlags('profile', ALL_ENVS, () => {
       'totalTensorsSnapshot': 2,
       'inputShapes': [[3]],
       'outputShapes': [[3]],
-      'kernelTimeMs': profile.kernels[1].kernelTimeMs,
-      'extraInfo': profile.kernels[1].extraInfo
+      'kernelTimeMs': requiredTestElement(profile.kernels, 1).kernelTimeMs,
+      'extraInfo': requiredTestElement(profile.kernels, 1).extraInfo
     });
   });
 
@@ -443,9 +443,9 @@ describeWithFlags('profile', ALL_ENVS, () => {
     expect(profile.newTensors).toBe(2);
     expectArraysClose(await result.data(), [1, 4, 9]);
     expect(profile.kernels.length).toBe(1);
-    expect(profile.kernels[0].kernelTimeMs instanceof Promise).toBe(false);
-    expect(profile.kernels[0].extraInfo instanceof Promise).toBe(false);
-    expect(profile.kernels[0]).toEqual({
+    expect(requiredTestElement(profile.kernels, 0).kernelTimeMs instanceof Promise).toBe(false);
+    expect(requiredTestElement(profile.kernels, 0).extraInfo instanceof Promise).toBe(false);
+    expect(requiredTestElement(profile.kernels, 0)).toEqual({
       'name': 'Square',
       'bytesAdded': 12,
       'totalBytesSnapshot': 24,
@@ -453,8 +453,8 @@ describeWithFlags('profile', ALL_ENVS, () => {
       'totalTensorsSnapshot': 2,
       'inputShapes': [[3]],
       'outputShapes': [[3]],
-      'kernelTimeMs': profile.kernels[0].kernelTimeMs,
-      'extraInfo': profile.kernels[0].extraInfo
+      'kernelTimeMs': requiredTestElement(profile.kernels, 0).kernelTimeMs,
+      'extraInfo': requiredTestElement(profile.kernels, 0).extraInfo
     });
   });
 
@@ -474,9 +474,9 @@ describeWithFlags('profile', ALL_ENVS, () => {
     expect(profile.newTensors).toBe(1);
     expectArraysClose(await result.data(), [1, 2, 3]);
     expect(profile.kernels.length).toBe(1);
-    expect(profile.kernels[0].kernelTimeMs instanceof Promise).toBe(false);
-    expect(profile.kernels[0].extraInfo instanceof Promise).toBe(false);
-    expect(profile.kernels[0]).toEqual({
+    expect(requiredTestElement(profile.kernels, 0).kernelTimeMs instanceof Promise).toBe(false);
+    expect(requiredTestElement(profile.kernels, 0).extraInfo instanceof Promise).toBe(false);
+    expect(requiredTestElement(profile.kernels, 0)).toEqual({
       'name': 'Square',
       'bytesAdded': 12,
       'totalBytesSnapshot': 24,
@@ -484,8 +484,8 @@ describeWithFlags('profile', ALL_ENVS, () => {
       'totalTensorsSnapshot': 2,
       'inputShapes': [[3]],
       'outputShapes': [[3]],
-      'kernelTimeMs': profile.kernels[0].kernelTimeMs,
-      'extraInfo': profile.kernels[0].extraInfo
+      'kernelTimeMs': requiredTestElement(profile.kernels, 0).kernelTimeMs,
+      'extraInfo': requiredTestElement(profile.kernels, 0).extraInfo
     });
   });
 

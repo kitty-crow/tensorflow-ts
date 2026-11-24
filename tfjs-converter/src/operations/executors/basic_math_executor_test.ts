@@ -94,7 +94,7 @@ describe('basic math', () => {
         node.inputNames = ['input1', 'input2', 'input3'];
         node.inputParams['clipValueMin'] = createNumberAttrFromIndex(1);
         node.inputParams['clipValueMax'] = createNumberAttrFromIndex(2);
-        const input2 = [tfOps.scalar(2)];
+        const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
         const input3 = [tfOps.scalar(3)];
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 
@@ -110,7 +110,7 @@ describe('basic math', () => {
     });
     describe('Rsqrt', () => {
       it('should call tfOps.rsqrt', () => {
-        const input1 = [tfOps.scalar(1)];
+        const input1 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.op = 'Rsqrt';
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
@@ -143,7 +143,7 @@ describe('basic math', () => {
         node.inputParams['x'] = createTensorAttr(0);
         node.inputParams['alpha'] = createTensorAttr(1);
         node.inputNames = ['input1', 'input2'];
-        const input2 = [tfOps.scalar(1)];
+        const input2 = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 
         expect(spyOps.prelu).toHaveBeenCalledWith(input1[0], input2[0]);
@@ -160,7 +160,7 @@ describe('basic math', () => {
         node.op = 'Atan2';
         node.inputParams['y'] = createTensorAttr(1);
         node.inputNames = ['input1', 'input2'];
-        const input2 = [tfOps.scalar(2)];
+        const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 
         expect(spyOps.atan2).toHaveBeenCalledWith(input1[0], input2[0]);
@@ -193,7 +193,7 @@ describe('basic math', () => {
           real: createTensorAttr(0),
           imag: createTensorAttr(1)
         };
-        const input2 = [tfOps.scalar(2)];
+        const input2 = [tfOps.scalar(2)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
 

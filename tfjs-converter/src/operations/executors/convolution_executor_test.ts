@@ -27,7 +27,7 @@ import {createBoolAttr} from './test_helper';
 
 describe('convolution', () => {
   let node: Node;
-  const input = [tfOps.scalar(1)];
+  const input = [tfOps.scalar(1)] satisfies [ReturnType<typeof tfOps.scalar>];
   const context = new ExecutionContext({}, {}, {});
 
   let spyOps: RecursiveSpy<typeof tfOps>;
@@ -98,8 +98,8 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
 
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(1.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -118,8 +118,8 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
 
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(1.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -138,8 +138,8 @@ describe('convolution', () => {
         node.attrParams['strides'] = createNumericArrayAttr([1, 2, 2, 1]);
         node.attrParams['pad'] = createStrAttr('same');
 
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(1.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -157,8 +157,8 @@ describe('convolution', () => {
         node.attrParams['explicitPaddings'] =
             createNumericArrayAttr([0, 0, 1, 1, 2, 2, 0, 0]);
 
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(1.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -183,8 +183,8 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NWC');
         node.attrParams['dilation'] = createNumberAttr(1);
 
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(1.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -204,8 +204,8 @@ describe('convolution', () => {
         node.attrParams['pad'] = createStrAttr('same');
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(1.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -225,8 +225,8 @@ describe('convolution', () => {
             createNumericArrayAttr([0, 0, 1, 1, 2, 2, 0, 0]);
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(1.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -248,8 +248,8 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 2, 1]);
 
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(1.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2'];
 
         executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
@@ -317,9 +317,9 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
         node.attrParams['numArgs'] = createNumberAttr(1);
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(2.0)];
-        const input3 = [tfOps.scalar(3.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
 
         node.inputNames = ['input1', 'input2', 'input3'];
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -349,9 +349,9 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
         node.attrParams['numArgs'] = createNumberAttr(1);
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(2.0)];
-        const input3 = [tfOps.scalar(3.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
 
         node.inputNames = ['input1', 'input2', 'input3'];
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -379,10 +379,10 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
         node.attrParams['numArgs'] = createNumberAttr(2);
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(2.0)];
-        const input3 = [tfOps.scalar(3.0)];
-        const input4 = [tfOps.scalar(4.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input4 = [tfOps.scalar(4.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2', 'input3', 'input4'];
         executeOp(
             node, {input1, input2, input3, input4}, context, spyOpsAsTfOps);
@@ -412,9 +412,9 @@ describe('convolution', () => {
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
         node.attrParams['numArgs'] = createNumberAttr(1);
         node.attrParams['leakyreluAlpha'] = createNumberAttr(0.3);
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(2.0)];
-        const input3 = [tfOps.scalar(3.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
         node.inputNames = ['input1', 'input2', 'input3'];
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 
@@ -442,9 +442,9 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
         node.attrParams['numArgs'] = createNumberAttr(1);
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(2.0)];
-        const input3 = [tfOps.scalar(3.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
 
         node.inputNames = ['input1', 'input2', 'input3'];
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -472,9 +472,9 @@ describe('convolution', () => {
         node.attrParams['dataFormat'] = createStrAttr('NHWC');
         node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
         node.attrParams['numArgs'] = createNumberAttr(1);
-        const input1 = [tfOps.scalar(1.0)];
-        const input2 = [tfOps.scalar(2.0)];
-        const input3 = [tfOps.scalar(3.0)];
+        const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+        const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
 
         node.inputNames = ['input1', 'input2', 'input3'];
         expect(
@@ -497,9 +497,9 @@ describe('convolution', () => {
       node.attrParams['dataFormat'] = createStrAttr('NHWC');
       node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
       node.attrParams['numArgs'] = createNumberAttr(1);
-      const input1 = [tfOps.scalar(1.0)];
-      const input2 = [tfOps.scalar(2.0)];
-      const input3 = [tfOps.scalar(3.0)];
+      const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
 
       node.inputNames = ['input1', 'input2', 'input3'];
       executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -527,9 +527,9 @@ describe('convolution', () => {
       node.attrParams['dataFormat'] = createStrAttr('NHWC');
       node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
       node.attrParams['numArgs'] = createNumberAttr(1);
-      const input1 = [tfOps.scalar(1.0)];
-      const input2 = [tfOps.scalar(2.0)];
-      const input3 = [tfOps.scalar(3.0)];
+      const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
       node.inputNames = ['input1', 'input2', 'input3'];
       executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 
@@ -556,9 +556,9 @@ describe('convolution', () => {
       node.attrParams['dataFormat'] = createStrAttr('NHWC');
       node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
       node.attrParams['numArgs'] = createNumberAttr(1);
-      const input1 = [tfOps.scalar(1.0)];
-      const input2 = [tfOps.scalar(2.0)];
-      const input3 = [tfOps.scalar(3.0)];
+      const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
 
       node.inputNames = ['input1', 'input2', 'input3'];
       executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -586,10 +586,10 @@ describe('convolution', () => {
       node.attrParams['dataFormat'] = createStrAttr('NHWC');
       node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
       node.attrParams['numArgs'] = createNumberAttr(2);
-      const input1 = [tfOps.scalar(1.0)];
-      const input2 = [tfOps.scalar(2.0)];
-      const input3 = [tfOps.scalar(3.0)];
-      const input4 = [tfOps.scalar(4.0)];
+      const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input4 = [tfOps.scalar(4.0)] satisfies [ReturnType<typeof tfOps.scalar>];
       node.inputNames = ['input1', 'input2', 'input3', 'input4'];
       executeOp(node, {input1, input2, input3, input4}, context, spyOpsAsTfOps);
 
@@ -618,9 +618,9 @@ describe('convolution', () => {
       node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
       node.attrParams['numArgs'] = createNumberAttr(1);
       node.attrParams['leakyreluAlpha'] = createNumberAttr(0.3);
-      const input1 = [tfOps.scalar(1.0)];
-      const input2 = [tfOps.scalar(2.0)];
-      const input3 = [tfOps.scalar(3.0)];
+      const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
       node.inputNames = ['input1', 'input2', 'input3'];
       executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 
@@ -648,9 +648,9 @@ describe('convolution', () => {
       node.attrParams['dataFormat'] = createStrAttr('NHWC');
       node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
       node.attrParams['numArgs'] = createNumberAttr(1);
-      const input1 = [tfOps.scalar(1.0)];
-      const input2 = [tfOps.scalar(2.0)];
-      const input3 = [tfOps.scalar(3.0)];
+      const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input2 = [tfOps.scalar(2.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input3 = [tfOps.scalar(3.0)] satisfies [ReturnType<typeof tfOps.scalar>];
 
       node.inputNames = ['input1', 'input2', 'input3'];
       executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
@@ -678,8 +678,8 @@ describe('convolution', () => {
       node.attrParams['pad'] = createStrAttr('same');
       node.attrParams['dilations'] = createNumericArrayAttr([1, 2, 2, 1]);
 
-      const input1 = [tfOps.scalar(1.0)];
-      const input2 = [tfOps.scalar(1.0)];
+      const input1 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
+      const input2 = [tfOps.scalar(1.0)] satisfies [ReturnType<typeof tfOps.scalar>];
       node.inputNames = ['input1', 'input2'];
 
       executeOp(node, {input1, input2}, context, spyOpsAsTfOps);
