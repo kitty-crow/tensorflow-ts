@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Max, MaxAttrs, MaxInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -58,12 +56,12 @@ function max_<T extends Tensor>(
     x: Tensor|TensorLike, axis: number|number[] = null, keepDims = false): T {
   const $x = convertToTensor(x, 'x', 'max');
 
-  const inputs: MaxInputs = {x: $x};
-  const attrs: MaxAttrs = {reductionIndices: axis, keepDims};
+  const inputs = {x: $x} satisfies MaxInputs;
+  const attrs = {reductionIndices: axis, keepDims} satisfies MaxAttrs;
 
   return ENGINE.runKernel(
-      Max, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Max, inputs,
+      attrs);
 }
 
 export const max = /* @__PURE__ */ op({max_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../../engine';
 import {CropAndResize, CropAndResizeAttrs, CropAndResizeInputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor1D, Tensor2D, Tensor4D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import * as util from '../../util';
@@ -86,12 +84,11 @@ function cropAndResize_(
       method === 'bilinear' || method === 'nearest',
       () => `method must be bilinear or nearest, but was ${method}`);
 
-  const inputs:
-      CropAndResizeInputs = {image: $image, boxes: $boxes, boxInd: $boxInd};
-  const attrs: CropAndResizeAttrs = {method, extrapolationValue, cropSize};
+  const inputs = {image: $image, boxes: $boxes, boxInd: $boxInd} satisfies CropAndResizeInputs;
+  const attrs = {method, extrapolationValue, cropSize} satisfies CropAndResizeAttrs;
   const res = ENGINE.runKernel(
-      CropAndResize, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      CropAndResize, inputs,
+      attrs);
   return res as Tensor4D;
 }
 

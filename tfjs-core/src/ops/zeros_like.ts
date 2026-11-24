@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {ZerosLike, ZerosLikeInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,7 +38,7 @@ import {op} from './operation';
  */
 function zerosLike_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'zerosLike');
-  const inputs: ZerosLikeInputs = {x: $x};
-  return ENGINE.runKernel(ZerosLike, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies ZerosLikeInputs;
+  return ENGINE.runKernel(ZerosLike, inputs);
 }
 export const zerosLike = /* @__PURE__ */ op({zerosLike_});

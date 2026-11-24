@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Ceil, CeilInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,7 +38,7 @@ import {op} from './operation';
 function ceil_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'ceil', 'float32');
 
-  const inputs: CeilInputs = {x: $x};
-  return ENGINE.runKernel(Ceil, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies CeilInputs;
+  return ENGINE.runKernel(Ceil, inputs);
 }
 export const ceil = /* @__PURE__ */ op({ceil_});

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Asinh, AsinhInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -40,8 +39,8 @@ import {op} from './operation';
 function asinh_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'asinh');
 
-  const inputs: AsinhInputs = {x: $x};
+  const inputs = {x: $x} satisfies AsinhInputs;
 
-  return ENGINE.runKernel(Asinh, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Asinh, inputs);
 }
 export const asinh = /* @__PURE__ */ op({asinh_});

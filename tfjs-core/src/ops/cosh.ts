@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Cosh, CoshInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -38,8 +37,8 @@ import {op} from './operation';
  */
 function cosh_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'cosh', 'float32');
-  const inputs: CoshInputs = {x: $x};
+  const inputs = {x: $x} satisfies CoshInputs;
 
-  return ENGINE.runKernel(Cosh, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Cosh, inputs);
 }
 export const cosh = /* @__PURE__ */ op({cosh_});

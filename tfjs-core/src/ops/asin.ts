@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Asin, AsinInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -37,8 +36,8 @@ import {op} from './operation';
  */
 function asin_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'asin');
-  const inputs: AsinInputs = {x: $x};
+  const inputs = {x: $x} satisfies AsinInputs;
 
-  return ENGINE.runKernel(Asin, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Asin, inputs);
 }
 export const asin = /* @__PURE__ */ op({asin_});

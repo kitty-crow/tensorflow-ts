@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Equal, EqualInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -48,9 +47,9 @@ function equal_<T extends Tensor>(
 
   assertAndGetBroadcastShape($a.shape, $b.shape);
 
-  const inputs: EqualInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies EqualInputs;
 
-  return ENGINE.runKernel(Equal, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Equal, inputs);
 }
 
 export const equal = /* @__PURE__ */ op({equal_});

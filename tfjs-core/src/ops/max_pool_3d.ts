@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D, Tensor5D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -85,14 +83,13 @@ function maxPool3d_<T extends Tensor4D|Tensor5D>(
       () => `Error in maxPool3d: Only NDHWC is currently supported, ` +
           `but got dataFormat of ${dataFormat}`);
   checkPadOnDimRoundingMode('maxPool3d', pad, dimRoundingMode);
-  const inputs: MaxPool3DInputs = {x: x5D};
-  const attrs:
-      MaxPool3DAttrs = {filterSize, strides, pad, dimRoundingMode, dataFormat};
+  const inputs = {x: x5D} satisfies MaxPool3DInputs;
+  const attrs = {filterSize, strides, pad, dimRoundingMode, dataFormat} satisfies MaxPool3DAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  MaxPool3D, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  MaxPool3D, inputs,
+                  attrs) as T;
 
   if (reshapedTo5D) {
     return reshape(

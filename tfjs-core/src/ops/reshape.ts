@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Reshape, ReshapeAttrs, ReshapeInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank, ShapeMap, TensorLike} from '../types';
 
@@ -55,10 +53,10 @@ function reshape_<R extends Rank>(
     x: Tensor|TensorLike, shape: ShapeMap[R]): Tensor<R> {
   const $x = convertToTensor(x, 'x', 'reshape', 'string_or_numeric');
 
-  const inputs: ReshapeInputs = {x: $x};
-  const attrs: ReshapeAttrs = {shape};
+  const inputs = {x: $x} satisfies ReshapeInputs;
+  const attrs = {shape} satisfies ReshapeAttrs;
   return ENGINE.runKernel(
-      Reshape, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Reshape, inputs,
+      attrs);
 }
 export const reshape = /* @__PURE__ */ op({reshape_});

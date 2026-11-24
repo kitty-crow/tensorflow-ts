@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Expm1, Expm1Inputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -40,7 +39,7 @@ import {op} from './operation';
 function expm1_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'expm1');
 
-  const inputs: Expm1Inputs = {x: $x};
-  return ENGINE.runKernel(Expm1, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies Expm1Inputs;
+  return ENGINE.runKernel(Expm1, inputs);
 }
 export const expm1 = /* @__PURE__ */ op({expm1_});

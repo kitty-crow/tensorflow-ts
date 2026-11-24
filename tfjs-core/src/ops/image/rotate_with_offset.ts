@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../../engine';
 import {RotateWithOffset, RotateWithOffsetAttrs, RotateWithOffsetInputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor4D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import * as util from '../../util';
@@ -53,11 +51,11 @@ function rotateWithOffset_(
       () => 'Error in rotateWithOffset: image must be rank 4,' +
           `but got rank ${$image.rank}.`);
 
-  const inputs: RotateWithOffsetInputs = {image: $image};
-  const attrs: RotateWithOffsetAttrs = {radians, fillValue, center};
+  const inputs = {image: $image} satisfies RotateWithOffsetInputs;
+  const attrs = {radians, fillValue, center} satisfies RotateWithOffsetAttrs;
   const res = ENGINE.runKernel(
-      RotateWithOffset, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      RotateWithOffset, inputs,
+      attrs);
   return res as Tensor4D;
 }
 

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Softplus, SoftplusInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,7 +38,7 @@ import {op} from './operation';
 function softplus_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'softplus');
 
-  const inputs: SoftplusInputs = {x: $x};
-  return ENGINE.runKernel(Softplus, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies SoftplusInputs;
+  return ENGINE.runKernel(Softplus, inputs);
 }
 export const softplus = /* @__PURE__ */ op({softplus_});

@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Pow, PowInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -58,9 +57,9 @@ function pow_<T extends Tensor>(
   let $exp = convertToTensor(exp, 'exp', 'pow');
   [$base, $exp] = makeTypesMatch($base, $exp);
 
-  const inputs: PowInputs = {a: $base, b: $exp};
+  const inputs = {a: $base, b: $exp} satisfies PowInputs;
 
-  return ENGINE.runKernel(Pow, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Pow, inputs);
 }
 
 export const pow = /* @__PURE__ */ op({pow_});

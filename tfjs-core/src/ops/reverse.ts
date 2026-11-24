@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Reverse, ReverseAttrs, ReverseInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -60,12 +58,12 @@ function reverse_<T extends Tensor>(
     x: T|TensorLike, axis?: number|number[]): T {
   const $x = convertToTensor(x, 'x', 'reverse');
 
-  const inputs: ReverseInputs = {x: $x};
-  const attrs: ReverseAttrs = {dims: axis};
+  const inputs = {x: $x} satisfies ReverseInputs;
+  const attrs = {dims: axis} satisfies ReverseAttrs;
 
   return ENGINE.runKernel(
-      Reverse, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Reverse, inputs,
+      attrs);
 }
 
 export const reverse = /* @__PURE__ */ op({reverse_});

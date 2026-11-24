@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {AvgPoolGrad, AvgPoolGradAttrs, AvgPoolGradInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor3D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -78,14 +76,14 @@ function avgPoolGrad_<T extends Tensor3D|Tensor4D>(
       () => `Error in avgPoolGrad: input must be rank 4 but got rank ` +
           `${input4D.rank}.`);
 
-  const inputs: AvgPoolGradInputs = {dy: dy4D, input: input4D};
+  const inputs = {dy: dy4D, input: input4D} satisfies AvgPoolGradInputs;
 
-  const attrs: AvgPoolGradAttrs = {filterSize, strides, pad};
+  const attrs = {filterSize, strides, pad} satisfies AvgPoolGradAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  AvgPoolGrad, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  AvgPoolGrad, inputs,
+                  attrs) as T;
 
   if (reshapedTo4D) {
     return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;

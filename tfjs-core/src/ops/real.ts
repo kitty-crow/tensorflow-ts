@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Real, RealInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import {op} from './operation';
@@ -41,8 +40,8 @@ import {op} from './operation';
 function real_<T extends Tensor>(input: T|TensorLike): T {
   const $input = convertToTensor(input, 'input', 'real');
 
-  const inputs: RealInputs = {input: $input};
-  return ENGINE.runKernel(Real, inputs as unknown as NamedTensorMap);
+  const inputs = {input: $input} satisfies RealInputs;
+  return ENGINE.runKernel(Real, inputs);
 }
 
 export const real = /* @__PURE__ */ op({real_});

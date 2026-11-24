@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Less, LessInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -47,9 +46,9 @@ function less_<T extends Tensor>(
 
   assertAndGetBroadcastShape($a.shape, $b.shape);
 
-  const inputs: LessInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies LessInputs;
 
-  return ENGINE.runKernel(Less, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Less, inputs);
 }
 
 export const less = /* @__PURE__ */ op({less_});

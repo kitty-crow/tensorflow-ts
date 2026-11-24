@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Sinh, SinhInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -38,8 +37,8 @@ import {op} from './operation';
  */
 function sinh_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'sinh');
-  const inputs: SinhInputs = {x: $x};
+  const inputs = {x: $x} satisfies SinhInputs;
 
-  return ENGINE.runKernel(Sinh, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Sinh, inputs);
 }
 export const sinh = /* @__PURE__ */ op({sinh_});

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {IsNan, IsNanInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -38,8 +37,8 @@ import {op} from './operation';
  */
 function isNaN_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'isNaN');
-  const inputs: IsNanInputs = {x: $x};
+  const inputs = {x: $x} satisfies IsNanInputs;
 
-  return ENGINE.runKernel(IsNan, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(IsNan, inputs);
 }
 export const isNaN = /* @__PURE__ */ op({isNaN_});

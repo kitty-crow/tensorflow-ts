@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {ClipByValue, ClipByValueAttrs, ClipByValueInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -52,12 +50,12 @@ function clipByValue_<T extends Tensor>(
     return fill($x.shape, clipValueMin, $x.dtype) as T;
   }
 
-  const inputs: ClipByValueInputs = {x: $x};
-  const attrs: ClipByValueAttrs = {clipValueMin, clipValueMax};
+  const inputs = {x: $x} satisfies ClipByValueInputs;
+  const attrs = {clipValueMin, clipValueMax} satisfies ClipByValueAttrs;
 
   return ENGINE.runKernel(
-      ClipByValue, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      ClipByValue, inputs,
+      attrs);
 }
 
 export const clipByValue = /* @__PURE__ */ op({clipByValue_});

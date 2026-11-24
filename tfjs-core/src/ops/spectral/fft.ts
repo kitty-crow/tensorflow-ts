@@ -18,7 +18,6 @@
 import {ENGINE} from '../../engine';
 import {FFT, FFTInputs} from '../../kernel_names';
 import {Tensor} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
 import {assert} from '../../util';
 import {op} from '../operation';
 
@@ -45,9 +44,9 @@ function fft_(input: Tensor): Tensor {
       () => `The dtype for tf.spectral.fft() must be complex64 ` +
           `but got ${input.dtype}.`);
 
-  const inputs: FFTInputs = {input};
+  const inputs = {input} satisfies FFTInputs;
 
-  return ENGINE.runKernel(FFT, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(FFT, inputs);
 }
 
 export const fft = /* @__PURE__ */ op({fft_});

@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../engine';
 import {MaxPoolWithArgmax, MaxPoolWithArgmaxAttrs, MaxPoolWithArgmaxInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor, Tensor4D} from '../tensor';
 import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
@@ -64,14 +63,13 @@ function maxPoolWithArgmax_<T extends Tensor4D>(
     includeBatchInIndex = false): NamedTensorMap {
   const $x = convertToTensor(x, 'x', 'maxPoolWithArgmax');
 
-  const inputs: MaxPoolWithArgmaxInputs = {x: $x};
-  const attrs:
-      MaxPoolWithArgmaxAttrs = {filterSize, strides, pad, includeBatchInIndex};
+  const inputs = {x: $x} satisfies MaxPoolWithArgmaxInputs;
+  const attrs = {filterSize, strides, pad, includeBatchInIndex} satisfies MaxPoolWithArgmaxAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const result = ENGINE.runKernel(
-                     MaxPoolWithArgmax, inputs as unknown as NamedTensorMap,
-                     attrs as unknown as NamedAttrMap) as Tensor[];
+                     MaxPoolWithArgmax, inputs,
+                     attrs) as Tensor[];
 
   return {result: result[0], indexes: result[1]};
 }

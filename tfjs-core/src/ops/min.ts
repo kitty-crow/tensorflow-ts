@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {Min, MinAttrs, MinInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -57,13 +55,13 @@ function min_<T extends Tensor>(
     x: Tensor|TensorLike, axis: number|number[] = null, keepDims = false): T {
   const $x = convertToTensor(x, 'x', 'min');
 
-  const inputs: MinInputs = {x: $x};
-  const attrs: MinAttrs = {axis, keepDims};
+  const inputs = {x: $x} satisfies MinInputs;
+  const attrs = {axis, keepDims} satisfies MinAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   return ENGINE.runKernel(
-             Min, inputs as unknown as NamedTensorMap,
-             attrs as unknown as NamedAttrMap) as T;
+             Min, inputs,
+             attrs) as T;
 }
 
 export const min = /* @__PURE__ */ op({min_});

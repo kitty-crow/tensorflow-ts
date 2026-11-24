@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../../engine';
 import {ResizeNearestNeighbor, ResizeNearestNeighborAttrs, ResizeNearestNeighborInputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor3D, Tensor4D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import * as util from '../../util';
@@ -75,14 +73,13 @@ function resizeNearestNeighbor_<T extends Tensor3D|Tensor4D>(
   }
   const [] = size;
 
-  const inputs: ResizeNearestNeighborInputs = {images: batchImages};
-  const attrs:
-      ResizeNearestNeighborAttrs = {alignCorners, halfPixelCenters, size};
+  const inputs = {images: batchImages} satisfies ResizeNearestNeighborInputs;
+  const attrs = {alignCorners, halfPixelCenters, size} satisfies ResizeNearestNeighborAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  ResizeNearestNeighbor, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  ResizeNearestNeighbor, inputs,
+                  attrs) as T;
 
   if (reshapedTo4D) {
     return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;

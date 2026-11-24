@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Reciprocal, ReciprocalInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,7 +38,7 @@ import {op} from './operation';
 function reciprocal_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'reciprocal');
 
-  const inputs: ReciprocalInputs = {x: $x};
-  return ENGINE.runKernel(Reciprocal, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies ReciprocalInputs;
+  return ENGINE.runKernel(Reciprocal, inputs);
 }
 export const reciprocal = /* @__PURE__ */ op({reciprocal_});

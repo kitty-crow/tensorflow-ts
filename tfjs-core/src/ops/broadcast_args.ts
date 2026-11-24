@@ -15,7 +15,6 @@
  * =============================================================================
  */
 
-import { NamedTensorMap } from '../tensor_types';
 import { ENGINE } from '../engine';
 import { BroadcastArgs, BroadcastArgsInputs } from '../kernel_names';
 import { Tensor } from '../tensor';
@@ -55,8 +54,8 @@ function broadcastArgs_<R extends Rank>(
       `Has rank ${shape2Input.rank}`);
   }
 
-  const inputs: BroadcastArgsInputs = { s0: shape1Input, s1: shape2Input };
-  return ENGINE.runKernel(BroadcastArgs, inputs as unknown as NamedTensorMap);
+  const inputs = { s0: shape1Input, s1: shape2Input } satisfies BroadcastArgsInputs;
+  return ENGINE.runKernel(BroadcastArgs, inputs);
 }
 
 export const broadcastArgs = /* @__PURE__ */ op({ broadcastArgs_ });

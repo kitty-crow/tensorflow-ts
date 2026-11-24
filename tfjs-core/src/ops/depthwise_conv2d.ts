@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {DepthwiseConv2dNative, DepthwiseConv2dNativeAttrs, DepthwiseConv2dNativeInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor3D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -104,14 +102,13 @@ function depthwiseConv2d_<T extends Tensor3D|Tensor4D>(
           `(${inChannels}) must match the inChannels dimension in ` +
           `filter ${$filter.shape[2]}.`);
   conv_util.checkPadOnDimRoundingMode('depthwiseConv2d', pad, dimRoundingMode);
-  const inputs: DepthwiseConv2dNativeInputs = {x: x4D, filter: $filter};
-  const attrs: DepthwiseConv2dNativeAttrs =
-      {strides, pad, dataFormat, dilations, dimRoundingMode};
+  const inputs = {x: x4D, filter: $filter} satisfies DepthwiseConv2dNativeInputs;
+  const attrs = {strides, pad, dataFormat, dilations, dimRoundingMode} satisfies DepthwiseConv2dNativeAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  DepthwiseConv2dNative, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  DepthwiseConv2dNative, inputs,
+                  attrs) as T;
 
   if (reshapedTo4D) {
     return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;

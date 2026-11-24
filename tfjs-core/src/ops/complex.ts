@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Complex, ComplexInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -52,8 +51,8 @@ function complex_<T extends Tensor>(real: T|TensorLike, imag: T|TensorLike): T {
       `real and imag shapes, ${$real.shape} and ${$imag.shape}, ` +
           `must match in call to tf.complex().`);
 
-  const inputs: ComplexInputs = {real: $real, imag: $imag};
-  return ENGINE.runKernel(Complex, inputs as unknown as NamedTensorMap);
+  const inputs = {real: $real, imag: $imag} satisfies ComplexInputs;
+  return ENGINE.runKernel(Complex, inputs);
 }
 
 export const complex = /* @__PURE__ */ op({complex_});

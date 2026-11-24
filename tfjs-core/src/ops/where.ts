@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Select, SelectInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -63,12 +62,12 @@ function where_<T extends Tensor>(
   const $broadcastedA = broadcastTo($a, broadcastShape);
   const $broadcastedB = broadcastTo($b, broadcastShape);
 
-  const inputs: SelectInputs = {
+  const inputs = {
     condition: $broadcastedCondition,
     t: $broadcastedA,
     e: $broadcastedB
-  };
-  return ENGINE.runKernel(Select, inputs as unknown as NamedTensorMap);
+  } satisfies SelectInputs;
+  return ENGINE.runKernel(Select, inputs);
 }
 
 export const where = /* @__PURE__ */ op({where_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {PadV2, PadV2Attrs, PadV2Inputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -57,11 +55,11 @@ function pad_<T extends Tensor>(
     throw new Error('pad(scalar) is not defined. Pass non-scalar to pad');
   }
 
-  const attrs: PadV2Attrs = {paddings, constantValue};
-  const inputs: PadV2Inputs = {x: $x};
+  const attrs = {paddings, constantValue} satisfies PadV2Attrs;
+  const inputs = {x: $x} satisfies PadV2Inputs;
   return ENGINE.runKernel(
-      PadV2, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      PadV2, inputs,
+      attrs);
 }
 
 export const pad = /* @__PURE__ */ op({pad_});

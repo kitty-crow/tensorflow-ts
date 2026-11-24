@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Cos, CosInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,8 +38,8 @@ import {op} from './operation';
 function cos_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'cos', 'float32');
 
-  const inputs: CosInputs = {x: $x};
+  const inputs = {x: $x} satisfies CosInputs;
 
-  return ENGINE.runKernel(Cos, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Cos, inputs);
 }
 export const cos = /* @__PURE__ */ op({cos_});

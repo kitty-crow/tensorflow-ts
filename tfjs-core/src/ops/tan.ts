@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Tan, TanInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,8 +38,8 @@ import {op} from './operation';
 function tan_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'tan', 'float32');
 
-  const inputs: TanInputs = {x: $x};
+  const inputs = {x: $x} satisfies TanInputs;
 
-  return ENGINE.runKernel(Tan, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Tan, inputs);
 }
 export const tan = /* @__PURE__ */ op({tan_});

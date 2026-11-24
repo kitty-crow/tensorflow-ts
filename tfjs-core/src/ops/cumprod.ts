@@ -17,9 +17,7 @@
 
 import { ENGINE } from '../engine';
 import { Cumprod, CumprodAttrs, CumprodInputs } from '../kernel_names';
-import { NamedAttrMap } from '../kernel_registry';
 import { Tensor } from '../tensor';
-import { NamedTensorMap } from '../tensor_types';
 import { convertToTensor } from '../tensor_util_env';
 import { TensorLike } from '../types';
 
@@ -56,13 +54,13 @@ function cumprod_<T extends Tensor>(
 ): T {
   const $x = convertToTensor(x, 'x', 'cumprod');
 
-  const inputs: CumprodInputs = { x: $x };
-  const attrs: CumprodAttrs = { axis, exclusive, reverse };
+  const inputs = { x: $x } satisfies CumprodInputs;
+  const attrs = { axis, exclusive, reverse } satisfies CumprodAttrs;
 
   return ENGINE.runKernel(
     Cumprod,
-    inputs as unknown as NamedTensorMap,
-    attrs as unknown as NamedAttrMap
+    inputs,
+    attrs
   );
 }
 

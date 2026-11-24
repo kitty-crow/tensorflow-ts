@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {ArgMax, ArgMaxAttrs, ArgMaxInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -52,12 +50,12 @@ import {op} from './operation';
 function argMax_<T extends Tensor>(x: Tensor|TensorLike, axis = 0): T {
   const $x = convertToTensor(x, 'x', 'argMax');
 
-  const inputs: ArgMaxInputs = {x: $x};
-  const attrs: ArgMaxAttrs = {axis};
+  const inputs = {x: $x} satisfies ArgMaxInputs;
+  const attrs = {axis} satisfies ArgMaxAttrs;
 
   return ENGINE.runKernel(
-      ArgMax, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      ArgMax, inputs,
+      attrs);
 }
 
 export const argMax = /* @__PURE__ */ op({argMax_});

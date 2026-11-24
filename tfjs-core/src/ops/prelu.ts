@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Prelu, PreluInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -44,8 +43,8 @@ function prelu_<T extends Tensor>(x: T|TensorLike, alpha: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'prelu');
   const $alpha = convertToTensor(alpha, 'alpha', 'prelu');
 
-  const inputs: PreluInputs = {x: $x, alpha: $alpha};
-  return ENGINE.runKernel(Prelu, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x, alpha: $alpha} satisfies PreluInputs;
+  return ENGINE.runKernel(Prelu, inputs);
 }
 
 export const prelu = /* @__PURE__ */ op({prelu_});

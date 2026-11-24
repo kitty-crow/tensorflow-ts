@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {OneHot, OneHotAttrs, OneHotInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {DataType, TensorLike} from '../types';
 
@@ -57,12 +55,12 @@ function oneHot_(
   }
   const $indices = convertToTensor(indices, 'indices', 'oneHot', 'int32');
 
-  const inputs: OneHotInputs = {indices: $indices};
-  const attrs: OneHotAttrs = {dtype, depth, onValue, offValue};
+  const inputs = {indices: $indices} satisfies OneHotInputs;
+  const attrs = {dtype, depth, onValue, offValue} satisfies OneHotAttrs;
 
   return ENGINE.runKernel(
-      OneHot, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      OneHot, inputs,
+      attrs);
 }
 
 export const oneHot = /* @__PURE__ */ op({oneHot_});

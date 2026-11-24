@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Bincount, BincountAttrs, BincountInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor1D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -59,12 +57,12 @@ function bincount_<T extends Tensor1D>(
           `0-length, but got input shape: ${$x.shape}, weights shape: ` +
           `${$weights.shape}.`);
 
-  const inputs: BincountInputs = {x: $x, weights: $weights};
-  const attrs: BincountAttrs = {size};
+  const inputs = {x: $x, weights: $weights} satisfies BincountInputs;
+  const attrs = {size} satisfies BincountAttrs;
 
   return ENGINE.runKernel(
-      Bincount, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Bincount, inputs,
+      attrs);
 }
 
 export const bincount = /* @__PURE__ */ op({bincount_});

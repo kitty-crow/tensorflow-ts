@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {GatherV2, GatherV2Attrs, GatherV2Inputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -56,12 +54,12 @@ function gather_<T extends Tensor>(
   const $x = convertToTensor(x, 'x', 'gather');
   const $indices = convertToTensor(indices, 'indices', 'gather', 'int32');
 
-  const inputs: GatherV2Inputs = {x: $x, indices: $indices};
-  const attrs: GatherV2Attrs = {axis, batchDims};
+  const inputs = {x: $x, indices: $indices} satisfies GatherV2Inputs;
+  const attrs = {axis, batchDims} satisfies GatherV2Attrs;
 
   return ENGINE.runKernel(
-      GatherV2, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      GatherV2, inputs,
+      attrs);
 }
 
 export const gather = /* @__PURE__ */ op({gather_});

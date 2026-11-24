@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Softmax, SoftmaxAttrs, SoftmaxInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -58,12 +56,12 @@ function softmax_<T extends Tensor>(logits: T|TensorLike, dim = -1): T {
         `Logits was rank ${$logits.rank} and dim was ${dim}`);
   }
 
-  const inputs: SoftmaxInputs = {logits: $logits};
-  const attrs: SoftmaxAttrs = {dim};
+  const inputs = {logits: $logits} satisfies SoftmaxInputs;
+  const attrs = {dim} satisfies SoftmaxAttrs;
 
   return ENGINE.runKernel(
-      Softmax, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Softmax, inputs,
+      attrs);
 }
 
 export const softmax = /* @__PURE__ */ op({softmax_});

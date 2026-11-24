@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../../engine';
 import {ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor3D, Tensor4D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import * as util from '../../util';
@@ -72,13 +70,13 @@ function resizeBilinear_<T extends Tensor3D|Tensor4D>(
 
   const [] = size;
 
-  const inputs: ResizeBilinearInputs = {images: batchImages};
-  const attrs: ResizeBilinearAttrs = {alignCorners, halfPixelCenters, size};
+  const inputs = {images: batchImages} satisfies ResizeBilinearInputs;
+  const attrs = {alignCorners, halfPixelCenters, size} satisfies ResizeBilinearAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  ResizeBilinear, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  ResizeBilinear, inputs,
+                  attrs) as T;
 
   if (reshapedTo4D) {
     return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;

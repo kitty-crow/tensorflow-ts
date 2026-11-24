@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {Cast, CastAttrs, CastInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {DataType, TensorLike} from '../types';
 import * as util from '../util';
@@ -49,12 +47,12 @@ function cast_<T extends Tensor>(x: T|TensorLike, dtype: DataType): T {
     throw new Error('Only strings can be casted to strings');
   }
 
-  const inputs: CastInputs = {x: $x};
-  const attrs: CastAttrs = {dtype};
+  const inputs = {x: $x} satisfies CastInputs;
+  const attrs = {dtype} satisfies CastAttrs;
 
   return ENGINE.runKernel(
-      Cast, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Cast, inputs,
+      attrs);
 }
 
 export const cast = /* @__PURE__ */ op({cast_});

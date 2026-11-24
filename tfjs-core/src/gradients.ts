@@ -22,6 +22,11 @@ import {convertToTensor, convertToTensorArray} from './tensor_util_env';
 import {TensorLike} from './types';
 import * as util from './util';
 
+/** One gradient for every input, retaining the length of a known input tuple. */
+type GradientTuple<A extends readonly (Tensor|TensorLike)[]> = {
+  [K in keyof A]: Tensor;
+};
+
 /**
  * Provided `f(x)`, returns another function `g(x, dy?)`, which gives the
  * gradient of `f(x)` with respect to `x`.
@@ -108,11 +113,13 @@ function grad(f: (x: Tensor) => Tensor): (
  *
  * @doc {heading: 'Training', subheading: 'Gradients'}
  */
-function grads(f: (...args: Tensor[]) => Tensor): (
-    args: Array<Tensor|TensorLike>, dy?: Tensor|TensorLike) => Tensor[] {
+function grads(f: (...args: Tensor[]) => Tensor):
+    <A extends Array<Tensor|TensorLike>>(
+        args: [...A], dy?: Tensor|TensorLike) => GradientTuple<A> {
   util.assert(
       util.isFunction(f), () => 'The f passed in grads(f) must be a function');
-  return (args: Array<Tensor|TensorLike>, dy?: Tensor|TensorLike): Tensor[] => {
+  return <A extends Array<Tensor|TensorLike>>(
+      args: [...A], dy?: Tensor|TensorLike): GradientTuple<A> => {
     util.assert(
         Array.isArray(args),
         () => 'The args passed in grads(f)(args) must be an array ' +
@@ -130,7 +137,7 @@ function grads(f: (...args: Tensor[]) => Tensor): (
             'The shape of dy passed in grads(f)([x1,...], dy) must ' +
                 'match the shape returned by f([x1,...])');
       }
-      checkGrads(grads);
+      checkGradientTuple<A>($args.length, grads);
       return grads;
     });
   };
@@ -213,15 +220,15 @@ function valueAndGrad<I extends Tensor, O extends Tensor>(f: (x: I) => O): (
  *
  * @doc {heading: 'Training', subheading: 'Gradients'}
  */
-function valueAndGrads<O extends Tensor>(f: (...args: Tensor[]) => O): (
-    args: Tensor[], dy?: O) => {
-  grads: Tensor[];
-  value: O;
-} {
+function valueAndGrads<O extends Tensor>(f: (...args: Tensor[]) => O):
+    <A extends Tensor[]>(args: [...A], dy?: O) => {
+      grads: GradientTuple<A>;
+      value: O;
+    } {
   util.assert(
       util.isFunction(f),
       () => 'The f passed in valueAndGrads(f) must be a function');
-  return (args: Tensor[], dy?: O) => {
+  return <A extends Tensor[]>(args: [...A], dy?: O) => {
     util.assert(
         Array.isArray(args) && args.every(arg => arg instanceof Tensor),
         () => 'The args passed in valueAndGrads(f)(args) must be array of ' +
@@ -229,6 +236,7 @@ function valueAndGrads<O extends Tensor>(f: (...args: Tensor[]) => O): (
     util.assert(
         dy == null || dy instanceof Tensor,
         () => 'The dy passed in valueAndGrads(f)(args, dy) must be a tensor');
+    const expectedLength = args.length;
     const res = ENGINE.gradients(() => f(...args), args, dy);
     if (dy != null) {
       util.assertShapesMatch(
@@ -236,8 +244,8 @@ function valueAndGrads<O extends Tensor>(f: (...args: Tensor[]) => O): (
           'The shape of dy passed in valueAndGrads(f)([x1,...], dy) must ' +
               'match the shape returned by f([x1,...])');
     }
-    checkGrads(res.grads);
-    return res;
+    checkGradientTuple<A>(expectedLength, res.grads);
+    return {value: res.value, grads: res.grads};
   };
 }
 
@@ -374,6 +382,16 @@ function variableGrads(f: () => Scalar, varList?: Variable[]):
 function customGrad<T extends Tensor>(f: CustomGradientFunc<T>):
     (...args: Tensor[]) => T {
   return ENGINE.customGrad(f);
+}
+
+/** Verify the engine's one-to-one result contract before exposing tuple types. */
+function checkGradientTuple<A extends readonly (Tensor|TensorLike)[]>(
+    expectedLength: number, grads: Tensor[]):
+    asserts grads is Tensor[] & GradientTuple<A> {
+  if (grads.length !== expectedLength) {
+    throw new Error('The number of gradients must match the number of inputs.');
+  }
+  checkGrads(grads);
 }
 
 function checkGrads(grads: Tensor[]) {

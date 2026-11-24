@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {LeakyRelu, LeakyReluAttrs, LeakyReluInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -45,12 +43,12 @@ import {op} from './operation';
 function leakyRelu_<T extends Tensor>(x: T|TensorLike, alpha = 0.2): T {
   const $x = convertToTensor(x, 'x', 'leakyRelu');
 
-  const inputs: LeakyReluInputs = {x: $x};
-  const attrs: LeakyReluAttrs = {alpha};
+  const inputs = {x: $x} satisfies LeakyReluInputs;
+  const attrs = {alpha} satisfies LeakyReluAttrs;
 
   return ENGINE.runKernel(
-      LeakyRelu, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      LeakyRelu, inputs,
+      attrs);
 }
 
 export const leakyRelu = /* @__PURE__ */ op({leakyRelu_});

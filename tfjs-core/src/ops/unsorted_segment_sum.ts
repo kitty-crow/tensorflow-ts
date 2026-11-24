@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {UnsortedSegmentSum, UnsortedSegmentSumAttrs, UnsortedSegmentSumInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor, Tensor1D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import {assert, isInt} from '../util';
@@ -51,12 +49,12 @@ function unsortedSegmentSum_<T extends Tensor>(
       convertToTensor(segmentIds, 'segmentIds', 'unsortedSegmentSum', 'int32');
   assert(isInt(numSegments), () => 'numSegments must be of dtype int');
 
-  const inputs: UnsortedSegmentSumInputs = {x: $x, segmentIds: $segmentIds};
-  const attrs: UnsortedSegmentSumAttrs = {numSegments};
+  const inputs = {x: $x, segmentIds: $segmentIds} satisfies UnsortedSegmentSumInputs;
+  const attrs = {numSegments} satisfies UnsortedSegmentSumAttrs;
 
   return ENGINE.runKernel(
-      UnsortedSegmentSum, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      UnsortedSegmentSum, inputs,
+      attrs);
 }
 
 export const unsortedSegmentSum = /* @__PURE__ */ op({unsortedSegmentSum_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Step, StepAttrs, StepInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -41,11 +39,11 @@ import {op} from './operation';
 function step_<T extends Tensor>(x: T|TensorLike, alpha = 0.0): T {
   const $x = convertToTensor(x, 'x', 'step');
 
-  const inputs: StepInputs = {x: $x};
-  const attrs: StepAttrs = {alpha};
+  const inputs = {x: $x} satisfies StepInputs;
+  const attrs = {alpha} satisfies StepAttrs;
 
   return ENGINE.runKernel(
-      Step, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Step, inputs,
+      attrs);
 }
 export const step = /* @__PURE__ */ op({step_});

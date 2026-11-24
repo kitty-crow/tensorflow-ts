@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Log, LogInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,7 +38,7 @@ import {op} from './operation';
 function log_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'log', 'float32');
 
-  const inputs: LogInputs = {x: $x};
-  return ENGINE.runKernel(Log, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies LogInputs;
+  return ENGINE.runKernel(Log, inputs);
 }
 export const log = /* @__PURE__ */ op({log_});

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Minimum, MinimumInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -67,9 +66,9 @@ function minimum_<T extends Tensor>(
 
   assertAndGetBroadcastShape($a.shape, $b.shape);
 
-  const inputs: MinimumInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies MinimumInputs;
 
-  return ENGINE.runKernel(Minimum, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Minimum, inputs);
 }
 
 export const minimum = /* @__PURE__ */ op({minimum_});

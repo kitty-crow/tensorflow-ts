@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Prod, ProdAttrs, ProdInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -65,12 +63,12 @@ function prod_<T extends Tensor>(
     $x = cast($x, 'int32');
   }
 
-  const inputs: ProdInputs = {x: $x};
-  const attrs: ProdAttrs = {axis, keepDims};
+  const inputs = {x: $x} satisfies ProdInputs;
+  const attrs = {axis, keepDims} satisfies ProdAttrs;
 
   return ENGINE.runKernel(
-      Prod, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Prod, inputs,
+      attrs);
 }
 
 export const prod = /* @__PURE__ */ op({prod_});

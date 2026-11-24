@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {ExpandDims, ExpandDimsAttrs, ExpandDimsInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -47,12 +45,12 @@ function expandDims_<T extends Tensor>(x: Tensor|TensorLike, axis = 0): T {
 
   util.assert(axis <= $x.rank, () => 'Axis must be <= rank of the tensor');
 
-  const inputs: ExpandDimsInputs = {input: $x};
-  const attrs: ExpandDimsAttrs = {dim: axis};
+  const inputs = {input: $x} satisfies ExpandDimsInputs;
+  const attrs = {dim: axis} satisfies ExpandDimsAttrs;
 
   return ENGINE.runKernel(
-      ExpandDims, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      ExpandDims, inputs,
+      attrs);
 }
 
 export const expandDims = /* @__PURE__ */ op({expandDims_});

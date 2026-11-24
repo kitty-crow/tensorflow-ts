@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Relu6, Relu6Inputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -40,9 +39,9 @@ import {op} from './operation';
 function relu6_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'relu6');
 
-  const inputs: Relu6Inputs = {x: $x};
+  const inputs = {x: $x} satisfies Relu6Inputs;
 
-  return ENGINE.runKernel(Relu6, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Relu6, inputs);
 }
 
 export const relu6 = /* @__PURE__ */ op({relu6_});

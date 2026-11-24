@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {Conv3D, Conv3DAttrs, Conv3DInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D, Tensor5D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -100,14 +98,14 @@ function conv3d_<T extends Tensor4D|Tensor5D>(
       stridesOrDilationsArePositive(strides),
       () => 'Error in conv3D: Strides should be larger than 0.');
 
-  const inputs: Conv3DInputs = {x: x5D, filter: $filter};
+  const inputs = {x: x5D, filter: $filter} satisfies Conv3DInputs;
 
-  const attrs: Conv3DAttrs = {strides, pad, dataFormat, dilations};
+  const attrs = {strides, pad, dataFormat, dilations} satisfies Conv3DAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  Conv3D, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  Conv3D, inputs,
+                  attrs) as T;
 
   if (reshapedTo5D) {
     return reshape(

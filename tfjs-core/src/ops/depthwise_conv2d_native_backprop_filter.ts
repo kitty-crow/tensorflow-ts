@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {DepthwiseConv2dNativeBackpropFilter, DepthwiseConv2dNativeBackpropFilterAttrs, DepthwiseConv2dNativeBackpropFilterInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor3D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 
 import {ExplicitPadding} from './conv_util';
 import {op} from './operation';
@@ -39,15 +37,14 @@ function depthwiseConv2dNativeBackpropFilter_<T extends Tensor3D|Tensor4D>(
     dy4D = reshape(dy, [1, dy.shape[0], dy.shape[1], dy.shape[2]]);
   }
 
-  const inputs: DepthwiseConv2dNativeBackpropFilterInputs = {x: x4D, dy: dy4D};
-  const attrs: DepthwiseConv2dNativeBackpropFilterAttrs =
-      {strides, pad, dimRoundingMode, dilations, filterShape};
+  const inputs = {x: x4D, dy: dy4D} satisfies DepthwiseConv2dNativeBackpropFilterInputs;
+  const attrs = {strides, pad, dimRoundingMode, dilations, filterShape} satisfies DepthwiseConv2dNativeBackpropFilterAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   return ENGINE.runKernel(
              DepthwiseConv2dNativeBackpropFilter,
-             inputs as unknown as NamedTensorMap,
-             attrs as unknown as NamedAttrMap) as Tensor4D;
+             inputs,
+             attrs) as Tensor4D;
 }
 
 export const depthwiseConv2dNativeBackpropFilter =

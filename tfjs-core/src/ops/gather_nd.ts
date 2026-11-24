@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {GatherNd, GatherNdInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import {op} from './operation';
@@ -64,9 +63,9 @@ function gatherND_(x: Tensor|TensorLike, indices: Tensor|TensorLike): Tensor {
   const $indices = convertToTensor(indices, 'indices', 'gatherND', 'int32');
   const $x = convertToTensor(x, 'x', 'gatherND', 'string_or_numeric');
 
-  const inputs: GatherNdInputs = {params: $x, indices: $indices};
+  const inputs = {params: $x, indices: $indices} satisfies GatherNdInputs;
 
-  return ENGINE.runKernel(GatherNd, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(GatherNd, inputs);
 }
 
 export const gatherND = /* @__PURE__ */ op({gatherND_});

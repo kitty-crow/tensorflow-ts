@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Atan2, Atan2Inputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -47,9 +46,9 @@ function atan2_<T extends Tensor>(
   let $b = convertToTensor(b, 'b', 'atan2');
   [$a, $b] = makeTypesMatch($a, $b);
 
-  const inputs: Atan2Inputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies Atan2Inputs;
 
-  return ENGINE.runKernel(Atan2, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Atan2, inputs);
 }
 
 export const atan2 = /* @__PURE__ */ op({atan2_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {ArgMin, ArgMinAttrs, ArgMinInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -52,12 +50,12 @@ import {op} from './operation';
 function argMin_<T extends Tensor>(x: Tensor|TensorLike, axis = 0): T {
   const $x = convertToTensor(x, 'x', 'argMin');
 
-  const inputs: ArgMinInputs = {x: $x};
-  const attrs: ArgMinAttrs = {axis};
+  const inputs = {x: $x} satisfies ArgMinInputs;
+  const attrs = {axis} satisfies ArgMinAttrs;
 
   return ENGINE.runKernel(
-      ArgMin, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      ArgMin, inputs,
+      attrs);
 }
 
 export const argMin = /* @__PURE__ */ op({argMin_});

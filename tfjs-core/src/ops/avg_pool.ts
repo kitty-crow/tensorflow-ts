@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {AvgPool, AvgPoolAttrs, AvgPoolInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor3D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -75,13 +73,13 @@ function avgPool_<T extends Tensor3D|Tensor4D>(
       x4D.rank === 4,
       () => `Error in avgPool: x must be rank 4 but got rank ${x4D.rank}.`);
   conv_util.checkPadOnDimRoundingMode('avgPool', pad, dimRoundingMode);
-  const inputs: AvgPoolInputs = {x: x4D};
-  const attrs: AvgPoolAttrs = {filterSize, strides, pad, dimRoundingMode};
+  const inputs = {x: x4D} satisfies AvgPoolInputs;
+  const attrs = {filterSize, strides, pad, dimRoundingMode} satisfies AvgPoolAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   let res = ENGINE.runKernel(
-                AvgPool, inputs as unknown as NamedTensorMap,
-                attrs as unknown as NamedAttrMap) as T;
+                AvgPool, inputs,
+                attrs) as T;
 
   res = cast(res, $x.dtype);
 

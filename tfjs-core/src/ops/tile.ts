@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Tile, TileAttrs, TileInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -58,12 +56,12 @@ function tile_<T extends Tensor>(x: T|TensorLike, reps: number[]): T {
       () => `Error in transpose: rank of input ${$x.rank} ` +
           `must match length of reps ${reps}.`);
 
-  const inputs: TileInputs = {x: $x};
-  const attrs: TileAttrs = {reps};
+  const inputs = {x: $x} satisfies TileInputs;
+  const attrs = {reps} satisfies TileAttrs;
 
   return ENGINE.runKernel(
-      Tile, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Tile, inputs,
+      attrs);
 }
 
 export const tile = /* @__PURE__ */ op({tile_});

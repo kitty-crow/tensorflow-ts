@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {TensorScatterUpdate, TensorScatterUpdateAttrs, TensorScatterUpdateInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank, TensorLike} from '../types';
 
@@ -71,17 +69,17 @@ function tensorScatterUpdate_<R extends Rank>(
             $tensor.dtype} and ${$updates.dtype}.`);
   }
 
-  const inputs: TensorScatterUpdateInputs = {
+  const inputs = {
     tensor: $tensor,
     indices: $indices,
     updates: $updates
-  };
-  const attrs: TensorScatterUpdateAttrs = {};
+  } satisfies TensorScatterUpdateInputs;
+  const attrs = {} satisfies TensorScatterUpdateAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   return ENGINE.runKernel(
-             TensorScatterUpdate, inputs as unknown as NamedTensorMap,
-             attrs as unknown as NamedAttrMap) as Tensor<R>;
+             TensorScatterUpdate, inputs,
+             attrs) as Tensor<R>;
 }
 
 export const tensorScatterUpdate = op({tensorScatterUpdate_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {All, AllAttrs, AllInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -58,12 +56,12 @@ function all_<T extends Tensor>(
     x: Tensor|TensorLike, axis: number|number[] = null, keepDims = false): T {
   const $x = convertToTensor(x, 'x', 'all', 'bool');
 
-  const inputs: AllInputs = {x: $x};
-  const attrs: AllAttrs = {axis, keepDims};
+  const inputs = {x: $x} satisfies AllInputs;
+  const attrs = {axis, keepDims} satisfies AllAttrs;
 
   return ENGINE.runKernel(
-      All, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      All, inputs,
+      attrs);
 }
 
 export const all = /* @__PURE__ */ op({all_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {BatchToSpaceND, BatchToSpaceNDAttrs, BatchToSpaceNDInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -96,12 +94,12 @@ function batchToSpaceND_<T extends Tensor>(
                 $x.shape[0]} but is not divisible by the product of ` +
           `the elements of blockShape ${blockShape.join(' * ')} === ${prod}`);
 
-  const inputs: BatchToSpaceNDInputs = {x: $x};
-  const attrs: BatchToSpaceNDAttrs = {blockShape, crops};
+  const inputs = {x: $x} satisfies BatchToSpaceNDInputs;
+  const attrs = {blockShape, crops} satisfies BatchToSpaceNDAttrs;
 
   return ENGINE.runKernel(
-      BatchToSpaceND, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      BatchToSpaceND, inputs,
+      attrs);
 }
 
 export const batchToSpaceND = /* @__PURE__ */ op({batchToSpaceND_});

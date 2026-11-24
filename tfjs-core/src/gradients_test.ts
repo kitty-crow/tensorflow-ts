@@ -101,6 +101,30 @@ describeWithFlags('gradients', ALL_ENVS, () => {
     expectArraysClose(await result[0].data(), [.2, .4]);
   });
 
+  it('preserves the input tuple length in grads(f)', async () => {
+    const differentiate = tf.grads((a, b) => a.mul(b).sum());
+    const result: [Tensor, Tensor] =
+        differentiate([tf.scalar(2), tf.scalar(3)]);
+    expect(result.length).toBe(2);
+    expectArraysClose(await result[0].data(), [3]);
+    expectArraysClose(await result[1].data(), [2]);
+    const inputs: Tensor[] = [tf.scalar(4), tf.scalar(5)];
+    const dynamic: Tensor[] = differentiate(inputs);
+    expect(dynamic.length).toBe(inputs.length);
+    expectArraysClose(await dynamic[0].data(), [5]);
+    expectArraysClose(await dynamic[1].data(), [4]);
+  });
+
+  it('preserves the input tuple length in valueAndGrads(f)', async () => {
+    const differentiate = tf.valueAndGrads((a, b) => a.mul(b).sum());
+    const {value, grads} = differentiate([tf.scalar(2), tf.scalar(3)]);
+    const result: [Tensor, Tensor] = grads;
+    expect(result.length).toBe(2);
+    expectArraysClose(await value.data(), [6]);
+    expectArraysClose(await result[0].data(), [3]);
+    expectArraysClose(await result[1].data(), [2]);
+  });
+
   it('calling grads(f) twice works', async () => {
     const grads = tf.grads(x => x.square());
 

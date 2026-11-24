@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Mod, ModInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -58,9 +57,9 @@ function mod_<T extends Tensor>(a: Tensor|TensorLike, b: Tensor|TensorLike): T {
   let $b = convertToTensor(b, 'b', 'mod');
   [$a, $b] = makeTypesMatch($a, $b);
 
-  const inputs: ModInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies ModInputs;
 
-  return ENGINE.runKernel(Mod, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Mod, inputs);
 }
 
 export const mod = /* @__PURE__ */ op({mod_});

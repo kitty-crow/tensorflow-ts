@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {BatchMatMul, BatchMatMulAttrs, BatchMatMulInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -48,12 +46,12 @@ function matMul_<T extends Tensor>(
   let $b = convertToTensor(b, 'b', 'matMul');
   [$a, $b] = makeTypesMatch($a, $b);
 
-  const inputs: BatchMatMulInputs = {a: $a, b: $b};
-  const attrs: BatchMatMulAttrs = {transposeA, transposeB};
+  const inputs = {a: $a, b: $b} satisfies BatchMatMulInputs;
+  const attrs = {transposeA, transposeB} satisfies BatchMatMulAttrs;
 
   return ENGINE.runKernel(
-      BatchMatMul, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      BatchMatMul, inputs,
+      attrs);
 }
 
 export const matMul = /* @__PURE__ */ op({matMul_});

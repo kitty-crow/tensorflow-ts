@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Floor, FloorInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -38,7 +37,7 @@ import {op} from './operation';
 function floor_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'floor', 'float32');
 
-  const inputs: FloorInputs = {x: $x};
-  return ENGINE.runKernel(Floor, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies FloorInputs;
+  return ENGINE.runKernel(Floor, inputs);
 }
 export const floor = /* @__PURE__ */ op({floor_});

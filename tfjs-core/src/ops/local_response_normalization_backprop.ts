@@ -17,21 +17,19 @@
 
 import {ENGINE} from '../engine';
 import {LRNGrad, LRNGradAttrs, LRNGradInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 
 import {op} from './operation';
 
 function localResponseNormalizationBackprop_<T extends Tensor4D>(
     x: T, y: T, dy: T, depthRadius = 5, bias = 1, alpha = 1, beta = 0.5): T {
-  const inputs: LRNGradInputs = {x, y, dy};
+  const inputs = {x, y, dy} satisfies LRNGradInputs;
 
-  const attrs: LRNGradAttrs = {depthRadius, bias, alpha, beta};
+  const attrs = {depthRadius, bias, alpha, beta} satisfies LRNGradAttrs;
 
   return ENGINE.runKernel(
-      LRNGrad, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      LRNGrad, inputs,
+      attrs);
 }
 
 export const localResponseNormalizationBackprop =

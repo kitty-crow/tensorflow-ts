@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {SquaredDifference, SquaredDifferenceInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -58,11 +57,11 @@ function squaredDifference_<T extends Tensor>(
 
   assertAndGetBroadcastShape($a.shape, $b.shape);
 
-  const inputs: SquaredDifferenceInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies SquaredDifferenceInputs;
   const attrs = {};
 
   return ENGINE.runKernel(
-      SquaredDifference, inputs as unknown as NamedTensorMap, attrs);
+      SquaredDifference, inputs, attrs);
 }
 
 export const squaredDifference = /* @__PURE__ */ op({squaredDifference_});

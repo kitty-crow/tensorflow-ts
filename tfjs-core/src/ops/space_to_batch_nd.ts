@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {SpaceToBatchND, SpaceToBatchNDAttrs, SpaceToBatchNDInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -104,12 +102,12 @@ function spaceToBatchND_<T extends Tensor>(
           paddings.toString()} must be divisible by blockShapes ${
           blockShape.toString()}`);
 
-  const inputs: SpaceToBatchNDInputs = {x: $x};
-  const attrs: SpaceToBatchNDAttrs = {blockShape, paddings};
+  const inputs = {x: $x} satisfies SpaceToBatchNDInputs;
+  const attrs = {blockShape, paddings} satisfies SpaceToBatchNDAttrs;
 
   return ENGINE.runKernel(
-      SpaceToBatchND, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      SpaceToBatchND, inputs,
+      attrs);
 }
 
 export const spaceToBatchND = /* @__PURE__ */ op({spaceToBatchND_});

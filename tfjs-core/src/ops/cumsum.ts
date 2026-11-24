@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Cumsum, CumsumAttrs, CumsumInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -52,12 +50,12 @@ function cumsum_<T extends Tensor>(
     x: Tensor|TensorLike, axis = 0, exclusive = false, reverse = false): T {
   const $x = convertToTensor(x, 'x', 'cumsum');
 
-  const inputs: CumsumInputs = {x: $x};
-  const attrs: CumsumAttrs = {axis, exclusive, reverse};
+  const inputs = {x: $x} satisfies CumsumInputs;
+  const attrs = {axis, exclusive, reverse} satisfies CumsumAttrs;
 
   return ENGINE.runKernel(
-      Cumsum, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Cumsum, inputs,
+      attrs);
 }
 
 export const cumsum = /* @__PURE__ */ op({cumsum_});

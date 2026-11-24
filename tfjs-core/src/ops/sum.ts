@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {Sum, SumAttrs, SumInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -62,12 +60,12 @@ function sum_<T extends Tensor>(
     $x = cast($x, 'int32');
   }
 
-  const inputs: SumInputs = {x: $x};
-  const attrs: SumAttrs = {axis, keepDims};
+  const inputs = {x: $x} satisfies SumInputs;
+  const attrs = {axis, keepDims} satisfies SumAttrs;
 
   return ENGINE.runKernel(
-      Sum, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Sum, inputs,
+      attrs);
 }
 
 export const sum = /* @__PURE__ */ op({sum_});

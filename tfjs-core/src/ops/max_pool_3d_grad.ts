@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {MaxPool3DGrad, MaxPool3DGradAttrs, MaxPool3DGradInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D, Tensor5D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -89,14 +87,13 @@ function maxPool3dGrad_<T extends Tensor4D|Tensor5D>(
       () => `Error in maxPool3dGrad: output must be rank 5 but got rank ` +
           `${output5D.rank}.`);
   checkPadOnDimRoundingMode('maxPool3dGrad', pad, dimRoundingMode);
-  const inputs:
-      MaxPool3DGradInputs = {dy: dy5D, input: input5D, output: output5D};
-  const attrs: MaxPool3DGradAttrs = {filterSize, strides, pad, dimRoundingMode};
+  const inputs = {dy: dy5D, input: input5D, output: output5D} satisfies MaxPool3DGradInputs;
+  const attrs = {filterSize, strides, pad, dimRoundingMode} satisfies MaxPool3DGradAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  MaxPool3DGrad, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  MaxPool3DGrad, inputs,
+                  attrs) as T;
 
   if (reshapedTo5D) {
     return reshape(

@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Acos, AcosInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -36,8 +35,8 @@ import {op} from './operation';
  */
 function acos_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'acos');
-  const inputs: AcosInputs = {x: $x};
+  const inputs = {x: $x} satisfies AcosInputs;
 
-  return ENGINE.runKernel(Acos, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Acos, inputs);
 }
 export const acos = /* @__PURE__ */ op({acos_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D, Tensor5D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -92,14 +90,13 @@ function avgPool3d_<T extends Tensor4D|Tensor5D>(
            strides[2] > 0),
       () => `Error in avgPool3d: Stride must be > 0, but got '${strides}'`);
   checkPadOnDimRoundingMode('avgPool3d', pad, dimRoundingMode);
-  const inputs: AvgPool3DInputs = {x: x5D};
-  const attrs:
-      AvgPool3DAttrs = {filterSize, strides, pad, dimRoundingMode, dataFormat};
+  const inputs = {x: x5D} satisfies AvgPool3DInputs;
+  const attrs = {filterSize, strides, pad, dimRoundingMode, dataFormat} satisfies AvgPool3DAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   let res = ENGINE.runKernel(
-                AvgPool3D, inputs as unknown as NamedTensorMap,
-                attrs as unknown as NamedAttrMap) as T;
+                AvgPool3D, inputs,
+                attrs) as T;
 
   res = cast(res, x5D.dtype);
 

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {LogicalOr, LogicalOrInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import {assertAndGetBroadcastShape} from './broadcast_util';
@@ -44,7 +43,7 @@ function logicalOr_<T extends Tensor>(
   const $b = convertToTensor(b, 'b', 'logicalOr', 'bool');
   assertAndGetBroadcastShape($a.shape, $b.shape);
 
-  const inputs: LogicalOrInputs = {a: $a, b: $b};
-  return ENGINE.runKernel(LogicalOr, inputs as unknown as NamedTensorMap);
+  const inputs = {a: $a, b: $b} satisfies LogicalOrInputs;
+  return ENGINE.runKernel(LogicalOr, inputs);
 }
 export const logicalOr = /* @__PURE__ */ op({logicalOr_});

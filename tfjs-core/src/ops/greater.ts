@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Greater, GreaterInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -48,9 +47,9 @@ function greater_<T extends Tensor>(
 
   assertAndGetBroadcastShape($a.shape, $b.shape);
 
-  const inputs: GreaterInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies GreaterInputs;
 
-  return ENGINE.runKernel(Greater, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Greater, inputs);
 }
 
 export const greater = /* @__PURE__ */ op({greater_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Tile, TileAttrs, TileInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank, ShapeMap, TensorLike} from '../types';
 import {assertNonNegativeIntegerDimensions} from '../util_base';
@@ -79,11 +77,11 @@ function broadcastTo_<R extends Rank>(
   }
 
   // TODO call broadcastTo kernel directly once backends implement broadcstTo
-  const inputs: TileInputs = {x: input};
-  const attrs: TileAttrs = {reps};
+  const inputs = {x: input} satisfies TileInputs;
+  const attrs = {reps} satisfies TileAttrs;
   return ENGINE.runKernel(
-      Tile, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Tile, inputs,
+      attrs);
 }
 
 export const broadcastTo = /* @__PURE__ */ op({broadcastTo_});

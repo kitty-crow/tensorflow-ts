@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Unique, UniqueAttrs, UniqueInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor, Tensor1D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import {assert} from '../util';
@@ -80,11 +78,11 @@ function unique_<T extends Tensor>(
   const $x = convertToTensor(x, 'x', 'unique', 'string_or_numeric');
   assert($x.rank > 0, () => 'The input tensor must be at least 1D');
 
-  const inputs: UniqueInputs = {x: $x};
-  const attrs: UniqueAttrs = {axis};
+  const inputs = {x: $x} satisfies UniqueInputs;
+  const attrs = {axis} satisfies UniqueAttrs;
   const [values, indices] = ENGINE.runKernel(
-      Unique, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap) as [T, Tensor1D];
+      Unique, inputs,
+      attrs) as [T, Tensor1D];
   return {values, indices};
 }
 

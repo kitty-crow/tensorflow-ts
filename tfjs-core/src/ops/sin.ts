@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Sin, SinInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,8 +38,8 @@ import {op} from './operation';
 function sin_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'sin', 'float32');
 
-  const inputs: SinInputs = {x: $x};
+  const inputs = {x: $x} satisfies SinInputs;
 
-  return ENGINE.runKernel(Sin, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Sin, inputs);
 }
 export const sin = /* @__PURE__ */ op({sin_});

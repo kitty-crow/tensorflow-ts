@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Mean, MeanAttrs, MeanInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -58,12 +56,12 @@ function mean_<T extends Tensor>(
     x: Tensor|TensorLike, axis: number|number[] = null, keepDims = false): T {
   const $x = convertToTensor(x, 'x', 'mean');
 
-  const inputs: MeanInputs = {x: $x};
-  const attrs: MeanAttrs = {axis, keepDims};
+  const inputs = {x: $x} satisfies MeanInputs;
+  const attrs = {axis, keepDims} satisfies MeanAttrs;
 
   return ENGINE.runKernel(
-      Mean, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Mean, inputs,
+      attrs);
 }
 
 export const mean = /* @__PURE__ */ op({mean_});

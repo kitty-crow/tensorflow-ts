@@ -18,7 +18,6 @@
 import {ENGINE} from '../../engine';
 import {FlipLeftRight, FlipLeftRightInputs} from '../../kernel_names';
 import {Tensor4D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import * as util from '../../util';
@@ -39,9 +38,9 @@ function flipLeftRight_(image: Tensor4D|TensorLike): Tensor4D {
       () => 'Error in flipLeftRight: image must be rank 4,' +
           `but got rank ${$image.rank}.`);
 
-  const inputs: FlipLeftRightInputs = {image: $image};
+  const inputs = {image: $image} satisfies FlipLeftRightInputs;
   const res =
-      ENGINE.runKernel(FlipLeftRight, inputs as unknown as NamedTensorMap, {});
+      ENGINE.runKernel(FlipLeftRight, inputs, {});
   return res as Tensor4D;
 }
 

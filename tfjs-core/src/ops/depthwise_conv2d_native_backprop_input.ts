@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor3D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 
 import {ExplicitPadding} from './conv_util';
 import {op} from './operation';
@@ -37,16 +35,15 @@ function depthwiseConv2dNativeBackpropInput_<T extends Tensor3D|Tensor4D>(
     dy4D = reshape(dy, [1, dy.shape[0], dy.shape[1], dy.shape[2]]);
   }
 
-  const inputs: DepthwiseConv2dNativeBackpropInputInputs = {dy: dy4D, filter};
-  const attrs: DepthwiseConv2dNativeBackpropInputAttrs =
-      {strides, pad, dimRoundingMode, dilations, inputShape: xShape};
+  const inputs = {dy: dy4D, filter} satisfies DepthwiseConv2dNativeBackpropInputInputs;
+  const attrs = {strides, pad, dimRoundingMode, dilations, inputShape: xShape} satisfies DepthwiseConv2dNativeBackpropInputAttrs;
 
   const res =
       // tslint:disable-next-line: no-unnecessary-type-assertion
       ENGINE.runKernel(
           DepthwiseConv2dNativeBackpropInput,
-          inputs as unknown as NamedTensorMap,
-          attrs as unknown as NamedAttrMap) as T;
+          inputs,
+          attrs) as T;
 
   if (reshapedTo4D) {
     return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;

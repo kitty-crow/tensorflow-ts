@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Elu, EluInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,9 +38,9 @@ import {op} from './operation';
 function elu_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'elu', 'float32');
 
-  const inputs: EluInputs = {x: $x};
+  const inputs = {x: $x} satisfies EluInputs;
 
-  return ENGINE.runKernel(Elu, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Elu, inputs);
 }
 
 export const elu = /* @__PURE__ */ op({elu_});

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Sign, SignInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -38,7 +37,7 @@ import {op} from './operation';
  */
 function sign_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'sign');
-  const inputs: SignInputs = {x: $x};
-  return ENGINE.runKernel(Sign, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies SignInputs;
+  return ENGINE.runKernel(Sign, inputs);
 }
 export const sign = /* @__PURE__ */ op({sign_});

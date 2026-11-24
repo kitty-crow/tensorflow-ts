@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Round, RoundInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,9 +38,9 @@ import {op} from './operation';
  */
 function round_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'round');
-  const inputs: RoundInputs = {x: $x};
+  const inputs = {x: $x} satisfies RoundInputs;
 
-  return ENGINE.runKernel(Round, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Round, inputs);
 }
 
 export const round = /* @__PURE__ */ op({round_});

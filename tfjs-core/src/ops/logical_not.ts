@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {LogicalNot, LogicalNotInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import {op} from './operation';
@@ -38,8 +37,8 @@ import {op} from './operation';
  */
 function logicalNot_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'logicalNot', 'bool');
-  const inputs: LogicalNotInputs = {x: $x};
-  return ENGINE.runKernel(LogicalNot, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies LogicalNotInputs;
+  return ENGINE.runKernel(LogicalNot, inputs);
 }
 
 export const logicalNot = /* @__PURE__ */ op({logicalNot_});

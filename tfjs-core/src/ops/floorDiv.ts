@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {FloorDiv, FloorDivInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -57,9 +56,9 @@ function floorDiv_<T extends Tensor>(
   let $b = convertToTensor(b, 'b', 'floorDiv');
   [$a, $b] = makeTypesMatch($a, $b);
 
-  const inputs: FloorDivInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies FloorDivInputs;
 
-  return ENGINE.runKernel(FloorDiv, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(FloorDiv, inputs);
 }
 
 export const floorDiv = /* @__PURE__ */ op({floorDiv_});

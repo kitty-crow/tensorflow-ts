@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {IsFinite, IsFiniteInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,8 +38,8 @@ import {op} from './operation';
 function isFinite_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'isFinite');
 
-  const inputs: IsFiniteInputs = {x: $x};
+  const inputs = {x: $x} satisfies IsFiniteInputs;
 
-  return ENGINE.runKernel(IsFinite, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(IsFinite, inputs);
 }
 export const isFinite = /* @__PURE__ */ op({isFinite_});

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {IsInf, IsInfInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,8 +38,8 @@ import {op} from './operation';
 function isInf_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'isInf');
 
-  const inputs: IsInfInputs = {x: $x};
+  const inputs = {x: $x} satisfies IsInfInputs;
 
-  return ENGINE.runKernel(IsInf, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(IsInf, inputs);
 }
 export const isInf = /* @__PURE__ */ op({isInf_});

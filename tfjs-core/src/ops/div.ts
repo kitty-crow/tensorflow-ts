@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {RealDiv, RealDivInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -59,12 +58,12 @@ function div_<T extends Tensor>(a: Tensor|TensorLike, b: Tensor|TensorLike): T {
     return floorDiv($a, $b);
   }
 
-  const inputs: RealDivInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies RealDivInputs;
   const attrs = {};
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   return ENGINE.runKernel(RealDiv,
-                          inputs as unknown as NamedTensorMap, attrs) as T;
+                          inputs, attrs) as T;
 }
 
 export const div = /* @__PURE__ */ op({div_});

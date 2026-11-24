@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {Conv3DBackpropInputV2, Conv3DBackpropInputV2Attrs, Conv3DBackpropInputV2Inputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D, Tensor5D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import * as util from '../util';
 
 import {op} from './operation';
@@ -86,15 +84,14 @@ function conv3DBackpropInput_<T extends Tensor4D|Tensor5D>(
       () => `Error in conv3dDerInput: depth of output (${outDepth}) must ` +
           `match output depth for filter ${filter.shape[4]}.`);
 
-  const inputs: Conv3DBackpropInputV2Inputs = {dy: dy5D, filter};
+  const inputs = {dy: dy5D, filter} satisfies Conv3DBackpropInputV2Inputs;
 
-  const attrs:
-      Conv3DBackpropInputV2Attrs = {pad, strides, inputShape: xShape5D};
+  const attrs = {pad, strides, inputShape: xShape5D} satisfies Conv3DBackpropInputV2Attrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  Conv3DBackpropInputV2, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  Conv3DBackpropInputV2, inputs,
+                  attrs) as T;
 
   if (reshapedTo5D) {
     return reshape(

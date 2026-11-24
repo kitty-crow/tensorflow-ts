@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {MirrorPad, MirrorPadAttrs, MirrorPadInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -82,11 +80,11 @@ function mirrorPad_<T extends Tensor>(
             `shape ${$x.shape}`);
   }
 
-  const attrs: MirrorPadAttrs = {paddings, mode};
-  const inputs: MirrorPadInputs = {x: $x};
+  const attrs = {paddings, mode} satisfies MirrorPadAttrs;
+  const inputs = {x: $x} satisfies MirrorPadInputs;
   return ENGINE.runKernel(
-      MirrorPad, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      MirrorPad, inputs,
+      attrs);
 }
 
 export const mirrorPad = /* @__PURE__ */ op({mirrorPad_});

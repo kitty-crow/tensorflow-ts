@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../engine';
 import {Conv2D, Conv2DAttrs, Conv2DInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor3D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -101,14 +99,13 @@ function conv2d_<T extends Tensor3D|Tensor4D>(
       conv_util.stridesOrDilationsArePositive(strides),
       () => 'Error in conv2D: Strides should be larger than 0.');
 
-  const inputs: Conv2DInputs = {x: x4D, filter: $filter};
-  const attrs:
-      Conv2DAttrs = {strides, pad, dataFormat, dilations, dimRoundingMode};
+  const inputs = {x: x4D, filter: $filter} satisfies Conv2DInputs;
+  const attrs = {strides, pad, dataFormat, dilations, dimRoundingMode} satisfies Conv2DAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  Conv2D, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  Conv2D, inputs,
+                  attrs) as T;
 
   if (reshapedTo4D) {
     return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;

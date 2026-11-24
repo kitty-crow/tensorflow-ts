@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {tidy} from '../globals';
 import {Transpose, TransposeAttrs, TransposeInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
 import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
@@ -72,8 +71,8 @@ function transpose_<T extends Tensor>(
     return $x.clone();
   }
 
-  const inputs: TransposeInputs = {x: $x};
-  const attrs: TransposeAttrs = {perm};
+  const inputs = {x: $x} satisfies TransposeInputs;
+  const attrs = {perm} satisfies TransposeAttrs;
 
   if ($x.dtype === 'complex64') {
     return tidy(() => {
@@ -81,10 +80,10 @@ function transpose_<T extends Tensor>(
       let $imag = imag($x);
       $real = ENGINE.runKernel(
           Transpose, {x: $real} as unknown as NamedTensorMap,
-          attrs as unknown as NamedAttrMap);
+          attrs);
       $imag = ENGINE.runKernel(
           Transpose, {x: $imag} as unknown as NamedTensorMap,
-          attrs as unknown as NamedAttrMap);
+          attrs);
       if (conjugate) {
         $imag = neg($imag);
       }
@@ -93,8 +92,8 @@ function transpose_<T extends Tensor>(
   }
 
   return ENGINE.runKernel(
-      Transpose, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Transpose, inputs,
+      attrs);
 }
 
 export const transpose = /* @__PURE__ */ op({transpose_});

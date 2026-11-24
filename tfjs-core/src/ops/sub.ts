@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Sub, SubInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -52,9 +51,9 @@ function sub_<T extends Tensor>(a: Tensor|TensorLike, b: Tensor|TensorLike): T {
   let $b = convertToTensor(b, 'b', 'sub');
   [$a, $b] = makeTypesMatch($a, $b);
 
-  const inputs: SubInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies SubInputs;
 
-  return ENGINE.runKernel(Sub, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Sub, inputs);
 }
 
 export const sub = /* @__PURE__ */ op({sub_});

@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {NotEqual, NotEqualInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -47,9 +46,9 @@ function notEqual_<T extends Tensor>(
 
   assertAndGetBroadcastShape($a.shape, $b.shape);
 
-  const inputs: NotEqualInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies NotEqualInputs;
 
-  return ENGINE.runKernel(NotEqual, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(NotEqual, inputs);
 }
 
 export const notEqual = /* @__PURE__ */ op({notEqual_});

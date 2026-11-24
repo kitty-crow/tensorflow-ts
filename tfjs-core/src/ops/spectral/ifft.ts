@@ -18,7 +18,6 @@
 import {ENGINE} from '../../engine';
 import {IFFT, IFFTInputs} from '../../kernel_names';
 import {Tensor} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
 import {assert} from '../../util';
 import {op} from '../operation';
 
@@ -45,9 +44,9 @@ function ifft_(input: Tensor): Tensor {
       () => `The dtype for tf.spectral.ifft() must be complex64 ` +
           `but got ${input.dtype}.`);
 
-  const inputs: IFFTInputs = {input};
+  const inputs = {input} satisfies IFFTInputs;
 
-  return ENGINE.runKernel(IFFT, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(IFFT, inputs);
 }
 
 export const ifft = /* @__PURE__ */ op({ifft_});

@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike4D} from '../types';
 import * as util from '../util';
@@ -94,12 +92,12 @@ function depthToSpace_(
           blockSize * blockSize} but is ${
           inputDepth} for depthToSpace with input shape ${$x.shape}`);
 
-  const inputs: DepthToSpaceInputs = {x: $x};
-  const attrs: DepthToSpaceAttrs = {blockSize, dataFormat};
+  const inputs = {x: $x} satisfies DepthToSpaceInputs;
+  const attrs = {blockSize, dataFormat} satisfies DepthToSpaceAttrs;
 
   return ENGINE.runKernel(
-      DepthToSpace, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      DepthToSpace, inputs,
+      attrs);
 }
 
 export const depthToSpace = /* @__PURE__ */ op({depthToSpace_});

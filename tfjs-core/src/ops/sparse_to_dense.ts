@@ -17,10 +17,8 @@
 
 import {ENGINE} from '../engine';
 import {SparseToDense, SparseToDenseAttrs, SparseToDenseInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import * as sparse_to_dense from '../ops/sparse_to_dense_util';
 import {Scalar, Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank, ScalarLike, ShapeMap, TensorLike} from '../types';
 import {assertNonNegativeIntegerDimensions} from '../util_base';
@@ -80,17 +78,17 @@ function sparseToDense_<R extends Rank>(
   sparse_to_dense.validateInput(
       $sparseIndices, $sparseValues, outputShape, $defaultValue);
 
-  const inputs: SparseToDenseInputs = {
+  const inputs = {
     sparseIndices: $sparseIndices,
     sparseValues: $sparseValues,
     defaultValue: $defaultValue
-  };
+  } satisfies SparseToDenseInputs;
 
-  const attrs: SparseToDenseAttrs = {outputShape};
+  const attrs = {outputShape} satisfies SparseToDenseAttrs;
 
   return ENGINE.runKernel(
-      SparseToDense, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      SparseToDense, inputs,
+      attrs);
 }
 
 export const sparseToDense = /* @__PURE__ */ op({sparseToDense_});

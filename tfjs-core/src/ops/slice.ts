@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Slice, SliceAttrs, SliceInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank, TensorLike} from '../types';
 
@@ -67,12 +65,12 @@ function slice_<R extends Rank, T extends Tensor<R>>(
     throw new Error('Slicing scalar is not possible');
   }
 
-  const inputs: SliceInputs = {x: $x};
-  const attrs: SliceAttrs = {begin, size};
+  const inputs = {x: $x} satisfies SliceInputs;
+  const attrs = {begin, size} satisfies SliceAttrs;
 
   return ENGINE.runKernel(
-      Slice, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Slice, inputs,
+      attrs);
 }
 
 export const slice = /* @__PURE__ */ op({slice_});

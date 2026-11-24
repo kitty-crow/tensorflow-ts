@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {LRN, LRNAttrs, LRNInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor3D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -61,14 +59,14 @@ function localResponseNormalization_<T extends Tensor3D|Tensor4D>(
     x4D = reshape($x, [1, $x.shape[0], $x.shape[1], $x.shape[2]]);
   }
 
-  const inputs: LRNInputs = {x: x4D};
+  const inputs = {x: x4D} satisfies LRNInputs;
 
-  const attrs: LRNAttrs = {depthRadius, bias, alpha, beta};
+  const attrs = {depthRadius, bias, alpha, beta} satisfies LRNAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  LRN, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  LRN, inputs,
+                  attrs) as T;
 
   if (reshapedTo4D) {
     return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;

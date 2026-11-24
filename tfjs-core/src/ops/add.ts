@@ -17,7 +17,6 @@
 import {ENGINE} from '../engine';
 import {Add, AddInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
@@ -52,9 +51,9 @@ function add_<T extends Tensor>(a: Tensor|TensorLike, b: Tensor|TensorLike): T {
   let $b = convertToTensor(b, 'b', 'add');
   [$a, $b] = makeTypesMatch($a, $b);
 
-  const inputs: AddInputs = {a: $a, b: $b};
+  const inputs = {a: $a, b: $b} satisfies AddInputs;
 
-  return ENGINE.runKernel(Add, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Add, inputs);
 }
 
 export const add = /* @__PURE__ */ op({add_});

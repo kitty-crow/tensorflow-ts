@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../../engine';
 import {NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor, Tensor1D, Tensor2D} from '../../tensor';
 import {NamedTensorMap} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
@@ -71,14 +70,13 @@ function nonMaxSuppressionWithScore_(
   scoreThreshold = params.scoreThreshold;
   softNmsSigma = params.softNmsSigma;
 
-  const inputs: NonMaxSuppressionV5Inputs = {boxes: $boxes, scores: $scores};
-  const attrs: NonMaxSuppressionV5Attrs =
-      {maxOutputSize, iouThreshold, scoreThreshold, softNmsSigma};
+  const inputs = {boxes: $boxes, scores: $scores} satisfies NonMaxSuppressionV5Inputs;
+  const attrs = {maxOutputSize, iouThreshold, scoreThreshold, softNmsSigma} satisfies NonMaxSuppressionV5Attrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const result = ENGINE.runKernel(
-                     NonMaxSuppressionV5, inputs as unknown as NamedTensorMap,
-                     attrs as unknown as NamedAttrMap) as Tensor[];
+                     NonMaxSuppressionV5, inputs,
+                     attrs) as Tensor[];
 
   return {selectedIndices: result[0], selectedScores: result[1]};
 }

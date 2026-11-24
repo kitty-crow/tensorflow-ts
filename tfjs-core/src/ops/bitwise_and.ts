@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {BitwiseAnd, BitwiseAndInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank} from '../types';
 import {arraysEqual} from '../util_base';
@@ -59,7 +58,7 @@ function bitwiseAnd_<R extends Rank>(x: Tensor, y: Tensor): Tensor<R> {
             $x.dtype} and type of y: ${$y.dtype}`);
   }
 
-  const inputs: BitwiseAndInputs = {a: $x, b: $y};
-  return ENGINE.runKernel(BitwiseAnd, inputs as unknown as NamedTensorMap);
+  const inputs = {a: $x, b: $y} satisfies BitwiseAndInputs;
+  return ENGINE.runKernel(BitwiseAnd, inputs);
 }
 export const bitwiseAnd = /* @__PURE__ */ op({bitwiseAnd_});

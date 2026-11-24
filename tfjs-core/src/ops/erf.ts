@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Erf, ErfInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -49,7 +48,7 @@ function erf_<T extends Tensor>(x: T|TensorLike): T {
     $x = cast($x, 'float32');
   }
 
-  const inputs: ErfInputs = {x: $x};
-  return ENGINE.runKernel(Erf, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies ErfInputs;
+  return ENGINE.runKernel(Erf, inputs);
 }
 export const erf = /* @__PURE__ */ op({erf_});

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Atanh, AtanhInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -40,8 +39,8 @@ import {op} from './operation';
 function atanh_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'atanh');
 
-  const inputs: AtanhInputs = {x: $x};
+  const inputs = {x: $x} satisfies AtanhInputs;
 
-  return ENGINE.runKernel(Atanh, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Atanh, inputs);
 }
 export const atanh = /* @__PURE__ */ op({atanh_});

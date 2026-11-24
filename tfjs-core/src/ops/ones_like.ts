@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {OnesLike, OnesLikeInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,8 +38,8 @@ import {op} from './operation';
 function onesLike_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'onesLike');
 
-  const inputs: OnesLikeInputs = {x: $x};
-  return ENGINE.runKernel(OnesLike, inputs as unknown as NamedTensorMap);
+  const inputs = {x: $x} satisfies OnesLikeInputs;
+  return ENGINE.runKernel(OnesLike, inputs);
 }
 
 export const onesLike = /* @__PURE__ */ op({onesLike_});

@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Imag, ImagInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import {op} from './operation';
@@ -39,8 +38,8 @@ import {op} from './operation';
 function imag_<T extends Tensor>(input: T|TensorLike): T {
   const $input = convertToTensor(input, 'input', 'imag');
 
-  const inputs: ImagInputs = {input: $input};
-  return ENGINE.runKernel(Imag, inputs as unknown as NamedTensorMap);
+  const inputs = {input: $input} satisfies ImagInputs;
+  return ENGINE.runKernel(Imag, inputs);
 }
 
 export const imag = /* @__PURE__ */ op({imag_});

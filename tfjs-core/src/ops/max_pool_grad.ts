@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {MaxPoolGrad, MaxPoolGradAttrs, MaxPoolGradInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -72,13 +70,13 @@ function maxPoolGrad_(
       () => `Error in maxPoolGrad: input must be rank 4 but got rank ` +
           `${$input.rank}.`);
   conv_util.checkPadOnDimRoundingMode('maxPoolGrad', pad, dimRoundingMode);
-  const inputs: MaxPoolGradInputs = {dy: $dy, input: $input, output: $output};
-  const attrs: MaxPoolGradAttrs = {filterSize, strides, pad, dimRoundingMode};
+  const inputs = {dy: $dy, input: $input, output: $output} satisfies MaxPoolGradInputs;
+  const attrs = {filterSize, strides, pad, dimRoundingMode} satisfies MaxPoolGradAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   return ENGINE.runKernel(
-             MaxPoolGrad, inputs as unknown as NamedTensorMap,
-             attrs as unknown as NamedAttrMap) as Tensor4D;
+             MaxPoolGrad, inputs,
+             attrs) as Tensor4D;
 }
 
 export const maxPoolGrad = /* @__PURE__ */ op({maxPoolGrad_});

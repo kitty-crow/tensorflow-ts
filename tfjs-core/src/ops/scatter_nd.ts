@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {ScatterNd, ScatterNdAttrs, ScatterNdInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank, ShapeMap, TensorLike} from '../types';
 import {assertNonNegativeIntegerDimensions} from '../util_base';
@@ -54,13 +52,13 @@ function scatterND_<R extends Rank>(
   const $updates = convertToTensor(updates, 'updates', 'scatterND');
   scatter_nd_util.validateInput($updates, $indices, shape);
 
-  const inputs: ScatterNdInputs = {indices: $indices, updates: $updates};
-  const attrs: ScatterNdAttrs = {shape};
+  const inputs = {indices: $indices, updates: $updates} satisfies ScatterNdInputs;
+  const attrs = {shape} satisfies ScatterNdAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   return ENGINE.runKernel(
-             ScatterNd, inputs as unknown as NamedTensorMap,
-             attrs as unknown as NamedAttrMap) as Tensor<R>;
+             ScatterNd, inputs,
+             attrs) as Tensor<R>;
 }
 
 export const scatterND = /* @__PURE__ */ op({scatterND_});

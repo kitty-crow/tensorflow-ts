@@ -18,9 +18,7 @@
 
 import {ENGINE} from '../engine';
 import {AvgPool3DGrad, AvgPool3DGradAttrs, AvgPool3DGradInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor4D, Tensor5D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -79,13 +77,13 @@ function avgPool3dGrad_<T extends Tensor4D|Tensor5D>(
       () => `Error in avgPool3dGrad: input must be rank 5 but got rank ` +
           `${input5D.rank}.`);
   checkPadOnDimRoundingMode('avgPool3dGrad', pad, dimRoundingMode);
-  const inputs: AvgPool3DGradInputs = {dy: dy5D, input: input5D};
-  const attrs: AvgPool3DGradAttrs = {filterSize, strides, pad, dimRoundingMode};
+  const inputs = {dy: dy5D, input: input5D} satisfies AvgPool3DGradInputs;
+  const attrs = {filterSize, strides, pad, dimRoundingMode} satisfies AvgPool3DGradAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  AvgPool3DGrad, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  AvgPool3DGrad, inputs,
+                  attrs) as T;
 
   if (reshapedTo5D) {
     return reshape(

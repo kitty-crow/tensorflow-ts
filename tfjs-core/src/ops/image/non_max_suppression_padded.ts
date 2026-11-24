@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../../engine';
 import {NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor, Tensor1D, Tensor2D} from '../../tensor';
 import {NamedTensorMap} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
@@ -64,18 +63,18 @@ function nonMaxSuppressionPadded_(
   const $iouThreshold = params.iouThreshold;
   const $scoreThreshold = params.scoreThreshold;
 
-  const inputs: NonMaxSuppressionV4Inputs = {boxes: $boxes, scores: $scores};
-  const attrs: NonMaxSuppressionV4Attrs = {
+  const inputs = {boxes: $boxes, scores: $scores} satisfies NonMaxSuppressionV4Inputs;
+  const attrs = {
     maxOutputSize: $maxOutputSize,
     iouThreshold: $iouThreshold,
     scoreThreshold: $scoreThreshold,
     padToMaxOutputSize
-  };
+  } satisfies NonMaxSuppressionV4Attrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const result = ENGINE.runKernel(
-                     NonMaxSuppressionV4, inputs as unknown as NamedTensorMap,
-                     attrs as unknown as NamedAttrMap) as Tensor[];
+                     NonMaxSuppressionV4, inputs,
+                     attrs) as Tensor[];
 
   return {selectedIndices: result[0], validOutputs: result[1]};
 }

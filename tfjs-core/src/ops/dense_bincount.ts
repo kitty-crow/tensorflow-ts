@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {DenseBincount, DenseBincountAttrs, DenseBincountInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor1D, Tensor2D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -67,12 +65,12 @@ function denseBincount_<T extends Tensor1D|Tensor2D>(
           `0-length, but got x shape: ${$x.shape}, weights shape: ` +
           `${$weights.shape}.`);
 
-  const inputs: DenseBincountInputs = {x: $x, weights: $weights};
-  const attrs: DenseBincountAttrs = {size, binaryOutput};
+  const inputs = {x: $x, weights: $weights} satisfies DenseBincountInputs;
+  const attrs = {size, binaryOutput} satisfies DenseBincountAttrs;
 
   return ENGINE.runKernel(
-      DenseBincount, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      DenseBincount, inputs,
+      attrs);
 }
 
 export const denseBincount = /* @__PURE__ */ op({denseBincount_});

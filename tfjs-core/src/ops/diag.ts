@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Diag, DiagInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 
 import {op} from './operation';
@@ -49,9 +48,9 @@ import {op} from './operation';
 function diag_(x: Tensor): Tensor {
   const $x = convertToTensor(x, 'x', 'diag');
 
-  const inputs: DiagInputs = {x: $x};
+  const inputs = {x: $x} satisfies DiagInputs;
 
-  return ENGINE.runKernel(Diag, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Diag, inputs);
 }
 
 export const diag = /* @__PURE__ */ op({diag_});

@@ -18,7 +18,6 @@ import {ENGINE} from '../engine';
 import {SplitV, SplitVAttrs, SplitVInputs} from '../kernel_names';
 import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -63,11 +62,11 @@ function split_<T extends Tensor>(
     x: Tensor|TensorLike, numOrSizeSplits: number[]|number, axis = 0): T[] {
   const $x = convertToTensor(x, 'x', 'split');
 
-  const inputs: SplitVInputs = {x: $x};
+  const inputs = {x: $x} satisfies SplitVInputs;
   const attr: SplitVAttrs = {numOrSizeSplits, axis};
 
   return ENGINE.runKernel(
-             SplitV, inputs as unknown as NamedTensorMap,
+             SplitV, inputs,
              attr as unknown as NamedAttrMap) as unknown as T[];
 }
 

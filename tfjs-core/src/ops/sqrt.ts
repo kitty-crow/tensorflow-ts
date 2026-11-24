@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Sqrt, SqrtInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,8 +38,8 @@ import {op} from './operation';
 function sqrt_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'sqrt', 'float32');
 
-  const inputs: SqrtInputs = {x: $x};
+  const inputs = {x: $x} satisfies SqrtInputs;
 
-  return ENGINE.runKernel(Sqrt, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Sqrt, inputs);
 }
 export const sqrt = /* @__PURE__ */ op({sqrt_});

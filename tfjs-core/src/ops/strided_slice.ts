@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {StridedSlice, StridedSliceAttrs, StridedSliceInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -64,8 +62,8 @@ function stridedSlice_(
     shrinkAxisMask = 0): Tensor {
   const $x = convertToTensor(x, 'x', 'stridedSlice', 'string_or_numeric');
 
-  const inputs: StridedSliceInputs = {x: $x};
-  const attrs: StridedSliceAttrs = {
+  const inputs = {x: $x} satisfies StridedSliceInputs;
+  const attrs = {
     begin,
     end,
     strides,
@@ -74,11 +72,11 @@ function stridedSlice_(
     ellipsisMask,
     newAxisMask,
     shrinkAxisMask
-  };
+  } satisfies StridedSliceAttrs;
 
   return ENGINE.runKernel(
-      StridedSlice, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      StridedSlice, inputs,
+      attrs);
 }
 
 export const stridedSlice = /* @__PURE__ */ op({stridedSlice_});

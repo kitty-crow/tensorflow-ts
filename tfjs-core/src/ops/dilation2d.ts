@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {Dilation2D, Dilation2DAttrs, Dilation2DInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor3D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -92,13 +90,13 @@ function dilation2d_<T extends Tensor3D|Tensor4D>(
       () => `Error in dilation2d:  input and filter must have the same depth: ${
           x4D.shape[3]} vs ${$filter.shape[2]}`);
 
-  const inputs: Dilation2DInputs = {x: x4D, filter: $filter};
-  const attrs: Dilation2DAttrs = {strides, pad, dilations};
+  const inputs = {x: x4D, filter: $filter} satisfies Dilation2DInputs;
+  const attrs = {strides, pad, dilations} satisfies Dilation2DAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  Dilation2D, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as T;
+                  Dilation2D, inputs,
+                  attrs) as T;
 
   if (reshapedTo4D) {
     return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;

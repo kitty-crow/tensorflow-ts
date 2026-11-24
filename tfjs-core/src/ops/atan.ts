@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Atan, AtanInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -39,8 +38,8 @@ import {op} from './operation';
 function atan_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'atan');
 
-  const inputs: AtanInputs = {x: $x};
+  const inputs = {x: $x} satisfies AtanInputs;
 
-  return ENGINE.runKernel(Atan, inputs as unknown as NamedTensorMap);
+  return ENGINE.runKernel(Atan, inputs);
 }
 export const atan = /* @__PURE__ */ op({atan_});
