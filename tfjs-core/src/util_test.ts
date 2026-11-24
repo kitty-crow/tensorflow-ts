@@ -538,6 +538,27 @@ function nestedNumericValueForComparison(
   return value;
 }
 
+describe('util.assertArrayLength', () => {
+  it('retains symbolic null dimensions and numeric zero', () => {
+    const shape: Array<number|null> = [null, 0, 2];
+    util.assertArrayLength(shape, 3);
+    const checked: [number|null, number|null, number|null] = shape;
+    expect(checked).toEqual([null, 0, 2]);
+  });
+
+  it('rejects an incorrect rank and sparse arrays', () => {
+    expect(() => util.assertArrayLength([1, 2], 3)).toThrowError(/exactly 3/);
+    expect(() => util.assertArrayLength(new Array<number>(2), 2))
+        .toThrowError(/missing element/);
+  });
+
+  it('preserves fixed-rank stride types', () => {
+    const strides: [number, number, number] =
+        util.computeStrides([2, 3, 4, 5]);
+    expect(strides).toEqual([60, 20, 5]);
+  });
+});
+
 describeWithFlags('util.toNestedArray', ALL_ENVS, () => {
   it('rejects a scalar with missing data', () => {
     expect(() => util.toNestedArray([], new Float32Array(0)))

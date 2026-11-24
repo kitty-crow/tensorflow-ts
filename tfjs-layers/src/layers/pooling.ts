@@ -203,6 +203,7 @@ export abstract class Pooling1D extends Layer {
 
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
     inputShape = getExactlyOneShape(inputShape);
+    tfc.util.assertArrayLength(inputShape, 3);
     const length = convOutputLength(
         inputShape[1], this.poolSize[0], this.padding, this.strides[0]);
     return [inputShape[0], length, inputShape[2]];
@@ -341,6 +342,7 @@ export abstract class Pooling2D extends Layer {
 
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
     inputShape = getExactlyOneShape(inputShape);
+    tfc.util.assertArrayLength(inputShape, 4);
     let rows =
         this.dataFormat === 'channelsFirst' ? inputShape[2] : inputShape[1];
     let cols =
@@ -486,6 +488,7 @@ export abstract class Pooling3D extends Layer {
 
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
     inputShape = getExactlyOneShape(inputShape);
+    tfc.util.assertArrayLength(inputShape, 5);
     let depths =
         this.dataFormat === 'channelsFirst' ? inputShape[2] : inputShape[1];
     let rows =
@@ -580,6 +583,7 @@ export abstract class GlobalPooling1D extends Layer {
   }
 
   override computeOutputShape(inputShape: Shape): Shape {
+    tfc.util.assertArrayLength(inputShape, 3);
     return [inputShape[0], inputShape[2]];
   }
 
@@ -646,7 +650,8 @@ export abstract class GlobalPooling2D extends Layer {
   }
 
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
-    inputShape = inputShape as Shape;
+    inputShape = getExactlyOneShape(inputShape);
+    tfc.util.assertArrayLength(inputShape, 4);
     if (this.dataFormat === 'channelsLast') {
       return [inputShape[0], inputShape[3]];
     } else {

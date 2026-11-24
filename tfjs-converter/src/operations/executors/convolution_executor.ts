@@ -15,15 +15,26 @@
  * =============================================================================
  */
 
-import {Rank, Tensor, Tensor3D, Tensor4D, Tensor5D} from '@tensorflow/tfjs-core';
+import {Rank, Tensor, Tensor3D, Tensor4D, Tensor5D, util} from '@tensorflow/tfjs-core';
 // tslint:disable-next-line: no-imports-from-dist
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 
 import {NamedTensorsMap} from '../../data/types';
 import {ExecutionContext} from '../../executor/execution_context';
-import {InternalOpExecutor, Node} from '../types';
+import {InternalOpExecutor, Node, ValueType} from '../types';
 
 import {getPadding, getParamValue} from './utils';
+
+/** Read a graph's fixed-rank numeric vector without asserting its type. */
+function readSpatialVector(value: ValueType, rank: 4): [number, number, number, number];
+function readSpatialVector(value: ValueType, rank: 5): [number, number, number, number, number];
+function readSpatialVector(value: ValueType, rank: 4|5): number[] {
+  if (!util.isNumericArray(value)) {
+    throw new Error('Expected a numeric spatial parameter vector.');
+  }
+  util.assertArrayLength(value, rank);
+  return value;
+}
 
 function fusedConvAndDepthWiseParams(
     node: Node, tensorMap: NamedTensorsMap, context: ExecutionContext) {
@@ -53,13 +64,13 @@ function fusedConvAndDepthWiseParams(
     throw new Error(
         'FusedConv2d and DepthwiseConv2d with FusedBatchNorm is not supported');
   }
-  const stride = getParamValue('strides', node, tensorMap, context) as number[];
+  const stride = readSpatialVector(getParamValue('strides', node, tensorMap, context), 4);
   const pad = getPadding(node, tensorMap, context);
   const dataFormat =
       (getParamValue('dataFormat', node, tensorMap, context) as string)
           .toUpperCase();
   const dilations =
-      getParamValue('dilations', node, tensorMap, context) as number[];
+      readSpatialVector(getParamValue('dilations', node, tensorMap, context), 4);
   let [biasArg, preluArg] =
       getParamValue('args', node, tensorMap, context) as Tensor[];
   if (noBiasAdd) {
@@ -102,13 +113,13 @@ export const executeOp: InternalOpExecutor =
         }
         case 'Conv2D': {
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 4);
           const pad = getPadding(node, tensorMap, context);
           const dataFormat =
               (getParamValue('dataFormat', node, tensorMap, context) as string)
                   .toUpperCase();
           const dilations =
-              getParamValue('dilations', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('dilations', node, tensorMap, context), 4);
           return [ops.conv2d(
               getParamValue('x', node, tensorMap, context) as Tensor3D |
                   Tensor4D,
@@ -178,7 +189,7 @@ export const executeOp: InternalOpExecutor =
                             context) as [number, number, number] |
               [number, number, number, number];
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 4);
           const pad = getPadding(node, tensorMap, context);
           return [ops.conv2dTranspose(
               getParamValue('x', node, tensorMap, context) as Tensor3D |
@@ -189,10 +200,10 @@ export const executeOp: InternalOpExecutor =
         case 'DepthwiseConv2dNative':
         case 'DepthwiseConv2d': {
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 4);
           const pad = getPadding(node, tensorMap, context);
           const dilations =
-              getParamValue('dilations', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('dilations', node, tensorMap, context), 4);
           const dataFormat =
               (getParamValue('dataFormat', node, tensorMap, context) as string)
                   .toUpperCase();
@@ -206,13 +217,13 @@ export const executeOp: InternalOpExecutor =
         }
         case 'Conv3D': {
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 5);
           const pad = getParamValue('pad', node, tensorMap, context);
           const dataFormat =
               (getParamValue('dataFormat', node, tensorMap, context) as string)
                   .toUpperCase();
           const dilations =
-              getParamValue('dilations', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('dilations', node, tensorMap, context), 5);
           return [ops.conv3d(
               getParamValue('x', node, tensorMap, context) as Tensor4D |
                   Tensor<Rank.R5>,
@@ -224,10 +235,10 @@ export const executeOp: InternalOpExecutor =
         }
         case 'AvgPool': {
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 4);
           const pad = getParamValue('pad', node, tensorMap, context);
           const kernelSize =
-              getParamValue('kernelSize', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('kernelSize', node, tensorMap, context), 4);
 
           return [ops.avgPool(
               getParamValue('x', node, tensorMap, context) as Tensor3D |
@@ -237,10 +248,10 @@ export const executeOp: InternalOpExecutor =
         }
         case 'MaxPool': {
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 4);
           const pad = getParamValue('pad', node, tensorMap, context);
           const kernelSize =
-              getParamValue('kernelSize', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('kernelSize', node, tensorMap, context), 4);
 
           return [ops.maxPool(
               getParamValue('x', node, tensorMap, context) as Tensor3D |
@@ -250,10 +261,10 @@ export const executeOp: InternalOpExecutor =
         }
         case 'MaxPoolWithArgmax': {
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 4);
           const pad = getParamValue('pad', node, tensorMap, context);
           const kernelSize =
-              getParamValue('kernelSize', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('kernelSize', node, tensorMap, context), 4);
           const includeBatchInIndex =
               getParamValue('includeBatchInIndex', node, tensorMap, context) as
               boolean;
@@ -265,10 +276,10 @@ export const executeOp: InternalOpExecutor =
         }
         case 'AvgPool3D': {
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 5);
           const pad = getParamValue('pad', node, tensorMap, context);
           const kernelSize =
-              getParamValue('kernelSize', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('kernelSize', node, tensorMap, context), 5);
 
           return [ops.avgPool3d(
               getParamValue('x', node, tensorMap, context) as Tensor5D,
@@ -278,10 +289,10 @@ export const executeOp: InternalOpExecutor =
 
         case 'MaxPool3D': {
           const stride =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 5);
           const pad = getParamValue('pad', node, tensorMap, context);
           const kernelSize =
-              getParamValue('kernelSize', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('kernelSize', node, tensorMap, context), 5);
 
           return [ops.maxPool3d(
               getParamValue('x', node, tensorMap, context) as Tensor5D,
@@ -291,10 +302,10 @@ export const executeOp: InternalOpExecutor =
 
         case 'Dilation2D': {
           const strides =
-              getParamValue('strides', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('strides', node, tensorMap, context), 4);
           const pad = getParamValue('pad', node, tensorMap, context);
           const dilations =
-              getParamValue('dilations', node, tensorMap, context) as number[];
+              readSpatialVector(getParamValue('dilations', node, tensorMap, context), 4);
 
           // strides: [1, stride_height, stride_width, 1].
           const strideHeight = strides[1];

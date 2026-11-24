@@ -576,6 +576,49 @@ export function nearestDivisor(size: number, start: number): number {
   return size;
 }
 
+/** Verify that an input array contains only numeric values and no holes. */
+export function isNumericArray(
+    value: {}|null|undefined): value is number[] {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  for (const element of value) {
+    if (typeof element !== 'number') {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Validate the length and presence of every element of a fixed-rank array.
+ * Null dimensions are valid for symbolic shapes; missing elements are not.
+ */
+export function assertArrayLength<T>(values: T[], length: 1): asserts values is [T];
+export function assertArrayLength<T>(values: T[], length: 2): asserts values is [T, T];
+export function assertArrayLength<T>(values: T[], length: 3): asserts values is [T, T, T];
+export function assertArrayLength<T>(values: T[], length: 4): asserts values is [T, T, T, T];
+export function assertArrayLength<T>(values: T[], length: 5): asserts values is [T, T, T, T, T];
+export function assertArrayLength<T>(values: T[], length: 6): asserts values is [T, T, T, T, T, T];
+export function assertArrayLength<T>(values: T[], length: number): void;
+export function assertArrayLength<T>(values: T[], length: number): void {
+  if (values == null || values.length !== length) {
+    throw new Error(`Expected an array with exactly ${length} elements.`);
+  }
+  for (const value of values) {
+    if (typeof value === 'undefined') {
+      throw new Error('Array contains a missing element.');
+    }
+  }
+}
+
+export function computeStrides(shape: [number]): [];
+export function computeStrides(shape: [number, number]): [number];
+export function computeStrides(shape: [number, number, number]): [number, number];
+export function computeStrides(shape: [number, number, number, number]): [number, number, number];
+export function computeStrides(shape: [number, number, number, number, number]): [number, number, number, number];
+export function computeStrides(shape: [number, number, number, number, number, number]): [number, number, number, number, number];
+export function computeStrides(shape: number[]): number[];
 export function computeStrides(shape: number[]): number[] {
   const rank = shape.length;
   if (rank < 2) {

@@ -28,21 +28,26 @@ export function cropAndResize(args: {
   const {image, boxes, boxInd} = inputs;
   const {cropSize, method, extrapolationValue} = attrs;
 
-  const [batch, imageHeight, imageWidth, numChannels] = image.shape;
-  const numBoxes = boxes.shape[0];
+  const imageShape = image.shape;
+  const boxesShape = boxes.shape;
+  util.assertArrayLength(imageShape, 4);
+  util.assertArrayLength(boxesShape, 2);
+  const [batch, imageHeight, imageWidth, numChannels] = imageShape;
+  const numBoxes = boxesShape[0];
 
   const [cropHeight, cropWidth] = cropSize;
-  const output =
-      buffer([numBoxes, cropHeight, cropWidth, numChannels], 'float32');
+  const outputShape: [number, number, number, number] =
+      [numBoxes, cropHeight, cropWidth, numChannels];
+  const output = buffer(outputShape, 'float32');
 
   const boxVals = backend.data.get(boxes.dataId).values as TypedArray;
   const boxIndVals = backend.data.get(boxInd.dataId).values as TypedArray;
   const imageVals = backend.data.get(image.dataId).values as TypedArray;
 
   const inStride =
-      util.computeStrides(image.shape);  // to calculate flat indexes into image
+      util.computeStrides(imageShape);  // to calculate flat indexes into image
   const outStride = util.computeStrides(
-      output.shape);  // to calculate flat indexes into output
+      outputShape);  // to calculate flat indexes into output
 
   // Reference implementation
   // tslint:disable-next-line:max-line-length

@@ -1125,7 +1125,7 @@ export class SeparableConv extends Conv {
     const inputDim = inputShape[channelAxis];
     const depthwiseKernelShape =
         this.kernelSize.concat([inputDim, this.depthMultiplier]);
-    const pointwiseKernelShape = [];
+    const pointwiseKernelShape: number[] = [];
     for (let i = 0; i < this.rank; ++i) {
       pointwiseKernelShape.push(1);
     }
@@ -1303,6 +1303,7 @@ export class Cropping2D extends Layer {
   }
 
   override computeOutputShape(inputShape: Shape): Shape {
+    tfc.util.assertArrayLength(inputShape, 4);
     if (this.dataFormat === 'channelsFirst') {
       return [
         inputShape[0], inputShape[1],
@@ -1321,21 +1322,23 @@ export class Cropping2D extends Layer {
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tidy(() => {
       inputs = getExactlyOneTensor(inputs);
+      const inputShape = inputs.shape;
+      tfc.util.assertArrayLength(inputShape, 4);
 
       if (this.dataFormat === 'channelsLast') {
         const hSliced = K.sliceAlongAxis(
             inputs, this.cropping[0][0],
-            inputs.shape[1] - this.cropping[0][0] - this.cropping[0][1], 2);
+            inputShape[1] - this.cropping[0][0] - this.cropping[0][1], 2);
         return K.sliceAlongAxis(
             hSliced, this.cropping[1][0],
-            inputs.shape[2] - this.cropping[1][1] - this.cropping[1][0], 3);
+            inputShape[2] - this.cropping[1][1] - this.cropping[1][0], 3);
       } else {
         const hSliced = K.sliceAlongAxis(
             inputs, this.cropping[0][0],
-            inputs.shape[2] - this.cropping[0][0] - this.cropping[0][1], 3);
+            inputShape[2] - this.cropping[0][0] - this.cropping[0][1], 3);
         return K.sliceAlongAxis(
             hSliced, this.cropping[1][0],
-            inputs.shape[3] - this.cropping[1][1] - this.cropping[1][0], 4);
+            inputShape[3] - this.cropping[1][1] - this.cropping[1][0], 4);
       }
     });
   }
@@ -1379,15 +1382,17 @@ export declare interface UpSampling2DLayerArgs extends LayerArgs {
 export class UpSampling2D extends Layer {
   /** @nocollapse */
   static className = 'UpSampling2D';
-  protected readonly DEFAULT_SIZE = [2, 2];
-  protected readonly size: number[];
+  protected readonly DEFAULT_SIZE: [number, number] = [2, 2];
+  protected readonly size: [number, number];
   protected readonly dataFormat: DataFormat;
   protected readonly interpolation: InterpolationFormat;
 
   constructor(args: UpSampling2DLayerArgs) {
     super(args);
     this.inputSpec = [{ndim: 4}];
-    this.size = args.size == null ? this.DEFAULT_SIZE : args.size;
+    const size = args.size == null ? this.DEFAULT_SIZE : args.size;
+    tfc.util.assertArrayLength(size, 2);
+    this.size = size;
     this.dataFormat =
         args.dataFormat == null ? 'channelsLast' : args.dataFormat;
     checkDataFormat(this.dataFormat);
@@ -1397,6 +1402,7 @@ export class UpSampling2D extends Layer {
   }
 
   override computeOutputShape(inputShape: Shape): Shape {
+    tfc.util.assertArrayLength(inputShape, 4);
     if (this.dataFormat === 'channelsFirst') {
       const height =
           inputShape[2] == null ? null : this.size[0] * inputShape[2];
