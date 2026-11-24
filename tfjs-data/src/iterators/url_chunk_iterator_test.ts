@@ -16,6 +16,7 @@
  * =============================================================================
  */
 
+import {test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 import {urlChunkIterator} from './url_chunk_iterator';
 
 const TEST_STRING = 'abcdefghijklmnopqrstuvwxyz';
@@ -48,17 +49,17 @@ describe('URLChunkIterator', () => {
     const readIterator = await urlChunkIterator('', {chunkSize: 10}, fetchFunc);
 
     const result = await readIterator.toArrayForTest();
-    expect(result[0][0]).toEqual('a'.charCodeAt(0));
-    expect(result[1][0]).toEqual('k'.charCodeAt(0));
-    expect(result[2][0]).toEqual('u'.charCodeAt(0));
+    expect(fixtureTestUtil.requiredTestElement(result, 0)[0]).toEqual('a'.charCodeAt(0));
+    expect(fixtureTestUtil.requiredTestElement(result, 1)[0]).toEqual('k'.charCodeAt(0));
+    expect(fixtureTestUtil.requiredTestElement(result, 2)[0]).toEqual('u'.charCodeAt(0));
   });
 
   it('Reads chunks of expected sizes', async () => {
     const readIterator = await urlChunkIterator('', {chunkSize: 10}, fetchFunc);
 
     const result = await readIterator.toArrayForTest();
-    expect(result[0].length).toEqual(10);
-    expect(result[1].length).toEqual(10);
-    expect(result[2].length).toEqual(6);
+    expect(fixtureTestUtil.requiredTestElement(result, 0).length).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(result, 1).length).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(result, 2).length).toEqual(6);
   });
 });

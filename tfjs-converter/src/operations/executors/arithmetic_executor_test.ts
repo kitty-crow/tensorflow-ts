@@ -73,9 +73,9 @@ describe('arithmetic', () => {
       const res = executeOp(node, {input1, input2}, context,
                             spyOpsAsTfOps) as Tensor[];
       expect(spyOps.add).toHaveBeenCalledWith(input1[0], input2[0]);
-      expect(res[0].dtype).toBe('float32');
-      expect(res[0].shape).toEqual([]);
-      test_util.expectArraysClose(await res[0].data(), 2);
+      expect(test_util.requiredTestElement(res, 0).dtype).toBe('float32');
+      expect(test_util.requiredTestElement(res, 0).shape).toEqual([]);
+      test_util.expectArraysClose(await test_util.requiredTestElement(res, 0).data(), 2);
     });
 
     it('AddN', async () => {
@@ -87,9 +87,9 @@ describe('arithmetic', () => {
                   spyOpsAsTfOps) as Tensor[];
       expect(spyOps.addN)
         .toHaveBeenCalledWith([input1[0], input2[0], input3[0]]);
-      expect(res[0].dtype).toBe('float32');
-      expect(res[0].shape).toEqual([]);
-      test_util.expectArraysClose(await res[0].data(), [6]);
+      expect(test_util.requiredTestElement(res, 0).dtype).toBe('float32');
+      expect(test_util.requiredTestElement(res, 0).shape).toEqual([]);
+      test_util.expectArraysClose(await test_util.requiredTestElement(res, 0).data(), [6]);
     });
   });
 });

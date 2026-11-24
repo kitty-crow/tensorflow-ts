@@ -19,7 +19,7 @@
  * Unit Tests for GPT2Tokenizer.
  */
 
-import { tensor } from '@tensorflow/tfjs-core';
+import { tensor, test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 
 import { expectTensorsClose } from '../../../../utils/test_utils';
 import { GPT2Tokenizer } from './gpt2_tokenizer';
@@ -58,7 +58,7 @@ describe('GPT2Tokenizer', () => {
     const output = tokenizer.tokenize(inputData);
 
     expect(output.length).toBe(1);
-    expectTensorsClose(output[0], expectedOutput[0]);
+    expectTensorsClose(fixtureTestUtil.requiredTestElement(output, 0), fixtureTestUtil.requiredTestElement(expectedOutput, 0));
   });
 
   it('tokenize end token', () => {
@@ -68,7 +68,7 @@ describe('GPT2Tokenizer', () => {
     const output = tokenizer.tokenize(inputData);
 
     expect(output.length).toBe(1);
-    expectTensorsClose(output[0], expectedOutput[0]);
+    expectTensorsClose(fixtureTestUtil.requiredTestElement(output, 0), fixtureTestUtil.requiredTestElement(expectedOutput, 0));
   });
 
   it('tokenize batch', () => {
@@ -78,8 +78,8 @@ describe('GPT2Tokenizer', () => {
     const output = tokenizer.tokenize(inputData);
 
     expect(output.length).toBe(2);
-    expectTensorsClose(output[0], expectedOutput[0]);
-    expectTensorsClose(output[1], expectedOutput[1]);
+    expectTensorsClose(fixtureTestUtil.requiredTestElement(output, 0), fixtureTestUtil.requiredTestElement(expectedOutput, 0));
+    expectTensorsClose(fixtureTestUtil.requiredTestElement(output, 1), fixtureTestUtil.requiredTestElement(expectedOutput, 1));
   });
 
   it('detokenize', () => {

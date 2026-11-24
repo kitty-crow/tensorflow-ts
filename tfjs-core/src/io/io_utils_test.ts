@@ -760,9 +760,9 @@ describe('float16', () => {
       0x00003555
     ]);
     const f32 = decoder(buffer);
-    expect(f32[0]).toBeCloseTo(0.25);
-    expect(f32[1]).toBeCloseTo(0.5);
-    expect(f32[2]).toBeCloseTo(0.75);
-    expect(f32[3]).toBeCloseTo(0.333);
+    expect(tf.test_util.requiredTestElement(f32, 0)).toBeCloseTo(0.25);
+    expect(tf.test_util.requiredTestElement(f32, 1)).toBeCloseTo(0.5);
+    expect(tf.test_util.requiredTestElement(f32, 2)).toBeCloseTo(0.75);
+    expect(tf.test_util.requiredTestElement(f32, 3)).toBeCloseTo(0.333);
   });
 });

@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 import * as path from 'path';
 import {TFEOpAttr, TFJSBinding} from './tfjs_binding';
 // tslint:disable-next-line:no-require-imports
@@ -110,10 +111,10 @@ describe('tensor management', () => {
         binding.executeOp('Max', attrs, [inputId, axesId], 1);
     expect(outputMetadata.length).toBe(1);
 
-    expect(outputMetadata[0].id).toBeDefined();
-    expect(outputMetadata[0].shape).toEqual([]);
-    expect(outputMetadata[0].dtype).toEqual(binding.TF_INT32);
-    expect(binding.tensorDataSync(outputMetadata[0].id))
+    expect(fixtureTestUtil.requiredTestElement(outputMetadata, 0).id).toBeDefined();
+    expect(fixtureTestUtil.requiredTestElement(outputMetadata, 0).shape).toEqual([]);
+    expect(fixtureTestUtil.requiredTestElement(outputMetadata, 0).dtype).toEqual(binding.TF_INT32);
+    expect(binding.tensorDataSync(fixtureTestUtil.requiredTestElement(outputMetadata, 0).id))
         .toEqual(new Int32Array([3]));
   });
 });
@@ -290,7 +291,7 @@ describe('executeOp', () => {
   });
   it('should work for matmul', () => {
     const output = binding.executeOp(name, matMulOpAttrs, matMulInput, 1);
-    expect(binding.tensorDataSync(output[0].id)).toEqual(new Float32Array([
+    expect(binding.tensorDataSync(fixtureTestUtil.requiredTestElement(output, 0).id)).toEqual(new Float32Array([
       8, 5, 20, 13
     ]));
   });

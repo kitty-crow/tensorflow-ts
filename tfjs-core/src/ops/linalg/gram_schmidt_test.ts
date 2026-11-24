@@ -34,8 +34,8 @@ describeWithFlags('gramSchmidt-tiny', ALL_ENVS, () => {
     // Test angle between xs[0] and ys[0] is zero, i.e., the orientation of the
     // first vector is kept.
     expectArraysClose(
-        await tf.sum(xs[0].mul(requiredTestElement(ys, 0))).array(),
-        await tf.norm(xs[0]).mul(tf.norm(requiredTestElement(ys, 0))).array());
+        await tf.sum(requiredTestElement(xs, 0).mul(requiredTestElement(ys, 0))).array(),
+        await tf.norm(requiredTestElement(xs, 0)).mul(tf.norm(requiredTestElement(ys, 0))).array());
   });
 
   it('3x3, Array of Tensor1D', async () => {
@@ -49,8 +49,8 @@ describeWithFlags('gramSchmidt-tiny', ALL_ENVS, () => {
     expectArraysClose(
         await y.transpose().matMul(y).array(), await tf.eye(3).array());
     expectArraysClose(
-        await tf.sum(xs[0].mul(requiredTestElement(ys, 0))).array(),
-        await tf.norm(xs[0]).mul(tf.norm(requiredTestElement(ys, 0))).array());
+        await tf.sum(requiredTestElement(xs, 0).mul(requiredTestElement(ys, 0))).array(),
+        await tf.norm(requiredTestElement(xs, 0)).mul(tf.norm(requiredTestElement(ys, 0))).array());
   });
 
   it('3x3, Matrix', async () => {

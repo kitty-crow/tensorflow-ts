@@ -221,7 +221,7 @@ describe('hash_table', () => {
         const result =
             (await executeOp(node, {input3, input5}, context, resourceManager));
         const after = memory().numTensors;
-        test_util.expectArraysClose(await result[0].data(), [5.5, 0]);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [5.5, 0]);
 
         // Create a result tensor.
         expect(after).toBe(before + 1);
@@ -318,7 +318,7 @@ describe('hash_table', () => {
         const result =
             (await executeOp(node, {input3, input5}, context, resourceManager));
         const after = memory().numTensors;
-        test_util.expectArraysClose(await result[0].data(), [5.5, 0]);
+        test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [5.5, 0]);
 
         // Create a result tensor.
         expect(after).toBe(before + 1);
@@ -404,7 +404,7 @@ describe('hash_table', () => {
         const before = memory().numTensors;
         const result = await executeOp(node, {}, context, resourceManager);
         const after = memory().numTensors;
-        const size = await result[0].data();
+        const size = await test_util.requiredTestElement(result, 0).data();
 
         test_util.expectArraysClose(size, [0]);
         expect(after).toBe(before + 1);
@@ -437,7 +437,7 @@ describe('hash_table', () => {
         const before = memory().numTensors;
         const result = await executeOp(node, {}, context, resourceManager);
         const after = memory().numTensors;
-        const size = await result[0].data();
+        const size = await test_util.requiredTestElement(result, 0).data();
 
         test_util.expectArraysClose(size, [2]);
         expect(after).toBe(before + 1);
@@ -472,7 +472,7 @@ describe('hash_table', () => {
         const before = memory().numTensors;
         const result = await executeOp(node, {}, context, resourceManager);
         const after = memory().numTensors;
-        const size = await result[0].data();
+        const size = await test_util.requiredTestElement(result, 0).data();
 
         test_util.expectArraysClose(size, [0]);
         expect(after).toBe(before + 1);
@@ -505,7 +505,7 @@ describe('hash_table', () => {
         const before = memory().numTensors;
         const result = await executeOp(node, {}, context, resourceManager);
         const after = memory().numTensors;
-        const size = await result[0].data();
+        const size = await test_util.requiredTestElement(result, 0).data();
 
         test_util.expectArraysClose(size, [2]);
         expect(after).toBe(before + 1);

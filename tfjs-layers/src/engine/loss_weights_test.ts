@@ -8,6 +8,7 @@
  * =============================================================================
  */
 
+import {test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 import * as tfc from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
@@ -64,19 +65,19 @@ async function expectWeightedLoss(
       return (await value.data())[0];
     }));
     expect(values.length).toBe(3);
-    expect(values[0]).toBeCloseTo(expected, 5);
+    expect(fixtureTestUtil.requiredTestElement(values, 0)).toBeCloseTo(expected, 5);
     // Keras reports per-output losses before applying loss_weights.
-    expect(values[1]).toBeCloseTo(1, 5);
-    expect(values[2]).toBeCloseTo(4, 5);
+    expect(fixtureTestUtil.requiredTestElement(values, 1)).toBeCloseTo(1, 5);
+    expect(fixtureTestUtil.requiredTestElement(values, 2)).toBeCloseTo(4, 5);
     tfc.dispose(tensors);
 
     const trained = await model.trainOnBatch(xs, [firstTarget, secondTarget]);
     expect(Array.isArray(trained)).toBe(true);
     const trainValues = trained as number[];
     expect(trainValues.length).toBe(3);
-    expect(trainValues[0]).toBeCloseTo(expected, 5);
-    expect(trainValues[1]).toBeCloseTo(1, 5);
-    expect(trainValues[2]).toBeCloseTo(4, 5);
+    expect(fixtureTestUtil.requiredTestElement(trainValues, 0)).toBeCloseTo(expected, 5);
+    expect(fixtureTestUtil.requiredTestElement(trainValues, 1)).toBeCloseTo(1, 5);
+    expect(fixtureTestUtil.requiredTestElement(trainValues, 2)).toBeCloseTo(4, 5);
   } finally {
     model.dispose();
     tfc.dispose([xs, firstTarget, secondTarget]);

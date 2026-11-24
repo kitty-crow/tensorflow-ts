@@ -42,7 +42,7 @@ function readPixelsFromCanvas(
 function convertToRGBA(
     data: number[], shape: number[], dtype: string, alpha = 1) {
   const [height, width] = shape.slice(0, 2);
-  const depth = shape.length === 2 ? 1 : shape[2];
+  const depth = shape.length === 2 ? 1 : tf.test_util.requiredTestElement(shape, 2);
   const multiplier = dtype === 'float32' ? 255 : 1;
   const bytes = new Uint8ClampedArray(width * height * 4);
 
@@ -81,10 +81,10 @@ function convertToRGBA(
     }
 
     const j = i * 4;
-    bytes[j + 0] = Math.round(rgba[0]);
-    bytes[j + 1] = Math.round(rgba[1]);
-    bytes[j + 2] = Math.round(rgba[2]);
-    bytes[j + 3] = Math.round(rgba[3]);
+    bytes[j + 0] = Math.round(tf.test_util.requiredTestElement(rgba, 0));
+    bytes[j + 1] = Math.round(tf.test_util.requiredTestElement(rgba, 1));
+    bytes[j + 2] = Math.round(tf.test_util.requiredTestElement(rgba, 2));
+    bytes[j + 3] = Math.round(tf.test_util.requiredTestElement(rgba, 3));
   }
   return bytes;
 }

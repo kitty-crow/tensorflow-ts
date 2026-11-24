@@ -61,7 +61,7 @@ describeWithFlags('raggedGather ', ALL_ENVS, () => {
         [.1, .2, .3, .4, .5, .6, .7, .8, .9]);
 
     expect(result.outputNestedSplits.length).toEqual(1);
-    expectArraysClose(result.outputNestedSplits[0], [0, 4, 4, 7, 9]);
+    expectArraysClose(tf.test_util.requiredTestElement(result.outputNestedSplits, 0), [0, 4, 4, 7, 9]);
 
     expectArraysClose(
         result.outputDenseValues, [.4, .5, .6, .7, .1, .2, .3, .8, .9]);
@@ -74,8 +74,8 @@ describeWithFlags('raggedGather ', ALL_ENVS, () => {
         [.1, .2, .3, .4, .5, .6, .7, .8, .9]);
 
     expect(result.outputNestedSplits.length).toEqual(2);
-    expectArraysClose(result.outputNestedSplits[0], [0, 0, 2, 3, 3, 5]);
-    expectArraysClose(result.outputNestedSplits[1], [0, 2, 3, 3, 5, 8]);
+    expectArraysClose(tf.test_util.requiredTestElement(result.outputNestedSplits, 0), [0, 0, 2, 3, 3, 5]);
+    expectArraysClose(tf.test_util.requiredTestElement(result.outputNestedSplits, 1), [0, 2, 3, 3, 5, 8]);
 
     expectArraysClose(
         result.outputDenseValues, [.1, .2, .3, .4, .5, .6, .7, .8]);
@@ -88,8 +88,8 @@ describeWithFlags('raggedGather ', ALL_ENVS, () => {
         [1, 2, 3, 4, 5, 6, 7, 8]);
 
     expect(result.outputNestedSplits.length).toEqual(2);
-    expectArraysClose(result.outputNestedSplits[0], [0, 0, 2, 3, 3]);
-    expectArraysClose(result.outputNestedSplits[1], [0, 3, 4, 4]);
+    expectArraysClose(tf.test_util.requiredTestElement(result.outputNestedSplits, 0), [0, 0, 2, 3, 3]);
+    expectArraysClose(tf.test_util.requiredTestElement(result.outputNestedSplits, 1), [0, 3, 4, 4]);
 
     expectArraysClose(result.outputDenseValues, [1, 2, 3, 4, 5, 6, 7, 8]);
     expectArraysEqual(result.outputDenseValuesShape, [4, 2]);
@@ -101,8 +101,8 @@ describeWithFlags('raggedGather ', ALL_ENVS, () => {
         [.1, .2, .3, .4, .5, .6, .7, .8, .9]);
 
     expect(result.outputNestedSplits.length).toEqual(2);
-    expectArraysClose(result.outputNestedSplits[0], [0, 2, 4]);
-    expectArraysClose(result.outputNestedSplits[1], [0, 4, 4, 7, 9]);
+    expectArraysClose(tf.test_util.requiredTestElement(result.outputNestedSplits, 0), [0, 2, 4]);
+    expectArraysClose(tf.test_util.requiredTestElement(result.outputNestedSplits, 1), [0, 4, 4, 7, 9]);
 
     expectArraysClose(
         result.outputDenseValues, [.4, .5, .6, .7, .1, .2, .3, .8, .9]);

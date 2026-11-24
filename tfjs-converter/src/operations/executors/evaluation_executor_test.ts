@@ -15,6 +15,7 @@
  * =============================================================================
  */
 // tslint:disable-next-line: no-imports-from-dist
+import {test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 
 import {ExecutionContext} from '../../executor/execution_context';
@@ -73,7 +74,7 @@ describe('evaluation', () => {
             [2, 3], 'float32')];
         executeOp(node, {sortedSequence, values}, context, spyOpsAsTfOps);
         expect(spyOps.lowerBound)
-            .toHaveBeenCalledWith(sortedSequence[0], values[0]);
+            .toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(sortedSequence, 0), fixtureTestUtil.requiredTestElement(values, 0));
       });
     });
 
@@ -109,7 +110,7 @@ describe('evaluation', () => {
             [2, 3], 'float32')];
         executeOp(node, {sortedSequence, values}, context, spyOpsAsTfOps);
         expect(spyOps.upperBound)
-            .toHaveBeenCalledWith(sortedSequence[0], values[0]);
+            .toHaveBeenCalledWith(fixtureTestUtil.requiredTestElement(sortedSequence, 0), fixtureTestUtil.requiredTestElement(values, 0));
       });
     });
 

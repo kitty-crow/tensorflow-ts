@@ -404,7 +404,7 @@ describeAllEnvs('Dataset', () => {
       expect(e.foo.shape).toEqual([8, 2, 3, 2]);
     });
     // tslint:disable-next-line:no-any
-    expect((result[12] as any).foo.shape).toEqual([4, 2, 3, 2]);
+    expect((tf.test_util.requiredTestElement(result, 12) as any).foo.shape).toEqual([4, 2, 3, 2]);
 
     tf.dispose(result);
     expect(tf.memory().numTensors).toBe(0);
@@ -958,10 +958,10 @@ describeAllEnvs('Dataset', () => {
     const a = new Float32Array([1, 2, 3]);
     const ds = tfd.array([a]);
     const result = await ds.toArrayForTest();
-    const resultArray = result[0];
-    expect(resultArray[0]).toBe(1);
-    expect(resultArray[1]).toBe(2);
-    expect(resultArray[2]).toBe(3);
+    const resultArray = tf.test_util.requiredTestElement(result, 0);
+    expect(tf.test_util.requiredTestElement(resultArray, 0)).toBe(1);
+    expect(tf.test_util.requiredTestElement(resultArray, 1)).toBe(2);
+    expect(tf.test_util.requiredTestElement(resultArray, 2)).toBe(3);
     expect(ArrayBuffer.isView(resultArray)).toBe(true);
     expect(resultArray.constructor === Float32Array).toBe(true);
   });

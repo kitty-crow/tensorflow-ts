@@ -39,7 +39,7 @@ describeWithFlags('slice2d', ALL_ENVS, () => {
     const aValues = await a.data();
 
     expectArraysClose(
-        await b.data(), [aValues[0], aValues[1], aValues[10], aValues[11]]);
+        await b.data(), [tf.test_util.requiredTestElement(aValues, 0), tf.test_util.requiredTestElement(aValues, 1), tf.test_util.requiredTestElement(aValues, 10), tf.test_util.requiredTestElement(aValues, 11)]);
   });
 
   it('returns the rectangle specified', async () => {

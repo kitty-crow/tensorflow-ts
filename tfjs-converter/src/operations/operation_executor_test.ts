@@ -110,15 +110,15 @@ describe('OperationExecutor', () => {
       registerOp('const2', () => [scalar(2)]);
       node.category = 'custom';
       const result = executeOp(node, {}, context) as Tensor[];
-      test_util.expectArraysClose(await result[0].data(), [1]);
+      test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [1]);
       deregisterOp('const');
       deregisterOp('const2');
     });
 
     it('should handle custom op with inputs and attrs', async () => {
       registerOp('const', (node) => {
-        const a = node.inputs[0];
-        const b = node.inputs[1];
+        const a = test_util.requiredTestElement(node.inputs, 0);
+        const b = test_util.requiredTestElement(node.inputs, 1);
         const attrC = node.attrs['c'] as Tensor;
         const attrD = node.attrs['d'] as number;
         return [add(mul(attrC.dataSync()[0], a), mul(attrD, b))];
@@ -131,7 +131,7 @@ describe('OperationExecutor', () => {
                          node, {a: [scalar(1)], b: [scalar(2)], c: [scalar(2)]},
                          context) as Tensor[];
       // result = 2 * 1 + 3 * 2
-      test_util.expectArraysClose(await result[0].data(), [8]);
+      test_util.expectArraysClose(await test_util.requiredTestElement(result, 0).data(), [8]);
       deregisterOp('const');
     });
   });

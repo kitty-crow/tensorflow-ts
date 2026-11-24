@@ -12,7 +12,7 @@
  * Unit tests for callbacks.
  */
 
-import {scalar, zeros} from '@tensorflow/tfjs-core';
+import {scalar, zeros, test_util as fixtureTestUtil} from '@tensorflow/tfjs-core';
 
 import {BaseCallback, BaseLogger, CallbackConstructorRegistry, CallbackList, History} from './base_callbacks';
 import {Callback} from './callbacks';
@@ -251,11 +251,11 @@ describe('CallbackConstructorRegistry', () => {
 
     callbacks = CallbackConstructorRegistry.createCallbacks(1);
     expect(callbacks.length).toEqual(1);
-    expect(callbacks[0] instanceof FakeCallback1).toEqual(true);
+    expect(fixtureTestUtil.requiredTestElement(callbacks, 0) instanceof FakeCallback1).toEqual(true);
 
     callbacks = CallbackConstructorRegistry.createCallbacks(2);
     expect(callbacks.length).toEqual(1);
-    expect(callbacks[0] instanceof FakeCallback1).toEqual(true);
+    expect(fixtureTestUtil.requiredTestElement(callbacks, 0) instanceof FakeCallback1).toEqual(true);
   });
 
   it('Registry with two elements on two levels', () => {
@@ -267,12 +267,12 @@ describe('CallbackConstructorRegistry', () => {
 
     callbacks = CallbackConstructorRegistry.createCallbacks(1);
     expect(callbacks.length).toEqual(1);
-    expect(callbacks[0] instanceof FakeCallback1).toEqual(true);
+    expect(fixtureTestUtil.requiredTestElement(callbacks, 0) instanceof FakeCallback1).toEqual(true);
 
     callbacks = CallbackConstructorRegistry.createCallbacks(2);
     expect(callbacks.length).toEqual(2);
-    expect(callbacks[0] instanceof FakeCallback1).toEqual(true);
-    expect(callbacks[1] instanceof FakeCallback2).toEqual(true);
+    expect(fixtureTestUtil.requiredTestElement(callbacks, 0) instanceof FakeCallback1).toEqual(true);
+    expect(fixtureTestUtil.requiredTestElement(callbacks, 1) instanceof FakeCallback2).toEqual(true);
   });
 
   it('Registry with two elements on the same level', () => {
@@ -287,8 +287,8 @@ describe('CallbackConstructorRegistry', () => {
 
     callbacks = CallbackConstructorRegistry.createCallbacks(2);
     expect(callbacks.length).toEqual(2);
-    expect(callbacks[0] instanceof FakeCallback1).toEqual(true);
-    expect(callbacks[1] instanceof FakeCallback2).toEqual(true);
+    expect(fixtureTestUtil.requiredTestElement(callbacks, 0) instanceof FakeCallback1).toEqual(true);
+    expect(fixtureTestUtil.requiredTestElement(callbacks, 1) instanceof FakeCallback2).toEqual(true);
   });
 
   it('Duplicate registration on same level leads to Error', () => {
