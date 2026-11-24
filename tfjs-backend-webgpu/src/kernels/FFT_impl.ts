@@ -32,7 +32,7 @@ export function fftImpl(
   const innerDimensionSize = x.shape[x.shape.length - 1];
   const batch = inputSize / innerDimensionSize;
 
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
   const input2D = reshape(
       {inputs: {x}, backend, attrs: {shape: [batch, innerDimensionSize]}});
   toDispose.push(input2D);

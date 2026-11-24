@@ -45,7 +45,7 @@ export const spaceToBatchND = (args: {
     completePaddings.push([0, 0]);
   }
 
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
 
   const paddedX = padV2({
     inputs: {x},

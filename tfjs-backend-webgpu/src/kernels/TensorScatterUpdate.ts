@@ -41,7 +41,7 @@ export function tensorScatterUpdate(args: {
     return backend.makeTensorInfo(tensor.shape, indices.dtype);
   }
 
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
 
   const flattenIndices = reshape(
       {inputs: {x: indices}, backend, attrs: {shape: [numUpdates, sliceRank]}});

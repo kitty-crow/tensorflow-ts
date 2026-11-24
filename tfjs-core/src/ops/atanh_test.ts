@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('atanh', ALL_ENVS, () => {
   it('basic', async () => {
@@ -25,9 +25,9 @@ describeWithFlags('atanh', ALL_ENVS, () => {
     const a = tf.tensor1d(values);
     const result = tf.atanh(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atanh(values[i]);
+      expected[i] = Math.atanh(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -46,9 +46,9 @@ describeWithFlags('atanh', ALL_ENVS, () => {
     const a = tf.tensor2d(values, [2, 2]);
     const result = tf.atanh(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atanh(values[i]);
+      expected[i] = Math.atanh(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -95,9 +95,9 @@ describeWithFlags('atanh', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.atanh(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / (1 - Math.pow(aValues[i], 2));
+      expected[i] = requiredTestElement(dyValues, i) / (1 - Math.pow(requiredTestElement(aValues, i), 2));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -113,9 +113,9 @@ describeWithFlags('atanh', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.atanh(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / (1 - Math.pow(aValues[i], 2));
+      expected[i] = requiredTestElement(dyValues, i) / (1 - Math.pow(requiredTestElement(aValues, i), 2));
     }
 
     expect(gradients.shape).toEqual(a.shape);

@@ -52,7 +52,7 @@ export const fusedConv2DConfig: KernelConfig = {
 
     let result = conv2dImpl(x, filter, convInfo, backend);
 
-    const toDispose = [];
+    const toDispose: Tensor[] = [];
     if (bias != null) {
       toDispose.push(result);
       result = add(result, bias as Tensor);

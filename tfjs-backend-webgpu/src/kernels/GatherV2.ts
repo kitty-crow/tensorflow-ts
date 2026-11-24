@@ -40,7 +40,7 @@ export function gatherV2(
 
   const indicesSize = util.sizeFromShape(indices.shape);
 
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
 
   const flattenX = reshape({
     inputs: {x},

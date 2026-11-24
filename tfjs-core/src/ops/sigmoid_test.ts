@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('sigmoid', ALL_ENVS, () => {
   it('basic', async () => {
@@ -26,9 +26,9 @@ describeWithFlags('sigmoid', ALL_ENVS, () => {
 
     const result = tf.sigmoid(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = 1 / (1 + Math.exp(-values[i]));
+      expected[i] = 1 / (1 + Math.exp(-requiredTestElement(values, i)));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -37,7 +37,7 @@ describeWithFlags('sigmoid', ALL_ENVS, () => {
     const a = tf.ones([2, 2, 2, 2, 2, 2]);
     const result = tf.sigmoid(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
       expected[i] = 1 / (1 + Math.exp(-1.0));
     }
@@ -58,10 +58,10 @@ describeWithFlags('sigmoid', ALL_ENVS, () => {
 
     const aVals = await a.array();
     const dyVals = await dy.array();
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      const y = 1 / (1 + Math.exp(-aVals[i]));
-      expected[i] = dyVals[i] * y * (1 - y);
+      const y = 1 / (1 + Math.exp(-requiredTestElement(aVals, i)));
+      expected[i] = requiredTestElement(dyVals, i) * y * (1 - y);
     }
 
     expectArraysClose(await da.data(), expected);
@@ -75,10 +75,10 @@ describeWithFlags('sigmoid', ALL_ENVS, () => {
 
     const aVals = await a.array();
     const dyVals = await dy.array();
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      const y = 1 / (1 + Math.exp(-aVals[i]));
-      expected[i] = dyVals[i] * y * (1 - y);
+      const y = 1 / (1 + Math.exp(-requiredTestElement(aVals, i)));
+      expected[i] = requiredTestElement(dyVals, i) * y * (1 - y);
     }
 
     expectArraysClose(await da.data(), expected);
@@ -93,9 +93,9 @@ describeWithFlags('sigmoid', ALL_ENVS, () => {
     const values = [1, -3, 2, 7, -4];
     const result = tf.sigmoid(values);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < values.length; i++) {
-      expected[i] = 1 / (1 + Math.exp(-values[i]));
+      expected[i] = 1 / (1 + Math.exp(-requiredTestElement(values, i)));
     }
     expectArraysClose(await result.data(), expected);
   });

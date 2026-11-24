@@ -49,7 +49,7 @@ export const fusedDepthwiseConv2DConfig: KernelConfig = {
 
     let result = depthwiseConv2dNativeImpl(x, filter, convInfo, backend);
 
-    const toDispose = [];
+    const toDispose: Tensor[] = [];
     if (bias != null) {
       toDispose.push(result);
       result = add(result, bias as Tensor);

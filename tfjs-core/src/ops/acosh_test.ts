@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('acosh', ALL_ENVS, () => {
   it('basic', async () => {
@@ -25,9 +25,9 @@ describeWithFlags('acosh', ALL_ENVS, () => {
     const a = tf.tensor1d(values);
     const result = tf.acosh(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.acosh(values[i]);
+      expected[i] = Math.acosh(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -46,9 +46,9 @@ describeWithFlags('acosh', ALL_ENVS, () => {
     const a = tf.tensor2d(values, [2, 2]);
     const result = tf.acosh(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.acosh(values[i]);
+      expected[i] = Math.acosh(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -97,9 +97,9 @@ describeWithFlags('acosh', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.acosh(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / Math.sqrt(Math.pow(aValues[i], 2) - 1.0);
+      expected[i] = requiredTestElement(dyValues, i) / Math.sqrt(Math.pow(requiredTestElement(aValues, i), 2) - 1.0);
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -115,9 +115,9 @@ describeWithFlags('acosh', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.acosh(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / Math.sqrt(Math.pow(aValues[i], 2) - 1.0);
+      expected[i] = requiredTestElement(dyValues, i) / Math.sqrt(Math.pow(requiredTestElement(aValues, i), 2) - 1.0);
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -134,9 +134,9 @@ describeWithFlags('acosh', ALL_ENVS, () => {
     const values = [2, 3, 4, 5, 6];
     const result = tf.acosh(values);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < values.length; i++) {
-      expected[i] = Math.acosh(values[i]);
+      expected[i] = Math.acosh(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });

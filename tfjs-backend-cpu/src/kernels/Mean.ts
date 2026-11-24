@@ -33,7 +33,7 @@ export function mean(
   const shapes = backend_util.computeOutAndReduceShapes(x.shape, axes);
   const reduceShape = shapes[1];
   const reduceSize = util.sizeFromShape(reduceShape);
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
   const reduceSizeScalar =
       backend.makeTensorInfo([], 'float32', new Float32Array([reduceSize]));
   toDispose.push(reduceSizeScalar);

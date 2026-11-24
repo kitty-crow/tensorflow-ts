@@ -30,9 +30,8 @@ import {BackendValues, DataType, DataTypeMap, FlatVector, NumericDataType, Tenso
  *
  * @doc {heading: 'Util', namespace: 'util'}
  */
-// tslint:disable-next-line:no-any
-export function shuffle(array: any[]|Uint32Array|Int32Array|
-                        Float32Array): void {
+export function shuffle<T>(array: {length: number; [index: number]: T}):
+    void {
   let counter = array.length;
   let index = 0;
   // While there are elements in the array
@@ -62,11 +61,9 @@ export function shuffle(array: any[]|Uint32Array|Int32Array|
  *
  * @doc {heading: 'Util', namespace: 'util'}
  */
-export function shuffleCombo(
-    // tslint:disable-next-line:no-any
-    array: any[]|Uint32Array|Int32Array|Float32Array,
-    // tslint:disable-next-line:no-any
-    array2: any[]|Uint32Array|Int32Array|Float32Array): void {
+export function shuffleCombo<A, B>(
+    array: {length: number; [index: number]: A},
+    array2: {length: number; [index: number]: B}): void {
   if (array.length !== array2.length) {
     throw new Error(
         `Array sizes must match to be shuffled together ` +
@@ -439,7 +436,7 @@ export function getTypedArrayFromDType<D extends NumericDataType>(
 
 export function getArrayFromDType<D extends DataType>(
     dtype: D, size: number): DataTypeMap[D] {
-  let values = null;
+  let values: DataTypeMap[DataType];
   if (dtype == null || dtype === 'float32') {
     values = new Float32Array(size);
   } else switch (dtype) {
@@ -587,39 +584,53 @@ export function computeStrides(shape: number[]): number[] {
 
   // Last dimension has implicit stride of 1, thus having D-1 (instead of D)
   // strides.
-  const strides = new Array(rank - 1);
-  strides[rank - 2] = shape[rank - 1];
-  for (let i = rank - 3; i >= 0; --i) {
-    strides[i] = strides[i + 1] * shape[i + 1];
+  const strides = new Array<number>(rank - 1);
+  let stride = 1;
+  for (let axis = rank - 1; axis > 0; --axis) {
+    const dimension = shape[axis];
+    if (dimension == null) {
+      throw new Error(`Missing dimension ${axis} in shape [${shape}].`);
+    }
+    stride *= dimension;
+    strides[axis - 1] = stride;
   }
   return strides;
 }
 
+/** A numeric tensor converted to nested JavaScript arrays. */
+export type NestedNumericArray = Array<number|NestedNumericArray>;
+
 function createNestedArray(
-    offset: number, shape: number[], a: TypedArray, isComplex = false) {
-  const ret = new Array();
+    offset: number, shape: number[], a: TypedArray,
+    isComplex = false): NestedNumericArray {
+  const dimension = shape[0];
+  if (dimension == null) {
+    throw new Error('A nested tensor array requires a dimension.');
+  }
   if (shape.length === 1) {
-    const d = shape[0] * (isComplex ? 2 : 1);
-    for (let i = 0; i < d; i++) {
-      ret[i] = a[offset + i];
-    }
-  } else {
-    const d = shape[0];
-    const rest = shape.slice(1);
-    const len = rest.reduce((acc, c) => acc * c) * (isComplex ? 2 : 1);
-    for (let i = 0; i < d; i++) {
-      ret[i] = createNestedArray(offset + i * len, rest, a, isComplex);
-    }
+    const length = dimension * (isComplex ? 2 : 1);
+    return Array.from(a.subarray(offset, offset + length));
+  }
+  const ret: NestedNumericArray = [];
+  const rest = shape.slice(1);
+  const length = rest.reduce((acc, c) => acc * c) * (isComplex ? 2 : 1);
+  for (let i = 0; i < dimension; i++) {
+    ret.push(createNestedArray(offset + i * length, rest, a, isComplex));
   }
   return ret;
 }
 
 // Provide a nested array of TypedArray in given shape.
 export function toNestedArray(
-    shape: number[], a: TypedArray, isComplex = false) {
+    shape: number[], a: TypedArray,
+    isComplex = false): number|NestedNumericArray {
   if (shape.length === 0) {
     // Scalar type should return a single number.
-    return a[0];
+    const value = a[0];
+    if (value == null) {
+      throw new Error('A scalar tensor requires a value.');
+    }
+    return value;
   }
   const size = shape.reduce((acc, c) => acc * c) * (isComplex ? 2 : 1);
   if (size === 0) {
@@ -757,7 +768,7 @@ export function indexToLoc(
       return [index];
     }
   }
-  const locs: number[] = new Array(rank);
+  const locs = new Array<number>(rank);
   for (let i = 0; i < locs.length - 1; ++i) {
     locs[i] = Math.floor(index / strides[i]);
     index -= locs[i] * strides[i];

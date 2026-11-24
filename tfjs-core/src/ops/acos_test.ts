@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('acos', ALL_ENVS, () => {
   it('basic', async () => {
@@ -25,9 +25,9 @@ describeWithFlags('acos', ALL_ENVS, () => {
     const a = tf.tensor1d(values);
     const result = tf.acos(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.acos(values[i]);
+      expected[i] = Math.acos(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -70,10 +70,10 @@ describeWithFlags('acos', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.acos(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
       expected[i] =
-          (-1 * dyValues[i]) / Math.sqrt(1 - (aValues[i] * aValues[i]));
+          (-1 * requiredTestElement(dyValues, i)) / Math.sqrt(1 - (requiredTestElement(aValues, i) * requiredTestElement(aValues, i)));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -89,10 +89,10 @@ describeWithFlags('acos', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.acos(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
       expected[i] =
-          (-1 * dyValues[i]) / Math.sqrt(1 - (aValues[i] * aValues[i]));
+          (-1 * requiredTestElement(dyValues, i)) / Math.sqrt(1 - (requiredTestElement(aValues, i) * requiredTestElement(aValues, i)));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -109,9 +109,9 @@ describeWithFlags('acos', ALL_ENVS, () => {
     const values = [.1, -3, 2, 7, -4];
     const result = tf.acos(values);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < values.length; i++) {
-      expected[i] = Math.acos(values[i]);
+      expected[i] = Math.acos(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });

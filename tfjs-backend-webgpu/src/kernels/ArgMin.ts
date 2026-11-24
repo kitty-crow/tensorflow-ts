@@ -32,7 +32,7 @@ export function argMin(
   let axes = util.parseAxisParam(axis, x.shape);
   const permutedAxes = backend_util.getAxesPermutation(axes, x.shape.length);
   let $x = x;
-  const intermediateTensorInfos = [];
+  const intermediateTensorInfos: TensorInfo[] = [];
   if (permutedAxes != null) {
     $x = transpose({inputs: {x}, backend, attrs: {perm: permutedAxes}});
     intermediateTensorInfos.push($x);

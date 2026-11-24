@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('asin', ALL_ENVS, () => {
   it('basic', async () => {
@@ -25,9 +25,9 @@ describeWithFlags('asin', ALL_ENVS, () => {
     const a = tf.tensor1d(values);
     const result = tf.asin(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.asin(values[i]);
+      expected[i] = Math.asin(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -68,9 +68,9 @@ describeWithFlags('asin', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.asin(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / Math.sqrt(1 - (aValues[i] * aValues[i]));
+      expected[i] = requiredTestElement(dyValues, i) / Math.sqrt(1 - (requiredTestElement(aValues, i) * requiredTestElement(aValues, i)));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -86,9 +86,9 @@ describeWithFlags('asin', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.asin(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / Math.sqrt(1 - (aValues[i] * aValues[i]));
+      expected[i] = requiredTestElement(dyValues, i) / Math.sqrt(1 - (requiredTestElement(aValues, i) * requiredTestElement(aValues, i)));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -105,9 +105,9 @@ describeWithFlags('asin', ALL_ENVS, () => {
     const values = [.1, -3, 2, 7, -4];
     const result = tf.asin(values);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < values.length; i++) {
-      expected[i] = Math.asin(values[i]);
+      expected[i] = Math.asin(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });

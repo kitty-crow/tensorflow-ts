@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('cosh', ALL_ENVS, () => {
   it('basic', async () => {
@@ -25,9 +25,9 @@ describeWithFlags('cosh', ALL_ENVS, () => {
     const a = tf.tensor1d(values);
     const result = tf.cosh(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.cosh(values[i]);
+      expected[i] = Math.cosh(requiredTestElement(values, i));
     }
 
     expectArraysClose(await result.data(), expected);
@@ -69,9 +69,9 @@ describeWithFlags('cosh', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.cosh(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] * Math.sinh(aValues[i]);
+      expected[i] = requiredTestElement(dyValues, i) * Math.sinh(requiredTestElement(aValues, i));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -87,9 +87,9 @@ describeWithFlags('cosh', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.cosh(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] * Math.sinh(aValues[i]);
+      expected[i] = requiredTestElement(dyValues, i) * Math.sinh(requiredTestElement(aValues, i));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -106,9 +106,9 @@ describeWithFlags('cosh', ALL_ENVS, () => {
     const values = [1, -3, 2, -1, -4];
     const result = tf.cosh(values);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < values.length; i++) {
-      expected[i] = Math.cosh(values[i]);
+      expected[i] = Math.cosh(requiredTestElement(values, i));
     }
 
     expectArraysClose(await result.data(), expected);

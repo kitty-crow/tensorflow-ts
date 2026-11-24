@@ -47,7 +47,7 @@ export const batchToSpaceND = (args: {
   const sliceSize =
       backend_util.getSliceSize(reshapedPermuted, crops, blockShape.length);
 
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
 
   const reshapedIntermediate =
       reshape({inputs: {x}, backend, attrs: {shape: reshaped}});

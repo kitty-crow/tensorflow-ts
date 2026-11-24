@@ -46,7 +46,7 @@ export function unpack(
     }
   }
 
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
 
   const begin = new Array(xRank).fill(0);
   const size = x.shape.slice();

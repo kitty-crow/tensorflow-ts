@@ -36,7 +36,7 @@ export function reduce(
     x: TensorInfo, axis: number|number[], keepDims: boolean,
     reduceType: ReduceTypes, backend: WebGPUBackend): TensorInfo {
   const xRank = x.shape.length;
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
 
   const origAxes = util.parseAxisParam(axis, x.shape);
   let axes = origAxes;

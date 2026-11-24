@@ -533,6 +533,10 @@ describe('util.hasEncodingLoss', () => {
 });
 
 describeWithFlags('util.toNestedArray', ALL_ENVS, () => {
+  it('rejects a scalar with missing data', () => {
+    expect(() => util.toNestedArray([], new Float32Array(0)))
+        .toThrowError(/scalar tensor requires a value/);
+  });
   it('2 dimensions', () => {
     const a = new Float32Array([1, 2, 3, 4, 5, 6]);
     expect(util.toNestedArray([2, 3], a)).toEqual([[1, 2, 3], [4, 5, 6]]);

@@ -35,7 +35,7 @@ export function unsortedSegmentSum(args: {
 
   const xRank = x.shape.length;
 
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
 
   let axis = 0;
   const permutation = backend_util.getAxesPermutation([axis], xRank);

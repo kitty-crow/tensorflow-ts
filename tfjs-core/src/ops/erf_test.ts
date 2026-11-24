@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('erf', ALL_ENVS, () => {
   it('basic', async () => {
@@ -92,9 +92,9 @@ describeWithFlags('erf', ALL_ENVS, () => {
     const a = tf.tensor1d(aValues);
     const dy = tf.tensor1d(dyValues);
     const gradients = tf.grad(a => tf.erf(a))(a, dy);
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] * 2 * Math.exp(-aValues[i] * aValues[i]) /
+      expected[i] = requiredTestElement(dyValues, i) * 2 * Math.exp(-requiredTestElement(aValues, i) * requiredTestElement(aValues, i)) /
           Math.sqrt(Math.PI);
     }
     expect(gradients.shape).toEqual(a.shape);
@@ -108,9 +108,9 @@ describeWithFlags('erf', ALL_ENVS, () => {
     const a = tf.tensor2d(aValues, [2, 2]);
     const dy = tf.tensor2d(dyValues, [2, 2]);
     const gradients = tf.grad(a => tf.erf(a))(a, dy);
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] * 2 * Math.exp(-aValues[i] * aValues[i]) /
+      expected[i] = requiredTestElement(dyValues, i) * 2 * Math.exp(-requiredTestElement(aValues, i) * requiredTestElement(aValues, i)) /
           Math.sqrt(Math.PI);
     }
     expect(gradients.shape).toEqual(a.shape);

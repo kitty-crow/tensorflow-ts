@@ -76,7 +76,7 @@ export function argMinMaxReduce(
       'arg' + reduceType.charAt(0).toUpperCase() + reduceType.slice(1), axes,
       x.shape.length);
   if (!env().getBool('WEBGL_PACK_REDUCE') || x.shape.length <= 2) {
-    const intermediateTensorInfos = [];
+    const intermediateTensorInfos: TensorInfo[] = [];
     // Eagerly unpack x input since it is passed in to all the shaders which
     // require unpacked inputs.
     const xtexData = backend.texData.get(x.dataId);

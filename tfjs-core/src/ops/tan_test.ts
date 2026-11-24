@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose, TEST_EPSILON_FLOAT16} from '../test_util';
+import {expectArraysClose, TEST_EPSILON_FLOAT16, requiredTestElement} from '../test_util';
 
 describeWithFlags('tan', ALL_ENVS, () => {
   it('basic', async () => {
@@ -25,9 +25,9 @@ describeWithFlags('tan', ALL_ENVS, () => {
     const a = tf.tensor1d(values);
     const result = tf.tan(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.tan(values[i]);
+      expected[i] = Math.tan(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -87,9 +87,9 @@ describeWithFlags('tan', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.tan(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / (Math.cos(aValues[i]) * Math.cos(aValues[i]));
+      expected[i] = requiredTestElement(dyValues, i) / (Math.cos(requiredTestElement(aValues, i)) * Math.cos(requiredTestElement(aValues, i)));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -106,9 +106,9 @@ describeWithFlags('tan', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.tan(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / (Math.cos(aValues[i]) * Math.cos(aValues[i]));
+      expected[i] = requiredTestElement(dyValues, i) / (Math.cos(requiredTestElement(aValues, i)) * Math.cos(requiredTestElement(aValues, i)));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -125,9 +125,9 @@ describeWithFlags('tan', ALL_ENVS, () => {
     const values = [1, -3, 2, 7, -4];
     const result = tf.tan(values);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < values.length; i++) {
-      expected[i] = Math.tan(values[i]);
+      expected[i] = Math.tan(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });

@@ -32,7 +32,7 @@ export function prod(
   const {axis, keepDims} = attrs;
 
   const xRank = x.shape.length;
-  const toDispose = [];
+  const toDispose: TensorInfo[] = [];
 
   const origAxes = util.parseAxisParam(axis, x.shape);
   let axes = origAxes;

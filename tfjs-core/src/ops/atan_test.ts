@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('atan', ALL_ENVS, () => {
   it('basic', async () => {
@@ -25,9 +25,9 @@ describeWithFlags('atan', ALL_ENVS, () => {
     const a = tf.tensor1d(values);
     const result = tf.atan(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atan(values[i]);
+      expected[i] = Math.atan(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -36,7 +36,7 @@ describeWithFlags('atan', ALL_ENVS, () => {
     const a = tf.range(1, 65).reshape([2, 2, 2, 2, 2, 2]);
     const result = tf.atan(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 1; i < 65; ++i) {
       expected[i - 1] = Math.atan(i);
     }
@@ -79,9 +79,9 @@ describeWithFlags('atan', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.atan(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / (1 + (aValues[i] * aValues[i]));
+      expected[i] = requiredTestElement(dyValues, i) / (1 + (requiredTestElement(aValues, i) * requiredTestElement(aValues, i)));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -97,9 +97,9 @@ describeWithFlags('atan', ALL_ENVS, () => {
 
     const gradients = tf.grad(a => tf.atan(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = dyValues[i] / (1 + (aValues[i] * aValues[i]));
+      expected[i] = requiredTestElement(dyValues, i) / (1 + (requiredTestElement(aValues, i) * requiredTestElement(aValues, i)));
     }
 
     expect(gradients.shape).toEqual(a.shape);
@@ -116,9 +116,9 @@ describeWithFlags('atan', ALL_ENVS, () => {
     const values = [1, -3, 2, 7, -4];
     const result = tf.atan(values);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < values.length; i++) {
-      expected[i] = Math.atan(values[i]);
+      expected[i] = Math.atan(requiredTestElement(values, i));
     }
     expectArraysClose(await result.data(), expected);
   });

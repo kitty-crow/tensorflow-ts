@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('logSigmoid', ALL_ENVS, () => {
   it('basic', async () => {
@@ -26,9 +26,9 @@ describeWithFlags('logSigmoid', ALL_ENVS, () => {
 
     const result = tf.logSigmoid(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.log(1 / (1 + Math.exp(-values[i])));
+      expected[i] = Math.log(1 / (1 + Math.exp(-requiredTestElement(values, i))));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -48,9 +48,9 @@ describeWithFlags('logSigmoid', ALL_ENVS, () => {
 
     const result = tf.logSigmoid(a);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.log(1 / (1 + Math.exp(-values[i])));
+      expected[i] = Math.log(1 / (1 + Math.exp(-requiredTestElement(values, i))));
     }
     expectArraysClose(await result.data(), expected);
   });
@@ -102,10 +102,10 @@ describeWithFlags('logSigmoid', ALL_ENVS, () => {
     const dyVals = await dy.array();
     const da = tf.grad(a => tf.logSigmoid(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      const y = 1 / (1 + Math.exp(aVals[i]));
-      expected[i] = dyVals[i] * y;
+      const y = 1 / (1 + Math.exp(requiredTestElement(aVals, i)));
+      expected[i] = requiredTestElement(dyVals, i) * y;
     }
 
     expectArraysClose(await da.data(), expected);
@@ -118,10 +118,10 @@ describeWithFlags('logSigmoid', ALL_ENVS, () => {
     const dyVals = await dy.array();
     const da = tf.grad(a => tf.logSigmoid(a.clone()).clone())(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     for (let i = 0; i < a.size; i++) {
-      const y = 1 / (1 + Math.exp(aVals[i]));
-      expected[i] = dyVals[i] * y;
+      const y = 1 / (1 + Math.exp(requiredTestElement(aVals, i)));
+      expected[i] = requiredTestElement(dyVals, i) * y;
     }
 
     expectArraysClose(await da.data(), expected);
@@ -133,12 +133,12 @@ describeWithFlags('logSigmoid', ALL_ENVS, () => {
 
     const da = tf.grad(a => tf.logSigmoid(a))(a, dy);
 
-    const expected = [];
+    const expected: number[] = [];
     const aVals = await a.data();
     const dyVals = await dy.data();
     for (let i = 0; i < a.size; i++) {
-      const y = 1 / (1 + Math.exp(aVals[i]));
-      expected[i] = dyVals[i] * y;
+      const y = 1 / (1 + Math.exp(requiredTestElement(aVals, i)));
+      expected[i] = requiredTestElement(dyVals, i) * y;
     }
 
     expectArraysClose(await da.data(), expected);

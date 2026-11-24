@@ -59,7 +59,7 @@ export function prod(
   const permutation = backend_util.getAxesPermutation(axes, xRank);
   let reductionAxes = axes;
   let permutedX = x;
-  const intermediateTensorInfos = [];
+  const intermediateTensorInfos: TensorInfo[] = [];
   if (permutation != null) {
     permutedX = transpose({inputs: {x}, backend, attrs: {perm: permutation}});
     intermediateTensorInfos.push(permutedX);

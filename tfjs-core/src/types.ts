@@ -81,8 +81,7 @@ export type FlatVector = boolean[]|number[]|TypedArray;
 export type RegularArray<T> =
     T[]|T[][]|T[][][]|T[][][][]|T[][][][][]|T[][][][][][];
 
-// tslint:disable-next-line:no-any
-export interface RecursiveArray<T extends any> {
+export interface RecursiveArray<T> {
   [index: number]: T|RecursiveArray<T>;
 }
 

@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose, expectArraysEqual} from '../test_util';
+import {expectArraysClose, expectArraysEqual, requiredTestElement} from '../test_util';
 
 describeWithFlags('prelu', ALL_ENVS, () => {
   it('basic', async () => {
@@ -983,10 +983,10 @@ describeWithFlags('atan2', ALL_ENVS, () => {
     const c = tf.tensor2d(bValues, [2, 3]);
 
     const r = tf.atan2(a, c);
-    const expected = [];
+    const expected: number[] = [];
 
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atan2(aValues[i], bValues[i]);
+      expected[i] = Math.atan2(requiredTestElement(aValues, i), requiredTestElement(bValues, i));
     }
     expectArraysClose(await r.data(), expected);
   });
@@ -999,10 +999,10 @@ describeWithFlags('atan2', ALL_ENVS, () => {
     const b = tf.tensor2d(bValues, [2, 3]);
 
     const r = a.atan2(b);
-    const expected = [];
+    const expected: number[] = [];
 
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atan2(aValues[i], bValues[i]);
+      expected[i] = Math.atan2(requiredTestElement(aValues, i), requiredTestElement(bValues, i));
     }
     expectArraysClose(await r.data(), expected);
   });
@@ -1049,10 +1049,10 @@ describeWithFlags('atan2', ALL_ENVS, () => {
     const c = tf.tensor2d(bValues, [2, 3], 'int32');
 
     const r = tf.atan2(a, c);
-    const expected = [];
+    const expected: number[] = [];
 
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atan2(aValues[i], bValues[i]);
+      expected[i] = Math.atan2(requiredTestElement(aValues, i), requiredTestElement(bValues, i));
     }
     expect(r.shape).toEqual([2, 3]);
     expect(r.dtype).toBe('float32');
@@ -1075,10 +1075,10 @@ describeWithFlags('atan2', ALL_ENVS, () => {
     const c = tf.scalar(2);
 
     const r = tf.atan2(a, c);
-    const expected = [];
+    const expected: number[] = [];
 
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atan2(aValues[i], 2);
+      expected[i] = Math.atan2(requiredTestElement(aValues, i), 2);
     }
     expectArraysClose(await r.data(), expected);
   });
@@ -1090,10 +1090,10 @@ describeWithFlags('atan2', ALL_ENVS, () => {
     const c = tf.tensor2d(cValues, [4, 1]);
 
     const r = tf.atan2(a, c);
-    const expected = [];
+    const expected: number[] = [];
 
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atan2(aValues[i], cValues[i]);
+      expected[i] = Math.atan2(requiredTestElement(aValues, i), requiredTestElement(cValues, i));
     }
     expectArraysClose(await r.data(), expected);
   });
@@ -1105,10 +1105,10 @@ describeWithFlags('atan2', ALL_ENVS, () => {
     const c = tf.tensor2d(cValues, [4, 1]);
 
     const r = tf.atan2(a, c);
-    const expected = [];
+    const expected: number[] = [];
 
     for (let i = 0; i < a.size; i++) {
-      expected[i] = Math.atan2(aValues[i], cValues[i]);
+      expected[i] = Math.atan2(requiredTestElement(aValues, i), requiredTestElement(cValues, i));
     }
     expectArraysClose(await r.data(), expected);
   });
@@ -1255,7 +1255,7 @@ describeWithFlags('atan2', ALL_ENVS, () => {
     const c = 2;
 
     const r = tf.atan2(a, c);
-    const expected = [];
+    const expected: number[] = [];
 
     for (let i = 0; i < 6; i++) {
       expected[i] = Math.atan2(i + 1, 2);
