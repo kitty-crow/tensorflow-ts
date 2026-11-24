@@ -27,7 +27,7 @@ import {assert} from '../util';
 import {getModelArtifactsForJSON, getModelArtifactsInfoForJSON, getModelJSONForModelArtifacts, getWeightSpecs} from './io_utils';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 import {IORouter, IORouterRegistry} from './router_registry';
-import {IOHandler, LoadOptions, ModelArtifacts, ModelJSON, SaveResult, WeightData, WeightsManifestConfig, WeightsManifestEntry} from './types';
+import {IOHandler, LoadingAndSavingIOHandler, LoadOptions, ModelArtifacts, ModelJSON, SaveResult, WeightData, WeightsManifestConfig, WeightsManifestEntry} from './types';
 import {loadWeightsAsArrayBuffer, streamWeights} from './weights_loader';
 
 const OCTET_STREAM_MIME_TYPE = 'application/octet-stream';
@@ -359,7 +359,8 @@ IORouterRegistry.registerLoadRouter(httpRouter);
  *   ignoreCI: true
  * }
  */
-export function http(path: string, loadOptions?: LoadOptions): IOHandler {
+export function http(path: string, loadOptions?: LoadOptions):
+    LoadingAndSavingIOHandler {
   return new HTTPRequest(path, loadOptions);
 }
 
@@ -369,6 +370,6 @@ export function http(path: string, loadOptions?: LoadOptions): IOHandler {
  * @param loadOptions
  */
 export function browserHTTPRequest(
-    path: string, loadOptions?: LoadOptions): IOHandler {
+    path: string, loadOptions?: LoadOptions): LoadingAndSavingIOHandler {
   return http(path, loadOptions);
 }

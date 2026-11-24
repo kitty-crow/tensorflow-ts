@@ -22,7 +22,7 @@ import {assert} from '../util';
 import {arrayBufferToBase64String, base64StringToArrayBuffer, getModelArtifactsInfoForJSON} from './io_utils';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 import {IORouter, IORouterRegistry} from './router_registry';
-import {IOHandler, ModelArtifacts, ModelArtifactsInfo, ModelJSON, ModelStoreManager, SaveResult} from './types';
+import {IOHandler, LoadingAndSavingIOHandler, ModelArtifacts, ModelArtifactsInfo, ModelJSON, ModelStoreManager, SaveResult} from './types';
 
 const PATH_SEPARATOR = '/';
 const PATH_PREFIX = 'tensorflowjs_models';
@@ -348,7 +348,7 @@ IORouterRegistry.registerLoadRouter(localStorageRouter);
  * @returns An instance of `IOHandler`, which can be used with, e.g.,
  *   `tf.Model.save`.
  */
-export function browserLocalStorage(modelPath: string): IOHandler {
+export function browserLocalStorage(modelPath: string): LoadingAndSavingIOHandler {
   return new BrowserLocalStorage(modelPath);
 }
 

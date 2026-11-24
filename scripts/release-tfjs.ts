@@ -247,8 +247,14 @@ async function main() {
           transitiveDeps.push(packageName);
         }
 
-        const packageDependencyVersions =
-            new Map(transitiveDeps.map(dep => [dep, versions.get(dep)!]));
+        const packageDependencyVersions = new Map(
+            transitiveDeps.map(dep => {
+              const version = versions.get(dep);
+              if (version == null) {
+                throw new Error(`Missing release version for ${dep}.`);
+              }
+              return [dep, version] as const;
+            }));
 
         try {
           const updated =

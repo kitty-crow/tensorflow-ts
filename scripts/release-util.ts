@@ -612,10 +612,13 @@ export function getTagFromVersion(version: string): string {
 export function memoize<I, O>(f: (arg: I) => Promise<O>): (arg: I) => Promise<O> {
   const map = new Map<I, Promise<O>>();
   return async (i: I) => {
-    if (!map.has(i)) {
-      map.set(i, f(i));
+    const existing = map.get(i);
+    if (existing != null) {
+      return existing;
     }
-    return map.get(i)!;
+    const pending = f(i);
+    map.set(i, pending);
+    return pending;
   }
 }
 

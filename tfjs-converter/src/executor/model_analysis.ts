@@ -21,6 +21,15 @@ import {NamedTensorsMap} from '../data/types';
 import {parseNodeName} from '../operations/executors/utils';
 import {Graph, Node} from '../operations/types';
 
+/** Read a graph-analysis entry that must have been established earlier. */
+function requiredMapValue<K, V>(map: ReadonlyMap<K, V>, key: K): V {
+  const value = map.get(key);
+  if (typeof value === 'undefined') {
+    throw new Error(`Missing graph analysis entry: ${String(key)}.`);
+  }
+  return value;
+}
+
 export interface ExecutionInfo {
   inputs: NamedTensorMap;
   outputs: Node[];
@@ -145,7 +154,7 @@ export function getNodesInTopologicalOrder(
   const orderedNodeNames = [...frontier];
   while (frontier.length > 0) {
     const nodeName = frontier.pop();
-    const node = nameToNode.get(nodeName)!;
+    const node = requiredMapValue(nameToNode, nodeName);
     for (const child of node.children.filter(isUsed)) {
       if (--inCounts[child.name] === 0) {
         orderedNodeNames.push(child.name);
@@ -154,7 +163,7 @@ export function getNodesInTopologicalOrder(
     }
   }
 
-  const orderedNodes = orderedNodeNames.map((name) => nameToNode.get(name));
+  const orderedNodes = orderedNodeNames.map((name) => requiredMapValue(nameToNode, name));
   const filteredOrderedNodes =
       filterPredefinedReachableNodes(orderedNodes, predefinedNodes);
 
@@ -190,7 +199,7 @@ function filterPredefinedReachableNodes(
   // to find the set of all nodes reachable from the predefined nodes.
   while (stack.length > 0) {
     const nodeName = stack.pop();
-    const node = nameToNode.get(nodeName)!;
+    const node = requiredMapValue(nameToNode, nodeName);
     for (const child of node.children) {
       if (!nameToNode.has(child.name) ||
           predefinedReachableNodeNames.has(child.name)) {
@@ -241,7 +250,7 @@ function validateNodesExecutionOrder(
         throw new NodesExecutionOrderError(
             `Child ${child.name} of node ${node.name} is unreachable.`);
       }
-      if (nodeNameToOrder.get(node.name) > nodeNameToOrder.get(child.name)) {
+      if (requiredMapValue(nodeNameToOrder, node.name) > requiredMapValue(nodeNameToOrder, child.name)) {
         throw new NodesExecutionOrderError(`Node ${
             node.name} is scheduled to run after its child ${child.name}.`);
       }
@@ -253,7 +262,7 @@ function validateNodesExecutionOrder(
           throw new NodesExecutionOrderError(
               `Input ${input.name} of node ${node.name} is unreachable.`);
         }
-        if (nodeNameToOrder.get(input.name) > nodeNameToOrder.get(node.name)) {
+        if (requiredMapValue(nodeNameToOrder, input.name) > requiredMapValue(nodeNameToOrder, node.name)) {
           throw new NodesExecutionOrderError(`Node ${
               node.name} is scheduled to run before its input ${input.name}.`);
         }
@@ -281,7 +290,12 @@ export function getNodeLiveUntilMap(orderedNodes: Node[]): Map<string, Node[]> {
   const selfLifespans = orderedNodes.map(
       (node, nodeOrder) => isControlFlow(node) ? INF_LIFE : nodeOrder);
   const getSelfLifeSpan = (node: Node) => {
-    const selfLife = selfLifespans[nodeNameToOrder.get(node.name)!];
+    const order = nodeNameToOrder.get(node.name);
+    if (order == null) {
+      // A child outside the execution order is unused or unreachable.
+      return -1;
+    }
+    const selfLife = selfLifespans[order];
     if (selfLife == null) {
       // If nodeToOrder does not contain the node, it is unused or
       // unreachable in graph.
@@ -316,7 +330,7 @@ export function getNodeLiveUntilMap(orderedNodes: Node[]): Map<string, Node[]> {
     if (!liveUntilMap.has(liveUntilNode.name)) {
       liveUntilMap.set(liveUntilNode.name, []);
     }
-    liveUntilMap.get(liveUntilNode.name)!.push(node);
+    requiredMapValue(liveUntilMap, liveUntilNode.name).push(node);
   }
   return liveUntilMap;
 }

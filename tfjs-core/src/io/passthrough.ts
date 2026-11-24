@@ -19,10 +19,10 @@
  * IOHandlers that pass through the in-memory ModelArtifacts format.
  */
 
-import {IOHandler, IOHandlerSync, LoadHandler, ModelArtifacts, SaveHandler, SaveResult, TrainingConfig, WeightData, WeightsManifestEntry} from './types';
+import {LoadingIOHandler, LoadingIOHandlerSync, LoadHandler, ModelArtifacts, SavingIOHandler, SavingIOHandlerSync, SaveResult, TrainingConfig, WeightData, WeightsManifestEntry} from './types';
 
-class PassthroughLoader implements IOHandlerSync {
-  constructor(private readonly modelArtifacts?: ModelArtifacts) {}
+class PassthroughLoader implements LoadingIOHandlerSync {
+  constructor(private readonly modelArtifacts: ModelArtifacts) {}
 
   load(): ModelArtifacts {
     return this.modelArtifacts;
@@ -38,18 +38,11 @@ class PassthroughSaver<R extends SaveResult | Promise<SaveResult>> {
   }
 }
 
-class PassthroughAsync implements IOHandler {
-  load?: LoadHandler;
-  save?: SaveHandler;
+class PassthroughAsync implements LoadingIOHandler {
+  readonly load: LoadHandler;
 
-  constructor(handler: IOHandlerSync) {
-    if (handler.load) {
-      this.load = () => Promise.resolve(handler.load());
-    }
-    if (handler.save) {
-      this.save = (modelArtifacts: ModelArtifacts) =>
-        Promise.resolve(handler.save(modelArtifacts));
-    }
+  constructor(handler: LoadingIOHandlerSync) {
+    this.load = () => Promise.resolve(handler.load());
   }
 }
 
@@ -76,10 +69,11 @@ class PassthroughAsync implements IOHandler {
  */
 export function fromMemory(
     modelArtifacts: {}|ModelArtifacts, weightSpecs?: WeightsManifestEntry[],
-    weightData?: WeightData, trainingConfig?: TrainingConfig): IOHandler {
-
-  const args = arguments as unknown as Parameters<typeof fromMemory>;
-  return new PassthroughAsync(fromMemorySync(...args));
+    weightData?: WeightData, trainingConfig?: TrainingConfig): LoadingIOHandler {
+  const handler = arguments.length === 1 ?
+      fromMemorySync(modelArtifacts) :
+      fromMemorySync(modelArtifacts, weightSpecs, weightData, trainingConfig);
+  return new PassthroughAsync(handler);
 }
 
 /**
@@ -105,7 +99,7 @@ export function fromMemory(
  */
 export function fromMemorySync(
     modelArtifacts: {}|ModelArtifacts, weightSpecs?: WeightsManifestEntry[],
-    weightData?: WeightData, trainingConfig?: TrainingConfig): IOHandlerSync {
+    weightData?: WeightData, trainingConfig?: TrainingConfig): LoadingIOHandlerSync {
   if (!(arguments.length === 1)) {
     // Legacy support.
     // TODO(cais): Remove this deprecated API.
@@ -157,7 +151,7 @@ export function fromMemorySync(
  */
 export function withSaveHandler(
     saveHandler: (artifacts: ModelArtifacts) =>
-        Promise<SaveResult>): IOHandler {
+        Promise<SaveResult>): SavingIOHandler {
   return new PassthroughSaver(saveHandler);
 }
 
@@ -177,6 +171,6 @@ export function withSaveHandler(
  *     `SaveResult`.
  */
 export function withSaveHandlerSync(
-    saveHandler: (artifacts: ModelArtifacts) => SaveResult): IOHandlerSync {
+    saveHandler: (artifacts: ModelArtifacts) => SaveResult): SavingIOHandlerSync {
   return new PassthroughSaver<SaveResult>(saveHandler);
 }

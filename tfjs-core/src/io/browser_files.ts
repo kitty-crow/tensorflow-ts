@@ -25,7 +25,7 @@ import {env} from '../environment';
 
 import {basename, getModelArtifactsForJSON, getModelArtifactsInfoForJSON, getModelJSONForModelArtifacts} from './io_utils';
 import {IORouter, IORouterRegistry} from './router_registry';
-import {IOHandler, ModelArtifacts, ModelJSON, SaveResult, WeightData, WeightsManifestConfig, WeightsManifestEntry} from './types';
+import {IOHandler, LoadingIOHandler, SavingIOHandler, ModelArtifacts, ModelJSON, SaveResult, WeightData, WeightsManifestConfig, WeightsManifestEntry} from './types';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 
 const DEFAULT_FILE_NAME_PREFIX = 'model';
@@ -303,7 +303,7 @@ IORouterRegistry.registerSaveRouter(browserDownloadsRouter);
  *   ignoreCI: true
  * }
  */
-export function browserDownloads(fileNamePrefix = 'model'): IOHandler {
+export function browserDownloads(fileNamePrefix = 'model'): SavingIOHandler {
   return new BrowserDownloads(fileNamePrefix);
 }
 
@@ -347,6 +347,6 @@ export function browserDownloads(fileNamePrefix = 'model'): IOHandler {
  *   ignoreCI: true
  * }
  */
-export function browserFiles(files: File[]): IOHandler {
+export function browserFiles(files: File[]): LoadingIOHandler {
   return new BrowserFiles(files);
 }

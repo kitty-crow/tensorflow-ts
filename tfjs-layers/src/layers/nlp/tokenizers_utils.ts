@@ -233,15 +233,20 @@ export function regexSplit(
   return strs.map(str => {
     const matches = matchAll(str, regexPattern);
 
-    const splitString = [];
+    const splitString: string[] = [];
     let currIdx = 0;
     for (const match of matches) {
-      splitString.push(str.slice(currIdx, match.index));
-      if (keepDelimRegexPattern) {
-        splitString.push(
-          str.slice(match.index, match.index! + match[0].length));
+      const index = match.index;
+      const matched = match[0];
+      if (index == null || matched == null) {
+        throw new Error('Regular expression match is missing its position.');
       }
-      currIdx = match.index! + match[0].length;
+      const end = index + matched.length;
+      splitString.push(str.slice(currIdx, index));
+      if (keepDelimRegexPattern) {
+        splitString.push(str.slice(index, end));
+      }
+      currIdx = end;
     }
     if (currIdx !== str.length) {
       splitString.push(str.slice(currIdx, str.length));

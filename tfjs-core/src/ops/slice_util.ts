@@ -43,30 +43,30 @@ interface StridedSliceSparseSpec {
 // where as the sparse can have length less than the rank of foo.
 interface StridedSliceDenseSpec {
   dims: number;
-  beginMask?: number;
-  endMask?: number;
+  beginMask: number;
+  endMask: number;
   beginValid: boolean;
   endValid: boolean;
-  begin?: number[];
-  end?: number[];
-  strides?: number[];
+  begin: number[];
+  end: number[];
+  strides: number[];
   // This array helps construct the final shape of the slice.
   // The final tensor is reduced in rank whenever a single index e.g. foo[3]
   // is called for. The final tensor increases in rank with newAxis entries.
   // If an index in this array is positive, the size of the dimension is
   // obtained from canonical end-begin.  Otherwise, if it is a NEW_AXIS, it will
   // be 1. A shrunk dimension is skipped.
-  finalShapeGatherIndices?: number[];
+  finalShapeGatherIndices: number[];
   // This array has the same size as finalShapeGatherIndices, but it remembers
   // the sparse index that a dimension comes from, instead of dense index.
   // A -1 in this vector means the index is not from the sparse input.
-  finalShapeGatherIndicesSparse?: number[];
-  inputShapeGatherIndicesSparse?: number[];
+  finalShapeGatherIndicesSparse: number[];
+  inputShapeGatherIndicesSparse: number[];
   // The dense indexed shrink mask is which processing dimensions should be
   // shrunk. For example, if foo.shape = [10, 10, 10, 10], foo[3, ..., 5] has
   // sparseShrinkAxisMask of 5 (0101) and denseShrinkAxisMask of 9 (1001),
   // yielding a final shape [10, 10].
-  shrinkAxisMask?: number;
+  shrinkAxisMask: number;
 }
 
 export type SliceInfo = {
@@ -103,7 +103,7 @@ export function assertParamsValid(
 
 /** Converts a binary mask to an array of axes. Used in stridedSlice(). */
 export function maskToAxes(mask: number): number[] {
-  const axes = [];
+  const axes: number[] = [];
   let axis = 0;
   while (mask > 0) {
     if (mask & 1) {
@@ -118,7 +118,7 @@ export function maskToAxes(mask: number): number[] {
 /** Computes the output shape given the strided slice params. */
 export function computeOutShape(
     begin: number[], end: number[], strides: number[]): number[] {
-  const size = [];
+  const size: number[] = [];
   for (let axis = 0; axis < begin.length; axis++) {
     size[axis] = Math.ceil((end[axis] - begin[axis]) / strides[axis]);
   }
@@ -158,7 +158,7 @@ function unnormalizeAxis(
 }
 
 function getElidedAxes(numElidedAxes: number, ellipsisInsertionIndex: number) {
-  const elidedAxes = [];
+  const elidedAxes: number[] = [];
   for (let i = 0; i < numElidedAxes; i++) {
     elidedAxes.push(ellipsisInsertionIndex + i);
   }
@@ -172,9 +172,9 @@ export function getNormalizedAxes(
     endMask: number,
     ellipsisMask: number): {begin: number[], end: number[], strides: number[]} {
   const inputRank = inputShape.length;
-  let normalizedBegin = new Array(inputRank),
-      normalizedEnd = new Array(inputRank),
-      normalizedStrides = new Array(inputRank);
+  let normalizedBegin = new Array<number>(inputRank),
+      normalizedEnd = new Array<number>(inputRank),
+      normalizedStrides = new Array<number>(inputRank);
   if (ellipsisAxes.length && numInterpolatedAxes > 0) {
     const fullIndex = ellipsisAxes[0];
 
@@ -358,24 +358,25 @@ export function computeFlatOffset(begin: number[], strides: number[]): number {
 }
 
 export function parseSliceParams(
-    x: TensorInfo, begin: number|number[], size?: number|number[]) {
+    x: TensorInfo, begin: number|number[], size?: number|number[]):
+    [number[], number[]] {
   // The following logic allows for more ergonomic calls.
   const xRank = x.shape.length;
   const begin_: number[] = typeof begin === 'number' ?
-      [begin, ...new Array(xRank - 1).fill(0)] :
+      [begin, ...new Array<number>(xRank - 1).fill(0)] :
       begin.length < xRank ?
-      begin.concat(new Array(xRank - begin.length).fill(0)) :
+      begin.concat(new Array<number>(xRank - begin.length).fill(0)) :
       begin.slice();
   begin_.forEach(d => {
     util.assert(
         d !== -1, () => 'slice() does not support negative begin indexing.');
   });
   const initialSize: number[] = size == null ?
-      new Array(xRank).fill(-1) :
+      new Array<number>(xRank).fill(-1) :
       typeof size === 'number' ?
-      [size, ...new Array(xRank - 1).fill(-1)] :
+      [size, ...new Array<number>(xRank - 1).fill(-1)] :
       size.length < xRank ?
-      size.concat(new Array(xRank - size.length).fill(-1)) : size;
+      size.concat(new Array<number>(xRank - size.length).fill(-1)) : size;
   const size_ = initialSize.map((d, i) => {
     if (d >= 0) {
       return d;
@@ -396,9 +397,9 @@ export function sliceInfo(
     xShape: number[], begin: number[], end: number[], strides: number[],
     beginMask: number, endMask: number, ellipsisMask: number,
     newAxisMask: number, shrinkAxisMask: number): SliceInfo {
-  let stridesNonNull;
+  let stridesNonNull: number[];
   if (strides == null) {
-    stridesNonNull = new Array(begin.length);
+    stridesNonNull = new Array<number>(begin.length);
     stridesNonNull.fill(1);
   } else {
     stridesNonNull = strides;
@@ -453,23 +454,15 @@ export function sliceInfo(
   // produce the missing beginMask for the first two dimensions i.e. from
   // beginMaskSpec = 0, endMaskSpec = 2, we achieve beginMask = 6 (110),
   // endMask = 7 (111).
-  const denseSpec: StridedSliceDenseSpec = {
-    dims: xShape.length,
-    beginMask: 0,
-    endMask: 0,
-    beginValid: false,
-    endValid: false
-  };
-
-  buildDenseSpec(sparseSpec, denseSpec);
+  const denseSpec = buildDenseSpec(sparseSpec, xShape.length);
 
   // Step 3: Make implicit ranges (non-zero beginMasks and endMasks) explicit
   // and bounds check.
   let isIdentity = true;
   let sliceDim0 = true;
   let isSimpleSlice = true;
-  const processingShape = [];
-  const finalShape = [];
+  const processingShape: number[] = [];
+  const finalShape: number[] = [];
 
   for (let i = 0; i < xShape.length; ++i) {
     if (denseSpec.strides[i] === 0) {
@@ -599,21 +592,22 @@ function intervalElementCount(intervalLength: number, stride: number): number {
 }
 
 function buildDenseSpec(
-    sparse: StridedSliceSparseSpec, dense: StridedSliceDenseSpec) {
-  dense.beginMask = 0;
-  dense.endMask = 0;
-  dense.shrinkAxisMask = 0;
-
+    sparse: StridedSliceSparseSpec, dims: number): StridedSliceDenseSpec {
+  const dense: StridedSliceDenseSpec = {
+    dims,
+    beginMask: 0,
+    endMask: 0,
+    shrinkAxisMask: 0,
+    beginValid: sparse.begin != null,
+    endValid: sparse.end != null,
+    begin: new Array<number>(dims),
+    end: new Array<number>(dims),
+    strides: new Array<number>(dims),
+    finalShapeGatherIndices: [],
+    finalShapeGatherIndicesSparse: [],
+    inputShapeGatherIndicesSparse: new Array<number>(dims)
+  };
   let fullIndex = 0;
-  dense.beginValid = sparse.begin != null;
-  dense.endValid = sparse.end != null;
-
-  dense.begin = new Array(dense.dims);
-  dense.end = new Array(dense.dims);
-  dense.strides = new Array(dense.dims);
-  dense.finalShapeGatherIndices = [];
-  dense.finalShapeGatherIndicesSparse = [];
-  dense.inputShapeGatherIndicesSparse = new Array(dense.dims);
 
   for (let i = 0; i < sparse.dims; i++) {
     if ((1 << i) & sparse.ellipsisMask) {
@@ -643,6 +637,7 @@ function buildDenseSpec(
     }
     fullIndex = appendDenseSliceAxis(sparse, dense, i, fullIndex);
   }
+  return dense;
 }
 
 /**

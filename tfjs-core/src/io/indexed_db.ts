@@ -21,7 +21,7 @@ import {env} from '../environment';
 
 import {getModelArtifactsInfoForJSON} from './io_utils';
 import {IORouter, IORouterRegistry} from './router_registry';
-import {IOHandler, ModelArtifacts, ModelArtifactsInfo, ModelStoreManager, SaveResult} from './types';
+import {IOHandler, LoadingAndSavingIOHandler, ModelArtifacts, ModelArtifactsInfo, ModelStoreManager, SaveResult} from './types';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 
 const DATABASE_NAME = 'tensorflowjs';
@@ -258,7 +258,7 @@ IORouterRegistry.registerLoadRouter(indexedDBRouter);
  * @returns An instance of `BrowserIndexedDB` (subclass of `IOHandler`),
  *   which can be used with, e.g., `tf.Model.save`.
  */
-export function browserIndexedDB(modelPath: string): IOHandler {
+export function browserIndexedDB(modelPath: string): LoadingAndSavingIOHandler {
   return new BrowserIndexedDB(modelPath);
 }
 

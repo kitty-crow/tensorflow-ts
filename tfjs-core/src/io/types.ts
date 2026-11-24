@@ -408,6 +408,13 @@ export interface IOHandler {
   load?: LoadHandler;
 }
 
+/** An IO handler whose load capability is guaranteed by its factory. */
+export type LoadingIOHandler = IOHandler & {load: LoadHandler};
+/** An IO handler whose save capability is guaranteed by its factory. */
+export type SavingIOHandler = IOHandler & {save: SaveHandler};
+/** An IO handler whose factory guarantees both capabilities. */
+export type LoadingAndSavingIOHandler = LoadingIOHandler & SavingIOHandler;
+
 /**
  * Type definition for handlers of synchronous loading operations.
  */
@@ -429,6 +436,9 @@ export type IOHandlerSync = {
   save?: SaveHandlerSync;
   load?: LoadHandlerSync;
 };
+
+export type LoadingIOHandlerSync = IOHandlerSync & {load: LoadHandlerSync};
+export type SavingIOHandlerSync = IOHandlerSync & {save: SaveHandlerSync};
 
 /**
  * An interface for the manager of a model store.
