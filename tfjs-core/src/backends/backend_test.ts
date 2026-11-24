@@ -16,7 +16,7 @@
  */
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {EPSILON_FLOAT16, EPSILON_FLOAT32} from './backend';
+import {DataStorage, EPSILON_FLOAT16, EPSILON_FLOAT32, KernelBackend} from './backend';
 
 describeWithFlags('epsilon', ALL_ENVS, () => {
   it('Epsilon is a function of float precision', () => {
@@ -28,5 +28,42 @@ describeWithFlags('epsilon', ALL_ENVS, () => {
 
   it('abs(epsilon) > 0', async () => {
     expect(await tf.abs(tf.backend().epsilon()).array()).toBeGreaterThan(0);
+  });
+});
+
+
+describe('DataStorage', () => {
+  it('returns registered data without requesting a transfer', () => {
+    const backend = new KernelBackend();
+    const moveData = jasmine.createSpy('moveData');
+    const storage = new DataStorage<number>(backend, {moveData});
+    const dataId = {};
+    storage.set(dataId, 0);
+    expect(storage.get(dataId)).toBe(0);
+    expect(moveData).not.toHaveBeenCalled();
+  });
+
+  it('returns data registered by the mover', () => {
+    const backend = new KernelBackend();
+    const dataId = {};
+    const storage = new DataStorage<number>(backend, {
+      moveData: (target, id) => {
+        expect(target).toBe(backend);
+        expect(id).toBe(dataId);
+        storage.set(id, 42);
+      }
+    });
+    expect(storage.get(dataId)).toBe(42);
+    expect(storage.has(dataId)).toBe(true);
+  });
+
+  it('rejects a transfer that fails to register tensor data', () => {
+    const backend = new KernelBackend();
+    const moveData = jasmine.createSpy('moveData');
+    const storage = new DataStorage<number>(backend, {moveData});
+    const dataId = {};
+    expect(() => storage.get(dataId))
+        .toThrowError('Tensor data is missing after backend transfer.');
+    expect(moveData).toHaveBeenCalledWith(backend, dataId);
   });
 });

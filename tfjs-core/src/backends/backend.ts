@@ -50,11 +50,19 @@ export class DataStorage<T> {
 
   constructor(private backend: KernelBackend, private dataMover: DataMover) {}
 
-  get(dataId: DataId) {
+  /**
+   * Retrieve registered tensor data, transferring it to this backend if needed.
+   * A data mover must register the value before returning.
+   */
+  get(dataId: DataId): T {
     if (!this.data.has(dataId)) {
       this.dataMover.moveData(this.backend, dataId);
     }
-    return this.data.get(dataId);
+    const value = this.data.get(dataId);
+    if (typeof value === 'undefined') {
+      throw new Error('Tensor data is missing after backend transfer.');
+    }
+    return value;
   }
 
   set(dataId: DataId, value: T): void {
