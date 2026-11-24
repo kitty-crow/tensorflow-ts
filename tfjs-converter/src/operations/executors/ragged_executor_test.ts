@@ -53,9 +53,9 @@ describe('ragged', () => {
       beforeEach(() => {
         node.op = 'RaggedGather';
         node.inputParams = {
-          paramsNestedSplits: createTensorsAttr(0, 2),
-          paramsDenseValues: createTensorAttr(2),
-          indices: createTensorAttr(3),
+          paramsNestedSplits: createTensorsAttr(0, -2),
+          paramsDenseValues: createTensorAttr(-2),
+          indices: createTensorAttr(-1),
         };
         node.attrParams = {
           outputRaggedRank: createNumberAttr(OUTPUT_RAGGED_RANK)
@@ -96,10 +96,10 @@ describe('ragged', () => {
         test_util.expectArraysClose(
             await result[2].data(), [.1, .2, .3, .4, .5, .6, .7, .8]);
       });
-    });
 
-    it('should match json def', () => {
-      expect(validateParam(node, ragged.json)).toBeTruthy();
+      it('should match json def', () => {
+        expect(validateParam(node, ragged.json)).toBeTruthy();
+      });
     });
 
     describe('RaggedRange', () => {

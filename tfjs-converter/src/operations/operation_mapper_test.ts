@@ -30,6 +30,7 @@ import * as image from './op_list/image';
 import * as logical from './op_list/logical';
 import * as matrices from './op_list/matrices';
 import * as normalization from './op_list/normalization';
+import * as ragged from './op_list/ragged';
 import * as reduction from './op_list/reduction';
 import * as sliceJoin from './op_list/slice_join';
 import * as sparse from './op_list/sparse';
@@ -41,7 +42,7 @@ import {Graph} from './types';
 
 const ops = [
   arithmetic, basicMath, control, convolution, creation, dynamic, evaluation,
-  graph, hashTable, image, logical, matrices, normalization, reduction,
+  graph, hashTable, image, logical, matrices, normalization, ragged, reduction,
   sliceJoin, sparse, spectral, string, transformation
 ];
 const mapper: OperationMapper = OperationMapper.Instance;
@@ -421,40 +422,47 @@ describe('operationMapper without signature', () => {
       });
 
       it('should map the attribute params', () => {
-        expect(convertedGraph.nodes['Conv2D'].attrParams['strides'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Conv2D'].attrParams['strides'].value)
             .toEqual([1, 2, 2, 1]);
-        expect(convertedGraph.nodes['Conv2D'].attrParams['pad'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Conv2D'].attrParams['pad'].value)
             .toEqual('same');
-        expect(convertedGraph.nodes['Conv2D'].attrParams['useCudnnOnGpu'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Conv2D'].attrParams['useCudnnOnGpu'].value)
             .toEqual(true);
-        expect(
+        expect<string|number|boolean|object>(
             convertedGraph.nodes['Split'].attrParams['numOrSizeSplits'].value)
             .toEqual(3);
-        expect(
+        expect<string|number|boolean|object>(
             convertedGraph.nodes['FusedBatchNorm'].attrParams['epsilon'].value)
             .toEqual(0.0001);
-        expect(convertedGraph.nodes['Squeeze2'].attrParams['axis'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Squeeze2'].attrParams['axis'].value)
             .toEqual([]);
       });
 
       it('should map the placeholder attribute params', () => {
-        expect(
+        expect<string|number|boolean|object>(
             convertedGraph.nodes['image_placeholder'].attrParams['shape'].value)
             .toEqual([3, 3, 3, 1]);
-        expect(
+        expect<string|number|boolean|object>(
             convertedGraph.nodes['image_placeholder'].attrParams['dtype'].value)
             .toEqual('float32');
       });
       it('should map params with deprecated name', () => {
-        expect(convertedGraph.nodes['Squeeze'].attrParams['axis'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Squeeze'].attrParams['axis'].value)
             .toEqual([1, 2]);
       });
       it('should map params with int64 dtype', () => {
-        expect(convertedGraph.nodes['Cast'].attrParams['dtype'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Cast'].attrParams['dtype'].value)
             .toEqual('int32');
       });
       it('should map params with complex64 dtype', () => {
-        expect(convertedGraph.nodes['Cast4'].attrParams['dtype'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Cast4'].attrParams['dtype'].value)
             .toEqual('complex64');
       });
     });
@@ -522,48 +530,57 @@ describe('operationMapper with signature', () => {
       });
 
       it('should map the attribute params', () => {
-        expect(convertedGraph.nodes['Conv2D'].attrParams['strides'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Conv2D'].attrParams['strides'].value)
             .toEqual([1, 2, 2, 1]);
-        expect(convertedGraph.nodes['Conv2D'].attrParams['pad'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Conv2D'].attrParams['pad'].value)
             .toEqual('same');
-        expect(convertedGraph.nodes['Conv2D'].attrParams['useCudnnOnGpu'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Conv2D'].attrParams['useCudnnOnGpu'].value)
             .toEqual(true);
-        expect(
+        expect<string|number|boolean|object>(
             convertedGraph.nodes['Split'].attrParams['numOrSizeSplits'].value)
             .toEqual(3);
-        expect(
+        expect<string|number|boolean|object>(
             convertedGraph.nodes['FusedBatchNorm'].attrParams['epsilon'].value)
             .toEqual(0.0001);
-        expect(convertedGraph.nodes['Squeeze2'].attrParams['axis'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Squeeze2'].attrParams['axis'].value)
             .toEqual([]);
       });
 
       it('should map the placeholder attribute params', () => {
-        expect(
+        expect<string|number|boolean|object>(
             convertedGraph.nodes['image_placeholder'].attrParams['shape'].value)
             .toEqual([3, 3, 3, 1]);
-        expect(
+        expect<string|number|boolean|object>(
             convertedGraph.nodes['image_placeholder'].attrParams['dtype'].value)
             .toEqual('float32');
       });
       it('should map params with deprecated name', () => {
-        expect(convertedGraph.nodes['Squeeze'].attrParams['axis'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Squeeze'].attrParams['axis'].value)
             .toEqual([1, 2]);
       });
       it('should map params with int64 dtype', () => {
-        expect(convertedGraph.nodes['Cast'].attrParams['dtype'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Cast'].attrParams['dtype'].value)
             .toEqual('int32');
       });
       it('should map params with uint8 dtype', () => {
-        expect(convertedGraph.nodes['Cast2'].attrParams['dtype'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Cast2'].attrParams['dtype'].value)
             .toEqual('int32');
       });
       it('should map params with half dtype', () => {
-        expect(convertedGraph.nodes['Cast3'].attrParams['dtype'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Cast3'].attrParams['dtype'].value)
             .toEqual('float32');
       });
       it('should map params with complex64 dtype', () => {
-        expect(convertedGraph.nodes['Cast4'].attrParams['dtype'].value)
+        expect<string|number|boolean|object>(
+            convertedGraph.nodes['Cast4'].attrParams['dtype'].value)
             .toEqual('complex64');
       });
     });

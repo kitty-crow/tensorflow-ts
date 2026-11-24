@@ -74,6 +74,8 @@ export declare interface AttrParamMapper extends ParamMapper {
   tfName?: string;
   // TensorFlow deprecated attribute name, this is used to support old models.
   tfDeprecatedName?: string;
+  // Preserve case for case-sensitive string attributes.
+  keepCase?: boolean;
 }
 
 export interface InternalOpExecutor {

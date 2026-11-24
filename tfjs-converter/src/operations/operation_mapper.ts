@@ -34,6 +34,7 @@ import * as image from './op_list/image';
 import * as logical from './op_list/logical';
 import * as matrices from './op_list/matrices';
 import * as normalization from './op_list/normalization';
+import * as ragged from './op_list/ragged';
 import * as reduction from './op_list/reduction';
 import * as sliceJoin from './op_list/slice_join';
 import * as sparse from './op_list/sparse';
@@ -57,7 +58,7 @@ export class OperationMapper {
     const ops = [
       arithmetic, basicMath, control, convolution, creation, dynamic,
       evaluation, graph, hashTable, image, logical, matrices, normalization,
-      reduction, sliceJoin, sparse, spectral, string, transformation
+      ragged, reduction, sliceJoin, sparse, spectral, string, transformation
     ];
     const mappersJson: OpMapper[] = [].concat(...ops.map(op => op.json));
 
@@ -239,22 +240,22 @@ export class OperationMapper {
             switch (param.type) {
               case 'string':
                 value = getStringParam(
-                    attrs, param.tfName, param.defaultValue as string);
+                    attrs, param.tfName, param.defaultValue as string, param.keepCase);
 
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getStringParam(
                       attrs, param.tfDeprecatedName,
-                      param.defaultValue as string);
+                      param.defaultValue as string, param.keepCase);
                 }
                 break;
               case 'string[]':
                 value = getStringArrayParam(
-                    attrs, param.tfName, param.defaultValue as string[]);
+                    attrs, param.tfName, param.defaultValue as string[], param.keepCase);
 
                 if (value === undefined && !!param.tfDeprecatedName) {
                   value = getStringArrayParam(
                       attrs, param.tfDeprecatedName,
-                      param.defaultValue as string[]);
+                      param.defaultValue as string[], param.keepCase);
                 }
                 break;
               case 'number':
