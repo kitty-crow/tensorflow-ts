@@ -66,12 +66,9 @@ export class FeedDict {
    */
   constructor(feeds?: Feed[]|FeedDict) {
     if (feeds instanceof FeedDict) {
-      for (const id in feeds.id2Value) {
-        this.id2Value[id] = feeds.id2Value[id];
-        if (id in feeds.id2Mask) {
-          this.id2Mask[id] = feeds.id2Mask[id];
-        }
-      }
+      this.id2Value = {...feeds.id2Value};
+      this.id2Mask = {...feeds.id2Mask};
+      this.name2Id = {...feeds.name2Id};
       return;
     }
     if (feeds == null) {
@@ -147,13 +144,12 @@ export class FeedDict {
    * @throws ValueError: If `key` does not exist in this `FeedDict`.
    */
   getValue(key: SymbolicTensor|string): Tensor {
-    if (typeof key === 'string') {
-      return this.id2Value[this.namedFeedId(key)];
+    const id = typeof key === 'string' ? this.namedFeedId(key) : key.id;
+    const value = this.id2Value[id];
+    if (value == null) {
+      throw new ValueError(`Nonexistent key: ${typeof key === 'string' ? key : key.name}`);
     }
-    if (this.id2Value[key.id] == null) {
-      throw new ValueError(`Nonexistent key: ${key.name}`);
-    }
-    return this.id2Value[key.id];
+    return value;
   }
 
   /**

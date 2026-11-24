@@ -51,6 +51,9 @@ export function getExactlyOneTensor(xs: Tensor|Tensor[]): Tensor {
       throw new ValueError(`Expected Tensor length to be 1; got ${xs.length}`);
     }
     x = xs[0];
+    if (x == null) {
+      throw new ValueError('Expected a tensor, but the input array is empty.');
+    }
   } else {
     x = xs;
   }
@@ -72,11 +75,13 @@ export function getExactlyOneShape(shapes: Shape|Shape[]): Shape {
     return shapes as Shape;
   }
   {
-    if (shapes.length === 1) {
-      shapes = shapes as Shape[];
-      return shapes[0];
-    } else {
+    if (shapes.length !== 1) {
       throw new ValueError(`Expected exactly 1 Shape; got ${shapes.length}`);
     }
+    const shape = shapes[0];
+    if (!Array.isArray(shape)) {
+      throw new ValueError('Expected a shape array.');
+    }
+    return shape;
   }
 }

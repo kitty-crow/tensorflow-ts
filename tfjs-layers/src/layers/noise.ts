@@ -17,7 +17,7 @@ import {add, greaterEqual, mul, randomUniform, serialization, Tensor, tidy} from
 import * as K from '../backend/tfjs_backend';
 import {Layer, LayerArgs} from '../engine/topology';
 import {Shape} from '../keras_format/common';
-import {Kwargs} from '../types';
+import {Kwargs, trainingMode} from '../types';
 import {getExactlyOneTensor} from '../utils/types_utils';
 
 export declare interface GaussianNoiseArgs extends LayerArgs {
@@ -54,7 +54,7 @@ export class GaussianNoise extends Layer {
       const noised = () =>
           add(K.randomNormal(input.shape, 0, this.stddev), input);
       const output =
-          K.inTrainPhase(noised, () => input, kwargs['training'] || false);
+          K.inTrainPhase(noised, () => input, trainingMode(kwargs));
       return output;
     });
   }
@@ -97,7 +97,7 @@ export class GaussianDropout extends Layer {
           const stddev = Math.sqrt(this.rate / (1 - this.rate));
           return mul(input, K.randomNormal(input.shape, 1, stddev));
         };
-        return K.inTrainPhase(noised, () => input, kwargs['training'] || false);
+        return K.inTrainPhase(noised, () => input, trainingMode(kwargs));
       }
       return input;
     });
@@ -200,7 +200,7 @@ export class AlphaDropout extends Layer {
         };
         return K.inTrainPhase(
             droppedInputs, () => getExactlyOneTensor(inputs),
-            kwargs['training'] || false);
+            trainingMode(kwargs));
       }
       return inputs;
     });

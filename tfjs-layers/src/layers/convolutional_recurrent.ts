@@ -20,7 +20,7 @@ import {AttributeError, NotImplementedError, ValueError} from '../errors';
 import {Initializer} from '../initializers';
 import {DataFormat, DataType, PaddingMode, Shape} from '../keras_format/common';
 import {Regularizer} from '../regularizers';
-import {Kwargs} from '../types';
+import {Kwargs, trainingMode} from '../types';
 import {convOutputLength, normalizeArray} from '../utils/conv_utils';
 import {assertPositiveInteger} from '../utils/generic_utils';
 import {getExactlyOneShape} from '../utils/types_utils';
@@ -154,7 +154,7 @@ class ConvRNN2D extends RNN {
 
       const mask = kwargs == null ? null : kwargs['mask'];
 
-      const training = kwargs == null ? null : kwargs['training'];
+      const training = trainingMode(kwargs);
 
       const initialState: Tensor[] =
           kwargs == null ? null : kwargs['initialState'];
@@ -426,7 +426,7 @@ export class ConvLSTM2DCell extends LSTMCell implements ConvRNN2DCell {
             `${inputs.length}.`);
       }
 
-      const training = kwargs['training'] || false;
+      const training = trainingMode(kwargs);
 
       const x = inputs[0];         // Current input
       const hTMinus1 = inputs[1];  // Previous memory state.

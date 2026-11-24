@@ -37,7 +37,7 @@ import {version} from '../version';
 
 import {Container, ContainerArgs} from './container';
 import {Dataset} from './dataset_stub';
-import {execute, FeedDict} from './executor';
+import {execute, FeedDict, Feed} from './executor';
 import {DisposeResult, SymbolicTensor} from './topology';
 import {evaluateDataset, fitDataset, ModelEvaluateDatasetArgs, ModelFitDatasetArgs} from './training_dataset';
 import {checkBatchSize, disposeNewTensors, ensureTensorsRank2OrHigher, makeBatches, ModelFitArgs, sliceArrays, sliceArraysByIndices} from './training_tensors';
@@ -1157,7 +1157,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
           const insBatch = sliceArrays(ins, batchStart, batchEnd);
 
           // Construct the feeds for execute();
-          const feeds = [];
+          const feeds: Feed[] = [];
           if (Array.isArray(insBatch)) {
             for (let i = 0; i < insBatch.length; ++i) {
               feeds.push({key: this.inputs[i], value: insBatch[i]});
@@ -1370,9 +1370,8 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     const outLabels = this.metricsNames;
     // Rename duplicated metrics names (can happen with an output layer
     // shared among multiple dataflows).
-    const dedupedOutLabels = [];
-    for (let i = 0; i < outLabels.length; ++i) {
-      const label = outLabels[i];
+    const dedupedOutLabels: string[] = [];
+    for (const [i, label] of outLabels.entries()) {
       let newLabel = label;
       if (count(outLabels, label) > 1) {
         const dupIndex = count(outLabels.slice(0, i), label);
@@ -1410,7 +1409,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       // inputs. This function is used for obtaining gradients through
       // backprop.
       const totalLossFunction = () => {
-        const feeds = [];
+        const feeds: Feed[] = [];
         for (let i = 0; i < this.inputs.length; ++i) {
           feeds.push({key: this.inputs[i], value: inputs[i]});
         }
@@ -1497,7 +1496,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
         const inputs = data.slice(0, this.inputs.length);
         const targets = data.slice(
             this.inputs.length, this.inputs.length + this.outputs.length);
-        const feeds = [];
+        const feeds: Feed[] = [];
         for (let i = 0; i < this.inputs.length; ++i) {
           feeds.push({key: this.inputs[i], value: inputs[i]});
         }

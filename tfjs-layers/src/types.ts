@@ -69,3 +69,15 @@ export type Kwargs = {
   // tslint:disable-next-line:no-any
   [key: string]: any
 };
+
+/** Resolve the standard training-mode argument at the loose kwargs boundary. */
+export function trainingMode(kwargs: Kwargs|null|undefined): boolean {
+  const value: {}|null|undefined = kwargs == null ? null : kwargs['training'];
+  if (value == null) {
+    return false;
+  }
+  if (typeof value !== 'boolean') {
+    throw new Error('The training argument must be a boolean.');
+  }
+  return value;
+}

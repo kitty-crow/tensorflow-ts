@@ -26,7 +26,7 @@ import {getInitializer, Initializer, InitializerIdentifier, Ones, serializeIniti
 import {ActivationIdentifier} from '../keras_format/activation_config';
 import {Shape} from '../keras_format/common';
 import {getRegularizer, Regularizer, RegularizerIdentifier, serializeRegularizer} from '../regularizers';
-import {Kwargs, RnnStepFunction} from '../types';
+import {Kwargs, RnnStepFunction, trainingMode} from '../types';
 import {assertPositiveInteger} from '../utils/generic_utils';
 import * as math_utils from '../utils/math_utils';
 import {getExactlyOneShape, getExactlyOneTensor, isArrayOfShapes} from '../utils/types_utils';
@@ -78,16 +78,22 @@ export function standardizeArgs(
     if (inputs.length > 1) {
       initialState = inputs.slice(1, inputs.length);
     }
-    inputs = inputs[0];
+    const input = inputs[0];
+    if (input == null) {
+      throw new ValueError('An RNN requires its input tensor.');
+    }
+    inputs = input;
   }
 
   function toListOrNull(x: Tensor|Tensor[]|SymbolicTensor|
                         SymbolicTensor[]): Tensor[]|SymbolicTensor[] {
-    if (x == null || Array.isArray(x)) {
-      return x as Tensor[] | SymbolicTensor[];
-    } else {
-      return [x] as Tensor[] | SymbolicTensor[];
+    if (x == null) {
+      return null;
     }
+    if (Array.isArray(x)) {
+      return x;
+    }
+    return x instanceof Tensor ? [x] : [x];
   }
 
   initialState = toListOrNull(initialState);
@@ -706,7 +712,7 @@ export class RNN extends Layer {
     // this.inputSpec and this.stateSpec owith complete input shapes.
     return tidy(() => {
       const mask = kwargs == null ? null : kwargs['mask'] as Tensor;
-      const training = kwargs == null ? null : kwargs['training'];
+      const training = trainingMode(kwargs);
       let initialState: Tensor[] =
           kwargs == null ? null : kwargs['initialState'];
 
@@ -947,7 +953,7 @@ export declare interface SimpleRNNCellLayerArgs extends LayerArgs {
   /**
    * This is added for test DI purpose.
    */
-  dropoutFunc?: Function;
+  dropoutFunc?: RnnDropoutFunction;
 }
 
 export class SimpleRNNCell extends RNNCell {
@@ -971,7 +977,7 @@ export class SimpleRNNCell extends RNNCell {
 
   readonly dropout: number;
   readonly recurrentDropout: number;
-  readonly dropoutFunc: Function;
+  readonly dropoutFunc: RnnDropoutFunction;
 
   readonly stateSize: number;
 
@@ -1057,7 +1063,7 @@ export class SimpleRNNCell extends RNNCell {
       }
       let prevOutput = inputs[1];
       inputs = inputs[0];
-      const training = kwargs['training'] == null ? false : kwargs['training'];
+      const training = trainingMode(kwargs);
 
       if (0 < this.dropout && this.dropout < 1 && this.dropoutMask == null) {
         this.dropoutMask = generateDropoutMask({
@@ -1208,7 +1214,7 @@ export declare interface SimpleRNNLayerArgs extends BaseRNNLayerArgs {
   /**
    * This is added for test DI purpose.
    */
-  dropoutFunc?: Function;
+  dropoutFunc?: RnnDropoutFunction;
 }
 
 /**
@@ -1240,7 +1246,7 @@ export class SimpleRNN extends RNN {
         this.cell.recurrentDropoutMask = null;
       }
       const mask = kwargs == null ? null : kwargs['mask'];
-      const training = kwargs == null ? null : kwargs['training'];
+      const training = trainingMode(kwargs);
       const initialState: Tensor[] =
           kwargs == null ? null : kwargs['initialState'];
       return super.call(inputs, {mask, training, initialState});
@@ -1313,7 +1319,7 @@ export class GRUCell extends RNNCell {
 
   readonly dropout: number;
   readonly recurrentDropout: number;
-  readonly dropoutFunc: Function;
+  readonly dropoutFunc: RnnDropoutFunction;
 
   readonly stateSize: number;
   readonly implementation: number;
@@ -1407,7 +1413,7 @@ export class GRUCell extends RNNCell {
             `${inputs.length}.`);
       }
 
-      const training = kwargs['training'] == null ? false : kwargs['training'];
+      const training = trainingMode(kwargs);
       let hTMinus1 = inputs[1];  // Previous memory state.
       inputs = inputs[0];
 
@@ -1554,7 +1560,7 @@ export class GRU extends RNN {
         this.cell.recurrentDropoutMask = null;
       }
       const mask = kwargs == null ? null : kwargs['mask'];
-      const training = kwargs == null ? null : kwargs['training'];
+      const training = trainingMode(kwargs);
       const initialState: Tensor[] =
           kwargs == null ? null : kwargs['initialState'];
       return super.call(inputs, {mask, training, initialState});
@@ -1633,7 +1639,7 @@ export class LSTMCell extends RNNCell {
 
   readonly dropout: number;
   readonly recurrentDropout: number;
-  readonly dropoutFunc: Function;
+  readonly dropoutFunc: RnnDropoutFunction;
 
   readonly stateSize: number[];
   readonly implementation: number;
@@ -1738,7 +1744,7 @@ export class LSTMCell extends RNNCell {
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tidy(() => {
-      const training = kwargs['training'] == null ? false : kwargs['training'];
+      const training = trainingMode(kwargs);
       inputs = inputs as Tensor[];
       if (inputs.length !== 3) {
         throw new ValueError(
@@ -1892,7 +1898,7 @@ export class LSTM extends RNN {
         this.cell.recurrentDropoutMask = null;
       }
       const mask = kwargs == null ? null : kwargs['mask'];
-      const training = kwargs == null ? null : kwargs['training'];
+      const training = trainingMode(kwargs);
       const initialState: Tensor[] =
           kwargs == null ? null : kwargs['initialState'];
       return super.call(inputs, {mask, training, initialState});
@@ -2099,12 +2105,15 @@ export class StackedRNNCells extends RNNCell {
 }
 serialization.registerClass(StackedRNNCells);
 
+/** A dropout function receives a tensor and a dropout rate. */
+export type RnnDropoutFunction = (input: Tensor, rate: number) => Tensor;
+
 export function generateDropoutMask(args: {
   ones: () => tfc.Tensor,
   rate: number,
   training?: boolean,
   count?: number,
-  dropoutFunc?: Function,
+  dropoutFunc?: RnnDropoutFunction,
 }): tfc.Tensor|tfc.Tensor[] {
   const {ones, rate, training = false, count = 1, dropoutFunc} = args;
 
@@ -2118,7 +2127,7 @@ export function generateDropoutMask(args: {
     return tfc.keep(createMask().clone());
   }
 
-  const masks = Array(count).fill(undefined).map(createMask);
+  const masks = new Array<number>(count).fill(0).map(createMask);
 
   return masks.map(m => tfc.keep(m.clone()));
 }

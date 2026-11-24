@@ -24,7 +24,7 @@ import {ActivationIdentifier} from '../keras_format/activation_config';
 import {DataFormat, Shape} from '../keras_format/common';
 import {LayerConfig} from '../keras_format/topology_config';
 import {getRegularizer, Regularizer, RegularizerIdentifier, serializeRegularizer} from '../regularizers';
-import {Kwargs} from '../types';
+import {Kwargs, trainingMode} from '../types';
 import {assertPositiveInteger, mapActivationToFusedKernel} from '../utils/generic_utils';
 import {arrayProd, range} from '../utils/math_utils';
 import {getExactlyOneShape, getExactlyOneTensor} from '../utils/types_utils';
@@ -83,7 +83,7 @@ export class Dropout extends Layer {
       const input = getExactlyOneTensor(inputs);
       if (0 < this.rate && this.rate < 1) {
         const training =
-            kwargs['training'] == null ? false : kwargs['training'];
+            trainingMode(kwargs);
         const noiseShape = this.getNoiseShape(input);
         const output = K.inTrainPhase(
             () => K.dropout(input, this.rate, noiseShape, this.seed),

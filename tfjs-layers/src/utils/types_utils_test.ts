@@ -8,6 +8,7 @@
  * =============================================================================
  */
 
+import {trainingMode} from '../types';
 import * as types_utils from './types_utils';
 
 describe('isArrayOfShapes', () => {
@@ -59,5 +60,18 @@ describe('getExactlyOneShape', () => {
     expect(() => types_utils.getExactlyOneShape([
       [1], [2]
     ])).toThrowError(/Expected exactly 1 Shape; got 2/);
+  });
+});
+
+describe('trainingMode', () => {
+  it('defaults to inference and preserves explicit training flags', () => {
+    expect(trainingMode(null)).toBe(false);
+    expect(trainingMode({})).toBe(false);
+    expect(trainingMode({training: false})).toBe(false);
+    expect(trainingMode({training: true})).toBe(true);
+  });
+
+  it('rejects an invalid training flag', () => {
+    expect(() => trainingMode({training: 'true'})).toThrowError(/boolean/);
   });
 });

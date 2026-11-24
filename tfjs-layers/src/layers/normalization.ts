@@ -21,7 +21,7 @@ import {NotImplementedError, ValueError} from '../errors';
 import {getInitializer, Initializer, InitializerIdentifier, serializeInitializer} from '../initializers';
 import {Shape} from '../keras_format/common';
 import {getRegularizer, Regularizer, RegularizerIdentifier, serializeRegularizer} from '../regularizers';
-import {Kwargs} from '../types';
+import {Kwargs, trainingMode} from '../types';
 import * as generic_utils from '../utils/generic_utils';
 import * as math_utils from '../utils/math_utils';
 import {getExactlyOneShape, getExactlyOneTensor} from '../utils/types_utils';
@@ -328,7 +328,7 @@ export class BatchNormalization extends Layer {
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tidy(() => {
-      const training = kwargs['training'] == null ? false : kwargs['training'];
+      const training = trainingMode(kwargs);
       const input = getExactlyOneTensor(inputs);
       const inputShape = input.shape;
       const ndim = inputShape.length;
