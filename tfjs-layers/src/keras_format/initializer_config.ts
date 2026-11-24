@@ -38,8 +38,11 @@ export type ConstantSerialization =
     BaseSerialization<'Constant', ConstantConfig>;
 
 export type RandomNormalConfig = {
+  /** Mean of the random values to generate. */
   mean?: number;
+  /** Standard deviation of the random values to generate. */
   stddev?: number;
+  /** Used to seed the random generator. */
   seed?: number;
 };
 
@@ -47,22 +50,21 @@ export type RandomNormalSerialization =
     BaseSerialization<'RandomNormal', RandomNormalConfig>;
 
 export type RandomUniformConfig = {
+  /** Lower bound of the range of random values to generate. */
   minval?: number;
+  /** Upper bound of the range of random values to generate. */
   maxval?: number;
+  /** Used to seed the random generator. */
   seed?: number;
 };
 
 export type RandomUniformSerialization =
     BaseSerialization<'RandomUniform', RandomUniformConfig>;
 
-export type TruncatedNormalConfig = {
-  mean?: number;
-  stddev?: number;
-  seed?: number;
-};
+export type {RandomNormalConfig as TruncatedNormalConfig};
 
 export type TruncatedNormalSerialization =
-    BaseSerialization<'TruncatedNormal', TruncatedNormalConfig>;
+    BaseSerialization<'TruncatedNormal', RandomNormalConfig>;
 
 export type VarianceScalingConfig = {
   scale?: number;
@@ -76,7 +78,9 @@ export type VarianceScalingSerialization =
     BaseSerialization<'VarianceScaling', VarianceScalingConfig>;
 
 export type OrthogonalConfig = {
+  /** Random number generator seed. */
   seed?: number;
+  /** Multiplicative factor to apply to the orthogonal matrix. Defaults to 1. */
   gain?: number;
 };
 

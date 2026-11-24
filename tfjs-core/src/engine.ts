@@ -76,6 +76,18 @@ export interface TimingInfo extends BackendTimingInfo {
   wallMs: number;
 }
 
+/** Timing information for a single GPU kernel query. */
+export type GPUKernelTimingInfo = {
+  name: string;
+  query: Promise<number>;
+};
+
+/** GPU backend timing including host/device transfer waits. */
+export interface GPUTimingInfo extends TimingInfo {
+  uploadWaitMs: number;
+  downloadWaitMs: number;
+}
+
 /** @docalias Function */
 export type ScopeFn<T extends TensorContainer> = () => T;
 

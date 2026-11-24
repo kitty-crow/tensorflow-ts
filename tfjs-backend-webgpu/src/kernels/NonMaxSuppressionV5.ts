@@ -17,7 +17,8 @@
 import {kernel_impls, KernelConfig, KernelFunc, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
-export type TypedArray = Float32Array|Int32Array|Uint8Array;
+import type {TypedArray} from '@tensorflow/tfjs-core';
+export type {TypedArray} from '@tensorflow/tfjs-core';
 
 export function nonMaxSuppressionV5(args: {
   inputs: NonMaxSuppressionV5Inputs,

@@ -15,6 +15,7 @@ import {checkDataFormat} from './common';
 import {NotImplementedError, ValueError} from './errors';
 import {DataFormat, Shape} from './keras_format/common';
 import {Distribution, FanMode, VALID_DISTRIBUTION_VALUES, VALID_FAN_MODE_VALUES} from './keras_format/initializer_config';
+import type {OrthogonalConfig as OrthogonalArgs, RandomNormalConfig as RandomNormalArgs, RandomNormalConfig as TruncatedNormalArgs, RandomUniformConfig as RandomUniformArgs} from './keras_format/initializer_config';
 import {checkStringTypeUnionValue, deserializeKerasObject, serializeKerasObject} from './utils/generic_utils';
 import {arrayProd} from './utils/math_utils';
 
@@ -102,14 +103,7 @@ export class Constant extends Initializer {
 }
 serialization.registerClass(Constant);
 
-export interface RandomUniformArgs {
-  /** Lower bound of the range of random values to generate. */
-  minval?: number;
-  /** Upper bound of the range of random values to generate. */
-  maxval?: number;
-  /** Used to seed the random generator. */
-  seed?: number;
-}
+export type {RandomUniformConfig as RandomUniformArgs} from './keras_format/initializer_config';
 
 export class RandomUniform extends Initializer {
   /** @nocollapse */
@@ -137,14 +131,7 @@ export class RandomUniform extends Initializer {
 }
 serialization.registerClass(RandomUniform);
 
-export interface RandomNormalArgs {
-  /** Mean of the random values to generate. */
-  mean?: number;
-  /** Standard deviation of the random values to generate. */
-  stddev?: number;
-  /** Used to seed the random generator. */
-  seed?: number;
-}
+export type {RandomNormalConfig as RandomNormalArgs} from './keras_format/initializer_config';
 
 export class RandomNormal extends Initializer {
   /** @nocollapse */
@@ -178,14 +165,7 @@ export class RandomNormal extends Initializer {
 }
 serialization.registerClass(RandomNormal);
 
-export interface TruncatedNormalArgs {
-  /** Mean of the random values to generate. */
-  mean?: number;
-  /** Standard deviation of the random values to generate. */
-  stddev?: number;
-  /** Used to seed the random generator. */
-  seed?: number;
-}
+export type {RandomNormalConfig as TruncatedNormalArgs} from './keras_format/initializer_config';
 
 export class TruncatedNormal extends Initializer {
   /** @nocollapse */
@@ -524,12 +504,7 @@ export class LeCunUniform extends VarianceScaling {
 }
 serialization.registerClass(LeCunUniform);
 
-export interface OrthogonalArgs extends SeedOnlyInitializerArgs {
-  /**
-   * Multiplicative factor to apply to the orthogonal matrix. Defaults to 1.
-   */
-  gain?: number;
-}
+export type {OrthogonalConfig as OrthogonalArgs} from './keras_format/initializer_config';
 
 export class Orthogonal extends Initializer {
   /** @nocollapse */

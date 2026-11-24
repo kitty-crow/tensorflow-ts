@@ -13,15 +13,11 @@ import { getExactlyOneTensor, getExactlyOneShape } from '../../utils/types_utils
 import { Shape } from '../../keras_format/common';
 import { Kwargs } from '../../types';
 import { ValueError } from '../../errors';
-import { BaseRandomLayerArgs, BaseRandomLayer } from '../../engine/base_random_layer';
+import { BaseRandomLayer } from '../../engine/base_random_layer';
 import { randomUniform } from '@tensorflow/tfjs-core';
+import type {RandomResizeArgs as RandomWidthArgs} from '../../engine/base_random_layer';
 
-export declare interface RandomWidthArgs extends BaseRandomLayerArgs {
-   factor: number | [number, number];
-   interpolation?: InterpolationType; // default = 'bilinear';
-   seed?: number; // default = null;
-   autoVectorize?: boolean;
-}
+export type {RandomResizeArgs as RandomWidthArgs} from '../../engine/base_random_layer';
 
 const INTERPOLATION_KEYS = ['bilinear', 'nearest'] as const;
 export const INTERPOLATION_METHODS = new Set(INTERPOLATION_KEYS);

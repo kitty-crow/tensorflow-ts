@@ -13,6 +13,7 @@
 import * as tfc from '@tensorflow/tfjs-core';
 import {abs, add, Scalar, serialization, sum, Tensor, tidy, zeros} from '@tensorflow/tfjs-core';
 import * as K from './backend/tfjs_backend';
+import type {L1L2Config as L1L2Args} from './keras_format/regularizer_config';
 import {deserializeKerasObject, serializeKerasObject} from './utils/generic_utils';
 
 function assertObjectArgs(args: L1Args|L2Args|L1L2Args): void {
@@ -30,12 +31,7 @@ export abstract class Regularizer extends serialization.Serializable {
   abstract apply(x: Tensor): Scalar;
 }
 
-export interface L1L2Args {
-  /** L1 regularization rate. Defaults to 0.01. */
-  l1?: number;
-  /** L2 regularization rate. Defaults to 0.01. */
-  l2?: number;
-}
+export type {L1L2Config as L1L2Args} from './keras_format/regularizer_config';
 
 export interface L1Args {
   /** L1 regularization rate. Defaults to 0.01. */

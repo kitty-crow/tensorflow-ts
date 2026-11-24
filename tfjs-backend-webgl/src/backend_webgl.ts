@@ -19,7 +19,8 @@
 import './flags_webgl';
 
 import * as tf from '@tensorflow/tfjs-core';
-import {backend_util, BackendValues, buffer, DataId, DataStorage, DataToGPUWebGLOption, DataType, engine, env, GPUData, kernel_impls, KernelBackend, MemoryInfo, nextFrame, NumericDataType, Rank, RecursiveArray, scalar, ShapeMap, Tensor, Tensor2D, TensorBuffer, TensorInfo, tidy, TimingInfo, TypedArray, util, WebGLData} from '@tensorflow/tfjs-core';
+import {backend_util, BackendValues, buffer, DataId, DataStorage, DataToGPUWebGLOption, DataType, engine, env, GPUData, kernel_impls, KernelBackend, MemoryInfo, nextFrame, NumericDataType, Rank, RecursiveArray, scalar, ShapeMap, Tensor, Tensor2D, TensorBuffer, TensorInfo, tidy, TypedArray, util, WebGLData} from '@tensorflow/tfjs-core';
+import type {GPUKernelTimingInfo as KernelInfo, GPUTimingInfo as WebGLTimingInfo} from '@tensorflow/tfjs-core';
 import {getWebGLContext} from './canvas_util';
 import {DecodeMatrixProgram} from './decode_matrix_gpu';
 import {DecodeMatrixPackedProgram} from './decode_matrix_packed_gpu';
@@ -47,9 +48,7 @@ const whereImpl = kernel_impls.whereImpl;
 export const EPSILON_FLOAT32 = 1e-7;
 export const EPSILON_FLOAT16 = 1e-4;
 
-type KernelInfo = {
-  name: string; query: Promise<number>;
-};
+export type {GPUTimingInfo as WebGLTimingInfo} from '@tensorflow/tfjs-core';
 
 export type TimerNode = RecursiveArray<KernelInfo>|KernelInfo;
 export interface CPUTimerQuery {
@@ -66,11 +65,6 @@ export interface WebGLMemoryInfo extends MemoryInfo {
   // reuse (disposed).
   numBytesInGPUFree: number;
   unreliable: boolean;
-}
-
-export interface WebGLTimingInfo extends TimingInfo {
-  uploadWaitMs: number;
-  downloadWaitMs: number;
 }
 
 const binaryCaches: {[webGLVersion: string]: {[key: string]: GPGPUBinary}} = {};

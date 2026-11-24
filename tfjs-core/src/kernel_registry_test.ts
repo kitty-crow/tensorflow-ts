@@ -17,7 +17,7 @@
 
 import * as tf from './index';
 import {KernelBackend} from './index';
-import {ALL_ENVS, describeWithFlags, TestEnv} from './jasmine_util';
+import {ALL_ENVS, describeWithFlags, TestBackendWithId, TestEnv} from './jasmine_util';
 import { KernelFunc } from './kernel_registry';
 import { TensorInfo } from './tensor_info';
 import {expectArraysClose} from './test_util';
@@ -69,16 +69,13 @@ describeWithFlags('kernel_registry', ALL_ENVS, (testEnv: TestEnv) => {
   // now.
   // tslint:disable-next-line: ban
   xit('errors when registering the same kernel twice', () => {
-    interface TestBackend extends KernelBackend {
-      id: number;
-    }
     tf.registerBackend('backend1', () => {
       return {
         id: 1,
         dispose: () => null,
         disposeData: (dataId: {}) => null,
         numDataIds: () => 0
-      } as TestBackend;
+      } as TestBackendWithId;
     });
 
     tf.registerKernel({
@@ -101,16 +98,13 @@ describeWithFlags('kernel_registry', ALL_ENVS, (testEnv: TestEnv) => {
   });
 
   it('register same kernel on two different backends', async () => {
-    interface TestBackend extends KernelBackend {
-      id: number;
-    }
     tf.registerBackend('backend1', () => {
       return {
         id: 1,
         dispose: () => null,
         disposeData: (dataId: {}) => true,
         numDataIds: () => 0
-      } as TestBackend;
+      } as TestBackendWithId;
     });
     tf.registerBackend('backend2', () => {
       return {
@@ -118,12 +112,12 @@ describeWithFlags('kernel_registry', ALL_ENVS, (testEnv: TestEnv) => {
         dispose: () => null,
         disposeData: (dataId: {}) => null,
         numDataIds: () => 0
-      } as TestBackend;
+      } as TestBackendWithId;
     });
 
     let lastStorageId = -1;
     const kernelFunc: KernelFunc = ({backend}) => {
-      lastStorageId = (backend as TestBackend).id;
+      lastStorageId = (backend as TestBackendWithId).id;
       return {dataId: {}, shape: [], dtype: 'float32'};
     };
     tf.registerKernel(

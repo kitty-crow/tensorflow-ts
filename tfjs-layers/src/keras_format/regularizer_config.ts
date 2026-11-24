@@ -11,7 +11,9 @@
 import {BaseSerialization} from './types';
 
 export type L1L2Config = {
+  /** L1 regularization rate. Defaults to 0.01. */
   l1?: number;
+  /** L2 regularization rate. Defaults to 0.01. */
   l2?: number;
 };
 

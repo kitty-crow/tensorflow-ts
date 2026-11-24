@@ -19,9 +19,11 @@
  * 2) not having to convert the returned Tensors to numbers.
  */
 
+import type {TypedArray as ArrayTypes} from '@tensorflow/tfjs-core';
+
 import {ValueError} from '../errors';
 
-export type ArrayTypes = Uint8Array|Int32Array|Float32Array;
+export type {TypedArray as ArrayTypes} from '@tensorflow/tfjs-core';
 
 /**
  * Determine if a number is an integer.

@@ -19,7 +19,7 @@ import {KernelBackend} from './backends/backend';
 import {ENGINE} from './engine';
 import * as tf from './index';
 import {KernelFunc} from './index';
-import {ALL_ENVS, describeWithFlags, TestKernelBackend} from './jasmine_util';
+import {ALL_ENVS, describeWithFlags, TestKernelBackend, TestBackendWithId} from './jasmine_util';
 import { TensorInfo } from './tensor_info';
 import {Tensor} from './tensor';
 import {expectArraysClose} from './test_util';
@@ -690,10 +690,6 @@ describeWithFlags(
       });
     });
 */
-interface TestStorage extends KernelBackend {
-  id: number;
-}
-
 describeWithFlags('Detects memory leaks in kernels', ALL_ENVS, () => {
   const backendName = 'test-mem';
   const kernelName = 'MyKernel';
@@ -707,7 +703,7 @@ describeWithFlags('Detects memory leaks in kernels', ALL_ENVS, () => {
         dispose: () => null,
         disposeData: (dataId: {}) => null,
         numDataIds: () => dataIdsCount
-      } as TestStorage;
+      } as TestBackendWithId;
     });
 
     const kernelWithMemLeak: KernelFunc = () => {
@@ -733,7 +729,7 @@ describeWithFlags('Detects memory leaks in kernels', ALL_ENVS, () => {
         dispose: () => null,
         disposeData: (dataId: {}) => null,
         numDataIds: () => dataIdsCount
-      } as TestStorage;
+      } as TestBackendWithId;
     });
     tf.setBackend(backendName);
 
@@ -787,7 +783,7 @@ describe('Memory allocation outside a test scope', () => {
         read: async (dataId: object) => storedValues,
         dispose: () => null,
         disposeData: (dataId: {}) => null
-      } as TestStorage;
+      } as TestBackendWithId;
     });
     tf.setBackend(backendName);
 

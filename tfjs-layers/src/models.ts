@@ -12,6 +12,8 @@
 
 import {dispose, io, NamedTensorMap, Optimizer, Scalar, serialization, Tensor, util} from '@tensorflow/tfjs-core';
 
+import type {ModelPredictConfig as ModelPredictArgs} from '@tensorflow/tfjs-core';
+
 import {getUid} from './backend/state';
 import {History} from './base_callbacks';
 import {Dataset} from './engine/dataset_stub';
@@ -132,17 +134,7 @@ export interface ModelAndWeightsConfig {
 }
 
 // TODO(nielsene): Remove after: https://github.com/tensorflow/tfjs/issues/400
-export interface ModelPredictArgs {
-  /**
-   * Optional. Batch size (Integer). If unspecified, it will default to 32.
-   */
-  batchSize?: number;
-
-  /**
-   * Optional. Verbosity mode. Defaults to false.
-   */
-  verbose?: boolean;
-}
+export type {ModelPredictConfig as ModelPredictArgs} from '@tensorflow/tfjs-core';
 
 /**
  * Load a model composed of Layer objects, including its topology and optionally

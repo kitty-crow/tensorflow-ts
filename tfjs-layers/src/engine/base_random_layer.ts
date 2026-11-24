@@ -16,6 +16,13 @@ export declare interface BaseRandomLayerArgs extends LayerArgs {
   seed?: number;
 }
 
+/** Shared options for random height and width transformations. */
+export interface RandomResizeArgs extends BaseRandomLayerArgs {
+  factor: number | [number, number];
+  interpolation?: 'bilinear' | 'nearest';
+  autoVectorize?: boolean;
+}
+
 export abstract class BaseRandomLayer extends Layer {
   // A layer handle the random number creation and savemodel behavior.
   /** @nocollapse */

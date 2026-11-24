@@ -291,6 +291,11 @@ function executeTests(
   });
 }
 
+/** Backend contract used by registry and storage test doubles with an ID. */
+export interface TestBackendWithId extends KernelBackend {
+  id: number;
+}
+
 export class TestKernelBackend extends KernelBackend {
   override dispose(): void {}
 }

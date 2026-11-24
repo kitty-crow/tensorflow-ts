@@ -14,10 +14,7 @@ import {NamedTensorMap, Scalar, Tensor} from '@tensorflow/tfjs-core';
 
 import {Shape} from './keras_format/common';
 
-export interface NamedTensor {
-  name: string;
-  tensor: Tensor;
-}
+export type {NamedTensor} from '@tensorflow/tfjs-core';
 
 export type HasShape = {
   shape: Shape;

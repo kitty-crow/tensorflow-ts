@@ -17,7 +17,9 @@
 
 import './flags_webgpu';
 
-import {backend_util, BackendValues, buffer, DataStorage, DataType, engine, env, GPUData, KernelBackend, Rank, RecursiveArray, ShapeMap, Tensor, TensorBuffer, TensorInfo, TimingInfo, TypedArray, util, WebGPUData} from '@tensorflow/tfjs-core';
+import {backend_util, BackendValues, buffer, DataStorage, DataType, engine, env, GPUData, KernelBackend, Rank, RecursiveArray, ShapeMap, Tensor, TensorBuffer, TensorInfo, TypedArray, util, WebGPUData} from '@tensorflow/tfjs-core';
+
+import type {GPUKernelTimingInfo as WebGPUKernelInfo, GPUTimingInfo as WebGPUTimingInfo} from '@tensorflow/tfjs-core';
 
 import {AdapterInfo} from './adapter_info';
 import {BufferManager} from './buffer_manager';
@@ -48,17 +50,9 @@ type TensorData = {
 
 interface DataId {}
 
-export type WebGPUKernelInfo = {
-  name: string,
-  query: Promise<number>,
-};
+export type {GPUKernelTimingInfo as WebGPUKernelInfo, GPUTimingInfo as WebGPUTimingInfo} from '@tensorflow/tfjs-core';
 
 export type TimerNode = RecursiveArray<WebGPUKernelInfo>|WebGPUKernelInfo;
-
-export interface WebGPUTimingInfo extends TimingInfo {
-  uploadWaitMs: number;
-  downloadWaitMs: number;
-}
 
 type ProgramUniform = Array<{type: string; data: number[]}>;
 
