@@ -16,9 +16,15 @@
  * =============================================================================
  */
 
-import {env, Tensor, tensor, Tensor2D, Tensor3D, TensorContainer, util} from '@tensorflow/tfjs-core';
+import {env, Rank, ShapeMap, Tensor, tensor, Tensor2D, Tensor3D, util} from '@tensorflow/tfjs-core';
 import {MicrophoneConfig} from '../types';
 import {LazyIterator} from './lazy_iterator';
+
+/** Audio tensors enabled by the microphone configuration. */
+export type MicrophoneFrame = {
+  spectrogram: Tensor3D|undefined;
+  waveform: Tensor2D|undefined;
+};
 
 /**
  * Provide a stream of tensors from microphone audio stream. The tensors are
@@ -26,7 +32,7 @@ import {LazyIterator} from './lazy_iterator';
  * browser's native FFT. Tensors representing time-domain waveform is available
  * based on configuration. Only works in browser environment.
  */
-export class MicrophoneIterator extends LazyIterator<TensorContainer> {
+export class MicrophoneIterator extends LazyIterator<MicrophoneFrame> {
   private isClosed = false;
   private stream: MediaStream;
   private readonly fftSize: number;
@@ -133,23 +139,23 @@ export class MicrophoneIterator extends LazyIterator<TensorContainer> {
     return;
   }
 
-  async next(): Promise<IteratorResult<TensorContainer, null>> {
+  async next(): Promise<IteratorResult<MicrophoneFrame, null>> {
     if (this.isClosed) {
       return {value: null, done: true};
     }
 
-    let spectrogramTensor: Tensor;
-    let waveformTensor: Tensor;
+    let spectrogramTensor: Tensor3D|undefined;
+    let waveformTensor: Tensor2D|undefined;
 
     const audioDataQueue = await this.getAudioData();
     if (this.includeSpectrogram) {
       const freqData = this.flattenQueue(audioDataQueue.freqDataQueue);
-      spectrogramTensor = this.getTensorFromAudioDataArray(
+      spectrogramTensor = this.getTensorFromAudioDataArray<Rank.R3>(
           freqData, [this.numFrames, this.columnTruncateLength, 1]);
     }
     if (this.includeWaveform) {
       const timeData = this.flattenQueue(audioDataQueue.timeDataQueue);
-      waveformTensor = this.getTensorFromAudioDataArray(
+      waveformTensor = this.getTensorFromAudioDataArray<Rank.R2>(
           timeData, [this.numFrames * this.fftSize, 1]);
     }
 
@@ -161,9 +167,8 @@ export class MicrophoneIterator extends LazyIterator<TensorContainer> {
 
   // Capture one result from the audio stream, and extract the value from
   // iterator.next() result.
-  async capture(): Promise<{spectrogram: Tensor3D, waveform: Tensor2D}> {
-    return (await this.next()).value as
-        {spectrogram: Tensor3D, waveform: Tensor2D};
+  async capture(): Promise<MicrophoneFrame|null> {
+    return (await this.next()).value;
   }
 
   private async getAudioData():
@@ -209,7 +214,7 @@ export class MicrophoneIterator extends LazyIterator<TensorContainer> {
   }
 
   // Override toArray() function to prevent collecting.
-  override toArray(): Promise<Tensor[]> {
+  override toArray(): Promise<MicrophoneFrame[]> {
     throw new Error('Can not convert infinite audio stream to array.');
   }
 
@@ -225,11 +230,11 @@ export class MicrophoneIterator extends LazyIterator<TensorContainer> {
     return freqData;
   }
 
-  private getTensorFromAudioDataArray(freqData: Float32Array, shape: number[]):
-      Tensor {
+  private getTensorFromAudioDataArray<R extends Rank>(
+      freqData: Float32Array, shape: ShapeMap[R]): Tensor<R> {
     const vals = new Float32Array(util.sizeFromShape(shape));
     // If the data is less than the output shape, the rest is padded with zeros.
     vals.set(freqData, vals.length - freqData.length);
-    return tensor(vals, shape);
+    return tensor<R>(vals, shape);
   }
 }
