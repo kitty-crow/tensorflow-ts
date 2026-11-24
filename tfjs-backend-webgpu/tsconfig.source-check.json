@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "src/"
+  ],
+  "exclude": [
+    "node_modules/"
+  ],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "types": [
+      "node",
+      "jasmine",
+      "offscreencanvas",
+      "dom-webcodecs",
+      "@webgpu/types"
+    ]
+  }
+}
