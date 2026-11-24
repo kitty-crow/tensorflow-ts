@@ -1,8 +1,7 @@
 name: Guard remediation loop
 
 on:
-  push:
-    branches: [guard-remediation]
+  # Manual hosted fallback only; private KITTYWIN owns automatic validation.
   workflow_dispatch:
 
 permissions:
