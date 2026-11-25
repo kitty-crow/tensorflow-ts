@@ -45,7 +45,7 @@ describe('shape utility regression coverage', () => {
     expect(() => squeezeShape([1, 2], [1])).toThrowError();
   });
   it('preserves scalar zero and rejects missing scalar values', () => {
-    expect(toNestedArray([], new Float32Array([0]))).toBe(0);
+    expect(toNestedArray([], new Float32Array([0])) === 0).toBe(true);
     expect(() => toNestedArray([], new Float32Array(0))).toThrowError();
   });
 });
