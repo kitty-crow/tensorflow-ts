@@ -57,8 +57,8 @@ export function conv2D(
   const yColStride = isChannelsLast ? y.strides[2] : 1;
   const yChannelStride = isChannelsLast ? 1 : y.strides[1];
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
-  const wVals = backend.data.get(filter.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
+  const wVals = backend.requireValues(filter.dataId) as TypedArray;
   const yVals = y.values;
 
   for (let b = 0; b < convInfo.batchSize; ++b) {

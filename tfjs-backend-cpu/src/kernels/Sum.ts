@@ -61,9 +61,9 @@ export function sum(
   const resultDtype = backend_util.upcastType(permutedX.dtype, 'int32');
   let result = zeros(backend, outShape, resultDtype);
   const reduceSize = util.sizeFromShape(reduceShape);
-  const vals = backend.data.get(result.dataId).values as TypedArray;
+  const vals = backend.requireValues(result.dataId) as TypedArray;
 
-  const aVals = backend.data.get(permutedX.dataId).values as TypedArray;
+  const aVals = backend.requireValues(permutedX.dataId) as TypedArray;
   for (let i = 0; i < vals.length; ++i) {
     const offset = i * reduceSize;
     let sum = 0;

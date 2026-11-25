@@ -28,8 +28,8 @@ export function eluGrad(args: {inputs: EluGradInputs, backend: MathBackendCPU}):
   assertNotComplex([dy, y], 'eluGrad');
 
   const resultValues = new Float32Array(util.sizeFromShape(y.shape));
-  const values = backend.data.get(y.dataId).values as TypedArray;
-  const dyValues = backend.data.get(dy.dataId).values as TypedArray;
+  const values = backend.requireValues(y.dataId) as TypedArray;
+  const dyValues = backend.requireValues(dy.dataId) as TypedArray;
   for (let i = 0; i < values.length; ++i) {
     const v = values[i];
     if (v >= 0) {

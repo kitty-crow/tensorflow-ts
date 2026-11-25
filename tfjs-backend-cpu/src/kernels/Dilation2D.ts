@@ -27,10 +27,10 @@ export const dilation2DConfig: KernelConfig = {
     const {strides, pad, dilations} = attrs as unknown as Dilation2DAttrs;
     const cpuBackend = backend as MathBackendCPU;
 
-    const xVals = cpuBackend.data.get(x.dataId).values as TypedArray;
+    const xVals = cpuBackend.requireValues(x.dataId) as TypedArray;
     const xRank = x.shape.length;
 
-    const filterVals = cpuBackend.data.get(filter.dataId).values as TypedArray;
+    const filterVals = cpuBackend.requireValues(filter.dataId) as TypedArray;
     const filterRank = filter.shape.length;
 
     const {

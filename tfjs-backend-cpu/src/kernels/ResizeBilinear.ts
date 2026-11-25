@@ -35,7 +35,7 @@ export function resizeBilinear(args: {
   const [newHeight, newWidth] = size;
 
   const [batch, oldHeight, oldWidth, numChannels] = images.shape;
-  const xValues = backend.data.get(images.dataId).values as TypedArray;
+  const xValues = backend.requireValues(images.dataId) as TypedArray;
   const result = new Float32Array(
       util.sizeFromShape([batch, newHeight, newWidth, numChannels]));
 

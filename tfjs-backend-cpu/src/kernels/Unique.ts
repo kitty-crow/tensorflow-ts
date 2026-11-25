@@ -30,7 +30,7 @@ export function unique(
   const {x} = inputs;
   assertNotComplex(x, 'unique');
 
-  const values = backend.data.get(x.dataId).values;
+  const values = backend.requireValues(x.dataId);
   const {outputValues, outputShape, indices} =
       uniqueImpl(values, axis, x.shape, x.dtype);
   return [

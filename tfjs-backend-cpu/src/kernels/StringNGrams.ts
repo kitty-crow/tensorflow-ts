@@ -36,8 +36,8 @@ export function stringNGrams(args: {
     preserveShortSequences
   } = attrs;
   const {data, dataSplits} = inputs;
-  const $data = backend.data.get(data.dataId).values as Uint8Array[];
-  const $dataSplits = backend.data.get(dataSplits.dataId).values as Int32Array;
+  const $data = backend.requireValues(data.dataId) as Uint8Array[];
+  const $dataSplits = backend.requireValues(dataSplits.dataId) as Int32Array;
 
   const [nGrams, nGramsSplits] = stringNGramsImpl(
       $data, $dataSplits, separator, nGramWidths, leftPad, rightPad, padWidth,

@@ -30,8 +30,8 @@ export function denseBincount(args: {
   const {size, binaryOutput} = attrs;
 
   if (x.shape.length === 1) {
-    const xVals = backend.data.get(x.dataId).values as TypedArray;
-    const weightsVals = backend.data.get(weights.dataId).values as TypedArray;
+    const xVals = backend.requireValues(x.dataId) as TypedArray;
+    const weightsVals = backend.requireValues(weights.dataId) as TypedArray;
 
     const outVals =
         bincountImpl(xVals, weightsVals, weights.dtype, weights.shape, size);

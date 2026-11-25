@@ -39,10 +39,10 @@ export function fftBatch(
   const batch = inputShape[0];
   const innerDim = inputShape[1];
 
-  const inputVals = cpuBackend.data.get(input.dataId);
+  const inputParts = cpuBackend.requireComplexParts(input.dataId);
 
-  const real2D = inputVals.complexTensorInfos.real;
-  const imag2D = inputVals.complexTensorInfos.imag;
+  const real2D = inputParts.real;
+  const imag2D = inputParts.imag;
 
   // Collects real and imaginary values separately.
   const resultShape = [batch, innerDim];
@@ -99,14 +99,14 @@ export function fftImpl(
     cpuBackend: MathBackendCPU): {real: Float32Array, imag: Float32Array} {
   const inputSize = util.sizeFromShape(input.shape);
 
-  const inputVals = cpuBackend.data.get(input.dataId);
+  const inputParts = cpuBackend.requireComplexParts(input.dataId);
 
   const realVals =
-      cpuBackend.data.get(inputVals.complexTensorInfos.real.dataId).values as
+      cpuBackend.requireValues(inputParts.real.dataId) as
       Float32Array;
 
   const imagVals =
-      cpuBackend.data.get(inputVals.complexTensorInfos.imag.dataId).values as
+      cpuBackend.requireValues(inputParts.imag.dataId) as
       Float32Array;
 
   if (!(isExponentOf2(inputSize))) {
@@ -145,9 +145,9 @@ export function fftImpl(
           TensorInfo;
 
       const divRealVals =
-          cpuBackend.data.get(divRealInfo.dataId).values as Float32Array;
+          cpuBackend.requireValues(divRealInfo.dataId) as Float32Array;
       const divImagVals =
-          cpuBackend.data.get(divImagInfo.dataId).values as Float32Array;
+          cpuBackend.requireValues(divImagInfo.dataId) as Float32Array;
 
       cpuBackend.disposeIntermediateTensorInfo(realInfo);
       cpuBackend.disposeIntermediateTensorInfo(imagInfo);
@@ -285,8 +285,8 @@ function fftRadix2(
     attrs: {axis: 0}
   });
 
-  const $realVals = cpuBackend.data.get($real.dataId).values as Float32Array;
-  const $imagVals = cpuBackend.data.get($imag.dataId).values as Float32Array;
+  const $realVals = cpuBackend.requireValues($real.dataId) as Float32Array;
+  const $imagVals = cpuBackend.requireValues($imag.dataId) as Float32Array;
 
   cpuBackend.disposeIntermediateTensorInfo(evenRealInfo);
   cpuBackend.disposeIntermediateTensorInfo(evenImagInfo);

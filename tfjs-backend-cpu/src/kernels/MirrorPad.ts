@@ -38,7 +38,7 @@ export function mirrorPad(args: {
   const end = paddings.map((p, i) => p[0] + x.shape[i]);
   const offset = mode === 'reflect' ? 0 : 1;
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
   const xRank = x.shape.length;
   const xStrides = util.computeStrides(x.shape);
 

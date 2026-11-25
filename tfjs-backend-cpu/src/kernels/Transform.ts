@@ -48,9 +48,9 @@ export function transform(args: {
 
   outVals.fill(fillValue);
 
-  const imageVals = backend.data.get(image.dataId).values as TypedArray;
+  const imageVals = backend.requireValues(image.dataId) as TypedArray;
   const transformVals =
-      backend.data.get(transforms.dataId).values as TypedArray;
+      backend.requireValues(transforms.dataId) as TypedArray;
 
   // Ref TF implementation:
   // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/image/image_ops.h

@@ -48,7 +48,7 @@ export function avgPoolGrad(args: {
 
   const avgMultiplier = 1 / (filterHeight * filterWidth);
 
-  const dyData = backend.data.get(dy.dataId).values as Float32Array;
+  const dyData = backend.requireValues(dy.dataId) as Float32Array;
   const dyBuf = buffer<Rank.R4>(
       dy.shape as [number, number, number, number], 'float32', dyData);
 

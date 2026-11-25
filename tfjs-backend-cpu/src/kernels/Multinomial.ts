@@ -40,7 +40,7 @@ export function multinomial(args: {
 
   const batchSize = probabilities.shape[0];
   const numEvents = probabilities.shape[1];
-  const probVals = backend.data.get(probabilities.dataId).values as TypedArray;
+  const probVals = backend.requireValues(probabilities.dataId) as TypedArray;
   const resShape = [batchSize, numSamples];
   const resVals =
       util.makeZerosTypedArray(util.sizeFromShape(resShape), 'int32');

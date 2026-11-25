@@ -36,7 +36,7 @@ export function maxPool3D(args: {
       x.shape as [number, number, number, number, number], filterSize, strides,
       1 /* dilations */, pad, dimRoundingMode, dataFormat);
 
-  const xValues = backend.data.get(x.dataId).values as TypedArray;
+  const xValues = backend.requireValues(x.dataId) as TypedArray;
   const outBuf = pool3d(
       xValues, x.shape, x.dtype, util.computeStrides(x.shape), convInfo, 'max');
 

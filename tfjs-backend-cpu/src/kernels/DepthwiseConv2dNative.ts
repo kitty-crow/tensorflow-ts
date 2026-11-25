@@ -55,8 +55,8 @@ export function depthwiseConv2dNative(args: {
   const padTop = padInfo.top;
   const chMul = convInfo.outChannels / convInfo.inChannels;
   const y = new TensorBuffer(convInfo.outShape, x.dtype as 'float32');
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
-  const wVals = backend.data.get(filter.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
+  const wVals = backend.requireValues(filter.dataId) as TypedArray;
   const yVals = y.values;
 
   for (let b = 0; b < convInfo.batchSize; ++b) {

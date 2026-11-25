@@ -41,9 +41,9 @@ export function reshape(
 
   const xData = backend.data.get(x.dataId);
 
-  if (xData.complexTensorInfos != null) {
-    const real = xData.complexTensorInfos.real;
-    const imag = xData.complexTensorInfos.imag;
+  const parts = xData.complexTensorInfos ?? null;
+  if (parts !== null) {
+    const {real, imag} = parts;
 
     real.shape = $shape;
     imag.shape = $shape;

@@ -48,13 +48,13 @@ export function batchNorm(args: {
     varianceEpsilon = 0.001;
   }
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
-  const mVals = backend.data.get(mean.dataId).values as TypedArray;
-  const varVals = backend.data.get(variance.dataId).values as TypedArray;
-  const sVals = scale ? backend.data.get(scale.dataId).values as TypedArray :
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
+  const mVals = backend.requireValues(mean.dataId) as TypedArray;
+  const varVals = backend.requireValues(variance.dataId) as TypedArray;
+  const sVals = scale ? backend.requireValues(scale.dataId) as TypedArray :
                         new Float32Array([1]);
   const offVals = offset ?
-      backend.data.get(offset.dataId).values as TypedArray :
+      backend.requireValues(offset.dataId) as TypedArray :
       new Float32Array([0]);
   const outVals = new Float32Array(xVals.length);
 

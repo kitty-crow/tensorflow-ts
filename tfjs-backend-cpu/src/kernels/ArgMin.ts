@@ -49,7 +49,7 @@ export function argMin(
   const vals = util.makeZerosTypedArray(outSize, 'int32');
   const reduceSize = util.sizeFromShape(reduceShape);
 
-  const aVals = backend.data.get($x.dataId).values as TypedArray;
+  const aVals = backend.requireValues($x.dataId) as TypedArray;
   for (let i = 0; i < vals.length; ++i) {
     const offset = i * reduceSize;
     let min = aVals[offset];

@@ -35,7 +35,7 @@ export function resizeNearestNeighbor(args: {
   const [newHeight, newWidth] = size;
 
   const [batch, oldHeight, oldWidth, numChannels] = images.shape;
-  const xValues = backend.data.get(images.dataId).values as TypedArray;
+  const xValues = backend.requireValues(images.dataId) as TypedArray;
   const output = new Float32Array(batch * newHeight * newWidth * numChannels);
 
   const effectiveInputSize: [number, number] = [

@@ -27,9 +27,9 @@ export function raggedRange(
   const {inputs, backend} = args;
   const {starts, limits, deltas} = inputs;
 
-  const $starts = backend.data.get(starts.dataId).values as TypedArray;
-  const $limits = backend.data.get(limits.dataId).values as TypedArray;
-  const $deltas = backend.data.get(deltas.dataId).values as TypedArray;
+  const $starts = backend.requireValues(starts.dataId) as TypedArray;
+  const $limits = backend.requireValues(limits.dataId) as TypedArray;
+  const $deltas = backend.requireValues(deltas.dataId) as TypedArray;
 
   const [rtNestedSplitsData, rtDenseValuesData] = raggedRangeImpl(
       $starts, starts.shape, starts.dtype, $limits, limits.shape, $deltas,

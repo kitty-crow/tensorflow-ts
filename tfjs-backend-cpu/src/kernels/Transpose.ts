@@ -40,7 +40,7 @@ export function transpose(args: {
     newShape[i] = x.shape[perm[i]];
   }
 
-  const values = backend.data.get(x.dataId).values as TypedArray;
+  const values = backend.requireValues(x.dataId) as TypedArray;
   const result = transposeImpl(values, x.shape, x.dtype, perm, newShape);
 
   const dataId = backend.write(result, newShape, x.dtype);

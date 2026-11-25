@@ -41,8 +41,8 @@ export function stringSplit(args: {
         `Delimiter must be a scalar, got shape: ${delimiter.shape}`);
   }
 
-  const $input = backend.data.get(input.dataId).values as Uint8Array[];
-  const $delimiter = backend.data.get(delimiter.dataId).values[0] as Uint8Array;
+  const $input = backend.requireValues(input.dataId) as Uint8Array[];
+  const $delimiter = backend.requireValues(delimiter.dataId)[0] as Uint8Array;
 
   const [indices, values, shape] =
       stringSplitImpl($input, $delimiter, skipEmpty);

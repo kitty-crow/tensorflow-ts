@@ -45,8 +45,8 @@ export function binaryKernelFunc(
 
       assertNotComplex([a, b], name);
 
-      const aVals = cpuBackend.data.get(a.dataId).values as TypedArray;
-      const bVals = cpuBackend.data.get(b.dataId).values as TypedArray;
+      const aVals = cpuBackend.requireValues(a.dataId) as TypedArray;
+      const bVals = cpuBackend.requireValues(b.dataId) as TypedArray;
 
       const decodedAVals = a.dtype === 'string' ?
           // tslint:disable-next-line: no-any
@@ -73,28 +73,28 @@ export function binaryKernelFunc(
       const $aComplex = cast(
           {inputs: {x: a}, backend: cpuBackend, attrs: {dtype: 'complex64'}});
 
-      const $aComplexVals = cpuBackend.data.get($aComplex.dataId);
+      const $aComplexParts = cpuBackend.requireComplexParts($aComplex.dataId);
 
-      const aReal = $aComplexVals.complexTensorInfos.real;
-      const aImag = $aComplexVals.complexTensorInfos.imag;
+      const aReal = $aComplexParts.real;
+      const aImag = $aComplexParts.imag;
 
       const aRealVals =
-          cpuBackend.data.get(aReal.dataId).values as Float32Array;
+          cpuBackend.requireValues(aReal.dataId) as Float32Array;
       const aImagVals =
-          cpuBackend.data.get(aImag.dataId).values as Float32Array;
+          cpuBackend.requireValues(aImag.dataId) as Float32Array;
 
       const $bComplex = cast(
           {inputs: {x: b}, backend: cpuBackend, attrs: {dtype: 'complex64'}});
 
-      const $bComplexVals = cpuBackend.data.get($bComplex.dataId);
+      const $bComplexParts = cpuBackend.requireComplexParts($bComplex.dataId);
 
-      const bReal = $bComplexVals.complexTensorInfos.real;
-      const bImag = $bComplexVals.complexTensorInfos.imag;
+      const bReal = $bComplexParts.real;
+      const bImag = $bComplexParts.imag;
 
       const bRealVals =
-          cpuBackend.data.get(bReal.dataId).values as Float32Array;
+          cpuBackend.requireValues(bReal.dataId) as Float32Array;
       const bImagVals =
-          cpuBackend.data.get(bImag.dataId).values as Float32Array;
+          cpuBackend.requireValues(bImag.dataId) as Float32Array;
 
       const [resultRealData, resultImagData, resultShape] = complexImpl(
           a.shape, b.shape, aRealVals, aImagVals, bRealVals, bImagVals);
@@ -115,8 +115,8 @@ export function binaryKernelFunc(
 
       return result;
     } else {
-      const aVals = cpuBackend.data.get(a.dataId).values as TypedArray;
-      const bVals = cpuBackend.data.get(b.dataId).values as TypedArray;
+      const aVals = cpuBackend.requireValues(a.dataId) as TypedArray;
+      const bVals = cpuBackend.requireValues(b.dataId) as TypedArray;
 
       const $dtype = dtype || a.dtype;
 

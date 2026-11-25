@@ -73,8 +73,8 @@ export function batchMatMul(args: {
   const rightDim = transposeB ? b3d.shape[1] : b3d.shape[2];
   const batchDim = Math.max(batchDimA, batchDimB);
 
-  const a3dValues = backend.data.get(a3d.dataId).values as TypedArray;
-  const b3dValues = backend.data.get(b3d.dataId).values as TypedArray;
+  const a3dValues = backend.requireValues(a3d.dataId) as TypedArray;
+  const b3dValues = backend.requireValues(b3d.dataId) as TypedArray;
 
   const a3dStrides = util.computeStrides(a3d.shape);
   const b3dStrides = util.computeStrides(b3d.shape);

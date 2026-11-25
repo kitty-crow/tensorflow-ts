@@ -43,8 +43,8 @@ export function conv2DBackpropFilter(args: {
 
   const leftPad = convInfo.padInfo.left;
   const topPad = convInfo.padInfo.top;
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
-  const dyVals = backend.data.get(dy.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
+  const dyVals = backend.requireValues(dy.dataId) as TypedArray;
 
   const xBuf = new TensorBuffer(x.shape, x.dtype, xVals);
   const dyBuf = new TensorBuffer(dy.shape, dy.dtype, dyVals);

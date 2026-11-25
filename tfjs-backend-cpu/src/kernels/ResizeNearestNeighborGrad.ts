@@ -37,7 +37,7 @@ export function resizeNearestNeighborGrad(args: {
   const [, yHeight, yWidth] = dy.shape;
 
   const output = new Float32Array(batch * xHeight * xWidth * depth);
-  const dyValues = backend.data.get(dy.dataId).values as TypedArray;
+  const dyValues = backend.requireValues(dy.dataId) as TypedArray;
 
   // In the backwards pass, we want to find the pixels that were generated
   // for each pixel in the input image the forward pass

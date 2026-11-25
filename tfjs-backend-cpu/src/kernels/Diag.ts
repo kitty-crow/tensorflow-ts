@@ -26,7 +26,7 @@ export function diag(args: {inputs: DiagInputs, backend: MathBackendCPU}):
 
   const xSize = util.sizeFromShape(x.shape);
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
   const outBuf = buffer([xSize, xSize], x.dtype);
   const vals = outBuf.values;
   for (let i = 0; i < xVals.length; i++) {

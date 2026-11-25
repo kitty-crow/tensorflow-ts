@@ -34,7 +34,7 @@ export function maxPoolGrad(args: {
   const convInfo = backend_util.computePool2DInfo(
       x.shape as [number, number, number, number], filterSize, strides,
       1 /* dilations */, pad, dimRoundingMode);
-  const xValues = backend.data.get(x.dataId).values as TypedArray;
+  const xValues = backend.requireValues(x.dataId) as TypedArray;
   const maxPosBuf = buffer(
       convInfo.outShape, x.dtype,
       maxPoolPositions(xValues, x.shape, x.dtype, convInfo).values);
@@ -49,7 +49,7 @@ export function maxPoolGrad(args: {
   const dx =
       buffer<Rank.R4>(x.shape as [number, number, number, number], 'float32');
 
-  const dyData = backend.data.get(dy.dataId).values as Float32Array;
+  const dyData = backend.requireValues(dy.dataId) as Float32Array;
   const dyBuf = buffer<Rank.R4>(
       dy.shape as [number, number, number, number], 'float32', dyData);
 

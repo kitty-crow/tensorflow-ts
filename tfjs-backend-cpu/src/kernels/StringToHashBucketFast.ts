@@ -37,7 +37,7 @@ export function stringToHashBucketFast(args: {
     throw new Error(`Number of buckets must be at least 1`);
   }
 
-  const $input = backend.data.get(input.dataId).values as Uint8Array[];
+  const $input = backend.requireValues(input.dataId) as Uint8Array[];
 
   const output = stringToHashBucketFastImpl($input, numBuckets);
   return backend.makeTensorInfo(input.shape, 'int32', output);

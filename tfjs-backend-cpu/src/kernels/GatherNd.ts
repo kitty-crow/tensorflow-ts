@@ -37,7 +37,7 @@ export function gatherNd(
     return backend.makeTensorInfo(resultShape, params.dtype, []);
   }
 
-  const indicesData = backend.data.get(indices.dataId).values as TypedArray;
+  const indicesData = backend.requireValues(indices.dataId) as TypedArray;
   const paramsBuf = backend.bufferSync<Rank, 'float32'>(params);
   const outBuf = gatherNdImpl(
       indicesData, paramsBuf, params.dtype, numSlices, sliceRank, sliceSize,

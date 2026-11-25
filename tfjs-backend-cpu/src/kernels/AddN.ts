@@ -28,7 +28,7 @@ export function addN(args: {inputs: AddNInputs, backend: MathBackendCPU}):
   assertNotComplex(inputs, 'addN');
 
   const vals =
-      tensors.map(t => backend.data.get(t.dataId).values as TypedArray);
+      tensors.map(t => backend.requireValues(t.dataId) as TypedArray);
   const outBuf = buffer(tensors[0].shape, tensors[0].dtype as 'float32');
   const outVals = outBuf.values;
   for (let i = 0; i < tensors.length; i++) {

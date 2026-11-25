@@ -33,9 +33,9 @@ export function lRNGrad(
   const dySize = util.sizeFromShape(dy.shape);
 
   const channels = dy.shape[3];
-  const dyValues = backend.data.get(dy.dataId).values as TypedArray;
-  const xValues = backend.data.get(x.dataId).values as TypedArray;
-  const yValues = backend.data.get(y.dataId).values as TypedArray;
+  const dyValues = backend.requireValues(dy.dataId) as TypedArray;
+  const xValues = backend.requireValues(x.dataId) as TypedArray;
+  const yValues = backend.requireValues(y.dataId) as TypedArray;
   const result = new Float32Array(dySize);
   const size = dySize;
 

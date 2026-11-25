@@ -33,7 +33,7 @@ export function oneHot(
 
   const res = new Float32Array(indicesSize * depth);
   res.fill(offValue);
-  const indicesVal = backend.data.get(indices.dataId).values as TypedArray;
+  const indicesVal = backend.requireValues(indices.dataId) as TypedArray;
 
   for (let event = 0; event < indicesSize; ++event) {
     if (indicesVal[event] >= 0 && indicesVal[event] < depth) {

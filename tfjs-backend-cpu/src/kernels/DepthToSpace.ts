@@ -42,7 +42,7 @@ export function depthToSpace(args: {
   const outputWidth = inputWidth * blockSize;
   const outputDepth = inputDepth / (blockSize * blockSize);
 
-  const xValues = backend.data.get(x.dataId).values as TypedArray;
+  const xValues = backend.requireValues(x.dataId) as TypedArray;
   const result =
       new Float32Array(batchSize * outputHeight * outputWidth * outputDepth);
 

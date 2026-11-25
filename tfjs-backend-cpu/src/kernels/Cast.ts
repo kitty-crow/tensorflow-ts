@@ -87,7 +87,7 @@ export function cast(
     return {dataId: result.dataId, shape: result.shape, dtype};
   }
 
-  const values = backend.data.get(x.dataId).values as TypedArray;
+  const values = backend.requireValues(x.dataId) as TypedArray;
   const [resultShape, resultType, resultData] =
       castImpl(values, x.shape, x.dtype, dtype);
   return backend.makeTensorInfo(resultShape, resultType, resultData);

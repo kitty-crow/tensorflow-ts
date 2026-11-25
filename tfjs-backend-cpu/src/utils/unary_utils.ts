@@ -60,7 +60,7 @@ export function unaryKernelFuncFromImpl<I extends number | string = number,
     assertNotComplex(x, name);
 
     const cpuBackend = backend as MathBackendCPU;
-    const values = cpuBackend.data.get(x.dataId).values;
+    const values = cpuBackend.requireValues(x.dataId);
     let decoded: ArrayLike<I>;
     if (x.dtype === 'string') {
       if (!Array.isArray(values)) {

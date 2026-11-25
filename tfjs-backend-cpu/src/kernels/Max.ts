@@ -38,7 +38,7 @@ export function max(
   const origAxes = util.parseAxisParam(reductionIndices, xShape);
   let axes = origAxes;
   const permutedAxes = backend_util.getAxesPermutation(axes, xRank);
-  let xVals = cpuBackend.data.get(x.dataId).values as TypedArray;
+  let xVals = cpuBackend.requireValues(x.dataId) as TypedArray;
   if (permutedAxes != null) {
     const newShape: number[] = new Array(xRank);
     for (let i = 0; i < newShape.length; i++) {

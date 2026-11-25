@@ -34,7 +34,7 @@ export function padV2(
 
   const start = paddings.map(p => p[0]);
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
   const xSize = util.sizeFromShape(x.shape);
   const xRank = x.shape.length;
   const xStrides = util.computeStrides(x.shape);

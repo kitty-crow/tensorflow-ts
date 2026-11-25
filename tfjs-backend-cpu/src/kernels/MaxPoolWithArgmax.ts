@@ -32,7 +32,7 @@ export const maxPoolWithArgmaxConfig: KernelConfig = {
     const cpuBackend = backend as MathBackendCPU;
     assertNotComplex(x, 'MaxPoolWithArgmax');
 
-    const values = cpuBackend.data.get(x.dataId).values as TypedArray;
+    const values = cpuBackend.requireValues(x.dataId) as TypedArray;
     const convInfo = backend_util.computePool2DInfo(
         x.shape as [number, number, number, number], filterSize, strides,
         [1, 1], pad);

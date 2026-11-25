@@ -28,9 +28,9 @@ export function select(args: {inputs: SelectInputs, backend: MathBackendCPU}):
   assertNotComplex([condition, t, e], 'select');
   const conditionRank = condition.shape.length;
 
-  const values = backend.data.get(condition.dataId).values as TypedArray;
-  const tValues = backend.data.get(t.dataId).values as TypedArray;
-  const eValues = backend.data.get(e.dataId).values as TypedArray;
+  const values = backend.requireValues(condition.dataId) as TypedArray;
+  const tValues = backend.requireValues(t.dataId) as TypedArray;
+  const eValues = backend.requireValues(e.dataId) as TypedArray;
   const resultDtype = upcastType(t.dtype, e.dtype);
   const newValues =
       util.makeZerosTypedArray(util.sizeFromShape(t.shape), resultDtype);

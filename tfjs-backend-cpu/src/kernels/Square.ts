@@ -28,7 +28,7 @@ export const squareConfig: KernelConfig = {
     const cpuBackend = backend as MathBackendCPU;
     assertNotComplex(x, 'square');
 
-    const values = cpuBackend.data.get(x.dataId).values as Float32Array;
+    const values = cpuBackend.requireValues(x.dataId) as Float32Array;
     const newValues = new Float32Array(values.length);
     for (let i = 0; i < values.length; ++i) {
       const value = values[i];

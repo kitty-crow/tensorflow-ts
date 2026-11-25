@@ -48,9 +48,9 @@ export function conv3DBackpropFilterV2(args: {
   const dw = new TensorBuffer(convInfo.filterShape, 'float32');
   const dwValues = dw.values;
   const [dwS0, dwS1, dwS2, dwS3] = dw.strides;
-  const dyValues = backend.data.get(dy.dataId).values as TypedArray;
+  const dyValues = backend.requireValues(dy.dataId) as TypedArray;
   const [dyS0, dyS1, dyS2, dyS3] = dyStrides;
-  const xValues = backend.data.get(x.dataId).values as TypedArray;
+  const xValues = backend.requireValues(x.dataId) as TypedArray;
   const [xS0, xS1, xS2, xS3] = xStrides;
 
   const frontPad = convInfo.padInfo.front;

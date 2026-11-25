@@ -48,8 +48,8 @@ export function conv3D(
   const padTop = padInfo.top;
   const y = new TensorBuffer(convInfo.outShape, x.dtype as 'float32');
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
-  const wVals = backend.data.get(filter.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
+  const wVals = backend.requireValues(filter.dataId) as TypedArray;
   const yVals = y.values;
 
   const xStrides = util.computeStrides(x.shape);

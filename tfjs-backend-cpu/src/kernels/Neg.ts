@@ -35,7 +35,7 @@ export function neg(args: {inputs: UnaryInputs, backend: MathBackendCPU}):
 
   assertNotComplex(x, 'neg');
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
   const [res, newShape] = negImpl(xVals, x.shape, x.dtype);
 
   return backend.makeTensorInfo(newShape, x.dtype, res);

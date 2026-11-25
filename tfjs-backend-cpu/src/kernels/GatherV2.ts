@@ -35,7 +35,7 @@ export function gatherV2(args: {
 
   // Throw error when any index is out of bound.
   const parsedAxis = util.parseAxisParam(axis, x.shape)[0];
-  const indicesVals = backend.data.get(indices.dataId).values as TypedArray;
+  const indicesVals = backend.requireValues(indices.dataId) as TypedArray;
   const axisDim = x.shape[parsedAxis];
   for (let i = 0; i < indicesVals.length; ++i) {
     const index = indicesVals[i];

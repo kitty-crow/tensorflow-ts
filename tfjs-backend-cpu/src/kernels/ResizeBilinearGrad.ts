@@ -59,7 +59,7 @@ export function resizeBilinearGrad(args: {
   // Reference implementation
   // tslint:disable-next-line:max-line-length
   // https://github.com/tensorflow/tensorflow/blob/3039375c86a5bbc9610c7725dcaa95d635f87ba2/tensorflow/core/kernels/resize_bilinear_op.cc#L275
-  const dyValues = backend.data.get(dy.dataId).values as TypedArray;
+  const dyValues = backend.requireValues(dy.dataId) as TypedArray;
   let offset = 0;
   for (let b = 0; b < batch; b++) {
     const bOffset = b * imagesStrides[0];

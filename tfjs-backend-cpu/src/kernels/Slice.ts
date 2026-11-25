@@ -67,7 +67,7 @@ export function slice(
   const [$begin, $size] = slice_util.parseSliceParams(x, begin, size);
   slice_util.assertParamsValid(x, $begin, $size);
 
-  const vals = backend.data.get(x.dataId).values;
+  const vals = backend.requireValues(x.dataId);
   const outVals = sliceImpl(vals, $begin, $size, x.shape, x.dtype);
   return backend.makeTensorInfo($size, x.dtype, outVals);
 }

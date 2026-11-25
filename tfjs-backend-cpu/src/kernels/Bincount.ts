@@ -29,8 +29,8 @@ export function bincount(args: {
   const {x, weights} = inputs;
   const {size} = attrs;
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
-  const weightsVals = backend.data.get(weights.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
+  const weightsVals = backend.requireValues(weights.dataId) as TypedArray;
 
   const outVals =
       bincountImpl(xVals, weightsVals, weights.dtype, weights.shape, size);

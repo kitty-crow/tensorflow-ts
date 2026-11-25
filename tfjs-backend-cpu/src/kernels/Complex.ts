@@ -24,8 +24,8 @@ export function complex(args: {inputs: ComplexInputs, backend: MathBackendCPU}):
   const {inputs, backend} = args;
   const {real, imag} = inputs;
 
-  const realVals = backend.data.get(real.dataId).values as TypedArray;
-  const imagVals = backend.data.get(imag.dataId).values as TypedArray;
+  const realVals = backend.requireValues(real.dataId) as TypedArray;
+  const imagVals = backend.requireValues(imag.dataId) as TypedArray;
 
   const complexInfo = backend.makeTensorInfo(real.shape, 'complex64');
 

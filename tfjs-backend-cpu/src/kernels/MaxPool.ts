@@ -45,7 +45,7 @@ export function maxPool(
       util.arraysEqual(convInfo.inShape, convInfo.outShape)) {
     res = identity({inputs: {x}, backend});
   } else {
-    const xValues = backend.data.get(x.dataId).values as TypedArray;
+    const xValues = backend.requireValues(x.dataId) as TypedArray;
     const strides = util.computeStrides(x.shape);
     const buffer = pool(xValues, x.shape, x.dtype, strides, convInfo, 'max');
     res = backend.makeTensorInfo(

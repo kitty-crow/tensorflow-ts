@@ -31,11 +31,11 @@ export function raggedGather(args: {
   const {outputRaggedRank} = attrs;
 
   const $paramsNestedSplits = paramsNestedSplits.map(
-      t => backend.data.get(t.dataId).values as TypedArray);
+      t => backend.requireValues(t.dataId) as TypedArray);
   const $paramsNestedSplitsShapes = paramsNestedSplits.map(t => t.shape);
   const $paramsDenseValues =
-      backend.data.get(paramsDenseValues.dataId).values as TypedArray;
-  const $indices = backend.data.get(indices.dataId).values as TypedArray;
+      backend.requireValues(paramsDenseValues.dataId) as TypedArray;
+  const $indices = backend.requireValues(indices.dataId) as TypedArray;
 
   const [outputNestedSplits, outputDenseValues, outputDenseValuesShape] =
       raggedGatherImpl(

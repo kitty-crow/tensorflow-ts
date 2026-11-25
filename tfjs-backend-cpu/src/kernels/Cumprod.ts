@@ -47,7 +47,7 @@ export function cumprod(
   const vals = util.makeOnesTypedArray(
                    util.sizeFromShape($x.shape), resultDtype) as TypedArray;
 
-  const aVals = backend.data.get($x.dataId).values as TypedArray;
+  const aVals = backend.requireValues($x.dataId) as TypedArray;
   const finalDim = $x.shape[$x.shape.length - 1];
   const indexAdjuster = reverse ?
       (i: number, j: number) => i + finalDim - j - 1 :

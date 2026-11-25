@@ -40,7 +40,7 @@ export function sparseToDense(args: {
     case 'bool': {
       const updatesBuf = backend.bufferSync<Rank, 'bool'>(sparseValues);
       const $defaultValue =
-          Boolean(backend.data.get(defaultValue.dataId).values[0]);
+          Boolean(backend.requireValues(defaultValue.dataId)[0]);
       outBuf = scatterImpl(
           indicesBuf, updatesBuf, outputShape, outputSize, sliceSize,
           numUpdates, sliceRank, strides, $defaultValue, sumDupeIndices);
@@ -49,7 +49,7 @@ export function sparseToDense(args: {
     case 'float32': {
       const updatesBuf = backend.bufferSync<Rank, 'float32'>(sparseValues);
       const $defaultValue =
-          backend.data.get(defaultValue.dataId).values[0] as number;
+          backend.requireValues(defaultValue.dataId)[0] as number;
       outBuf = scatterImpl(
           indicesBuf, updatesBuf, outputShape, outputSize, sliceSize,
           numUpdates, sliceRank, strides, $defaultValue, sumDupeIndices);
@@ -58,7 +58,7 @@ export function sparseToDense(args: {
     case 'int32': {
       const updatesBuf = backend.bufferSync<Rank, 'int32'>(sparseValues);
       const $defaultValue =
-          backend.data.get(defaultValue.dataId).values[0] as number;
+          backend.requireValues(defaultValue.dataId)[0] as number;
       outBuf = scatterImpl(
           indicesBuf, updatesBuf, outputShape, outputSize, sliceSize,
           numUpdates, sliceRank, strides, $defaultValue, sumDupeIndices);
@@ -67,7 +67,7 @@ export function sparseToDense(args: {
     case 'string': {
       const updatesBuf = backend.bufferSync<Rank, 'string'>(sparseValues);
       const $defaultValue = util.decodeString(
-          backend.data.get(defaultValue.dataId).values[0] as Uint8Array);
+          backend.requireValues(defaultValue.dataId)[0] as Uint8Array);
       outBuf = scatterImpl(
           indicesBuf, updatesBuf, outputShape, outputSize, sliceSize,
           numUpdates, sliceRank, strides, $defaultValue, sumDupeIndices);

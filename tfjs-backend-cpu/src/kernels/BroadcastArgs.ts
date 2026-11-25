@@ -26,8 +26,8 @@ export function broadcastArgs(args: {
   const {inputs, backend} = args;
   const {s0, s1} = inputs;
 
-  const s0Vals = backend.data.get(s0.dataId).values as TypedArray;
-  const s1Vals = backend.data.get(s1.dataId).values as TypedArray;
+  const s0Vals = backend.requireValues(s0.dataId) as TypedArray;
+  const s1Vals = backend.requireValues(s1.dataId) as TypedArray;
 
   const broadcastShape = backend_util.assertAndGetBroadcastShape(
       Array.from(s0Vals), Array.from(s1Vals));

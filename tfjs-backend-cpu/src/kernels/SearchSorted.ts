@@ -31,8 +31,8 @@ export function searchSorted(args: {
   const {side} = attrs;
 
   const $sortedSequence =
-      backend.data.get(sortedSequence.dataId).values as TypedArray;
-  const $values = backend.data.get(values.dataId).values as TypedArray;
+      backend.requireValues(sortedSequence.dataId) as TypedArray;
+  const $values = backend.requireValues(values.dataId) as TypedArray;
 
   const output = searchSortedImpl(
       $sortedSequence, $values, sortedSequence.shape[0],

@@ -42,9 +42,9 @@ export function sparseSegmentSum(
     throw new Error(`segmentIds and indices should have same size.`);
   }
 
-  const $data = backend.data.get(data.dataId).values as TypedArray;
-  const $indices = backend.data.get(indices.dataId).values as TypedArray;
-  const $segmentIds = backend.data.get(segmentIds.dataId).values as TypedArray;
+  const $data = backend.requireValues(data.dataId) as TypedArray;
+  const $indices = backend.requireValues(indices.dataId) as TypedArray;
+  const $segmentIds = backend.requireValues(segmentIds.dataId) as TypedArray;
 
   const [outputData, outputDataShape] = sparseSegmentReductionImpl(
       $data, data.shape, data.dtype, $indices, $segmentIds);

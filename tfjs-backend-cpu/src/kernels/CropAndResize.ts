@@ -40,9 +40,9 @@ export function cropAndResize(args: {
       [numBoxes, cropHeight, cropWidth, numChannels];
   const output = buffer(outputShape, 'float32');
 
-  const boxVals = backend.data.get(boxes.dataId).values as TypedArray;
-  const boxIndVals = backend.data.get(boxInd.dataId).values as TypedArray;
-  const imageVals = backend.data.get(image.dataId).values as TypedArray;
+  const boxVals = backend.requireValues(boxes.dataId) as TypedArray;
+  const boxIndVals = backend.requireValues(boxInd.dataId) as TypedArray;
+  const imageVals = backend.requireValues(image.dataId) as TypedArray;
 
   const inStride =
       util.computeStrides(imageShape);  // to calculate flat indexes into image

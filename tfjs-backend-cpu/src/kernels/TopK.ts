@@ -30,7 +30,7 @@ export function topK(
 
   assertNotComplex(x, 'topk');
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
   const [allTopKVals, allTopKIndices] =
       topKImpl(xVals, x.shape, x.dtype as NumericDataType, k, sorted);
 

@@ -30,12 +30,12 @@ export function raggedTensorToTensor(args: {
   const {shape, values, defaultValue, rowPartitionTensors} = inputs;
   const {rowPartitionTypes} = attrs;
 
-  const $shape = backend.data.get(shape.dataId).values as TypedArray;
-  const $values = backend.data.get(values.dataId).values as TypedArray;
+  const $shape = backend.requireValues(shape.dataId) as TypedArray;
+  const $values = backend.requireValues(values.dataId) as TypedArray;
   const $defaultValue =
-      backend.data.get(defaultValue.dataId).values as TypedArray;
+      backend.requireValues(defaultValue.dataId) as TypedArray;
   const $rowPartitionValues = rowPartitionTensors.map(
-      t => backend.data.get(t.dataId).values as TypedArray);
+      t => backend.requireValues(t.dataId) as TypedArray);
   const rowPartitionValuesShapes = rowPartitionTensors.map(t => t.shape);
 
   const [outputShape, output] = raggedTensorToTensorImpl(

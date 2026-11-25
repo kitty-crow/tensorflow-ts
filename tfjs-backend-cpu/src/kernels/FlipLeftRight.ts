@@ -31,7 +31,7 @@ export const flipLeftRightConfig: KernelConfig = {
         image.dtype as NumericDataType, util.sizeFromShape(image.shape));
     const [batch, imageHeight, imageWidth, numChannels] = image.shape;
 
-    const imageVals = cpuBackend.data.get(image.dataId).values as TypedArray;
+    const imageVals = cpuBackend.requireValues(image.dataId) as TypedArray;
 
     for (let batchIdx = 0; batchIdx < batch; batchIdx++) {
       const batchOffset = batchIdx * imageWidth * imageHeight * numChannels;

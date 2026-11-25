@@ -31,8 +31,8 @@ export function prelu(args: {inputs: PreluInputs, backend: MathBackendCPU}):
 
   assertNotComplex([x, alpha], 'prelu');
 
-  const aVals = backend.data.get(x.dataId).values as TypedArray;
-  const bVals = backend.data.get(alpha.dataId).values as TypedArray;
+  const aVals = backend.requireValues(x.dataId) as TypedArray;
+  const bVals = backend.requireValues(alpha.dataId) as TypedArray;
 
   const [resultData, resultShape] =
       preluImpl(x.shape, alpha.shape, aVals, bVals, 'float32');

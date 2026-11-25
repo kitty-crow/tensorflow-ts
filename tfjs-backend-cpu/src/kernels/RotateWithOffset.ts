@@ -39,7 +39,7 @@ export const rotateWithOffsetConfig: KernelConfig = {
 
     const sinFactor = Math.sin(radians);
     const cosFactor = Math.cos(radians);
-    const imageVals = cpuBackend.data.get(image.dataId).values as TypedArray;
+    const imageVals = cpuBackend.requireValues(image.dataId) as TypedArray;
 
     for (let batchIdx = 0; batchIdx < batch; batchIdx++) {
       const batchOffset = batchIdx * imageWidth * imageHeight * numChannels;

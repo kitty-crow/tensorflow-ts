@@ -42,7 +42,7 @@ export function draw(
 
   const [height, width] = image.shape.slice(0, 2);
   const depth = image.shape.length === 2 ? 1 : image.shape[2];
-  const data = backend.data.get(image.dataId).values as TypedArray;
+  const data = backend.requireValues(image.dataId) as TypedArray;
   const multiplier = image.dtype === 'float32' ? 255 : 1;
   const bytes = new Uint8ClampedArray(width * height * 4);
 

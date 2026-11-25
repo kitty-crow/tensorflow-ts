@@ -24,8 +24,8 @@ export function imag(args: {inputs: ImagInputs, backend: MathBackendCPU}):
   const {inputs, backend} = args;
   const {input} = inputs;
 
-  const imag = backend.data.get(input.dataId).complexTensorInfos.imag;
-  const imagVal = backend.data.get(imag.dataId).values;
+  const imag = backend.requireComplexParts(input.dataId).imag;
+  const imagVal = backend.requireValues(imag.dataId);
 
   // When complex tensor is disposed, its underlying parts will be disposed too.
   // Make new tensor out of the imag value of the complex. This makes sure the

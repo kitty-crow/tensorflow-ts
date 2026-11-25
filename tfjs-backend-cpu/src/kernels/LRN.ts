@@ -31,7 +31,7 @@ export function lRN(
 
   const channels = x.shape[3];
   const maxD = channels - 1;
-  const xValues = backend.data.get(x.dataId).values as TypedArray;
+  const xValues = backend.requireValues(x.dataId) as TypedArray;
   const size = util.sizeFromShape(x.shape);
   const result = new Float32Array(size);
 

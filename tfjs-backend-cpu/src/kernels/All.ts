@@ -46,7 +46,7 @@ export function all(
   const reduceSize = util.sizeFromShape(reduceShape);
   const vals = util.makeZerosTypedArray(util.sizeFromShape(outShape), $x.dtype);
 
-  const aVals = backend.data.get($x.dataId).values as TypedArray;
+  const aVals = backend.requireValues($x.dataId) as TypedArray;
   for (let i = 0; i < vals.length; ++i) {
     const offset = i * reduceSize;
     let all = aVals[offset];

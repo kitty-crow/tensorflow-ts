@@ -43,9 +43,9 @@ export function depthwiseConv2dNativeBackpropFilter(args: {
   const topPad = convInfo.padInfo.top;
   const chMul = convInfo.outChannels / convInfo.inChannels;
 
-  const xVals = backend.data.get(x.dataId).values as TypedArray;
+  const xVals = backend.requireValues(x.dataId) as TypedArray;
   const xBuf = new TensorBuffer(x.shape, x.dtype, xVals);
-  const dyVals = backend.data.get(dy.dataId).values as TypedArray;
+  const dyVals = backend.requireValues(dy.dataId) as TypedArray;
   const dyBuf = new TensorBuffer(dy.shape, dy.dtype, dyVals);
   for (let wR = 0; wR < filterHeight; ++wR) {
     const yRMin = Math.max(0, Math.ceil((topPad - wR) / strideHeight));

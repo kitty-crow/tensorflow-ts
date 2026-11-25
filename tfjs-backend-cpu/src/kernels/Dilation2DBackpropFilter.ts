@@ -31,12 +31,12 @@ export const dilation2DBackpropFilterConfig: KernelConfig = {
 
     const $x =
         util.toNestedArray(
-            x.shape, cpuBackend.data.get(x.dataId).values as TypedArray) as
+            x.shape, cpuBackend.requireValues(x.dataId) as TypedArray) as
         number[][][][];
 
     const $filter = util.toNestedArray(
                         filter.shape,
-                        cpuBackend.data.get(filter.dataId).values as
+                        cpuBackend.requireValues(filter.dataId) as
                             TypedArray) as number[][][];
 
     const {
@@ -68,7 +68,7 @@ export const dilation2DBackpropFilterConfig: KernelConfig = {
 
     const $dy =
         util.toNestedArray(
-            outShape, cpuBackend.data.get(dy.dataId).values as TypedArray) as
+            outShape, cpuBackend.requireValues(dy.dataId) as TypedArray) as
         number[][][][];
 
     // The computed filter gradients has the same dimensions as the filter:

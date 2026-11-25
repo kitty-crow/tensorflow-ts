@@ -19,6 +19,7 @@ import {backend_util, BackendTimingInfo, buffer, DataStorage, DataType, engine, 
 
 const whereImpl = kernel_impls.whereImpl;
 import {assertNotComplex} from './cpu_util';
+import {requireComplexTensorInfos, requireTensorDataValues} from './tensor_data_values';
 
 interface DataId {}
 
@@ -129,10 +130,23 @@ export class MathBackendCPU extends KernelBackend {
   override async read(dataId: DataId): Promise<backend_util.BackendValues> {
     return this.readSync(dataId);
   }
+  /** Return the stored payload without copying or converting it. Complex
+   *  containers have no payload of their own; read their components instead.
+   */
+  requireValues(dataId: DataId): backend_util.BackendValues {
+    return requireTensorDataValues(this.data.get(dataId));
+  }
+
+  /** Return both owned components of a complex tensor. */
+  requireComplexParts(dataId: DataId): {real: TensorInfo, imag: TensorInfo} {
+    return requireComplexTensorInfos(this.data.get(dataId));
+  }
+
   override readSync(dataId: DataId): backend_util.BackendValues {
-    const {dtype, complexTensorInfos} = this.data.get(dataId);
+    const {dtype} = this.data.get(dataId);
 
     if (dtype === 'complex64') {
+      const complexTensorInfos = this.requireComplexParts(dataId);
       const realValues =
           this.readSync(complexTensorInfos.real.dataId) as Float32Array;
       const imagValues =
@@ -140,7 +154,7 @@ export class MathBackendCPU extends KernelBackend {
       return backend_util.mergeRealAndImagArrays(realValues, imagValues);
     }
     return util.convertBackendValuesAndArrayBuffer(
-        this.data.get(dataId).values, dtype);
+        this.requireValues(dataId), dtype);
   }
 
   bufferSync<R extends Rank, D extends DataType>(t: TensorInfo):
@@ -180,7 +194,7 @@ export class MathBackendCPU extends KernelBackend {
         return false;
       }
 
-      const {complexTensorInfos} = this.data.get(dataId);
+      const complexTensorInfos = this.data.get(dataId).complexTensorInfos ?? null;
 
       if (complexTensorInfos != null) {
         this.disposeData(complexTensorInfos.real.dataId, true);

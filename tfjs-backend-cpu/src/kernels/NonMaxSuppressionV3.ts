@@ -33,8 +33,8 @@ export function nonMaxSuppressionV3(args: {
 
   assertNotComplex(boxes, 'NonMaxSuppression');
 
-  const boxesVals = backend.data.get(boxes.dataId).values as TypedArray;
-  const scoresVals = backend.data.get(scores.dataId).values as TypedArray;
+  const boxesVals = backend.requireValues(boxes.dataId) as TypedArray;
+  const scoresVals = backend.requireValues(scores.dataId) as TypedArray;
 
   const {selectedIndices} = nonMaxSuppressionV3Impl(
       boxesVals, scoresVals, maxOutputSize, iouThreshold, scoreThreshold);
