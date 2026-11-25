@@ -16,26 +16,18 @@
  */
 
 import {getCoordsDataType, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class StridedSliceProgram implements WebGPUProgram {
-  variableNames = ['x'];
+const workPerThread = 1;
+
+export class StridedSliceProgram extends FlatDispatchProgram implements WebGPUProgram {
   uniforms: string;
-  outputShape: number[];
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
   // TODO(xing.xu): Increase the workPerThread.
-  workPerThread = 1;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
+  workPerThread = workPerThread;
 
   constructor(destSize: number[]) {
-    this.outputShape = destSize;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize,
-        [this.workPerThread, 1, 1]);
+    super(destSize, [64, 1, 1], ['x'], [workPerThread, 1, 1]);
 
     const dtype = getCoordsDataType(this.outputShape.length);
     this.uniforms = `begin : ${dtype},  strides : ${dtype}, `;

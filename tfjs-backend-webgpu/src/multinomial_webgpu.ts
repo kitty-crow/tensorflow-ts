@@ -16,23 +16,14 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class MultinomialProgram implements WebGPUProgram {
-  variableNames: string[] = ['probs'];
-  outputShape: number[] = [];
+export class MultinomialProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
   uniforms = 'seed : f32, numOutcomes: i32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(batchSize: number, numSamples: number) {
-    this.outputShape = [batchSize, numSamples];
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super([batchSize, numSamples], [64, 1, 1], ['probs']);
 
     this.shaderKey = 'multinomial';
   }

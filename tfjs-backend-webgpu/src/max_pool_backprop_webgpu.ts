@@ -17,27 +17,16 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class MaxPool2DBackpropProgram implements WebGPUProgram {
-  outputShape: number[];
+export class MaxPool2DBackpropProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['dy', 'maxPos'];
   uniforms =
       `strides : vec2<i32>, pads : vec2<i32>, dilations : vec2<i32>, filterDims : vec2<i32>,
        outHeight : i32, outWidth : i32`;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(convInfo: backend_util.Conv2DInfo) {
-    this.outputShape = convInfo.inShape;
-
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.inShape, [64, 1, 1], ['dy', 'maxPos']);
 
     this.shaderKey = 'maxPool2DBackprop';
   }
@@ -92,24 +81,13 @@ export class MaxPool2DBackpropProgram implements WebGPUProgram {
   }
 }
 
-export class MaxPool3DBackpropProgram implements WebGPUProgram {
-  outputShape: number[];
+export class MaxPool3DBackpropProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['dy', 'maxPos'];
   uniforms = `strides : vec3<i32>, pads : vec3<i32>, filterDims : vec3<i32>,
       outDepth : i32, outHeight : i32, outWidth : i32`;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(convInfo: backend_util.Conv3DInfo) {
-    this.outputShape = convInfo.inShape;
-
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.inShape, [64, 1, 1], ['dy', 'maxPos']);
 
     this.shaderKey = 'maxPool3DBackprop';
   }

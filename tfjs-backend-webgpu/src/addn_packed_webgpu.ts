@@ -16,25 +16,18 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class AddNPackedProgram implements WebGPUProgram {
-  outputShape: number[];
+const workPerThread = 1;
+
+export class AddNPackedProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames: string[];
-  workPerThread = 1;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
+  workPerThread = workPerThread;
 
   constructor(shapes: number[][]) {
-    this.outputShape = shapes[0];
-    this.variableNames = shapes.map((_, i) => `T${i}`);
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize,
-        [this.workPerThread, 1, 1]);
+    super(
+        shapes[0], [64, 1, 1], shapes.map((_, i) => `T${i}`),
+        [workPerThread, 1, 1]);
     this.shaderKey = 'addN';
   }
 

@@ -17,28 +17,20 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class ConcatProgram implements WebGPUProgram {
-  outputShape: number[];
+const workPerThread = 1;
+
+export class ConcatProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames: string[];
   uniforms = '';
-  workPerThread = 1;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
+  workPerThread = workPerThread;
   offsetLength: number;
 
   constructor(shapes: Array<[number, number]>) {
-    this.outputShape =
-        backend_util.computeOutShape(shapes, 1 /* axis */) as [number, number];
-    this.variableNames = shapes.map((_, i) => `T${i}`);
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize,
-        [this.workPerThread, 1, 1]);
+    super(
+        backend_util.computeOutShape(shapes, 1 /* axis */) as [number, number], [64, 1, 1], shapes.map((_, i) => `T${i}`),
+        [workPerThread, 1, 1]);
 
     this.offsetLength = shapes.length - 1;
     for (let i = 0; i < this.offsetLength; i++) {

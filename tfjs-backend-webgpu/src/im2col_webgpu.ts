@@ -16,26 +16,17 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class Im2ColProgram implements WebGPUProgram {
-  variableNames = ['x'];
+export class Im2ColProgram extends FlatDispatchProgram implements WebGPUProgram {
   uniforms =
       `pads : vec2<i32>, strides : vec2<i32>, dilations : vec2<i32>, outWidth : i32, itemsPerBlockRow : i32,
        inChannels : i32,`;
-  outputShape: number[];
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workgroupSize: [number, number, number] = [64, 1, 1];
   isChannelsLast: boolean;
-  size = true;
 
   constructor(outputShape: number[], isChannelsLast: boolean) {
-    this.outputShape = outputShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(outputShape, [64, 1, 1], ['x']);
     this.isChannelsLast = isChannelsLast;
     this.shaderKey = `im2col_${this.isChannelsLast}`;
   }

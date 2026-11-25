@@ -16,28 +16,20 @@
  */
 
 import {getCoordsDataType, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class MirrorPadProgram implements WebGPUProgram {
-  outputShape: number[];
+export class MirrorPadProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
   uniforms = '';
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
-  workgroupSize: [number, number, number] = [64, 1, 1];
   xShape: number[];
   offset: number;
-  size = true;
 
   constructor(
       xShape: number[], paddings: Array<[number, number]>,
       mode: 'reflect'|'symmetric') {
-    this.outputShape = paddings.map(
-        (p, i) => p[0] /* beforePad */ + xShape[i] + p[1] /* afterPad */);
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(
+        paddings.map(
+        (p, i) => p[0] /* beforePad */ + xShape[i] + p[1] /* afterPad */), [64, 1, 1], ['x']);
 
     this.xShape = xShape;
     paddings.map((_, i) => {

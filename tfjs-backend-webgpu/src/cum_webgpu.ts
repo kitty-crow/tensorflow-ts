@@ -16,34 +16,24 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
 export enum CumOpType {
   Prod = '*',
   Sum = '+',
 }
 
-export class CumProgram implements WebGPUProgram {
-  outputShape: number[];
+export class CumProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
-  workgroupSize: [number, number, number];
   // pow(i32, i32) is not supported, use pow(f32, f32) instead.
   uniforms = 'index : f32,';
-  size = true;
   exclusive: boolean;
   reverse: boolean;
   op: CumOpType;
 
   constructor(
       op: CumOpType, shape: number[], exclusive: boolean, reverse: boolean) {
-    this.workgroupSize = [128, 1, 1];
-    this.outputShape = shape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(shape, [128, 1, 1], ['x']);
     this.exclusive = exclusive;
     this.reverse = reverse;
     this.op = op;

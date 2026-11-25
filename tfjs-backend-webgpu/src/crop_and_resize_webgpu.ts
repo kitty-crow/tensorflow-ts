@@ -16,29 +16,21 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class CropAndResizeProgram implements WebGPUProgram {
-  outputShape: number[];
+export class CropAndResizeProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['Image', 'Boxes', 'BoxInd'];
   uniforms = 'extrapolationValue : f32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
   methodId: number;
   cropHeightBiggerThan1: boolean;
   cropWidthBiggerThan1: boolean;
-  size = true;
 
   constructor(
       channnel: number, boxShape: [number, number], cropSize: [number, number],
       method: 'bilinear'|'nearest') {
     const [numBoxes, ] = boxShape;
-    this.outputShape = [numBoxes, cropSize[0], cropSize[1], channnel];
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(
+        [numBoxes, cropSize[0], cropSize[1], channnel], [64, 1, 1], ['Image', 'Boxes', 'BoxInd']);
 
     this.methodId = method === 'bilinear' ? 1 : 0;
     this.cropHeightBiggerThan1 = this.outputShape[1] > 1;

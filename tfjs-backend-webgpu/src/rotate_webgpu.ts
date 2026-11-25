@@ -16,26 +16,17 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class RotateProgram implements WebGPUProgram {
-  outputShape: number[] = [];
+export class RotateProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms: string;
-  workgroupSize: [number, number, number] = [64, 1, 1];
   fillSnippet: string;
-  size = true;
 
   constructor(
       imageShape: [number, number, number, number],
       fillValue: number|[number, number, number]) {
-    this.outputShape = imageShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(imageShape, [64, 1, 1], ['x']);
     this.uniforms = `centerX : f32, centerY : f32, sinRadians : f32,
           cosRadians : f32,`;
     this.shaderKey = 'rotate';

@@ -17,6 +17,7 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 import {computeDispatch, flatDispatchLayout} from './webgpu_util';
 
 export class Conv2DDerInputProgram implements WebGPUProgram {
@@ -218,23 +219,14 @@ export class Conv2DDerInputProgram implements WebGPUProgram {
   }
 }
 
-export class Conv2DDerFilterProgram implements WebGPUProgram {
-  variableNames = ['x', 'dy'];
+export class Conv2DDerFilterProgram extends FlatDispatchProgram implements WebGPUProgram {
   uniforms =
       'pads : vec2<i32>, strides : vec2<i32>, batchSize : i32, outHeight : i32, outWidth : i32, inHeight : i32, inWidth : i32,';
-  outputShape: number[];
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workgroupSize: [number, number, number] = [64, 1, 1];
   isChannelsLast: boolean;
-  size = true;
 
   constructor(convInfo: backend_util.Conv2DInfo) {
-    this.outputShape = convInfo.filterShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.filterShape, [64, 1, 1], ['x', 'dy']);
     this.isChannelsLast = convInfo.dataFormat === 'channelsLast';
     this.shaderKey = `conv2DDerFilter_${this.isChannelsLast}`;
   }
@@ -285,23 +277,14 @@ export class Conv2DDerFilterProgram implements WebGPUProgram {
   }
 }
 
-export class Conv3DDerFilterProgram implements WebGPUProgram {
-  variableNames = ['x', 'dy'];
+export class Conv3DDerFilterProgram extends FlatDispatchProgram implements WebGPUProgram {
   uniforms =
       `pads : vec3<i32>, strides : vec3<i32>, batchSize : i32, outDepth : i32,
        outHeight : i32, outWidth : i32, inDepth : i32, inHeight : i32, inWidth : i32,`;
-  outputShape: number[];
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(convInfo: backend_util.Conv3DInfo) {
-    this.outputShape = convInfo.filterShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.filterShape, [64, 1, 1], ['x', 'dy']);
     this.shaderKey = `conv3DDerFilter`;
   }
 
@@ -350,22 +333,13 @@ export class Conv3DDerFilterProgram implements WebGPUProgram {
   }
 }
 
-export class Conv3DDerInputProgram implements WebGPUProgram {
-  variableNames = ['dy', 'W'];
+export class Conv3DDerInputProgram extends FlatDispatchProgram implements WebGPUProgram {
   uniforms = `filterDims : vec3<i32>, pads : vec3<i32>, strides : vec3<i32>,
       outDepth : i32, outHeight : i32, outWidth : i32, outChannels : i32,`;
-  outputShape: number[];
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(convInfo: backend_util.Conv3DInfo) {
-    this.outputShape = convInfo.inShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.inShape, [64, 1, 1], ['dy', 'W']);
     this.shaderKey = `conv3DDerInput`;
   }
 

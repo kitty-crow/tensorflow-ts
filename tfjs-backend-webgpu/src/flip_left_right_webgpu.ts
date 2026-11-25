@@ -16,22 +16,13 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class FlipLeftRightProgram implements WebGPUProgram {
-  outputShape: number[] = [];
+export class FlipLeftRightProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(imageShape: [number, number, number, number]) {
-    this.outputShape = imageShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(imageShape, [64, 1, 1], ['x']);
     this.shaderKey = 'flipLeftRight';
   }
 

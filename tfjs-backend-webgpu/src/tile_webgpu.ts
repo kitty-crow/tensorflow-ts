@@ -16,16 +16,10 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class TileProgram implements WebGPUProgram {
-  variableNames = ['A'];
-  outputShape: number[];
+export class TileProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
   rank: number;
 
   constructor(aShape: number[], reps: number[]) {
@@ -33,10 +27,7 @@ export class TileProgram implements WebGPUProgram {
     for (let i = 0; i < outputShape.length; i++) {
       outputShape[i] = aShape[i] * reps[i];
     }
-    this.outputShape = outputShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(outputShape, [64, 1, 1], ['A']);
     this.rank = this.outputShape.length;
     this.shaderKey = 'tile';
   }

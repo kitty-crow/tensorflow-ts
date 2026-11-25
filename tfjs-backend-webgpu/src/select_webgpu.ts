@@ -16,24 +16,15 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class SelectProgram implements WebGPUProgram {
-  variableNames = ['c', 'a', 'b'];
-  outputShape: number[];
+export class SelectProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workgroupSize: [number, number, number] = [64, 1, 1];
   cRank: number;
   rank: number;
-  size = true;
 
   constructor(cRank: number, shape: number[], rank: number) {
-    this.outputShape = shape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(shape, [64, 1, 1], ['c', 'a', 'b']);
 
     this.cRank = cRank;
     this.rank = rank;

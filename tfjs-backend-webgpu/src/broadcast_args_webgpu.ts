@@ -16,23 +16,14 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class BroadcastArgsProgram implements WebGPUProgram {
-  outputShape: number[] = [];
+export class BroadcastArgsProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['s0', 's1'];
   uniforms = 's0Size : i32, s1Size : i32, ';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(shape: number) {
-    this.outputShape = [shape];
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super([shape], [64, 1, 1], ['s0', 's1']);
 
     this.shaderKey = 'broadcastArgs';
   }

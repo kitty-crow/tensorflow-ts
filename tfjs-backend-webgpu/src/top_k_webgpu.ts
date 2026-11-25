@@ -16,7 +16,7 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
 // Based on Algorithm 2 of Bitonic Top K, ref:
 // https://anilshanbhag.in/static/papers/gputopk_sigmod18.pdf
@@ -28,21 +28,12 @@ import {computeDispatch, flatDispatchLayout} from './webgpu_util';
 // GPU, the values can easily be retrieved from the indices using a gather
 // op.
 
-export class SwapProgram implements WebGPUProgram {
-  outputShape: number[];
+export class SwapProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x', 'indices'];
   uniforms: string;
-  workgroupSize: [number, number, number] = [256, 1, 1];
-  size = true;
 
   constructor(shape: number[]) {
-    this.outputShape = shape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(shape, [256, 1, 1], ['x', 'indices']);
     this.uniforms = `inputSize : i32, firstPass : i32, negativeInf : f32,
         dir : i32, inc : i32,`;
     this.shaderKey = 'swap';
@@ -121,21 +112,12 @@ export class SwapProgram implements WebGPUProgram {
   }
 }
 
-export class MergeProgram implements WebGPUProgram {
-  outputShape: number[];
+export class MergeProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x', 'indices'];
   uniforms: string;
-  workgroupSize: [number, number, number] = [256, 1, 1];
-  size = true;
 
   constructor(shape: number[]) {
-    this.outputShape = shape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(shape, [256, 1, 1], ['x', 'indices']);
     // |n| Size of the original input of TopK
     // |firstPass| indicates if this is the first time swap is being used which
     // means no indices input containing the top K is present yet.

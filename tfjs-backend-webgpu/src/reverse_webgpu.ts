@@ -16,23 +16,14 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class ReverseProgram implements WebGPUProgram {
-  outputShape: number[];
+export class ReverseProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms: string;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(xShape: [number, number, number, number]) {
-    this.outputShape = xShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(xShape, [64, 1, 1], ['x']);
     this.uniforms = ` axis : vec4<i32>,`;
     this.shaderKey = 'reverse';
   }

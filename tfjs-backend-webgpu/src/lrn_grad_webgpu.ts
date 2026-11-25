@@ -16,23 +16,14 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class LRNGradProgram implements WebGPUProgram {
-  outputShape: number[] = [];
+export class LRNGradProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['inputImage', 'outputImage', 'dy'];
   uniforms = 'depthRadius : i32, bias : f32, alpha : f32, beta : f32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(inputShape: number[]) {
-    this.outputShape = inputShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(inputShape, [64, 1, 1], ['inputImage', 'outputImage', 'dy']);
     this.shaderKey = 'lrn_grad';
   }
 

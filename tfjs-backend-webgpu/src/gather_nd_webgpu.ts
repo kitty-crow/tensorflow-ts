@@ -16,23 +16,14 @@
  */
 
 import {getCoordsDataType, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class GatherNDProgram implements WebGPUProgram {
-  outputShape: number[];
+export class GatherNDProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames: string[] = ['A', 'indices'];
   uniforms: string;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
   sliceDim: number;
   constructor(sliceDim: number, shape: number[]) {
-    this.outputShape = shape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(shape, [64, 1, 1], ['A', 'indices']);
     this.shaderKey = `gathernd_${sliceDim}`;
     this.sliceDim = sliceDim;
     this.uniforms = `sliceDim : i32, strides : ${getCoordsDataType(sliceDim)},`;

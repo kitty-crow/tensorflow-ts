@@ -16,24 +16,15 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class FFTProgram implements WebGPUProgram {
-  variableNames: string[] = ['real', 'imag'];
-  outputShape: number[] = [];
+export class FFTProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
   uniforms = 'exponentMultiplier : f32, denominator: f32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
   component: string;
 
   constructor(component: 'real'|'imag', shape: [number, number]) {
-    this.outputShape = shape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(shape, [64, 1, 1], ['real', 'imag']);
 
     this.component = component;
     this.shaderKey = `fft_${component}`;

@@ -16,23 +16,14 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class TransformProgram implements WebGPUProgram {
-  variableNames = ['Image', 'Transforms'];
-  outputShape: number[];
+export class TransformProgram extends FlatDispatchProgram implements WebGPUProgram {
   uniforms = 'interpolationModeId : i32, fillModeId : i32, fillValue : f32,';
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(outShape: [number, number, number, number]) {
-    this.outputShape = outShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(outShape, [64, 1, 1], ['Image', 'Transforms']);
     this.shaderKey = 'transform';
   }
 

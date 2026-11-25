@@ -17,21 +17,13 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class Pool2DProgram implements WebGPUProgram {
-  outputShape: number[];
+export class Pool2DProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms =
       `strides : vec2<i32>, pads : vec2<i32>, dilations : vec2<i32>, convDims : vec2<i32>, filterDims : vec2<i32>,`;
-  // TODO(jiajia.qin@intel.com): Dynamically choose different workgroupSize for
-  // different output shapes.
-  workgroupSize: [number, number, number] = [128, 1, 1];
   poolType: 'max'|'avg';
-  size = true;
   computePositions: boolean;
   flattenPositions: boolean;
   includeBatchIndex: boolean;
@@ -44,10 +36,9 @@ export class Pool2DProgram implements WebGPUProgram {
       throw new Error('Cannot compute positions for average pool.');
     }
 
-    this.outputShape = convInfo.outShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    // TODO(jiajia.qin@intel.com): Dynamically choose different workgroupSize for
+    // different output shapes.
+    super(convInfo.outShape, [128, 1, 1], ['x']);
 
     this.poolType = poolType;
     this.computePositions = computePositions;
@@ -129,17 +120,11 @@ export class Pool2DProgram implements WebGPUProgram {
   }
 }
 
-export class Pool3DProgram implements WebGPUProgram {
-  outputShape: number[];
+export class Pool3DProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms =
       `strides : vec3<i32>, pads : vec3<i32>, convDims : vec3<i32>, filterDims : vec3<i32>,`;
-  workgroupSize: [number, number, number] = [128, 1, 1];
   poolType: 'max'|'avg';
-  size = true;
   computePositions: boolean;
   flattenPositions: boolean;
   includeBatchIndex: boolean;
@@ -152,10 +137,7 @@ export class Pool3DProgram implements WebGPUProgram {
       throw new Error('Cannot compute positions for average pool.');
     }
 
-    this.outputShape = convInfo.outShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.outShape, [128, 1, 1], ['x']);
 
     this.poolType = poolType;
     this.computePositions = computePositions;

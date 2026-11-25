@@ -16,28 +16,18 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class ResizeNearestNeighborProgram implements WebGPUProgram {
-  outputShape: number[];
+export class ResizeNearestNeighborProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms = 'adjustHeightWidth : vec2<f32>, roundBase : f32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
   halfPixelCenters: boolean;
-  size = true;
 
   constructor(
       inputShape: [number, number, number, number], newHeight: number,
       newWidth: number, halfPixelCenters: boolean) {
-    this.outputShape = [inputShape[0], newHeight, newWidth, inputShape[3]];
-
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(
+        [inputShape[0], newHeight, newWidth, inputShape[3]], [64, 1, 1], ['x']);
 
     this.halfPixelCenters = halfPixelCenters;
     this.shaderKey = `resizeNearest_${halfPixelCenters}`;

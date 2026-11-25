@@ -17,27 +17,16 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class DepthwiseConv2DDerFilterProgram implements WebGPUProgram {
-  outputShape: number[];
+export class DepthwiseConv2DDerFilterProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x', 'dy'];
   uniforms =
       `strides : vec2<i32>, pads : vec2<i32>, filterDims : vec2<i32>, outHeight : i32,
       outWidth : i32, inHeight : i32, inWidth : i32, batchSize : i32, channelMul : i32,`;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(convInfo: backend_util.Conv2DInfo) {
-    this.outputShape = convInfo.filterShape;
-
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.filterShape, [64, 1, 1], ['x', 'dy']);
 
     this.shaderKey = `depthwise_conv2d_backprop_filter`;
   }
@@ -83,24 +72,13 @@ export class DepthwiseConv2DDerFilterProgram implements WebGPUProgram {
   }
 }
 
-export class DepthwiseConv2DDerInputProgram implements WebGPUProgram {
-  outputShape: number[];
+export class DepthwiseConv2DDerInputProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['dy', 'W'];
   uniforms = `strides : vec2<i32>, pads : vec2<i32>, filterDims : vec2<i32>,
        outHeight : i32, outWidth : i32, channelMul : i32,`;
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(convInfo: backend_util.Conv2DInfo) {
-    this.outputShape = convInfo.inShape;
-
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.inShape, [64, 1, 1], ['dy', 'W']);
 
     this.shaderKey = `depthwise_conv2d_backprop_input`;
   }

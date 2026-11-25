@@ -16,22 +16,13 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class DiagProgram implements WebGPUProgram {
-  outputShape: number[];
+export class DiagProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(size: number) {
-    this.outputShape = [size, size];
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super([size, size], [64, 1, 1], ['x']);
 
     this.shaderKey = 'diag';
   }

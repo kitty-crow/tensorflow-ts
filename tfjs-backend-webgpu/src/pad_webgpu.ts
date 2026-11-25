@@ -16,7 +16,7 @@
  */
 
 import {getCoordsDataType, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
 export function padCommon(shape: number[], fillZero = false): string {
   const rank = shape.length;
@@ -50,23 +50,15 @@ export function padCommon(shape: number[], fillZero = false): string {
   `;
 }
 
-export class PadProgram implements WebGPUProgram {
-  outputShape: number[];
+export class PadProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms = 'constantValue : f32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
   xShape: number[];
-  size = true;
 
   constructor(xShape: number[], paddings: Array<[number, number]>) {
-    this.outputShape = paddings.map(
-        (p, i) => p[0] /* beforePad */ + xShape[i] + p[1] /* afterPad */);
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(
+        paddings.map(
+        (p, i) => p[0] /* beforePad */ + xShape[i] + p[1] /* afterPad */), [64, 1, 1], ['x']);
     paddings.map((_, i) => {
       this.uniforms += ` pad${i} : vec2<i32>,`;
     });

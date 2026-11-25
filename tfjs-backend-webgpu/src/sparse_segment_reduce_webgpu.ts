@@ -19,6 +19,7 @@ import {DataType} from '@tensorflow/tfjs-core';
 
 import {atomicAddSnippet} from './shader_util';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 import {computeDispatch, flatDispatchLayout} from './webgpu_util';
 
 export class SparseSegmentSumProgram implements WebGPUProgram {
@@ -94,23 +95,14 @@ export class SparseSegmentIdCountProgram implements WebGPUProgram {
   }
 }
 
-export class SparseSegmentMeanProgram implements WebGPUProgram {
-  variableNames = ['segmentSum', 'sameSegmentIdCount'];
-  outputShape: number[] = [];
+export class SparseSegmentMeanProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
   uniforms = 'segmentSize : i32';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
   type: DataType;
 
   constructor(outShape: number[], outputDtype: DataType) {
-    this.outputShape = outShape;
+    super(outShape, [64, 1, 1], ['segmentSum', 'sameSegmentIdCount']);
     this.type = outputDtype;
-    this.dispatchLayout = flatDispatchLayout(outShape);
-    this.dispatch =
-        computeDispatch(this.dispatchLayout, outShape, this.workgroupSize);
 
     this.shaderKey = 'sparseSegmentMean';
   }

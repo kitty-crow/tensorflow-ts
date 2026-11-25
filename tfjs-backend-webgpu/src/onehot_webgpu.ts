@@ -16,23 +16,14 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class OneHotProgram implements WebGPUProgram {
-  outputShape: number[];
+export class OneHotProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms = 'onValue : f32, offValue : f32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(numIndices: number, depth: number) {
-    this.outputShape = [numIndices, depth];
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super([numIndices, depth], [64, 1, 1], ['x']);
     this.shaderKey = 'onehot';
   }
 

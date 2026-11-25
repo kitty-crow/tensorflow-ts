@@ -18,27 +18,18 @@
 import {DataType} from '@tensorflow/tfjs-core';
 
 import {getMainHeaderString as main, PixelsOpType, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class DrawProgram implements WebGPUProgram {
-  variableNames = ['Image'];
+export class DrawProgram extends FlatDispatchProgram implements WebGPUProgram {
   uniforms = 'alpha: f32,';
-  outputShape: number[];
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workgroupSize: [number, number, number] = [64, 1, 1];
   type: DataType;
   textureFormat: GPUTextureFormat;
   pixelsOpType = PixelsOpType.DRAW;
-  size = true;
 
   constructor(
       outShape: number[], type: DataType, textureFormat: GPUTextureFormat) {
-    this.outputShape = outShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(outShape, [64, 1, 1], ['Image']);
     this.type = type;
     this.textureFormat = textureFormat;
     this.shaderKey = `draw_${type}_${textureFormat}`;

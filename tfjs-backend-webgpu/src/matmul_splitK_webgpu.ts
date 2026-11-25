@@ -21,7 +21,8 @@ import {activationFnSnippet, biasActivationSnippet} from './activation_util';
 import {makeMatMulPackedSource, makeMatMulPackedVec4Source, matMulReadFnSource} from './matmul_packed_webgpu';
 import {atomicAddSnippet} from './shader_util';
 import {getMainHeaderString as main, typeSnippet, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
+import {computeDispatch} from './webgpu_util';
 
 export class MatMulSplitKProgram implements WebGPUProgram {
   outputShape: number[];
@@ -107,15 +108,9 @@ export class MatMulSplitKProgram implements WebGPUProgram {
   }
 }
 
-export class BiasActivationProgram implements WebGPUProgram {
-  outputShape: number[];
+export class BiasActivationProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
   uniforms = '';
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
   private addBias: boolean;
   private activation: backend_util.Activation;
   private hasPreluActivationWeights: boolean;
@@ -124,10 +119,7 @@ export class BiasActivationProgram implements WebGPUProgram {
       outputShape: number[], bias: TensorInfo = null,
       activation: backend_util.Activation = null,
       preluActivationWeights: TensorInfo = null) {
-    this.outputShape = outputShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(outputShape, [64, 1, 1], ['x']);
     this.addBias = bias != null;
     this.hasPreluActivationWeights = preluActivationWeights != null;
     this.activation = activation;

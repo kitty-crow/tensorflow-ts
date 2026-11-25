@@ -16,24 +16,15 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class SearchSortedProgram implements WebGPUProgram {
-  outputShape: number[] = [];
+export class SearchSortedProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['sortedSequence', 'values'];
   uniforms = 'numInputs : i32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
   side: string;
 
   constructor(outputShape: [number, number], side: 'left'|'right') {
-    this.outputShape = outputShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(outputShape, [64, 1, 1], ['sortedSequence', 'values']);
 
     this.side = side;
     this.shaderKey = `search_sorted_${side}`;

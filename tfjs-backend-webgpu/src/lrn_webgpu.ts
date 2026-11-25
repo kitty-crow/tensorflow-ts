@@ -17,7 +17,8 @@
 
 import {util} from '@tensorflow/tfjs-core';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
+import {computeDispatch} from './webgpu_util';
 
 const powOperatorSnippet = `
   var powValue = 0.0;
@@ -31,21 +32,12 @@ const powOperatorSnippet = `
   }
 `;
 
-export class LRNProgram implements WebGPUProgram {
-  outputShape: number[] = [];
+export class LRNProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms = 'radius : i32, bias : f32, alpha : f32, beta : f32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(xShape: number[]) {
-    this.outputShape = xShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(xShape, [64, 1, 1], ['x']);
     this.shaderKey = 'lrn';
   }
 

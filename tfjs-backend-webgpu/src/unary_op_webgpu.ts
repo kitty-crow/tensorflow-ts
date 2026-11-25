@@ -17,27 +17,17 @@
 
 import {getUnaryOpString, UnaryOpType} from './unary_op_util';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class UnaryOpProgram implements WebGPUProgram {
-  outputShape: number[];
+export class UnaryOpProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['A'];
-  workgroupSize: [number, number, number];
   op: UnaryOpType;
   uniforms?: string;
-  size = true;
 
   constructor(outputShape: number[], op: UnaryOpType, uniforms = '') {
     // TODO(jiajia.qin@intel.com): Heuristically select a good work group size.
     const workgroupSizeX = 128;
-    this.workgroupSize = [workgroupSizeX, 1, 1];
-    this.outputShape = outputShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(outputShape, [workgroupSizeX, 1, 1], ['A']);
     this.op = op;
     if (uniforms !== '') {
       this.uniforms = uniforms;

@@ -16,29 +16,21 @@
  */
 
 import {getCoordsDataType, getCoordsXYZ, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class TransposeProgram implements WebGPUProgram {
-  variableNames = ['A'];
+const workPerThread = 1;
+
+export class TransposeProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  outputShape: number[];
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  workPerThread = 1;
-  workgroupSize: [number, number, number] = [64, 1, 1];
+  workPerThread = workPerThread;
   newDim: number[];
-  size = true;
 
   constructor(aShape: number[], newDim: number[]) {
     const outputShape: number[] = new Array(aShape.length);
     for (let i = 0; i < outputShape.length; i++) {
       outputShape[i] = aShape[newDim[i]];
     }
-    this.outputShape = outputShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize,
-        [this.workPerThread, 1, 1]);
+    super(outputShape, [64, 1, 1], ['A'], [workPerThread, 1, 1]);
 
     this.newDim = newDim;
     this.shaderKey = `transpose_${newDim}`;

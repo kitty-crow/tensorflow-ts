@@ -16,23 +16,14 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class LinSpaceProgram implements WebGPUProgram {
-  variableNames: string[] = [];
-  outputShape: number[] = [];
+export class LinSpaceProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
   uniforms = 'start : f32, step : f32,';
-  workgroupSize: [number, number, number] = [64, 1, 1];
-  size = true;
 
   constructor(shape: number) {
-    this.outputShape = [shape];
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super([shape], [64, 1, 1], []);
 
     this.shaderKey = 'linSpace';
   }

@@ -18,20 +18,14 @@
 import {padCommon} from './pad_webgpu';
 import {getSwitchedCoords} from './transpose_webgpu';
 import {getCoordsDataType, getCoordsFromIndexSnippet, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class SpaceToBatchNDProgram implements WebGPUProgram {
-  variableNames = ['x'];
-  outputShape: number[] = [];
+export class SpaceToBatchNDProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
   uniforms = '';
-  workgroupSize: [number, number, number] = [64, 1, 1];
   newDim: number[];
   xShape: number[];
   paddedXShape: number[];
-  size = true;
 
   constructor(
       xShape: number[], paddedXShape: number[],
@@ -41,11 +35,8 @@ export class SpaceToBatchNDProgram implements WebGPUProgram {
     for (let i = 0; i < outputShape.length; i++) {
       outputShape[i] = reshapedPaddedXShape[newDim[i]];
     }
-    this.outputShape = outputShape;
+    super(outputShape, [64, 1, 1], ['x']);
     this.newDim = newDim;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
     this.xShape = xShape;
     this.paddedXShape = paddedXShape;
     this.uniforms += `reshapedPaddedXShape : ${

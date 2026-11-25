@@ -17,24 +17,14 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
-import {computeDispatch, flatDispatchLayout} from './webgpu_util';
+import {FlatDispatchProgram} from './flat_dispatch_program';
 
-export class PoolWithFilterSizeEqualsOneProgram implements WebGPUProgram {
-  outputShape: number[];
+export class PoolWithFilterSizeEqualsOneProgram extends FlatDispatchProgram implements WebGPUProgram {
   shaderKey: string;
-  dispatchLayout: {x: number[]};
-  dispatch: [number, number, number];
-  variableNames = ['x'];
   uniforms = `strides : vec2<i32>,`;
-  workgroupSize: [number, number, number] = [256, 1, 1];
-  size = true;
 
   constructor(convInfo: backend_util.Conv2DInfo) {
-    this.outputShape = convInfo.outShape;
-    this.dispatchLayout = flatDispatchLayout(this.outputShape);
-
-    this.dispatch = computeDispatch(
-        this.dispatchLayout, this.outputShape, this.workgroupSize);
+    super(convInfo.outShape, [256, 1, 1], ['x']);
 
     this.shaderKey = 'poolWithFilterSizeEqualsOne';
   }
