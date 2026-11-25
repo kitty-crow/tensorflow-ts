@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, scalar, TopK, TopKAttrs, TopKInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, scalar, TopK, TopKAttrs, TopKInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const topKConfig: KernelConfig = {
   kernelName: TopK,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as TopKInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {k, sorted} = args.attrs as unknown as TopKAttrs;
+  kernelFunc: (args: {
+    inputs: TopKInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<TopKAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {k, sorted} = args.attrs;
 
     const kCount = k ?? 1;
     const isSorted = sorted ?? true;

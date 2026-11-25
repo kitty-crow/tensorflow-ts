@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, Max, MaxAttrs, MaxInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Max, MaxAttrs, MaxInputs, tensor1d, util} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const maxConfig: KernelConfig = {
   kernelName: Max,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as MaxInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {reductionIndices, keepDims} = args.attrs as unknown as MaxAttrs;
+  kernelFunc: (args: {
+    inputs: MaxInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<MaxAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {reductionIndices, keepDims} = args.attrs;
 
     const axes = util.parseAxisParam(reductionIndices, x.shape);
     const axesTensor = tensor1d(axes, 'int32');

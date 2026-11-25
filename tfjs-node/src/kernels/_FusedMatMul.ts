@@ -15,19 +15,22 @@
  * =============================================================================
  */
 
-import {_FusedMatMul, _FusedMatMulAttrs, _FusedMatMulInputs, add, KernelConfig, matMul, Tensor, Tensor3D, tidy} from '@tensorflow/tfjs';
+import {_FusedMatMul, _FusedMatMulAttrs, _FusedMatMulInputs, add, KernelConfig, KernelAttributes, matMul, Tensor, Tensor3D, tidy} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const _fusedMatMulConfig: KernelConfig = {
   kernelName: _FusedMatMul,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
+  kernelFunc: (args: {
+    inputs: _FusedMatMulInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<_FusedMatMulAttrs>
+  }) => {
     const {a, b, bias, preluActivationWeights} =
-        args.inputs as _FusedMatMulInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+        args.inputs;
+    const backend = args.backend;
     const {transposeA, transposeB, activation, leakyreluAlpha} =
-        args.attrs as unknown as _FusedMatMulAttrs;
+        args.attrs;
 
     // Core TensorFlow does not have a fused BatchMatMul op. Combine calls to
     // achieve the same results:

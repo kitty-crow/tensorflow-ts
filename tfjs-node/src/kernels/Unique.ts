@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, tensor1d, Unique, UniqueAttrs, UniqueInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, tensor1d, Unique, UniqueAttrs, UniqueInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const uniqueConfig: KernelConfig = {
   kernelName: Unique,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as UniqueInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis = 0} = args.attrs as unknown as UniqueAttrs;
+  kernelFunc: (args: {
+    inputs: UniqueInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<UniqueAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis = 0} = args.attrs;
 
     const axisTensor = tensor1d([axis], 'int32');
 

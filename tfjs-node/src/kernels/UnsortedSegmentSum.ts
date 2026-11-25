@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, scalar, UnsortedSegmentSum, UnsortedSegmentSumAttrs, UnsortedSegmentSumInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, scalar, UnsortedSegmentSum, UnsortedSegmentSumAttrs, UnsortedSegmentSumInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const unsortedSegmentSumConfig: KernelConfig = {
   kernelName: UnsortedSegmentSum,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x, segmentIds} = args.inputs as UnsortedSegmentSumInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {numSegments} = args.attrs as unknown as UnsortedSegmentSumAttrs;
+  kernelFunc: (args: {
+    inputs: UnsortedSegmentSumInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<UnsortedSegmentSumAttrs>
+  }) => {
+    const {x, segmentIds} = args.inputs;
+    const backend = args.backend;
+    const {numSegments} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', x.dtype),

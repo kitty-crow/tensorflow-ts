@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {AvgPoolGrad, AvgPoolGradAttrs, AvgPoolGradInputs, backend_util, KernelConfig, tensor1d} from '@tensorflow/tfjs';
+import {AvgPoolGrad, AvgPoolGradAttrs, AvgPoolGradInputs, backend_util, KernelConfig, KernelAttributes, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const avgPoolGradConfig: KernelConfig = {
   kernelName: AvgPoolGrad,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {dy, input} = args.inputs as AvgPoolGradInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: AvgPoolGradInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<AvgPoolGradAttrs>
+  }) => {
+    const {dy, input} = args.inputs;
+    const backend = args.backend;
     const {filterSize, strides, pad} =
-        args.attrs as unknown as AvgPoolGradAttrs;
+        args.attrs;
 
     const convInfo = backend_util.computePool2DInfo(
         input.shape as [number, number, number, number], filterSize, strides,

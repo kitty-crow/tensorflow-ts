@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, tensor1d, Transpose, TransposeAttrs, TransposeInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, tensor1d, Transpose, TransposeAttrs, TransposeInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const transposeConfig: KernelConfig = {
   kernelName: Transpose,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as TransposeInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {perm} = args.attrs as unknown as TransposeAttrs;
+  kernelFunc: (args: {
+    inputs: TransposeInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<TransposeAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {perm} = args.attrs;
 
     const permTensor = tensor1d(perm, 'int32');
     const opAttrs = [

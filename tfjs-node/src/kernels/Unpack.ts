@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const unpackConfig: KernelConfig = {
   kernelName: Unpack,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {value} = args.inputs as UnpackInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    let {axis} = args.attrs as unknown as UnpackAttrs;
+  kernelFunc: (args: {
+    inputs: UnpackInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<UnpackAttrs>
+  }) => {
+    const {value} = args.inputs;
+    const backend = args.backend;
+    let {axis} = args.attrs;
 
     if (axis < 0) {
       axis += value.shape.length;

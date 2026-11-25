@@ -15,16 +15,19 @@
  * =============================================================================
  */
 
-import {KernelConfig, LeakyRelu, LeakyReluAttrs, LeakyReluInputs, Tensor} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, LeakyRelu, LeakyReluAttrs, LeakyReluInputs, Tensor} from '@tensorflow/tfjs';
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const leakyReluConfig: KernelConfig = {
   kernelName: LeakyRelu,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const inputs = args.inputs as LeakyReluInputs;
-    const attrs = args.attrs as unknown as LeakyReluAttrs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: LeakyReluInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<LeakyReluAttrs>
+  }) => {
+    const inputs = args.inputs;
+    const attrs = args.attrs;
+    const backend = args.backend;
     const x = inputs.x as Tensor;
     const alpha = attrs.alpha;
 

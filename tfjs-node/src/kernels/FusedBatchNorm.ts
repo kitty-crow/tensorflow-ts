@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {add, fill, FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelConfig, mul, Rank, rsqrt, scalar, sub, Tensor, Tensor4D, tidy} from '@tensorflow/tfjs';
+import {add, fill, FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelAttributes, KernelConfig, mul, Rank, rsqrt, scalar, sub, Tensor, Tensor4D, tidy} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const fusedBatchNormConfig: KernelConfig = {
   kernelName: FusedBatchNorm,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x, mean, variance} = args.inputs as FusedBatchNormInputs;
-    let {scale, offset} = args.inputs as FusedBatchNormInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {varianceEpsilon} = args.attrs as unknown as FusedBatchNormAttrs;
+  kernelFunc: (args: {
+    inputs: FusedBatchNormInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<FusedBatchNormAttrs>
+  }) => {
+    const {x, mean, variance} = args.inputs;
+    let {scale, offset} = args.inputs;
+    const backend = args.backend;
+    const {varianceEpsilon} = args.attrs;
 
     return tidy(() => {
       if ((mean as Tensor).rank > 1) {

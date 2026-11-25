@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {KernelConfig, ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs, tensor1d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const resizeBilinearConfig: KernelConfig = {
   kernelName: ResizeBilinear,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {images} = args.inputs as ResizeBilinearInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: ResizeBilinearInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ResizeBilinearAttrs>
+  }) => {
+    const {images} = args.inputs;
+    const backend = args.backend;
     const {alignCorners, halfPixelCenters, size} =
-        args.attrs as unknown as ResizeBilinearAttrs;
+        args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', images.dtype),

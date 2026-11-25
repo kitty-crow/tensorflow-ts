@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {backend_util, fill, greater, isNaN as tfIsNan, KernelConfig, ones, scalar, Step, StepAttrs, StepInputs, Tensor, tidy, where} from '@tensorflow/tfjs';
+import {backend_util, fill, greater, isNaN as tfIsNan, KernelAttributes, KernelConfig, ones, scalar, Step, StepAttrs, StepInputs, Tensor, tidy, where} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const stepConfig: KernelConfig = {
   kernelName: Step,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as StepInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {alpha} = args.attrs as unknown as StepAttrs;
+  kernelFunc: (args: {
+    inputs: StepInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<StepAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {alpha} = args.attrs;
 
     const dtype = x.dtype;
     return tidy(() => {

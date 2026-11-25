@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {backend_util, Conv3D, Conv3DAttrs, Conv3DInputs, KernelConfig} from '@tensorflow/tfjs';
+import {backend_util, Conv3D, Conv3DAttrs, Conv3DInputs, KernelAttributes, KernelConfig} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const conv3DConfig: KernelConfig = {
   kernelName: Conv3D,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x, filter} = args.inputs as Conv3DInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {strides, pad, dilations} = args.attrs as unknown as Conv3DAttrs;
+  kernelFunc: (args: {
+    inputs: Conv3DInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<Conv3DAttrs>
+  }) => {
+    const {x, filter} = args.inputs;
+    const backend = args.backend;
+    const {strides, pad, dilations} = args.attrs;
 
     const convInfo = backend_util.computeConv3DInfo(
         x.shape as [number, number, number, number, number],

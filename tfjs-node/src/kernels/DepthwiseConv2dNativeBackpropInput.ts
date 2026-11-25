@@ -15,19 +15,22 @@
  * =============================================================================
  */
 
-import {backend_util, DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs, KernelConfig, tensor1d, Tensor4D, TensorInfo} from '@tensorflow/tfjs';
+import {backend_util, DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs, KernelAttributes, KernelConfig, tensor1d, Tensor4D, TensorInfo} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const depthwiseConv2dNativeBackpropInputConfig: KernelConfig = {
   kernelName: DepthwiseConv2dNativeBackpropInput,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
+  kernelFunc: (args: {
+    inputs: DepthwiseConv2dNativeBackpropInputInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<DepthwiseConv2dNativeBackpropInputAttrs>
+  }) => {
     const {dy, filter} =
-        args.inputs as DepthwiseConv2dNativeBackpropInputInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+        args.inputs;
+    const backend = args.backend;
     const {strides, dilations, pad, dimRoundingMode, inputShape} =
-        args.attrs as unknown as DepthwiseConv2dNativeBackpropInputAttrs;
+        args.attrs;
 
     const convInfo = backend_util.computeConv2DInfo(
         inputShape, filter.shape as [number, number, number, number], strides,

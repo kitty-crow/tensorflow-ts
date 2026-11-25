@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, LRN, LRNAttrs, LRNInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, LRN, LRNAttrs, LRNInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -23,10 +23,13 @@ import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_bac
 export const LRNConfig: KernelConfig = {
   kernelName: LRN,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as LRNInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {depthRadius, bias, alpha, beta} = args.attrs as unknown as LRNAttrs;
+  kernelFunc: (args: {
+    inputs: LRNInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<LRNAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {depthRadius, bias, alpha, beta} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', x.dtype),

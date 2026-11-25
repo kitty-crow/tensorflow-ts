@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {ArgMin, ArgMinAttrs, ArgMinInputs, KernelConfig, scalar, Tensor} from '@tensorflow/tfjs';
+import {ArgMin, ArgMinAttrs, ArgMinInputs, KernelConfig, KernelAttributes, scalar, Tensor} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const argMinConfig: KernelConfig = {
   kernelName: ArgMin,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as ArgMinInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis} = args.attrs as unknown as ArgMinAttrs;
+  kernelFunc: (args: {
+    inputs: ArgMinInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ArgMinAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis} = args.attrs;
 
     const toDispose: Tensor[] = [];
     let xInput = x;

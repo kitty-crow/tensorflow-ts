@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {All, AllAttrs, AllInputs, KernelConfig, tensor1d, util} from '@tensorflow/tfjs';
+import {All, AllAttrs, AllInputs, KernelConfig, KernelAttributes, tensor1d, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const allConfig: KernelConfig = {
   kernelName: All,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as AllInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis, keepDims} = args.attrs as unknown as AllAttrs;
+  kernelFunc: (args: {
+    inputs: AllInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<AllAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis, keepDims} = args.attrs;
 
     const origAxes = util.parseAxisParam(axis, x.shape);
     const opAttrs = [

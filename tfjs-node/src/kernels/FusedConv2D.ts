@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {add, backend_util, FusedConv2D, FusedConv2DAttrs, FusedConv2DInputs, KernelConfig, Tensor} from '@tensorflow/tfjs';
+import {add, backend_util, FusedConv2D, FusedConv2DAttrs, FusedConv2DInputs, KernelAttributes, KernelConfig, Tensor} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -24,10 +24,13 @@ import {conv2dImpl} from './Conv2D';
 export const fusedConv2DConfig: KernelConfig = {
   kernelName: FusedConv2D,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
+  kernelFunc: (args: {
+    inputs: FusedConv2DInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<FusedConv2DAttrs>
+  }) => {
     const {x, filter, bias, preluActivationWeights} =
-        args.inputs as FusedConv2DInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+        args.inputs;
+    const backend = args.backend;
     const {
       strides,
       pad,
@@ -36,7 +39,7 @@ export const fusedConv2DConfig: KernelConfig = {
       dimRoundingMode,
       activation,
       leakyreluAlpha
-    } = args.attrs as unknown as FusedConv2DAttrs;
+    } = args.attrs;
 
     if (dataFormat !== 'NHWC') {
       throw new Error(

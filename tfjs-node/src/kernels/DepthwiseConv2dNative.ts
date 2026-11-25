@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {backend_util, DepthwiseConv2dNative, DepthwiseConv2dNativeAttrs, DepthwiseConv2dNativeInputs, KernelConfig, Tensor4D, TensorInfo} from '@tensorflow/tfjs';
+import {backend_util, DepthwiseConv2dNative, DepthwiseConv2dNativeAttrs, DepthwiseConv2dNativeInputs, KernelAttributes, KernelConfig, Tensor4D, TensorInfo} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const depthwiseConv2dNativeConfig: KernelConfig = {
   kernelName: DepthwiseConv2dNative,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x, filter} = args.inputs as DepthwiseConv2dNativeInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: DepthwiseConv2dNativeInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<DepthwiseConv2dNativeAttrs>
+  }) => {
+    const {x, filter} = args.inputs;
+    const backend = args.backend;
     const {strides, pad, dilations, dimRoundingMode} =
-        args.attrs as unknown as DepthwiseConv2dNativeAttrs;
+        args.attrs;
 
     let $dilations = dilations;
     if ($dilations == null) {

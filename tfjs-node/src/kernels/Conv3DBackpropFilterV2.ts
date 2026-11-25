@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {backend_util, Conv3DBackpropFilterV2, Conv3DBackpropFilterV2Attrs, Conv3DBackpropFilterV2Inputs, KernelConfig, tensor1d} from '@tensorflow/tfjs';
+import {backend_util, Conv3DBackpropFilterV2, Conv3DBackpropFilterV2Attrs, Conv3DBackpropFilterV2Inputs, KernelAttributes, KernelConfig, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const conv3DBackpropFilterV2Config: KernelConfig = {
   kernelName: Conv3DBackpropFilterV2,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x, dy} = args.inputs as Conv3DBackpropFilterV2Inputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: Conv3DBackpropFilterV2Inputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<Conv3DBackpropFilterV2Attrs>
+  }) => {
+    const {x, dy} = args.inputs;
+    const backend = args.backend;
     const {strides, pad, filterShape} =
-        args.attrs as unknown as Conv3DBackpropFilterV2Attrs;
+        args.attrs;
 
     const dilations = 1;
 

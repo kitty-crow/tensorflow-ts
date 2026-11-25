@@ -15,20 +15,23 @@
  * =============================================================================
  */
 
-import {KernelConfig, StridedSlice, StridedSliceAttrs, StridedSliceInputs, tensor1d, tidy} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, StridedSlice, StridedSliceAttrs, StridedSliceInputs, tensor1d, tidy} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const stridedSliceConfig: KernelConfig = {
   kernelName: StridedSlice,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as StridedSliceInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: StridedSliceInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<StridedSliceAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
     const {beginMask, endMask, ellipsisMask, newAxisMask, shrinkAxisMask} =
-        args.attrs as unknown as StridedSliceAttrs;
+        args.attrs;
 
-    const attrs = args.attrs as unknown as StridedSliceAttrs;
+    const attrs = args.attrs;
     // make a copy because it may be modified in-place further down.
     const begin = attrs.begin.slice();
     const end = attrs.end.slice();

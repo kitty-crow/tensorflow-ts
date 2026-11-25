@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {CropAndResize, CropAndResizeAttrs, CropAndResizeInputs, KernelConfig, tensor1d} from '@tensorflow/tfjs';
+import {CropAndResize, CropAndResizeAttrs, CropAndResizeInputs, KernelAttributes, KernelConfig, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const cropAndResizeConfig: KernelConfig = {
   kernelName: CropAndResize,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {image, boxes, boxInd} = args.inputs as CropAndResizeInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: CropAndResizeInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<CropAndResizeAttrs>
+  }) => {
+    const {image, boxes, boxInd} = args.inputs;
+    const backend = args.backend;
     const {cropSize, method, extrapolationValue} =
-        args.attrs as unknown as CropAndResizeAttrs;
+        args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', image.dtype),

@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {BatchToSpaceND, BatchToSpaceNDAttrs, BatchToSpaceNDInputs, KernelConfig, tensor1d, tensor2d} from '@tensorflow/tfjs';
+import {BatchToSpaceND, BatchToSpaceNDAttrs, BatchToSpaceNDInputs, KernelConfig, KernelAttributes, tensor1d, tensor2d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const batchToSpaceNDConfig: KernelConfig = {
   kernelName: BatchToSpaceND,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as BatchToSpaceNDInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {blockShape, crops} = args.attrs as unknown as BatchToSpaceNDAttrs;
+  kernelFunc: (args: {
+    inputs: BatchToSpaceNDInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<BatchToSpaceNDAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {blockShape, crops} = args.attrs;
 
     const blockShapeTensor = tensor1d(blockShape, 'int32');
     const cropsTensor =

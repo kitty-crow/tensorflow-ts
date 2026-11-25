@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {ArgMax, ArgMaxAttrs, ArgMaxInputs, KernelConfig, scalar, Tensor} from '@tensorflow/tfjs';
+import {ArgMax, ArgMaxAttrs, ArgMaxInputs, KernelConfig, KernelAttributes, scalar, Tensor} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const argMaxConfig: KernelConfig = {
   kernelName: ArgMax,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as ArgMaxInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis} = args.attrs as unknown as ArgMaxAttrs;
+  kernelFunc: (args: {
+    inputs: ArgMaxInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ArgMaxAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis} = args.attrs;
 
     const toDispose: Tensor[] = [];
     let xInput = x;

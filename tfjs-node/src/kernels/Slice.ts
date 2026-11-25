@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, Slice, SliceAttrs, SliceInputs, tensor1d} from '@tensorflow/tfjs';
+import {backend_util, KernelAttributes, KernelConfig, Slice, SliceAttrs, SliceInputs, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const sliceConfig: KernelConfig = {
   kernelName: Slice,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SliceInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {begin, size} = args.attrs as unknown as SliceAttrs;
+  kernelFunc: (args: {
+    inputs: SliceInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<SliceAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {begin, size} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', x.dtype),

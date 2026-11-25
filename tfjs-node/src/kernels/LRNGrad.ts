@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, LRNGrad, LRNGradAttrs, LRNGradInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, LRNGrad, LRNGradAttrs, LRNGradInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -23,11 +23,14 @@ import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_bac
 export const LRNGradConfig: KernelConfig = {
   kernelName: LRNGrad,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x, y, dy} = args.inputs as LRNGradInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: LRNGradInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<LRNGradAttrs>
+  }) => {
+    const {x, y, dy} = args.inputs;
+    const backend = args.backend;
     const {depthRadius, bias, alpha, beta} =
-        args.attrs as unknown as LRNGradAttrs;
+        args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', dy.dtype),

@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, KernelConfig, Tensor4D, TensorInfo} from '@tensorflow/tfjs';
+import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, KernelAttributes, KernelConfig, Tensor4D, TensorInfo} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const conv2DConfig: KernelConfig = {
   kernelName: Conv2D,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x, filter} = args.inputs as Conv2DInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: Conv2DInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<Conv2DAttrs>
+  }) => {
+    const {x, filter} = args.inputs;
+    const backend = args.backend;
     const {strides, pad, dataFormat, dilations, dimRoundingMode} =
-        args.attrs as unknown as Conv2DAttrs;
+        args.attrs;
 
     const $dataFormat = backend_util.convertConv2DDataFormat(dataFormat);
     const convInfo = backend_util.computeConv2DInfo(

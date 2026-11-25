@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, scalar, SplitV, SplitVAttrs, SplitVInputs, Tensor, tensor1d, tidy, util} from '@tensorflow/tfjs';
+import {backend_util, KernelAttributes, KernelConfig, scalar, SplitV, SplitVAttrs, SplitVInputs, Tensor, tensor1d, tidy, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const splitVConfig: KernelConfig = {
   kernelName: SplitV,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SplitVInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {numOrSizeSplits, axis} = args.attrs as unknown as SplitVAttrs;
+  kernelFunc: (args: {
+    inputs: SplitVInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<SplitVAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {numOrSizeSplits, axis} = args.attrs;
 
     const $axis = util.parseAxisParam(axis, x.shape)[0];
     const splitSizes = backend_util.prepareSplitSize(x, numOrSizeSplits, $axis);

@@ -68,6 +68,34 @@ describe('kernel signature and saved-tensor contracts', () => {
         .toBe(outputs);
   });
 
+  it('preserves nested attributes and optional input identity at dispatch', () => {
+    interface NestedAttrs {
+      paddings: number[][];
+      axis?: number;
+    }
+    const input: TensorInfo = {dataId: {}, shape: [2], dtype: 'float32'};
+    const inputs = {x: input};
+    const attrs: KernelAttributes<NestedAttrs> = {paddings: [[1, 2]]};
+    const backend = {result: input};
+    const config: KernelConfig = {
+      kernelName: 'NestedDispatchTest', backendName: 'test',
+      kernelFunc: (args: {
+        inputs: {x: TensorInfo, bias?: TensorInfo},
+        backend: {result: TensorInfo},
+        attrs: KernelAttributes<NestedAttrs>
+      }) => {
+        expect(args.inputs).toBe(inputs);
+        expect('bias' in args.inputs).toBeFalse();
+        expect(args.backend).toBe(backend);
+        expect(args.attrs).toBe(attrs);
+        expect(args.attrs.paddings).toEqual([[1, 2]]);
+        expect('axis' in args.attrs).toBeFalse();
+        return args.backend.result;
+      }
+    };
+    expect(config.kernelFunc({inputs, backend, attrs})).toBe(input);
+  });
+
   it('rejects missing or surplus saved tensors before gradient dispatch', () => {
     const tensor = new Tensor<Rank.R1>([1], 'float32', {}, 0);
     expect(() => maximumGradConfig.gradFunc(tensor, [tensor], {}))

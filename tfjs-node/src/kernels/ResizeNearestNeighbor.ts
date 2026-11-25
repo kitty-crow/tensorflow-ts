@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {KernelConfig, ResizeNearestNeighbor, ResizeNearestNeighborAttrs, ResizeNearestNeighborInputs, tensor1d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, ResizeNearestNeighbor, ResizeNearestNeighborAttrs, ResizeNearestNeighborInputs, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const resizeNearestNeighborConfig: KernelConfig = {
   kernelName: ResizeNearestNeighbor,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {images} = args.inputs as ResizeNearestNeighborInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: ResizeNearestNeighborInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ResizeNearestNeighborAttrs>
+  }) => {
+    const {images} = args.inputs;
+    const backend = args.backend;
     const {alignCorners, halfPixelCenters, size} =
-        args.attrs as unknown as ResizeNearestNeighborAttrs;
+        args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', images.dtype),

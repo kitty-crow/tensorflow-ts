@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, Reshape, ReshapeAttrs, ReshapeInputs, tensor1d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Reshape, ReshapeAttrs, ReshapeInputs, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const reshapeConfig: KernelConfig = {
   kernelName: Reshape,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as ReshapeInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {shape} = args.attrs as unknown as ReshapeAttrs;
+  kernelFunc: (args: {
+    inputs: ReshapeInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ReshapeAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {shape} = args.attrs;
 
     const shapeTensor = tensor1d(shape, 'int32');
 

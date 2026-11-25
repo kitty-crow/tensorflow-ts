@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {BatchMatMul, BatchMatMulAttrs, BatchMatMulInputs, KernelConfig} from '@tensorflow/tfjs';
+import {BatchMatMul, BatchMatMulAttrs, BatchMatMulInputs, KernelAttributes, KernelConfig} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const batchMatMulConfig: KernelConfig = {
   kernelName: BatchMatMul,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as BatchMatMulInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {transposeA, transposeB} = args.attrs as unknown as BatchMatMulAttrs;
+  kernelFunc: (args: {
+    inputs: BatchMatMulInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<BatchMatMulAttrs>
+  }) => {
+    const {a, b} = args.inputs;
+    const backend = args.backend;
+    const {transposeA, transposeB} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', a.dtype),

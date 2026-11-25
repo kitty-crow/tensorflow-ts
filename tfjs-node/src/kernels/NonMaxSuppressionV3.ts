@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {KernelConfig, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs, scalar} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs, scalar} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const nonMaxSuppressionV3Config: KernelConfig = {
   kernelName: NonMaxSuppressionV3,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {boxes, scores} = args.inputs as NonMaxSuppressionV3Inputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: NonMaxSuppressionV3Inputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<NonMaxSuppressionV3Attrs>
+  }) => {
+    const {boxes, scores} = args.inputs;
+    const backend = args.backend;
     const {maxOutputSize, iouThreshold, scoreThreshold} =
-        args.attrs as unknown as NonMaxSuppressionV3Attrs;
+        args.attrs;
 
     const opAttrs = [createTensorsTypeOpAttr('T', boxes.dtype)];
 

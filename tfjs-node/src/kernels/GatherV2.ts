@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {backend_util, GatherV2, GatherV2Attrs, GatherV2Inputs, KernelConfig, scalar, Tensor, TypedArray, util} from '@tensorflow/tfjs';
+import {backend_util, GatherV2, GatherV2Attrs, GatherV2Inputs, KernelAttributes, KernelConfig, scalar, Tensor, TypedArray, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const gatherV2Config: KernelConfig = {
   kernelName: GatherV2,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x, indices} = args.inputs as GatherV2Inputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis, batchDims} = args.attrs as unknown as GatherV2Attrs;
+  kernelFunc: (args: {
+    inputs: GatherV2Inputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<GatherV2Attrs>
+  }) => {
+    const {x, indices} = args.inputs;
+    const backend = args.backend;
+    const {axis, batchDims} = args.attrs;
 
     // Throw error when any index is out of bound.
     const indicesVals = backend.readSync(indices.dataId) as TypedArray;

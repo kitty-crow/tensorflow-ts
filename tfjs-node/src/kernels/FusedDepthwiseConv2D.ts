@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {add, backend_util, FusedDepthwiseConv2D, FusedDepthwiseConv2DAttrs, FusedDepthwiseConv2DInputs, KernelConfig, Tensor} from '@tensorflow/tfjs';
+import {add, backend_util, FusedDepthwiseConv2D, FusedDepthwiseConv2DAttrs, FusedDepthwiseConv2DInputs, KernelAttributes, KernelConfig, Tensor} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -24,10 +24,13 @@ import {depthwiseConv2dNativeImpl} from './DepthwiseConv2dNative';
 export const fusedDepthwiseConv2DConfig: KernelConfig = {
   kernelName: FusedDepthwiseConv2D,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
+  kernelFunc: (args: {
+    inputs: FusedDepthwiseConv2DInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<FusedDepthwiseConv2DAttrs>
+  }) => {
     const {x, filter, bias, preluActivationWeights} =
-        args.inputs as FusedDepthwiseConv2DInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+        args.inputs;
+    const backend = args.backend;
     const {
       strides,
       pad,
@@ -35,7 +38,7 @@ export const fusedDepthwiseConv2DConfig: KernelConfig = {
       dimRoundingMode,
       activation,
       leakyreluAlpha
-    } = args.attrs as unknown as FusedDepthwiseConv2DAttrs;
+    } = args.attrs;
 
     let $dilations = dilations;
     if ($dilations == null) {

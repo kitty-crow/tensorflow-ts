@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, Sum, SumAttrs, SumInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Sum, SumAttrs, SumInputs, tensor1d, util} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const sumConfig: KernelConfig = {
   kernelName: Sum,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SumInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis, keepDims} = args.attrs as unknown as SumAttrs;
+  kernelFunc: (args: {
+    inputs: SumInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<SumAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis, keepDims} = args.attrs;
     const axes = util.parseAxisParam(axis, x.shape);
     const axisTensor = tensor1d(axes, 'int32');
     const res = backend.executeSingleOutput(

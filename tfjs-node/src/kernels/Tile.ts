@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, tensor1d, Tile, TileAttrs, TileInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, tensor1d, Tile, TileAttrs, TileInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const tileConfig: KernelConfig = {
   kernelName: Tile,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as TileInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {reps} = args.attrs as unknown as TileAttrs;
+  kernelFunc: (args: {
+    inputs: TileInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<TileAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {reps} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', x.dtype),

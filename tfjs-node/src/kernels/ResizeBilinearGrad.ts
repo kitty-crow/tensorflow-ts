@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, ResizeBilinearGrad, ResizeBilinearGradAttrs, ResizeBilinearGradInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, ResizeBilinearGrad, ResizeBilinearGradAttrs, ResizeBilinearGradInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const resizeBilinearGradConfig: KernelConfig = {
   kernelName: ResizeBilinearGrad,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {images, dy} = args.inputs as ResizeBilinearGradInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {alignCorners} = args.attrs as unknown as ResizeBilinearGradAttrs;
+  kernelFunc: (args: {
+    inputs: ResizeBilinearGradInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ResizeBilinearGradAttrs>
+  }) => {
+    const {images, dy} = args.inputs;
+    const backend = args.backend;
+    const {alignCorners} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', images.dtype), {

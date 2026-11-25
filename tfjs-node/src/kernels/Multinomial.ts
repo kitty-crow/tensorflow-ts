@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {KernelConfig, Multinomial, MultinomialAttrs, MultinomialInputs, scalar} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Multinomial, MultinomialAttrs, MultinomialInputs, scalar} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const multinomialConfig: KernelConfig = {
   kernelName: Multinomial,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {logits} = args.inputs as MultinomialInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: MultinomialInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<MultinomialAttrs>
+  }) => {
+    const {logits} = args.inputs;
+    const backend = args.backend;
     const {numSamples, seed, normalized} =
-        args.attrs as unknown as MultinomialAttrs;
+        args.attrs;
 
     if (normalized) {
       throw new Error(

@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, Reverse, ReverseAttrs, ReverseInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Reverse, ReverseAttrs, ReverseInputs, tensor1d, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const reverseConfig: KernelConfig = {
   kernelName: Reverse,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as ReverseInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {dims} = args.attrs as unknown as ReverseAttrs;
+  kernelFunc: (args: {
+    inputs: ReverseInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ReverseAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {dims} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('Tidx', 'int32'),

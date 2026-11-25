@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {Cast, CastAttrs, CastInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Cast, CastAttrs, CastInputs, KernelAttributes, KernelConfig} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const castConfig: KernelConfig = {
   kernelName: Cast,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as CastInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {dtype} = args.attrs as unknown as CastAttrs;
+  kernelFunc: (args: {
+    inputs: CastInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<CastAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {dtype} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('SrcT', x.dtype),

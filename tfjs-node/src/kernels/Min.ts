@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, Min, MinAttrs, MinInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Min, MinAttrs, MinInputs, tensor1d, util} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const minConfig: KernelConfig = {
   kernelName: Min,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as MinInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis, keepDims} = args.attrs as unknown as MinAttrs;
+  kernelFunc: (args: {
+    inputs: MinInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<MinAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis, keepDims} = args.attrs;
     const axes = util.parseAxisParam(axis, x.shape);
     const axesTensor = tensor1d(axes, 'int32');
     const res = backend.executeSingleOutput(

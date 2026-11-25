@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelConfig, Tensor} from '@tensorflow/tfjs';
+import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelAttributes, KernelConfig, Tensor} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const depthToSpaceConfig: KernelConfig = {
   kernelName: DepthToSpace,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as DepthToSpaceInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {blockSize, dataFormat} = args.attrs as unknown as DepthToSpaceAttrs;
+  kernelFunc: (args: {
+    inputs: DepthToSpaceInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<DepthToSpaceAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {blockSize, dataFormat} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', x as Tensor), {

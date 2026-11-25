@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {KernelConfig, StaticRegexReplace, StaticRegexReplaceAttrs, StaticRegexReplaceInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, StaticRegexReplace, StaticRegexReplaceAttrs, StaticRegexReplaceInputs} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const staticRegexReplaceConfig: KernelConfig = {
   kernelName: StaticRegexReplace,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const tensors = args.inputs as unknown as StaticRegexReplaceInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: StaticRegexReplaceInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<StaticRegexReplaceAttrs>
+  }) => {
+    const tensors = args.inputs;
+    const backend = args.backend;
     const {pattern, rewrite, replaceGlobal} =
-      args.attrs as unknown as StaticRegexReplaceAttrs;
+      args.attrs;
 
     const opAttrs = [
       {name: 'pattern', type: backend.binding.TF_ATTR_STRING, value: pattern},

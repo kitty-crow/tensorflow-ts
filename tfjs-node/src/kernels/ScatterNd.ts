@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, ScatterNd, ScatterNdAttrs, ScatterNdInputs, tensor1d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, ScatterNd, ScatterNdAttrs, ScatterNdInputs, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const scatterNdConfig: KernelConfig = {
   kernelName: ScatterNd,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {indices, updates} = args.inputs as ScatterNdInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {shape} = args.attrs as unknown as ScatterNdAttrs;
+  kernelFunc: (args: {
+    inputs: ScatterNdInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ScatterNdAttrs>
+  }) => {
+    const {indices, updates} = args.inputs;
+    const backend = args.backend;
+    const {shape} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', updates.dtype),

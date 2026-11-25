@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, MaxPool, MaxPoolAttrs, MaxPoolInputs} from '@tensorflow/tfjs';
+import {backend_util, KernelAttributes, KernelConfig, MaxPool, MaxPoolAttrs, MaxPoolInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const maxPoolConfig: KernelConfig = {
   kernelName: MaxPool,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as MaxPoolInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: MaxPoolInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<MaxPoolAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
     const {filterSize, strides, pad, dimRoundingMode} =
-        args.attrs as unknown as MaxPoolAttrs;
+        args.attrs;
 
     const convInfo = backend_util.computePool2DInfo(
         x.shape as [number, number, number, number], filterSize, strides,

@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {Cumsum, CumsumAttrs, CumsumInputs, KernelConfig, scalar} from '@tensorflow/tfjs';
+import {Cumsum, CumsumAttrs, CumsumInputs, KernelAttributes, KernelConfig, scalar} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const cumsumConfig: KernelConfig = {
   kernelName: Cumsum,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as CumsumInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis, exclusive, reverse} = args.attrs as unknown as CumsumAttrs;
+  kernelFunc: (args: {
+    inputs: CumsumInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<CumsumAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis, exclusive, reverse} = args.attrs;
 
     const axisTensor = scalar(axis, 'int32');
     const opAttrs = [

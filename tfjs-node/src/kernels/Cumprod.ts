@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {Cumprod, CumprodAttrs, CumprodInputs, KernelConfig, scalar} from '@tensorflow/tfjs';
+import {Cumprod, CumprodAttrs, CumprodInputs, KernelAttributes, KernelConfig, scalar} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const cumprodConfig: KernelConfig = {
   kernelName: Cumprod,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as CumprodInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis, exclusive, reverse} = args.attrs as unknown as CumprodAttrs;
+  kernelFunc: (args: {
+    inputs: CumprodInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<CumprodAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis, exclusive, reverse} = args.attrs;
 
     const axisTensor = scalar(axis, 'int32');
     const opAttrs = [

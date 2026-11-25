@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {ExpandDims, ExpandDimsAttrs, ExpandDimsInputs, KernelConfig, scalar} from '@tensorflow/tfjs';
+import {ExpandDims, ExpandDimsAttrs, ExpandDimsInputs, KernelAttributes, KernelConfig, scalar} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const expandDimsConfig: KernelConfig = {
   kernelName: ExpandDims,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {input} = args.inputs as ExpandDimsInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {dim} = args.attrs as unknown as ExpandDimsAttrs;
+  kernelFunc: (args: {
+    inputs: ExpandDimsInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<ExpandDimsAttrs>
+  }) => {
+    const {input} = args.inputs;
+    const backend = args.backend;
+    const {dim} = args.attrs;
 
     const dimTensor = scalar(dim, 'int32');
 

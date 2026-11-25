@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, PadV2, PadV2Attrs, PadV2Inputs, scalar, tensor2d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, PadV2, PadV2Attrs, PadV2Inputs, scalar, tensor2d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const padV2Config: KernelConfig = {
   kernelName: PadV2,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as PadV2Inputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {paddings, constantValue} = args.attrs as unknown as PadV2Attrs;
+  kernelFunc: (args: {
+    inputs: PadV2Inputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<PadV2Attrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {paddings, constantValue} = args.attrs;
 
     // Bind tensor values
     const paddingsTensor = tensor2d(paddings, [paddings.length, 2], 'int32');

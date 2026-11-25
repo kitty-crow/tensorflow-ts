@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {cast, KernelConfig, Mean, MeanAttrs, MeanInputs, Tensor, tensor1d, util} from '@tensorflow/tfjs';
+import {cast, KernelAttributes, KernelConfig, Mean, MeanAttrs, MeanInputs, Tensor, tensor1d, util} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const meanConfig: KernelConfig = {
   kernelName: Mean,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as MeanInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {axis, keepDims} = args.attrs as unknown as MeanAttrs;
+  kernelFunc: (args: {
+    inputs: MeanInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<MeanAttrs>
+  }) => {
+    const {x} = args.inputs;
+    const backend = args.backend;
+    const {axis, keepDims} = args.attrs;
     const axes = util.parseAxisParam(axis, x.shape);
     const axesTensor = tensor1d(axes, 'int32');
 

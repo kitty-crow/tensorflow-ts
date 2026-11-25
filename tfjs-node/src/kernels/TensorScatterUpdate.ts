@@ -15,17 +15,20 @@
  * =============================================================================
  */
 
-import {KernelConfig, TensorScatterUpdate, TensorScatterUpdateAttrs, TensorScatterUpdateInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, TensorScatterUpdate, TensorScatterUpdateAttrs, TensorScatterUpdateInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const tensorScatterUpdateConfig: KernelConfig = {
   kernelName: TensorScatterUpdate,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {tensor, indices, updates} = args.inputs as TensorScatterUpdateInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {} = args.attrs as unknown as TensorScatterUpdateAttrs;
+  kernelFunc: (args: {
+    inputs: TensorScatterUpdateInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<TensorScatterUpdateAttrs>
+  }) => {
+    const {tensor, indices, updates} = args.inputs;
+    const backend = args.backend;
+    const {} = args.attrs;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', updates.dtype),

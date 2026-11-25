@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {KernelConfig, SparseToDense, SparseToDenseAttrs, SparseToDenseInputs, tensor1d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, SparseToDense, SparseToDenseAttrs, SparseToDenseInputs, tensor1d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const sparseToDenseConfig: KernelConfig = {
   kernelName: SparseToDense,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
+  kernelFunc: (args: {
+    inputs: SparseToDenseInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<SparseToDenseAttrs>
+  }) => {
     const {sparseIndices, sparseValues, defaultValue} =
-        args.inputs as SparseToDenseInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-    const {outputShape} = args.attrs as unknown as SparseToDenseAttrs;
+        args.inputs;
+    const backend = args.backend;
+    const {outputShape} = args.attrs;
 
     const opAttrs = [
       {

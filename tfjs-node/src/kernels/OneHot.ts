@@ -15,18 +15,21 @@
  * =============================================================================
  */
 
-import {KernelConfig, OneHot, OneHotAttrs, OneHotInputs, scalar} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, OneHot, OneHotAttrs, OneHotInputs, scalar} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const oneHotConfig: KernelConfig = {
   kernelName: OneHot,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {indices} = args.inputs as OneHotInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+  kernelFunc: (args: {
+    inputs: OneHotInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<OneHotAttrs>
+  }) => {
+    const {indices} = args.inputs;
+    const backend = args.backend;
     const {dtype, depth, onValue, offValue} =
-        args.attrs as unknown as OneHotAttrs;
+        args.attrs;
 
     const depthTensor = scalar(depth, 'int32');
     const onValueTensor = scalar(onValue, dtype);
