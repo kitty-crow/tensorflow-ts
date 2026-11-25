@@ -15,20 +15,42 @@
  * =============================================================================
  */
 import {Tensor, Tensor4D} from '../tensor';
-import {Rank} from '../types';
+import {Rank, ShapeMap} from '../types';
 import {reshape} from './reshape';
 
-export function xAs4D<R extends Rank>(x: Tensor<R>) {
-  let x4D: Tensor4D;
-  if (x.rank === 0 || x.rank === 1) {
-    x4D = reshape(x, [1, 1, 1, x.size]);
-  } else if (x.rank === 2) {
-    x4D = reshape(x, [1, 1, x.shape[0], x.shape[1]]);
-  } else if (x.rank === 3) {
-    x4D = reshape(x, [1, x.shape[0], x.shape[1], x.shape[2]]);
-  } else {
-    x4D = x as Tensor4D;
+/**
+ * The fused batch-normalization kernel expects leading singleton axes for
+ * ranks below four. A null result preserves the existing no-reshape path.
+ */
+export function getBatchNormReshapeShape(
+    shape: readonly number[], size: number): ShapeMap[Rank.R4]|null {
+  if (shape.length >= 4) {
+    return null;
+  }
+  if (shape.length <= 1) {
+    return [1, 1, 1, size];
   }
 
-  return x4D;
+  const first = shape[0] ?? null;
+  const second = shape[1] ?? null;
+  if (first === null || second === null) {
+    throw new Error('Batch normalization input shape is missing a dimension.');
+  }
+  if (shape.length === 2) {
+    return [1, 1, first, second];
+  }
+
+  const third = shape[2] ?? null;
+  if (third === null) {
+    throw new Error('Batch normalization input shape is missing a dimension.');
+  }
+  return [1, first, second, third];
+}
+
+export function xAs4D<R extends Rank>(x: Tensor<R>): Tensor4D {
+  const shape = getBatchNormReshapeShape(x.shape, x.size);
+  if (shape === null) {
+    return x as Tensor4D;
+  }
+  return reshape<Rank.R4>(x, shape);
 }
