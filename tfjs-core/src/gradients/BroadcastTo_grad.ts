@@ -33,7 +33,9 @@ export const broadcastToGradConfig: GradConfig = {
     for (let i = inputShape.length - 1; i >= 0; i--) {
       if (inputShape[i] === outputShape[i]) {
         reps[i] = 1;
-      } else if (inputShape[i] !== 1) {
+        continue;
+      }
+      if (inputShape[i] !== 1) {
         throw new Error(`broadcastTo(): [${
             inputShape}] cannot be broadcast to [${outputShape}].`);
       }

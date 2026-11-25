@@ -27,13 +27,8 @@ export const round = unaryKernelFunc(Round, (xi) => {
   }
   if (xi - base > 0.5) {
     return Math.ceil(xi);
-  } else {
-    if (base % 2.0 === 0.0) {
-      return base;
-    } else {
-      return base + 1.0;
-    }
   }
+  return base % 2.0 === 0.0 ? base : base + 1.0;
 });
 
 export const roundConfig: KernelConfig = {

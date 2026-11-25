@@ -53,7 +53,9 @@ export function mirrorPad(args: {
     for (let i = 0; i < resultRank; i++) {
       if (coords[i] < start[i]) {
         coords[i] = start[i] * 2 - coords[i] - offset;
-      } else if (coords[i] >= end[i]) {
+        continue;
+      }
+      if (coords[i] >= end[i]) {
         coords[i] = (end[i] - 1) * 2 - coords[i] + offset;
       }
     }

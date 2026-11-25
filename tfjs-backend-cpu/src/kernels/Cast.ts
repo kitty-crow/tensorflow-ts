@@ -54,11 +54,10 @@ export function cast(
   const {dtype} = attrs;
 
   // Casting to complex64.
+  if (dtype === 'complex64' && x.dtype === 'complex64') {
+    return identity({inputs: {x}, backend});
+  }
   if (dtype === 'complex64') {
-    if (x.dtype === 'complex64') {
-      return identity({inputs: {x}, backend});
-    }
-
     const zerosTensorInfo = zeros(backend, x.shape, x.dtype);
     const floatX = cast({inputs: {x}, backend, attrs: {dtype: 'float32'}});
 

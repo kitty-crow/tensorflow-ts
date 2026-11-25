@@ -32,38 +32,30 @@ export function sparseReshapeImpl(
   let unknownIndex = -1;
   for (let d = 0; d < outputRank; ++d) {
     const size = targetShape[d];
+    if (size === -1 && unknownIndex !== -1) {
+      throw new Error(
+          backend_util.getSparseReshapeMultipleNegativeOneOutputDimErrorMessage(
+              unknownIndex, d));
+    }
     if (size === -1) {
-      if (unknownIndex !== -1) {
-        throw new Error(
-            backend_util
-                .getSparseReshapeMultipleNegativeOneOutputDimErrorMessage(
-                    unknownIndex, d));
-      }
       unknownIndex = d;
       outputShape.push(1);
-    } else {
-      if (size < 0) {
-        throw new Error(
-            backend_util.getSparseReshapeNegativeOutputDimErrorMessage(
-                d, size));
-      }
-      product *= size;
-      outputShape.push(size);
+      continue;
     }
+    if (size < 0) {
+      throw new Error(
+          backend_util.getSparseReshapeNegativeOutputDimErrorMessage(d, size));
+    }
+    product *= size;
+    outputShape.push(size);
+  }
+  if (unknownIndex !== -1 && product <= 0) {
+    throw new Error(
+        backend_util.getSparseReshapeEmptyTensorZeroOutputDimErrorMessage());
   }
   if (unknownIndex !== -1) {
-    if (product <= 0) {
-      throw new Error(
-          backend_util.getSparseReshapeEmptyTensorZeroOutputDimErrorMessage());
-    }
-    const missing = Math.trunc(denseSize / product);
-    if (product * missing !== denseSize) {
-      throw new Error(
-          backend_util.getSparseReshapeInputOutputMultipleErrorMessage(
-              inputShape, outputShape));
-    }
-
-    outputShape[unknownIndex] = missing;
+    outputShape[unknownIndex] =
+        inferSparseDimension(denseSize, product, inputShape, outputShape);
   }
   const outputSize = util.sizeFromShape(outputShape);
   if (outputSize !== denseSize) {
@@ -104,4 +96,16 @@ export function sparseReshapeImpl(
     }
   }
   return [newIndices, [nnz, outputRank], outputShape];
+}
+
+function inferSparseDimension(
+    denseSize: number, product: number, inputShape: number[],
+    outputShape: number[]): number {
+  const missing = Math.trunc(denseSize / product);
+  if (product * missing !== denseSize) {
+    throw new Error(
+        backend_util.getSparseReshapeInputOutputMultipleErrorMessage(
+            inputShape, outputShape));
+  }
+  return missing;
 }

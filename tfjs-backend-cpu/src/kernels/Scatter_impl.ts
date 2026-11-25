@@ -44,9 +44,11 @@ scatterImpl<R extends Rank, D extends 'float32'|'int32'|'bool'|'string'>(
       buffer(flattenShape, updates.dtype);
   if (typeof defaultValue === 'string') {
     (outBuf.values as string[]).fill(defaultValue);
-  } else if (typeof defaultValue === 'number') {
+  }
+  if (typeof defaultValue === 'number') {
     (outBuf.values as TypedArray).fill(defaultValue);
-  } else if (typeof defaultValue === 'boolean') {
+  }
+  if (typeof defaultValue === 'boolean') {
     (outBuf.values as TypedArray).fill(+defaultValue);
   }
 

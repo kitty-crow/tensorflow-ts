@@ -65,7 +65,9 @@ function broadcastTo_<R extends Rank>(
   for (let i = shape.length - 1; i >= 0; i--) {
     if (inputShape[i] === shape[i]) {
       reps[i] = 1;
-    } else if (input.shape[i] !== 1) {
+      continue;
+    }
+    if (input.shape[i] !== 1) {
       throw new Error(
           `broadcastTo(): [${xShape}] cannot be broadcast to [${shape}].`);
     }

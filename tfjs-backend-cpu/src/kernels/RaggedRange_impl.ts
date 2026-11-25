@@ -70,15 +70,11 @@ export function raggedRangeImpl(
     if (delta === 0) {
       throw new Error('Requires delta != 0');
     }
-    let size: number;  // The number of elements in the specified range.
-    if (((delta > 0) && (limit < start)) || ((delta < 0) && (limit > start))) {
-      size = 0;
-    } else {
-      size = Math.ceil(Math.abs((limit - start) / delta));
-
-      if (size > INT32_MAX) {
-        throw new Error(`Requires ((limit - start) / delta) <= ${INT32_MAX}`);
-      }
+    const emptyRange = (delta > 0 && limit < start) ||
+        (delta < 0 && limit > start);
+    const size = emptyRange ? 0 : Math.ceil(Math.abs((limit - start) / delta));
+    if (size > INT32_MAX) {
+      throw new Error(`Requires ((limit - start) / delta) <= ${INT32_MAX}`);
     }
     rtNestedSplits[row + 1] = rtNestedSplits[row] + size;
   }

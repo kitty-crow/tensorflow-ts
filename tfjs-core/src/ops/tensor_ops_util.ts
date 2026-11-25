@@ -25,22 +25,16 @@ import {assert, assertNonNegativeIntegerDimensions, flatten, inferDtype, isTyped
 export function makeTensor(
     values: TensorLike|WebGLData|WebGPUData, shape: number[],
     inferredShape: number[], dtype?: DataType): Tensor {
-  if (dtype == null) {
-    dtype = inferDtype(values);
-  } else if (dtype === 'complex64') {
+  if (dtype === 'complex64') {
     throw new Error(
         `Cannot construct a complex64 tensor directly. ` +
         `Please use tf.complex(real, imag).`);
   }
 
+  dtype = dtype ?? inferDtype(values);
+
   if (isWebGPUData(values) || isWebGLData(values)) {
-    if (dtype !== 'float32' && dtype !== 'int32') {
-      throw new Error(
-          `Creating tensor from GPU data only supports ` +
-          `'float32'|'int32' dtype, while the dtype is ${dtype}.`);
-    }
-    return ENGINE.backend.createTensorFromGPUData(
-        values, shape || inferredShape, dtype);
+    return makeTensorFromGPUData(values, shape || inferredShape, dtype);
   }
 
   if (!isTypedArray(values) && !Array.isArray(values) &&
@@ -84,4 +78,14 @@ export function makeTensor(
       toTypedArray(values, dtype) :
       flatten(values as string[], [], true) as string[];
   return ENGINE.makeTensor(values as TypedArray, shape, dtype);
+}
+
+function makeTensorFromGPUData(
+    values: WebGLData|WebGPUData, shape: number[], dtype: DataType): Tensor {
+  if (dtype !== 'float32' && dtype !== 'int32') {
+    throw new Error(
+        `Creating tensor from GPU data only supports ` +
+        `'float32'|'int32' dtype, while the dtype is ${dtype}.`);
+  }
+  return ENGINE.backend.createTensorFromGPUData(values, shape, dtype);
 }

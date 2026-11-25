@@ -100,17 +100,6 @@ export function validateInput(
         `Output rank must be greater or equal to 1, but got shape: ${shape}`);
   }
 
-  if (shape.length === 0) {
-    if (indices.size === 0) {
-      throw new Error(`Indices specified for empty output. indices shape: ${
-          indices.shape}`);
-    }
-    if (updates.size === 0) {
-      throw new Error(`Updates specified for empty output. updates shape: ${
-          updates.shape}`);
-    }
-  }
-
   validateUpdateShape(shape, indices, updates);
 }
 

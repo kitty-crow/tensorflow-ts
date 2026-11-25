@@ -64,13 +64,10 @@ export function bincountReduceImpl<R extends Rank>(
 
       if (binaryOutput) {
         outBuf.set(1, i, value);
-      } else {
-        if (weightsBuf.size > 0) {
-          outBuf.set(outBuf.get(i, value) + weightsBuf.get(i, j), i, value);
-        } else {
-          outBuf.set(outBuf.get(i, value) + 1, i, value);
-        }
+        continue;
       }
+      const weight = weightsBuf.size > 0 ? weightsBuf.get(i, j) : 1;
+      outBuf.set(outBuf.get(i, value) + weight, i, value);
     }
   }
 

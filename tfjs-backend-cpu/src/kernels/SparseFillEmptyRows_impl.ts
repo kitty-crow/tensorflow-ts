@@ -30,12 +30,12 @@ export function sparseFillEmptyRowsImpl(
 
   const rank = indicesShape[1];
 
+  if (denseRows === 0 && indicesCount !== 0) {
+    throw new Error(
+        backend_util.getSparseFillEmptyRowsIndicesDenseShapeMismatch(
+            indicesCount));
+  }
   if (denseRows === 0) {
-    if (indicesCount !== 0) {
-      throw new Error(
-          backend_util.getSparseFillEmptyRowsIndicesDenseShapeMismatch(
-              indicesCount));
-    }
     const outputIndices = util.getArrayFromDType(indicesDType, 0) as TypedArray;
     const outputValues = util.getArrayFromDType(valuesDType, 0) as TypedArray;
     return [
@@ -93,49 +93,48 @@ export function sparseFillEmptyRowsImpl(
       outputIndices, [indicesCount, rank], outputValues, emptyRowIndicator,
       reverseIndexMap
     ];
-  } else {
-    const fullIndicesCount = csrOffset[denseRows - 1];
-    const outputIndices =
-        util.getArrayFromDType(indicesDType, fullIndicesCount * rank) as
-        TypedArray;
-    const outputValues =
-        util.getArrayFromDType(valuesDType, fullIndicesCount) as TypedArray;
-    const filledCount: number[] = new Array(denseRows).fill(0);
-
-    // Fill in values for rows that are not missing
-    for (let i = 0; i < indicesCount; ++i) {
-      // indices is a 2d tensor with shape of [N, rank]
-      const row = indices[i * rank];
-      const offset = filledCount[row];
-      const outputI = ((row === 0) ? 0 : csrOffset[row - 1]) + offset;
-      filledCount[row]++;  // Increment the filled count for this row.
-      for (let j = 0; j < rank; ++j) {
-        // indices and outputIndices are 2d tensors with shape of [N, rank]
-        outputIndices[outputI * rank + j] = indices[i * rank + j];
-      }
-      outputValues[outputI] = values[i];
-      // We'll need this reverse index map to backprop correctly.
-      reverseIndexMap[i] = outputI;
-    }
-
-    // Fill in values for rows that are missing
-    for (let row = 0; row < denseRows; ++row) {
-      const rowCount = filledCount[row];
-      if (rowCount === 0) {  // We haven't filled this row
-        const startingIndex = (row === 0) ? 0 : csrOffset[row - 1];
-        // Remaining index values were set to zero already.
-        // Just need to set the row index in the right location.
-        // outputIndices is a 2d tensor with shape of [N, rank]
-        outputIndices[startingIndex * rank + 0] = row;
-        for (let col = 1; col < rank; ++col) {
-          outputIndices[startingIndex * rank + col] = 0;
-        }
-        outputValues[startingIndex] = defaultValue;
-      }
-    }
-    return [
-      outputIndices, [fullIndicesCount, rank], outputValues, emptyRowIndicator,
-      reverseIndexMap
-    ];
   }
+  const fullIndicesCount = csrOffset[denseRows - 1];
+  const outputIndices =
+      util.getArrayFromDType(indicesDType, fullIndicesCount * rank) as
+      TypedArray;
+  const outputValues =
+      util.getArrayFromDType(valuesDType, fullIndicesCount) as TypedArray;
+  const filledCount: number[] = new Array(denseRows).fill(0);
+
+  // Fill in values for rows that are not missing
+  for (let i = 0; i < indicesCount; ++i) {
+    // indices is a 2d tensor with shape of [N, rank]
+    const row = indices[i * rank];
+    const offset = filledCount[row];
+    const outputI = ((row === 0) ? 0 : csrOffset[row - 1]) + offset;
+    filledCount[row]++;  // Increment the filled count for this row.
+    for (let j = 0; j < rank; ++j) {
+      // indices and outputIndices are 2d tensors with shape of [N, rank]
+      outputIndices[outputI * rank + j] = indices[i * rank + j];
+    }
+    outputValues[outputI] = values[i];
+    // We'll need this reverse index map to backprop correctly.
+    reverseIndexMap[i] = outputI;
+  }
+
+  // Fill in values for rows that are missing
+  for (let row = 0; row < denseRows; ++row) {
+    const rowCount = filledCount[row];
+    if (rowCount === 0) {  // We haven't filled this row
+      const startingIndex = (row === 0) ? 0 : csrOffset[row - 1];
+      // Remaining index values were set to zero already.
+      // Just need to set the row index in the right location.
+      // outputIndices is a 2d tensor with shape of [N, rank]
+      outputIndices[startingIndex * rank + 0] = row;
+      for (let col = 1; col < rank; ++col) {
+        outputIndices[startingIndex * rank + col] = 0;
+      }
+      outputValues[startingIndex] = defaultValue;
+    }
+  }
+  return [
+    outputIndices, [fullIndicesCount, rank], outputValues, emptyRowIndicator,
+    reverseIndexMap
+  ];
 }

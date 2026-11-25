@@ -37,16 +37,13 @@ export const softplus = unaryKernelFunc(Softplus, (xi) => {
   const tooSmall = xi < threshold;
 
   const expX = Math.exp(xi);
-  let result;
-
   if (tooSmall) {
-    result = expX;
-  } else if (tooLarge) {
-    result = xi;
-  } else {
-    result = Math.log(1.0 + expX);
+    return expX;
   }
-  return result;
+  if (tooLarge) {
+    return xi;
+  }
+  return Math.log(1.0 + expX);
 });
 
 export const softplusConfig: KernelConfig = {
