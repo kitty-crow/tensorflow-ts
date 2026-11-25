@@ -60,17 +60,16 @@ export function combineRaggedTensorToTensorShapes(
         outputShape[outputShape.length - valueShape.length + i];
     const outputShapeDim = outputShape[outputShapeDimIndex];
 
-    if (!(valueDim >= 0)) continue;
-    {
-      if (outputShapeDim >= 0) {
-        if (outputShapeDim !== valueDim) {
-          throw new Error(`rt input.shape and shape=${
-              shape} are incompatible: rt input.shape[${i + raggedRank}] = ${
-              valueDim} but shape[${i + raggedRank}] = ${outputShapeDim}`);
-        }
-      } else {
-        outputShape[outputShapeDimIndex] = valueDim;
-      }
+    if (!(valueDim >= 0)) {
+      continue;
+    }
+    if (outputShapeDim >= 0 && outputShapeDim !== valueDim) {
+      throw new Error(`rt input.shape and shape=${
+          shape} are incompatible: rt input.shape[${i + raggedRank}] = ${
+          valueDim} but shape[${i + raggedRank}] = ${outputShapeDim}`);
+    }
+    if (!(outputShapeDim >= 0)) {
+      outputShape[outputShapeDimIndex] = valueDim;
     }
   }
   return outputShape;

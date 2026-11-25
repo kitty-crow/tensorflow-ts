@@ -33,17 +33,16 @@ export function getNoiseShape(x: Tensor, noiseShape?: number[]): number[] {
   if (util.arraysEqual(x.shape, noiseShape)) {
     return noiseShape;
   }
-  if (x.shape.length === noiseShape.length) {
-    const newDimension: number[] = [];
-    for (let i = 0; i < x.shape.length; i++) {
-      if (noiseShape[i] == null && x.shape[i] != null) {
-        newDimension.push(x.shape[i]);
-      } else {
-        newDimension.push(noiseShape[i]);
-      }
-    }
-    return newDimension;
+  if (x.shape.length !== noiseShape.length) {
+    return noiseShape;
   }
-
-  return noiseShape;
+  const newDimension: number[] = [];
+  for (let i = 0; i < x.shape.length; i++) {
+    if (noiseShape[i] == null && x.shape[i] != null) {
+      newDimension.push(x.shape[i]);
+    } else {
+      newDimension.push(noiseShape[i]);
+    }
+  }
+  return newDimension;
 }

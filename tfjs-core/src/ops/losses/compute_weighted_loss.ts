@@ -57,26 +57,23 @@ function computeWeightedLoss_<T extends Tensor, O extends Tensor>(
   if (reduction === Reduction.SUM) {
     return sum(weightedLoss);
   }
+  if (reduction === Reduction.MEAN && $weights == null) {
+    return mean(weightedLoss);
+  }
   if (reduction === Reduction.MEAN) {
-    if ($weights == null) {
-      return mean(weightedLoss);
-    } else {
-      const broadcastFactor = $losses.size / $weights.size;
-      const result = div(sum(weightedLoss), sum($weights));
-      return broadcastFactor > 1 ? div(result, scalar(broadcastFactor)) :
-                                   result as O;
-    }
+    const broadcastFactor = $losses.size / $weights.size;
+    const result = div(sum(weightedLoss), sum($weights));
+    return broadcastFactor > 1 ? div(result, scalar(broadcastFactor)) :
+                                 result as O;
+  }
+  if (reduction === Reduction.SUM_BY_NONZERO_WEIGHTS && $weights == null) {
+    return div(sum(weightedLoss), scalar($losses.size));
   }
   if (reduction === Reduction.SUM_BY_NONZERO_WEIGHTS) {
-    if ($weights == null) {
-      return div(sum(weightedLoss), scalar($losses.size));
-    } else {
-      const broadcastedWeights = mul($weights, ones($losses.shape));
-
-      const numNonZeros =
-          cast(sum(notEqual(broadcastedWeights, scalar(0))), 'float32');
-      return div(sum(weightedLoss), numNonZeros);
-    }
+    const broadcastedWeights = mul($weights, ones($losses.shape));
+    const numNonZeros =
+        cast(sum(notEqual(broadcastedWeights, scalar(0))), 'float32');
+    return div(sum(weightedLoss), numNonZeros);
   }
 
   throw Error(`Unknown reduction: ${reduction}`);

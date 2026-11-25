@@ -547,7 +547,9 @@ export function sliceInfo(
     const gatherIndex = denseSpec.finalShapeGatherIndices[denseDim];
     if (gatherIndex >= 0) {
       finalShape.push(processingShape[gatherIndex]);
-    } else if (gatherIndex === NEW_AXIS) {
+      continue;
+    }
+    if (gatherIndex === NEW_AXIS) {
       finalShape.push(1);
     }
   }

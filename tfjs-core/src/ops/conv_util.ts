@@ -478,7 +478,9 @@ function getPadAndOutInfo(
         [inHeight, inWidth], filterHeight, strideHeight, pad, roundingMode);
     outHeight = outShape[0];
     outWidth = outShape[1];
-  } else if (pad === 'same') {
+    return {padInfo, outHeight, outWidth};
+  }
+  if (pad === 'same') {
     outHeight = Math.ceil(inHeight / strideHeight);
     outWidth = Math.ceil(inWidth / strideWidth);
     const padAlongHeight =
@@ -490,11 +492,15 @@ function getPadAndOutInfo(
     const left = Math.floor(padAlongWidth / 2);
     const right = padAlongWidth - left;
     padInfo = {top, bottom, left, right, type: 'SAME'};
-  } else if (pad === 'valid') {
+    return {padInfo, outHeight, outWidth};
+  }
+  if (pad === 'valid') {
     padInfo = {top: 0, bottom: 0, left: 0, right: 0, type: 'VALID'};
     outHeight = Math.ceil((inHeight - filterHeight + 1) / strideHeight);
     outWidth = Math.ceil((inWidth - filterWidth + 1) / strideWidth);
-  } else if (typeof pad === 'object') {
+    return {padInfo, outHeight, outWidth};
+  }
+  if (typeof pad === 'object') {
     const top = dataFormat === 'channelsLast' ? pad[1][0] : pad[2][0];
     const bottom = dataFormat === 'channelsLast' ? pad[1][1] : pad[2][1];
     const left = dataFormat === 'channelsLast' ? pad[2][0] : pad[3][0];
@@ -508,10 +514,9 @@ function getPadAndOutInfo(
         roundingMode);
     outWidth = round(
         (inWidth - filterWidth + left + right) / strideWidth + 1, roundingMode);
-  } else {
-    throw Error(`Unknown padding parameter: ${pad}`);
+    return {padInfo, outHeight, outWidth};
   }
-  return {padInfo, outHeight, outWidth};
+  throw Error(`Unknown padding parameter: ${pad}`);
 }
 
 function get3DPadAndOutInfo(
@@ -551,7 +556,9 @@ function get3DPadAndOutInfo(
     outDepth = outShape[0];
     outHeight = outShape[1];
     outWidth = outShape[2];
-  } else if (pad === 'same') {
+    return {padInfo, outDepth, outHeight, outWidth};
+  }
+  if (pad === 'same') {
     outDepth = Math.ceil(inDepth / strideDepth);
     outHeight = Math.ceil(inHeight / strideHeight);
     outWidth = Math.ceil(inWidth / strideWidth);
@@ -567,10 +574,9 @@ function get3DPadAndOutInfo(
     const right = padAlongWidth - left;
 
     padInfo = {top, bottom, left, right, front, back, type: 'SAME'};
-  } else {
-    throw Error(`Unknown padding parameter: ${pad}`);
+    return {padInfo, outDepth, outHeight, outWidth};
   }
-  return {padInfo, outDepth, outHeight, outWidth};
+  throw Error(`Unknown padding parameter: ${pad}`);
 }
 
 /**
@@ -664,7 +670,9 @@ export function checkPadOnDimRoundingMode(
           util.isInt(pad),
           () => `Error in ${opDesc}: pad must be an integer when using ` +
               `dimRoundingMode ${dimRoundingMode} but got pad ${pad}.`);
-    } else if (typeof pad === 'object') {
+      return;
+    }
+    if (typeof pad === 'object') {
       (pad as ExplicitPadding).forEach(p => {
         p.forEach(v => {
           util.assert(
@@ -673,8 +681,8 @@ export function checkPadOnDimRoundingMode(
                   `dimRoundingMode ${dimRoundingMode} but got pad ${v}.`);
         });
       });
-    } else {
-      throw Error(`Error in ${opDesc}: Unknown padding parameter: ${pad}`);
+      return;
     }
+    throw Error(`Error in ${opDesc}: Unknown padding parameter: ${pad}`);
   }
 }

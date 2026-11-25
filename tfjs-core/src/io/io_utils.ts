@@ -552,13 +552,14 @@ export function getModelArtifactsForJSONSync(
   if (modelJSON.trainingConfig != null) {
     modelArtifacts.trainingConfig = modelJSON.trainingConfig;
   }
-  if (modelJSON.weightsManifest != null) {
-    if (!weightSpecs) {
-      throw new Error('modelJSON has weightsManifest but weightSpecs is null');
-    }
-    if (!weightData) {
-      throw new Error('modelJSON has weightsManifest but weightData is null');
-    }
+  const hasWeightsManifest = modelJSON.weightsManifest != null;
+  if (hasWeightsManifest && !weightSpecs) {
+    throw new Error('modelJSON has weightsManifest but weightSpecs is null');
+  }
+  if (hasWeightsManifest && !weightData) {
+    throw new Error('modelJSON has weightsManifest but weightData is null');
+  }
+  if (hasWeightsManifest) {
     modelArtifacts.weightSpecs = weightSpecs;
     modelArtifacts.weightData = weightData;
   }

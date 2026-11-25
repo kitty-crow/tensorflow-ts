@@ -44,7 +44,9 @@ export const tileGradConfig: GradConfig = {
         for (let i = 0; i < reps[0]; ++i) {
           xGrad = add(xGrad, slice(dy, [i * shape[0]], [shape[0]]));
         }
-      } else if (x.rank === 2) {
+        return xGrad;
+      }
+      if (x.rank === 2) {
         assertArrayLength(shape, 2);
         assertArrayLength(reps, 2);
         for (let i = 0; i < reps[0]; ++i) {
@@ -54,7 +56,9 @@ export const tileGradConfig: GradConfig = {
                         ]));
           }
         }
-      } else if (x.rank === 3) {
+        return xGrad;
+      }
+      if (x.rank === 3) {
         assertArrayLength(shape, 3);
         assertArrayLength(reps, 3);
         for (let i = 0; i < reps[0]; ++i) {
@@ -68,7 +72,9 @@ export const tileGradConfig: GradConfig = {
             }
           }
         }
-      } else if (x.rank === 4) {
+        return xGrad;
+      }
+      if (x.rank === 4) {
         assertArrayLength(shape, 4);
         assertArrayLength(reps, 4);
         for (let i = 0; i < reps[0]; ++i) {
@@ -88,12 +94,11 @@ export const tileGradConfig: GradConfig = {
             }
           }
         }
-      } else {
-        throw new Error(
-            `Gradient for tile operation is not implemented for rank-` +
-            `${x.rank} tensors yet.`);
+        return xGrad;
       }
-      return xGrad;
+      throw new Error(
+          `Gradient for tile operation is not implemented for rank-` +
+          `${x.rank} tensors yet.`);
     };
     return {x: derX};
   },
