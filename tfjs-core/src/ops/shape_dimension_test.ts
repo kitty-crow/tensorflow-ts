@@ -63,6 +63,25 @@ describe('checked shape utility regressions', () => {
     expect(slice.isSliceContinous([5, 3], [0, 1], [5, 2])).toBe(false);
     expect(slice.isSliceContinous([], [], [])).toBe(true);
   });
+  it('preserves masked reverse slicing and ellipsis expansion', () => {
+    const reversed = slice.sliceInfo([4], [0], [0], [-1], 1, 1, 0, 0, 0);
+    expect(reversed.finalShape).toEqual([4]);
+    expect(reversed.begin).toEqual([3]);
+    expect(reversed.end).toEqual([-1]);
+    expect(reversed.strides).toEqual([-1]);
+    const ellipsis = slice.sliceInfo([2, 3], [0], [0], [1], 0, 0, 1, 0, 0);
+    expect(ellipsis.finalShape).toEqual([2, 3]);
+    expect(ellipsis.isIdentity).toBe(true);
+  });
+  it('preserves shrink axes and rejects zero strides', () => {
+    const shrink = slice.sliceInfo([2, 3], [1, 0], [0, 3], [1, 1],
+        0, 0, 0, 0, 1);
+    expect(shrink.finalShape).toEqual([3]);
+    expect(shrink.begin).toEqual([1, 0]);
+    expect(shrink.end).toEqual([2, 3]);
+    expect(() => slice.sliceInfo([4], [0], [4], [0], 0, 0, 0, 0, 0))
+        .toThrowError('strides[0] must be non-zero');
+  });
   it('rejects missing required slice coordinates', () => {
     expect(() => slice.computeOutShape([0], [], [1])).toThrowError();
     expect(() => slice.computeFlatOffset([1, 2], [])).toThrowError();

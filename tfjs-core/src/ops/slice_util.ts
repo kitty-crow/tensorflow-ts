@@ -95,11 +95,12 @@ export function assertParamsValid(
           `match the rank of the array (${inputRank}).`);
 
   for (let i = 0; i < inputRank; ++i) {
+    const extent = requiredDimension(begin, i) + requiredDimension(size, i);
+    const dimension = requiredDimension(input.shape, i);
     util.assert(
-        begin[i] + size[i] <= input.shape[i],
+        extent <= dimension,
         () => `Error in slice${inputRank}D: begin[${i}] + size[${i}] ` +
-            `(${begin[i] + size[i]}) would overflow input.shape[${i}] (${
-                  input.shape[i]})`);
+            `(${extent}) would overflow input.shape[${i}] (${dimension})`);
   }
 }
 
@@ -180,7 +181,7 @@ export function getNormalizedAxes(
       normalizedEnd = new Array<number>(inputRank),
       normalizedStrides = new Array<number>(inputRank);
   if (ellipsisAxes.length && numInterpolatedAxes > 0) {
-    const fullIndex = ellipsisAxes[0];
+    const fullIndex = requiredDimension(ellipsisAxes, 0);
 
     // The ellipsis applies to the masked index as well as any dimensions
     // that are interpolated.
@@ -285,7 +286,7 @@ export function startForAxis(
   }
 
   // Handle negative indices
-  const axisSize = inputShape[axis];
+  const axisSize = requiredDimension(inputShape, axis);
   if (start < 0) {
     start += axisSize;
   }
@@ -311,7 +312,7 @@ export function stopForAxis(
   }
 
   // Handle negative indices
-  const axisSize = inputShape[axis];
+  const axisSize = requiredDimension(inputShape, axis);
   if (stop < 0) {
     stop += axisSize;
   }
@@ -391,7 +392,7 @@ export function parseSliceParams(
           d === -1,
           () => `Negative size values should be exactly -1 but got ` +
               `${d} for the slice() size at index ${i}.`);
-      return x.shape[i] - begin_[i];
+      return requiredDimension(x.shape, i) - requiredDimension(begin_, i);
     }
   });
   return [begin_, size_];
@@ -471,11 +472,12 @@ export function sliceInfo(
   const finalShape: number[] = [];
 
   for (let i = 0; i < xShape.length; ++i) {
-    if (denseSpec.strides[i] === 0) {
+    const stride = requiredDimension(denseSpec.strides, i);
+    if (stride === 0) {
       throw Error(`strides[${i}] must be non-zero`);
     }
     const shrinkI = !!(denseSpec.shrinkAxisMask & (1 << i));
-    const dimI = xShape[i];
+    const dimI = requiredDimension(xShape, i);
     if (dimI === -1) {
       processingShape.push(shrinkI ? 1 : -1);
       continue;
@@ -484,15 +486,15 @@ export function sliceInfo(
     const masks =
         [denseSpec.beginMask & (1 << i), denseSpec.endMask & (1 << i)];
     const validRange = [
-      denseSpec.strides[i] > 0 ? 0 : -1,
-      denseSpec.strides[i] > 0 ? dimI : dimI - 1
+      stride > 0 ? 0 : -1,
+      stride > 0 ? dimI : dimI - 1
     ];
 
-    if (shrinkI && denseSpec.strides[i] <= 0) {
+    if (shrinkI && stride <= 0) {
       throw Error('only stride 1 allowed on non-range indexing.');
     }
 
-    isSimpleSlice = isSimpleSlice && (denseSpec.strides[i] === 1);
+    isSimpleSlice = isSimpleSlice && (stride === 1);
 
     const beginAndEndMasked =
         !!((denseSpec.beginMask & (1 << i)) && (denseSpec.endMask & (1 << i)));
@@ -503,38 +505,38 @@ export function sliceInfo(
         // particular foo[-1] produces sparseBegin = -1, sparseEnd = 0.
         // and canonical puts these to n-1 and 0, which implies a degenerate
         // interval. Fortunately, it is now safe to re-create end as begin + 1.
-        const xFwd = denseSpec.begin[i] < 0 ? dimI + denseSpec.begin[i] :
-                                              denseSpec.begin[i];
+        const beginIndex = requiredDimension(denseSpec.begin, i);
+        const xFwd = beginIndex < 0 ? dimI + beginIndex : beginIndex;
         denseSpec.begin[i] = xFwd;
-        denseSpec.end[i] = denseSpec.begin[i] + 1;
+        denseSpec.end[i] = xFwd + 1;
         if (xFwd < 0 || xFwd >= dimI) {
-          throw Error(`slice index ${denseSpec.begin[i]} of dimension ${
+          throw Error(`slice index ${xFwd} of dimension ${
               i} out of bounds.`);
         }
       } else {
         denseSpec.begin[i] = canonical(
-            denseSpec.begin[i], 0, denseSpec.strides[i], dimI, masks,
+            denseSpec.begin[i], 0, stride, dimI, masks,
             validRange);
         denseSpec.end[i] = canonical(
-            denseSpec.end[i], 1, denseSpec.strides[i], dimI, masks, validRange);
+            denseSpec.end[i], 1, stride, dimI, masks, validRange);
       }
       // Update optimization values
-      const takeAllInDimension = denseSpec.strides[i] === 1 &&
+      const takeAllInDimension = stride === 1 &&
           denseSpec.begin[i] === 0 && denseSpec.end[i] === dimI;
       isIdentity = isIdentity && takeAllInDimension;
       sliceDim0 = sliceDim0 &&
-          ((i === 0 && denseSpec.strides[i] === 1) || takeAllInDimension);
+          ((i === 0 && stride === 1) || takeAllInDimension);
     } else {
       isIdentity =
-          isIdentity && ((denseSpec.strides[i] === 1) && beginAndEndMasked);
+          isIdentity && ((stride === 1) && beginAndEndMasked);
       sliceDim0 = sliceDim0 &&
-          ((i === 0 && denseSpec.strides[i] === 1) || beginAndEndMasked);
+          ((i === 0 && stride === 1) || beginAndEndMasked);
     }
     // The intermediate Eigen shape uses -1 for an unknown dimension.
     const intervalLength = knownSliceInterval(
         denseSpec, i, shrinkI, beginAndEndMasked, dimI);
     processingShape.push(intervalLength === null ? -1 :
-        intervalElementCount(intervalLength, denseSpec.strides[i]));
+        intervalElementCount(intervalLength, stride));
   }
 
   // Step 4: Compute the final shape
@@ -544,9 +546,9 @@ export function sliceInfo(
   // This cannot be done earlier, because it depends on Step 3.
   for (let denseDim = 0; denseDim < denseSpec.finalShapeGatherIndices.length;
        ++denseDim) {
-    const gatherIndex = denseSpec.finalShapeGatherIndices[denseDim];
+    const gatherIndex = requiredDimension(denseSpec.finalShapeGatherIndices, denseDim);
     if (gatherIndex >= 0) {
-      finalShape.push(processingShape[gatherIndex]);
+      finalShape.push(requiredDimension(processingShape, gatherIndex));
       continue;
     }
     if (gatherIndex === NEW_AXIS) {
@@ -555,7 +557,7 @@ export function sliceInfo(
   }
 
   const finalShapeSparse = finalShape.filter(
-      (dim, i) => denseSpec.finalShapeGatherIndices[i] !== NEW_AXIS);
+      (dim, i) => requiredDimension(denseSpec.finalShapeGatherIndices, i) !== NEW_AXIS);
 
   return {
     finalShapeSparse,
@@ -577,14 +579,14 @@ function knownSliceInterval(
     dense: StridedSliceDenseSpec, axis: number, shrink: boolean,
     beginAndEndMasked: boolean, dimension: number): number|null {
   if (dense.beginValid && dense.endValid) {
-    return dense.end[axis] - dense.begin[axis];
+    return requiredDimension(dense.end, axis) - requiredDimension(dense.begin, axis);
   }
   if (shrink) {
     // A shrunk axis is always one element in the intermediate shape.
     return 1;
   }
   if (beginAndEndMasked && dimension >= 0) {
-    return dense.strides[axis] < 0 ? -dimension : dimension;
+    return requiredDimension(dense.strides, axis) < 0 ? -dimension : dimension;
   }
   return null;
 }
@@ -668,7 +670,7 @@ function appendDenseSliceAxis(
   if (sparse.end != null) {
     dense.end[fullIndex] = sparse.end[i];
   }
-  dense.strides[fullIndex] = sparse.strides[i];
+  dense.strides[fullIndex] = requiredDimension(sparse.strides, i);
   if (sparse.beginMask & (1 << i)) {
     dense.beginMask |= (1 << fullIndex);
   }
@@ -691,12 +693,12 @@ function appendDenseSliceAxis(
 
 function canonical(
     x: number, c: number, strideI: number, dimI: number, masks: number[],
-    validRange: number[]) {
-  if (masks[c]) {
-    return strideI > 0 ? validRange[c] : validRange[(c + 1) & 1];
-  } else {
-    const xFwd = x < 0 ? dimI + x : x;  // make negative indices positive
-    return xFwd < validRange[0] ? validRange[0] :
-                                  xFwd > validRange[1] ? validRange[1] : xFwd;
+    validRange: number[]): number {
+  if (requiredDimension(masks, c)) {
+    return requiredDimension(validRange, strideI > 0 ? c : (c + 1) & 1);
   }
+  const xFwd = x < 0 ? dimI + x : x;  // make negative indices positive
+  const lower = requiredDimension(validRange, 0);
+  const upper = requiredDimension(validRange, 1);
+  return xFwd < lower ? lower : xFwd > upper ? upper : xFwd;
 }
