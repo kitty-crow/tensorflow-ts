@@ -15,17 +15,15 @@
  * =============================================================================
  */
 
-import {ClipByValue, ClipByValueAttrs, ClipByValueInputs, KernelAttributes, KernelConfig, maximum, minimum, scalar, Tensor, tidy} from '@tensorflow/tfjs';
+import {ClipByValue, ClipByValueAttrs, ClipByValueInputs, KernelConfig, maximum, minimum, scalar, Tensor, tidy} from '@tensorflow/tfjs';
 
 export const clipByValueConfig: KernelConfig = {
   kernelName: ClipByValue,
   backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: ClipByValueInputs, attrs: KernelAttributes<ClipByValueAttrs>
-  }) => {
-    const {x} = args.inputs;
+  kernelFunc: (args) => {
+    const {x} = args.inputs as ClipByValueInputs;
     const {clipValueMin, clipValueMax} =
-        args.attrs;
+        args.attrs as unknown as ClipByValueAttrs;
 
     return tidy(() => {
       const xMin = minimum(x as Tensor, scalar(clipValueMax, x.dtype));
