@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Max, MaxAttrs, MaxInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Max, MaxAttrs, MaxInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {reduce} from '../kernel_utils/reduce';
 
 export function max(
-    args: {inputs: MaxInputs, backend: WebGPUBackend, attrs: MaxAttrs}):
+    args: {inputs: MaxInputs, backend: WebGPUBackend, attrs: KernelAttributes<MaxAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -33,5 +33,5 @@ export function max(
 export const maxConfig: KernelConfig = {
   kernelName: Max,
   backendName: 'webgpu',
-  kernelFunc: max as unknown as KernelFunc
+  kernelFunc: max
 };

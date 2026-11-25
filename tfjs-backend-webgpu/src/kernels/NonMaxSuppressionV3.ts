@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {kernel_impls, KernelConfig, KernelFunc, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs, TypedArray} from '@tensorflow/tfjs-core';
+import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs, TypedArray} from '@tensorflow/tfjs-core';
 import {WebGPUBackend} from '../backend_webgpu';
 
 export function nonMaxSuppressionV3(args: {
   inputs: NonMaxSuppressionV3Inputs,
   backend: WebGPUBackend,
-  attrs: NonMaxSuppressionV3Attrs
+  attrs: KernelAttributes<NonMaxSuppressionV3Attrs>
 }) {
   console.warn(
       'tf.nonMaxSuppression() in webgpu locks the UI thread. ' +
@@ -44,5 +44,5 @@ export function nonMaxSuppressionV3(args: {
 export const nonMaxSuppressionV3Config: KernelConfig = {
   kernelName: NonMaxSuppressionV3,
   backendName: 'webgpu',
-  kernelFunc: nonMaxSuppressionV3 as unknown as KernelFunc
+  kernelFunc: nonMaxSuppressionV3
 };

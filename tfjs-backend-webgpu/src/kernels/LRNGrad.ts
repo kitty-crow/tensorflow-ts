@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, LRNGrad, LRNGradAttrs, LRNGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, LRNGrad, LRNGradAttrs, LRNGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {LRNGradProgram} from '../lrn_grad_webgpu';
 
 export function lrnGrad(
-    args: {inputs: LRNGradInputs, backend: WebGPUBackend, attrs: LRNGradAttrs}):
+    args: {inputs: LRNGradInputs, backend: WebGPUBackend, attrs: KernelAttributes<LRNGradAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, y, dy} = inputs;
@@ -41,5 +41,5 @@ export function lrnGrad(
 export const lrnGradConfig: KernelConfig = {
   kernelName: LRNGrad,
   backendName: 'webgpu',
-  kernelFunc: lrnGrad as unknown as KernelFunc
+  kernelFunc: lrnGrad
 };

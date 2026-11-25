@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Step, StepAttrs, TensorInfo, UnaryInputs} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Step, StepAttrs, TensorInfo, UnaryInputs} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {UnaryOpType} from '../unary_op_util';
@@ -23,7 +23,7 @@ import {UnaryOpProgram} from '../unary_op_webgpu';
 
 export function step(
     {inputs, attrs, backend}:
-        {inputs: UnaryInputs, attrs: StepAttrs, backend: WebGPUBackend}):
+        {inputs: UnaryInputs, attrs: KernelAttributes<StepAttrs>, backend: WebGPUBackend}):
     TensorInfo {
   const {x} = inputs;
   const program =
@@ -35,5 +35,5 @@ export function step(
 export const stepConfig: KernelConfig = {
   kernelName: Step,
   backendName: 'webgpu',
-  kernelFunc: step as unknown as KernelFunc
+  kernelFunc: step
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Neg, NegInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, Neg, NegInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {negImplCPU} from '../kernel_utils/shared';
@@ -45,5 +45,5 @@ export function neg(args: {inputs: NegInputs, backend: WebGPUBackend}):
 export const negConfig: KernelConfig = {
   kernelName: Neg,
   backendName: 'webgpu',
-  kernelFunc: neg as unknown as KernelFunc
+  kernelFunc: neg
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, MaxPool3DGrad, MaxPool3DGradAttrs, MaxPool3DGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, MaxPool3DGrad, MaxPool3DGradAttrs, MaxPool3DGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {MaxPool3DBackpropProgram} from '../max_pool_backprop_webgpu';
@@ -24,7 +24,7 @@ import {Pool3DProgram} from '../pool_webgpu';
 export function maxPool3DGrad(args: {
   inputs: MaxPool3DGradInputs,
   backend: WebGPUBackend,
-  attrs: MaxPool3DGradAttrs
+  attrs: KernelAttributes<MaxPool3DGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input} = inputs;
@@ -98,5 +98,5 @@ export function maxPool3DGrad(args: {
 export const maxPool3DGradConfig: KernelConfig = {
   kernelName: MaxPool3DGrad,
   backendName: 'webgpu',
-  kernelFunc: maxPool3DGrad as unknown as KernelFunc
+  kernelFunc: maxPool3DGrad
 };

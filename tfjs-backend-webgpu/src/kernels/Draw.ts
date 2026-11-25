@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 import {Draw, DrawAttrs, DrawInputs,} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {DrawProgram} from '../draw_webgpu';
 
 export function draw(
-    args: {inputs: DrawInputs, backend: WebGPUBackend, attrs: DrawAttrs}):
+    args: {inputs: DrawInputs, backend: WebGPUBackend, attrs: KernelAttributes<DrawAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {image} = inputs;
@@ -81,5 +81,5 @@ export function draw(
 export const drawConfig: KernelConfig = {
   kernelName: Draw,
   backendName: 'webgpu',
-  kernelFunc: draw as unknown as KernelFunc
+  kernelFunc: draw
 };

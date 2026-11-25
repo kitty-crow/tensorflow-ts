@@ -42,6 +42,32 @@ describe('kernel signature and saved-tensor contracts', () => {
     expect(config.kernelFunc).toBe(kernel);
   });
 
+  it('keeps optional attributes and multiple outputs without a wrapper', () => {
+    interface DispatchAttrs {
+      axis: number;
+      keepDims?: boolean;
+    }
+    const input: TensorInfo = {dataId: {}, shape: [2], dtype: 'float32'};
+    const outputs: TensorInfo[] = [input, input];
+    const attrs: KernelAttributes<DispatchAttrs> = {axis: 0};
+    const kernel = (params: {
+      inputs: Record<'x', TensorInfo>, backend: {},
+      attrs: KernelAttributes<DispatchAttrs>
+    }): TensorInfo[] => {
+      expect(params.inputs.x).toBe(input);
+      expect(params.attrs).toBe(attrs);
+      expect('keepDims' in params.attrs).toBeFalse();
+      return outputs;
+    };
+    const config: KernelConfig = {
+      kernelName: 'OptionalDispatchTest', backendName: 'test',
+      kernelFunc: kernel
+    };
+    expect(config.kernelFunc).toBe(kernel);
+    expect(config.kernelFunc({inputs: {x: input}, backend: {}, attrs}))
+        .toBe(outputs);
+  });
+
   it('rejects missing or surplus saved tensors before gradient dispatch', () => {
     const tensor = new Tensor<Rank.R1>([1], 'float32', {}, 0);
     expect(() => maximumGradConfig.gradFunc(tensor, [tensor], {}))

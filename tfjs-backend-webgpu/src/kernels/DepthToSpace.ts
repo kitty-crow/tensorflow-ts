@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {DepthToSpaceProgram} from '../depth_to_space_webgpu';
@@ -23,7 +23,7 @@ import {DepthToSpaceProgram} from '../depth_to_space_webgpu';
 export function depthToSpace(args: {
   inputs: DepthToSpaceInputs,
   backend: WebGPUBackend,
-  attrs: DepthToSpaceAttrs
+  attrs: KernelAttributes<DepthToSpaceAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -53,5 +53,5 @@ export function depthToSpace(args: {
 export const depthToSpaceConfig: KernelConfig = {
   kernelName: DepthToSpace,
   backendName: 'webgpu',
-  kernelFunc: depthToSpace as unknown as KernelFunc
+  kernelFunc: depthToSpace
 };

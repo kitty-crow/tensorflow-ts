@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, SpaceToBatchND, SpaceToBatchNDAttrs, SpaceToBatchNDInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, SpaceToBatchND, SpaceToBatchNDAttrs, SpaceToBatchNDInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {SpaceToBatchNDProgram} from '../space_to_batchND_webgpu';
@@ -25,7 +25,7 @@ import {reshape} from './Reshape';
 export const spaceToBatchND = (args: {
   inputs: SpaceToBatchNDInputs,
   backend: WebGPUBackend,
-  attrs: SpaceToBatchNDAttrs
+  attrs: KernelAttributes<SpaceToBatchNDAttrs>
 }): TensorInfo => {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -75,5 +75,5 @@ export const spaceToBatchND = (args: {
 export const spaceToBatchNDConfig: KernelConfig = {
   kernelName: SpaceToBatchND,
   backendName: 'webgpu',
-  kernelFunc: spaceToBatchND as unknown as KernelFunc
+  kernelFunc: spaceToBatchND
 };

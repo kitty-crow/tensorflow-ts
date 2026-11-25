@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, MaxPoolGrad, MaxPoolGradAttrs, MaxPoolGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, MaxPoolGrad, MaxPoolGradAttrs, MaxPoolGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {MaxPool2DBackpropProgram} from '../max_pool_backprop_webgpu';
@@ -25,7 +25,7 @@ import {assertNotComplex} from '../webgpu_util';
 export function maxPoolGrad(args: {
   inputs: MaxPoolGradInputs,
   backend: WebGPUBackend,
-  attrs: MaxPoolGradAttrs
+  attrs: KernelAttributes<MaxPoolGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input, output} = inputs;
@@ -76,5 +76,5 @@ export function maxPoolGrad(args: {
 export const maxPoolGradConfig: KernelConfig = {
   kernelName: MaxPoolGrad,
   backendName: 'webgpu',
-  kernelFunc: maxPoolGrad as unknown as KernelFunc
+  kernelFunc: maxPoolGrad
 };

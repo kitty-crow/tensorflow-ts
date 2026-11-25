@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Imag, ImagInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {Imag, ImagInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {identity} from './Identity';
@@ -32,5 +32,5 @@ export function imag(args: {inputs: ImagInputs, backend: WebGPUBackend}):
 export const imagConfig: KernelConfig = {
   kernelName: Imag,
   backendName: 'webgpu',
-  kernelFunc: imag as unknown as KernelFunc
+  kernelFunc: imag
 };

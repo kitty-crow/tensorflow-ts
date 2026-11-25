@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import * as tf from '@tensorflow/tfjs-core';
-import {BinaryInputs, Cast, CastAttrs, CastInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {BinaryInputs, Cast, CastAttrs, CastInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {castImplCPU} from '../kernel_utils/shared';
@@ -28,7 +28,7 @@ import {real} from './Real';
 import {int} from '../kernel_utils/int';
 
 export function cast(
-    args: {inputs: CastInputs, backend: WebGPUBackend, attrs: CastAttrs}):
+    args: {inputs: CastInputs, backend: WebGPUBackend, attrs: KernelAttributes<CastAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -96,5 +96,5 @@ export function cast(
 export const castConfig: KernelConfig = {
   kernelName: Cast,
   backendName: 'webgpu',
-  kernelFunc: cast as unknown as KernelFunc
+  kernelFunc: cast
 };

@@ -14,13 +14,13 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, KernelConfig, KernelFunc, MaxPool, MaxPoolAttrs, MaxPoolInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, MaxPool, MaxPoolAttrs, MaxPoolInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {poolImpl} from './Pool_impl';
 
 export function maxPool(
-    args: {inputs: MaxPoolInputs, backend: WebGPUBackend, attrs: MaxPoolAttrs}):
+    args: {inputs: MaxPoolInputs, backend: WebGPUBackend, attrs: KernelAttributes<MaxPoolAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -36,5 +36,5 @@ export function maxPool(
 export const maxPoolConfig: KernelConfig = {
   kernelName: MaxPool,
   backendName: 'webgpu',
-  kernelFunc: maxPool as unknown as KernelFunc
+  kernelFunc: maxPool
 };

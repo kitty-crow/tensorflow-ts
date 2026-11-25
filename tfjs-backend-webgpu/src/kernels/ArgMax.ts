@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {ArgMax, ArgMaxAttrs, ArgMaxInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {ArgMax, ArgMaxAttrs, ArgMaxInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {ArgMinMaxProgram} from '../argminmax_webgpu';
 import {WebGPUBackend} from '../backend_webgpu';
@@ -23,7 +23,7 @@ import {WebGPUBackend} from '../backend_webgpu';
 import {transpose} from './Transpose';
 
 export function argMax(
-    args: {inputs: ArgMaxInputs, backend: WebGPUBackend, attrs: ArgMaxAttrs}):
+    args: {inputs: ArgMaxInputs, backend: WebGPUBackend, attrs: KernelAttributes<ArgMaxAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -50,5 +50,5 @@ export function argMax(
 export const argMaxConfig: KernelConfig = {
   kernelName: ArgMax,
   backendName: 'webgpu',
-  kernelFunc: argMax as unknown as KernelFunc
+  kernelFunc: argMax
 };

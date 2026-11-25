@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Complex, ComplexInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {Complex, ComplexInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {identity} from './Identity';
@@ -48,5 +48,5 @@ export function complex(args: {inputs: ComplexInputs, backend: WebGPUBackend}):
 export const complexConfig: KernelConfig = {
   kernelName: Complex,
   backendName: 'webgpu',
-  kernelFunc: complex as unknown as KernelFunc
+  kernelFunc: complex
 };

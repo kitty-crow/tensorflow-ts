@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Softmax, SoftmaxAttrs, SoftmaxInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Softmax, SoftmaxAttrs, SoftmaxInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {SoftmaxProgram} from '../softmax_webgpu';
@@ -23,7 +23,7 @@ import {SoftmaxProgram} from '../softmax_webgpu';
 import {reshape} from './Reshape';
 
 export function softmax(
-    args: {inputs: SoftmaxInputs, backend: WebGPUBackend, attrs: SoftmaxAttrs}):
+    args: {inputs: SoftmaxInputs, backend: WebGPUBackend, attrs: KernelAttributes<SoftmaxAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {logits} = inputs;
@@ -50,5 +50,5 @@ export function softmax(
 export const softmaxConfig: KernelConfig = {
   kernelName: Softmax,
   backendName: 'webgpu',
-  kernelFunc: softmax as unknown as KernelFunc
+  kernelFunc: softmax
 };

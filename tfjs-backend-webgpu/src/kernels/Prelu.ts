@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Prelu, PreluInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, Prelu, PreluInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
@@ -34,5 +34,5 @@ export function prelu(args: {inputs: PreluInputs, backend: WebGPUBackend}):
 export const preluConfig: KernelConfig = {
   kernelName: Prelu,
   backendName: 'webgpu',
-  kernelFunc: prelu as unknown as KernelFunc
+  kernelFunc: prelu
 };

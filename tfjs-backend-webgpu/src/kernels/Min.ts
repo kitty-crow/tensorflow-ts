@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Min, MinAttrs, MinInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Min, MinAttrs, MinInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {reduce} from '../kernel_utils/reduce';
 
 export function min(
-    args: {inputs: MinInputs, backend: WebGPUBackend, attrs: MinAttrs}):
+    args: {inputs: MinInputs, backend: WebGPUBackend, attrs: KernelAttributes<MinAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -33,5 +33,5 @@ export function min(
 export const minConfig: KernelConfig = {
   kernelName: Min,
   backendName: 'webgpu',
-  kernelFunc: min as unknown as KernelFunc
+  kernelFunc: min
 };

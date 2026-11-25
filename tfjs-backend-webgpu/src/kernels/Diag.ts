@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Diag, DiagInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {Diag, DiagInputs, KernelConfig, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {DiagProgram} from '../diag_webgpu';
@@ -45,5 +45,5 @@ export function diag(args: {inputs: DiagInputs, backend: WebGPUBackend}):
 export const diagConfig: KernelConfig = {
   kernelName: Diag,
   backendName: 'webgpu',
-  kernelFunc: diag as unknown as KernelFunc
+  kernelFunc: diag
 };

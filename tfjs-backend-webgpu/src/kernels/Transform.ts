@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo, Transform, TransformAttrs, TransformInputs} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, TensorInfo, Transform, TransformAttrs, TransformInputs} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {TransformProgram} from '../transform_webgpu';
@@ -23,7 +23,7 @@ import {TransformProgram} from '../transform_webgpu';
 export function transform(args: {
   inputs: TransformInputs,
   backend: WebGPUBackend,
-  attrs: TransformAttrs
+  attrs: KernelAttributes<TransformAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {image, transforms} = inputs;
@@ -67,5 +67,5 @@ export function transform(args: {
 export const transformConfig: KernelConfig = {
   kernelName: Transform,
   backendName: 'webgpu',
-  kernelFunc: transform as unknown as KernelFunc
+  kernelFunc: transform
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, Conv2DBackpropFilter, Conv2DBackpropFilterAttrs, Conv2DBackpropFilterInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, Conv2DBackpropFilter, Conv2DBackpropFilterAttrs, Conv2DBackpropFilterInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {Conv2DDerFilterProgram} from '../conv_backprop_webgpu';
@@ -23,7 +23,7 @@ import {Conv2DDerFilterProgram} from '../conv_backprop_webgpu';
 export function conv2DBackpropFilter(args: {
   inputs: Conv2DBackpropFilterInputs,
   backend: WebGPUBackend,
-  attrs: Conv2DBackpropFilterAttrs
+  attrs: KernelAttributes<Conv2DBackpropFilterAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, dy} = inputs;
@@ -51,5 +51,5 @@ export function conv2DBackpropFilter(args: {
 export const conv2DBackpropFilterConfig: KernelConfig = {
   kernelName: Conv2DBackpropFilter,
   backendName: 'webgpu',
-  kernelFunc: conv2DBackpropFilter as unknown as KernelFunc
+  kernelFunc: conv2DBackpropFilter
 };

@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Sum, SumAttrs, SumInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Sum, SumAttrs, SumInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {reduce} from '../kernel_utils/reduce';
 
 export function sum(
-    args: {inputs: SumInputs, backend: WebGPUBackend, attrs: SumAttrs}):
+    args: {inputs: SumInputs, backend: WebGPUBackend, attrs: KernelAttributes<SumAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -33,5 +33,5 @@ export function sum(
 export const sumConfig: KernelConfig = {
   kernelName: Sum,
   backendName: 'webgpu',
-  kernelFunc: sum as unknown as KernelFunc
+  kernelFunc: sum
 };

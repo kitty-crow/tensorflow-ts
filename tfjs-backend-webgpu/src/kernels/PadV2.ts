@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, PadV2, PadV2Attrs, PadV2Inputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, PadV2, PadV2Attrs, PadV2Inputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {identity} from './Identity';
@@ -25,7 +25,7 @@ import {fill} from './Fill';
 export const padV2 =
     (args: {inputs: PadV2Inputs,
             backend: WebGPUBackend,
-            attrs: PadV2Attrs}): TensorInfo => {
+            attrs: KernelAttributes<PadV2Attrs>}): TensorInfo => {
       const {inputs, backend, attrs} = args;
       const {x} = inputs;
       const {paddings, constantValue} = attrs;
@@ -52,5 +52,5 @@ export const padV2 =
 export const padV2Config: KernelConfig = {
   kernelName: PadV2,
   backendName: 'webgpu',
-  kernelFunc: padV2 as unknown as KernelFunc
+  kernelFunc: padV2
 };

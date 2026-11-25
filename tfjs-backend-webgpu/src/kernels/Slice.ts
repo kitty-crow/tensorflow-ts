@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Slice, slice_util, SliceAttrs, SliceInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Slice, slice_util, SliceAttrs, SliceInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {sliceImplCPU} from '../kernel_utils/shared';
 import {SliceProgram} from '../slice_webgpu';
 
 export function slice(
-    args: {inputs: SliceInputs, backend: WebGPUBackend, attrs: SliceAttrs}):
+    args: {inputs: SliceInputs, backend: WebGPUBackend, attrs: KernelAttributes<SliceAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -51,5 +51,5 @@ export function slice(
 export const sliceConfig: KernelConfig = {
   kernelName: Slice,
   backendName: 'webgpu',
-  kernelFunc: slice as unknown as KernelFunc
+  kernelFunc: slice
 };

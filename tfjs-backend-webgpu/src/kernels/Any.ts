@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {Any, AnyAttrs, AnyInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {Any, AnyAttrs, AnyInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {reduce} from '../kernel_utils/reduce';
 
 export function any(
-    args: {inputs: AnyInputs, attrs: AnyAttrs, backend: WebGPUBackend}):
+    args: {inputs: AnyInputs, attrs: KernelAttributes<AnyAttrs>, backend: WebGPUBackend}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -33,5 +33,5 @@ export function any(
 export const anyConfig: KernelConfig = {
   kernelName: Any,
   backendName: 'webgpu',
-  kernelFunc: any as unknown as KernelFunc
+  kernelFunc: any
 };

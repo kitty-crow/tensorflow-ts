@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, backend_util, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {Pool3DProgram} from '../pool_webgpu';
@@ -22,7 +22,7 @@ import {Pool3DProgram} from '../pool_webgpu';
 export function avgPool3D(args: {
   inputs: AvgPool3DInputs,
   backend: WebGPUBackend,
-  attrs: AvgPool3DAttrs
+  attrs: KernelAttributes<AvgPool3DAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -61,5 +61,5 @@ export function avgPool3D(args: {
 export const avgPool3DConfig: KernelConfig = {
   kernelName: AvgPool3D,
   backendName: 'webgpu',
-  kernelFunc: avgPool3D as unknown as KernelFunc
+  kernelFunc: avgPool3D
 };

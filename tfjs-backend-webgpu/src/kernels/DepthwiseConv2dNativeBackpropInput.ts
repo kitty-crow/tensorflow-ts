@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {backend_util, DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {backend_util, DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {DepthwiseConv2DDerInputProgram} from '../conv_backprop_depthwise_webgpu';
 
 export function depthwiseConv2dNativeBackpropInput(args: {
   inputs: DepthwiseConv2dNativeBackpropInputInputs,
-  attrs: DepthwiseConv2dNativeBackpropInputAttrs,
+  attrs: KernelAttributes<DepthwiseConv2dNativeBackpropInputAttrs>,
   backend: WebGPUBackend
 }) {
   const {inputs, backend, attrs} = args;
@@ -53,5 +53,5 @@ export function depthwiseConv2dNativeBackpropInput(args: {
 export const depthwiseConv2dNativeBackpropInputConfig: KernelConfig = {
   kernelName: DepthwiseConv2dNativeBackpropInput,
   backendName: 'webgpu',
-  kernelFunc: depthwiseConv2dNativeBackpropInput as unknown as KernelFunc
+  kernelFunc: depthwiseConv2dNativeBackpropInput
 };

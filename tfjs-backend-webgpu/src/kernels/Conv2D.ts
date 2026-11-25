@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
 import {conv2DImpl} from './Conv2D_impl';
 
 export function conv2d(
-    args: {inputs: Conv2DInputs, attrs: Conv2DAttrs, backend: WebGPUBackend}) {
+    args: {inputs: Conv2DInputs, attrs: KernelAttributes<Conv2DAttrs>, backend: WebGPUBackend}) {
   const {inputs, attrs, backend} = args;
   const {x, filter} = inputs;
   const {strides, pad, dataFormat, dilations, dimRoundingMode} = attrs;
@@ -37,5 +37,5 @@ export function conv2d(
 export const conv2DConfig: KernelConfig = {
   kernelName: Conv2D,
   backendName: 'webgpu',
-  kernelFunc: conv2d as unknown as KernelFunc
+  kernelFunc: conv2d
 };

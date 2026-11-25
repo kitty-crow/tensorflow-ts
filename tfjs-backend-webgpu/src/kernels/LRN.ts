@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, LRN, LRNAttrs, LRNInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, LRN, LRNAttrs, LRNInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {LRNProgram, LRNSharedProgram} from '../lrn_webgpu';
 
 export function lrn(
-    args: {inputs: LRNInputs, backend: WebGPUBackend, attrs: LRNAttrs}):
+    args: {inputs: LRNInputs, backend: WebGPUBackend, attrs: KernelAttributes<LRNAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -50,5 +50,5 @@ export function lrn(
 export const lrnConfig: KernelConfig = {
   kernelName: LRN,
   backendName: 'webgpu',
-  kernelFunc: lrn as unknown as KernelFunc
+  kernelFunc: lrn
 };

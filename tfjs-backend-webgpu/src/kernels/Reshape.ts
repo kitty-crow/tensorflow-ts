@@ -15,12 +15,12 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Reshape, ReshapeAttrs, ReshapeInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Reshape, ReshapeAttrs, ReshapeInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
 export function reshape(
-    args: {inputs: ReshapeInputs, backend: WebGPUBackend, attrs: ReshapeAttrs}):
+    args: {inputs: ReshapeInputs, backend: WebGPUBackend, attrs: KernelAttributes<ReshapeAttrs>}):
     TensorInfo {
   const {inputs, attrs} = args;
   const {x} = inputs;
@@ -44,5 +44,5 @@ export function reshape(
 export const reshapeConfig: KernelConfig = {
   kernelName: Reshape,
   backendName: 'webgpu',
-  kernelFunc: reshape as unknown as KernelFunc
+  kernelFunc: reshape
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, BroadcastArgs, BroadcastArgsInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, BroadcastArgs, BroadcastArgsInputs, KernelConfig, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {BroadcastArgsProgram} from '../broadcast_args_webgpu';
@@ -51,5 +51,5 @@ export function broadcastArgs(args: {
 export const broadcastArgsConfig: KernelConfig = {
   kernelName: BroadcastArgs,
   backendName: 'webgpu',
-  kernelFunc: broadcastArgs as unknown as KernelFunc
+  kernelFunc: broadcastArgs
 };

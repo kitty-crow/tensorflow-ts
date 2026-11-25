@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, NumericDataType, TensorInfo, TopK, TopKAttrs, TopKInputs, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, NumericDataType, TensorInfo, TopK, TopKAttrs, TopKInputs, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {topKImplCPU} from '../kernel_utils/shared';
@@ -43,7 +43,7 @@ function roundUpToPow2(num: number) {
 // Based on Algorithm 2 of Bitonic Top K, ref:
 // https://anilshanbhag.in/static/papers/gputopk_sigmod18.pdf
 export function topK(
-    args: {inputs: TopKInputs, backend: WebGPUBackend, attrs: TopKAttrs}):
+    args: {inputs: TopKInputs, backend: WebGPUBackend, attrs: KernelAttributes<TopKAttrs>}):
     TensorInfo[] {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -176,5 +176,5 @@ export function topK(
 export const topKConfig: KernelConfig = {
   kernelName: TopK,
   backendName: 'webgpu',
-  kernelFunc: topK as unknown as KernelFunc
+  kernelFunc: topK
 };

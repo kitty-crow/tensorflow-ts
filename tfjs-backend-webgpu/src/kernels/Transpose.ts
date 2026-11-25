@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Transpose, TransposeAttrs, TransposeInputs, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Transpose, TransposeAttrs, TransposeInputs, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {transposeImplCPU as cpuTranspose} from '../kernel_utils/shared';
@@ -25,7 +25,7 @@ import {TransposeProgram} from '../transpose_webgpu';
 
 export function transpose(args: {
   inputs: TransposeInputs,
-  attrs: TransposeAttrs,
+  attrs: KernelAttributes<TransposeAttrs>,
   backend: WebGPUBackend
 }) {
   const {inputs, backend, attrs} = args;
@@ -55,5 +55,5 @@ export function transpose(args: {
 export const transposeConfig: KernelConfig = {
   kernelName: Transpose,
   backendName: 'webgpu',
-  kernelFunc: transpose as unknown as KernelFunc
+  kernelFunc: transpose
 };

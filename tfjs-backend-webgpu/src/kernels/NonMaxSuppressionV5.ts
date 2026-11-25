@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {kernel_impls, KernelConfig, KernelFunc, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import type {TypedArray} from '@tensorflow/tfjs-core';
@@ -23,7 +23,7 @@ export type {TypedArray} from '@tensorflow/tfjs-core';
 export function nonMaxSuppressionV5(args: {
   inputs: NonMaxSuppressionV5Inputs,
   backend: WebGPUBackend,
-  attrs: NonMaxSuppressionV5Attrs
+  attrs: KernelAttributes<NonMaxSuppressionV5Attrs>
 }): [TensorInfo, TensorInfo] {
   console.warn(
       'tf.nonMaxSuppression() in webgpu locks the UI thread. ' +
@@ -57,5 +57,5 @@ export function nonMaxSuppressionV5(args: {
 export const nonMaxSuppressionV5Config: KernelConfig = {
   kernelName: NonMaxSuppressionV5,
   backendName: 'webgpu',
-  kernelFunc: nonMaxSuppressionV5 as unknown as KernelFunc
+  kernelFunc: nonMaxSuppressionV5
 };

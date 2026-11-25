@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Reverse, ReverseAttrs, ReverseInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Reverse, ReverseAttrs, ReverseInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {ReverseProgram} from '../reverse_webgpu';
@@ -24,7 +24,7 @@ import {identity} from './Identity';
 import {reshape} from './Reshape';
 
 export function reverse(
-    args: {inputs: ReverseInputs, backend: WebGPUBackend, attrs: ReverseAttrs}):
+    args: {inputs: ReverseInputs, backend: WebGPUBackend, attrs: KernelAttributes<ReverseAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -67,5 +67,5 @@ export function reverse(
 export const reverseConfig: KernelConfig = {
   kernelName: Reverse,
   backendName: 'webgpu',
-  kernelFunc: reverse as unknown as KernelFunc
+  kernelFunc: reverse
 };

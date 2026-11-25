@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, ResizeBilinearGrad, ResizeBilinearGradAttrs, ResizeBilinearGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, ResizeBilinearGrad, ResizeBilinearGradAttrs, ResizeBilinearGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {ResizeBilinearBackpropProgram} from '../resize_bilinear_backprop_webgpu';
@@ -23,7 +23,7 @@ import {ResizeBilinearBackpropProgram} from '../resize_bilinear_backprop_webgpu'
 export function resizeBilinearGrad(args: {
   inputs: ResizeBilinearGradInputs,
   backend: WebGPUBackend,
-  attrs: ResizeBilinearGradAttrs
+  attrs: KernelAttributes<ResizeBilinearGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {images, dy} = inputs;
@@ -71,5 +71,5 @@ export function resizeBilinearGrad(args: {
 export const resizeBilinearGradConfig: KernelConfig = {
   kernelName: ResizeBilinearGrad,
   backendName: 'webgpu',
-  kernelFunc: resizeBilinearGrad as unknown as KernelFunc
+  kernelFunc: resizeBilinearGrad
 };

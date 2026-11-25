@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Prod, ProdAttrs, ProdInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Prod, ProdAttrs, ProdInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {reduce} from '../kernel_utils/reduce';
 
 export function prod(
-    args: {inputs: ProdInputs, backend: WebGPUBackend, attrs: ProdAttrs}):
+    args: {inputs: ProdInputs, backend: WebGPUBackend, attrs: KernelAttributes<ProdAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -33,5 +33,5 @@ export function prod(
 export const prodConfig: KernelConfig = {
   kernelName: Prod,
   backendName: 'webgpu',
-  kernelFunc: prod as unknown as KernelFunc
+  kernelFunc: prod
 };

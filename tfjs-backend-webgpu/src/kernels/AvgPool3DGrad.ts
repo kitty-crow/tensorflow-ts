@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {AvgPool3DGrad, AvgPool3DGradAttrs, AvgPool3DGradInputs, backend_util, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {AvgPool3DGrad, AvgPool3DGradAttrs, AvgPool3DGradInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {AvgPool3DBackpropProgram} from '../avg_pool_backprop_webgpu';
 import {WebGPUBackend} from '../backend_webgpu';
@@ -23,7 +23,7 @@ import {WebGPUBackend} from '../backend_webgpu';
 export function avgPool3DGrad(args: {
   inputs: AvgPool3DGradInputs,
   backend: WebGPUBackend,
-  attrs: AvgPool3DGradAttrs
+  attrs: KernelAttributes<AvgPool3DGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input} = inputs;
@@ -67,5 +67,5 @@ export function avgPool3DGrad(args: {
 export const avgPool3DGradConfig: KernelConfig = {
   kernelName: AvgPool3DGrad,
   backendName: 'webgpu',
-  kernelFunc: avgPool3DGrad as unknown as KernelFunc
+  kernelFunc: avgPool3DGrad
 };

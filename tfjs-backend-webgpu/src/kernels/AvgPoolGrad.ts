@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {AvgPoolGrad, AvgPoolGradAttrs, AvgPoolGradInputs, backend_util, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {AvgPoolGrad, AvgPoolGradAttrs, AvgPoolGradInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {AvgPool2DBackpropProgram} from '../avg_pool_backprop_webgpu';
 import {WebGPUBackend} from '../backend_webgpu';
@@ -24,7 +24,7 @@ import {assertNotComplex} from '../webgpu_util';
 export function avgPoolGrad(args: {
   inputs: AvgPoolGradInputs,
   backend: WebGPUBackend,
-  attrs: AvgPoolGradAttrs
+  attrs: KernelAttributes<AvgPoolGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input} = inputs;
@@ -59,5 +59,5 @@ export function avgPoolGrad(args: {
 export const avgPoolGradConfig: KernelConfig = {
   kernelName: AvgPoolGrad,
   backendName: 'webgpu',
-  kernelFunc: avgPoolGrad as unknown as KernelFunc
+  kernelFunc: avgPoolGrad
 };

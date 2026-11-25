@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, BatchToSpaceND, BatchToSpaceNDAttrs, BatchToSpaceNDInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, BatchToSpaceND, BatchToSpaceNDAttrs, BatchToSpaceNDInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
@@ -26,7 +26,7 @@ import {transpose} from './Transpose';
 export const batchToSpaceND = (args: {
   inputs: BatchToSpaceNDInputs,
   backend: WebGPUBackend,
-  attrs: BatchToSpaceNDAttrs
+  attrs: KernelAttributes<BatchToSpaceNDAttrs>
 }): TensorInfo => {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -76,5 +76,5 @@ export const batchToSpaceND = (args: {
 export const batchToSpaceNDConfig: KernelConfig = {
   kernelName: BatchToSpaceND,
   backendName: 'webgpu',
-  kernelFunc: batchToSpaceND as unknown as KernelFunc
+  kernelFunc: batchToSpaceND
 };

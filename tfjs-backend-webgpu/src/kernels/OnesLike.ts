@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, OnesLike, OnesLikeInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, OnesLike, OnesLikeInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
@@ -55,5 +55,5 @@ export function onesLike(
 export const onesLikeConfig: KernelConfig = {
   kernelName: OnesLike,
   backendName: 'webgpu',
-  kernelFunc: onesLike as unknown as KernelFunc
+  kernelFunc: onesLike
 };

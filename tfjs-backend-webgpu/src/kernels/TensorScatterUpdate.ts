@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, TensorInfo, TensorScatterUpdate, TensorScatterUpdateAttrs, TensorScatterUpdateInputs, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, TensorInfo, TensorScatterUpdate, TensorScatterUpdateAttrs, TensorScatterUpdateInputs, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {ScatterProgram} from '../scatter_webgpu';
@@ -26,7 +26,7 @@ import {tile} from './Tile';
 export function tensorScatterUpdate(args: {
   inputs: TensorScatterUpdateInputs,
   backend: WebGPUBackend,
-  attrs: TensorScatterUpdateAttrs
+  attrs: KernelAttributes<TensorScatterUpdateAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {tensor, indices, updates} = inputs;
@@ -82,5 +82,5 @@ export function tensorScatterUpdate(args: {
 export const tensorScatterUpdateConfig: KernelConfig = {
   kernelName: TensorScatterUpdate,
   backendName: 'webgpu',
-  kernelFunc: tensorScatterUpdate as unknown as KernelFunc
+  kernelFunc: tensorScatterUpdate
 };

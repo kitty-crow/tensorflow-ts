@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, ResizeNearestNeighborGrad, ResizeNearestNeighborGradAttrs, ResizeNearestNeighborGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, ResizeNearestNeighborGrad, ResizeNearestNeighborGradAttrs, ResizeNearestNeighborGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {ResizeNearestNeigborBackpropProgram} from '../resize_nearest_neighbor_backprop_webgpu';
@@ -23,7 +23,7 @@ import {ResizeNearestNeigborBackpropProgram} from '../resize_nearest_neighbor_ba
 export function resizeNearestNeighborGrad(args: {
   inputs: ResizeNearestNeighborGradInputs,
   backend: WebGPUBackend,
-  attrs: ResizeNearestNeighborGradAttrs
+  attrs: KernelAttributes<ResizeNearestNeighborGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {images, dy} = inputs;
@@ -68,5 +68,5 @@ export function resizeNearestNeighborGrad(args: {
 export const resizeNearestNeighborGradConfig: KernelConfig = {
   kernelName: ResizeNearestNeighborGrad,
   backendName: 'webgpu',
-  kernelFunc: resizeNearestNeighborGrad as unknown as KernelFunc
+  kernelFunc: resizeNearestNeighborGrad
 };

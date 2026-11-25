@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Mean, MeanAttrs, MeanInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Mean, MeanAttrs, MeanInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {reduce} from '../kernel_utils/reduce';
 
 export function mean(
-    args: {inputs: MeanInputs, attrs: MeanAttrs, backend: WebGPUBackend}):
+    args: {inputs: MeanInputs, attrs: KernelAttributes<MeanAttrs>, backend: WebGPUBackend}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -33,5 +33,5 @@ export function mean(
 export const meanConfig: KernelConfig = {
   kernelName: Mean,
   backendName: 'webgpu',
-  kernelFunc: mean as unknown as KernelFunc
+  kernelFunc: mean
 };

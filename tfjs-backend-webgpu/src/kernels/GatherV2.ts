@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, buffer, GatherV2, GatherV2Attrs, GatherV2Inputs, KernelConfig, KernelFunc, Rank, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, buffer, GatherV2, GatherV2Attrs, GatherV2Inputs, KernelConfig, KernelAttributes, Rank, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {GatherProgram} from '../gather_webgpu';
@@ -25,7 +25,7 @@ import {reshape} from './Reshape';
 
 export function gatherV2(
     args:
-        {inputs: GatherV2Inputs, backend: WebGPUBackend, attrs: GatherV2Attrs}):
+        {inputs: GatherV2Inputs, backend: WebGPUBackend, attrs: KernelAttributes<GatherV2Attrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, indices} = inputs;
@@ -99,5 +99,5 @@ export function gatherV2(
 export const gatherV2Config: KernelConfig = {
   kernelName: GatherV2,
   backendName: 'webgpu',
-  kernelFunc: gatherV2 as unknown as KernelFunc
+  kernelFunc: gatherV2
 };

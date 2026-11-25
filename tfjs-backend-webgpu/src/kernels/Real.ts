@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Real, RealInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, Real, RealInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {identity} from './Identity';
@@ -32,5 +32,5 @@ export function real(args: {inputs: RealInputs, backend: WebGPUBackend}):
 export const realConfig: KernelConfig = {
   kernelName: Real,
   backendName: 'webgpu',
-  kernelFunc: real as unknown as KernelFunc
+  kernelFunc: real
 };

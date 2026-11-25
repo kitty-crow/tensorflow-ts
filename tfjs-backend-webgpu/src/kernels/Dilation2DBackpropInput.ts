@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, Dilation2DAttrs, Dilation2DBackpropInput, Dilation2DBackpropInputInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, Dilation2DAttrs, Dilation2DBackpropInput, Dilation2DBackpropInputInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {Dilation2DBackpropInputProgram} from '../dilation_backprop_webgpu';
@@ -23,7 +23,7 @@ import {fill} from './Fill';
 
 export function dilation2DBackpropInput(args: {
   inputs: Dilation2DBackpropInputInputs,
-  attrs: Dilation2DAttrs,
+  attrs: KernelAttributes<Dilation2DAttrs>,
   backend: WebGPUBackend
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
@@ -53,5 +53,5 @@ export function dilation2DBackpropInput(args: {
 export const dilation2DBackpropInputConfig: KernelConfig = {
   kernelName: Dilation2DBackpropInput,
   backendName: 'webgpu',
-  kernelFunc: dilation2DBackpropInput as unknown as KernelFunc
+  kernelFunc: dilation2DBackpropInput
 };

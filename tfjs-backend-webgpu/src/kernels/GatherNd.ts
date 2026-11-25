@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, GatherNd, GatherNdInputs, KernelConfig, KernelFunc, Rank, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, GatherNd, GatherNdInputs, KernelConfig, Rank, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {GatherNDProgram} from '../gather_nd_webgpu';
@@ -71,5 +71,5 @@ export function gatherNd(
 export const gatherNdConfig: KernelConfig = {
   kernelName: GatherNd,
   backendName: 'webgpu',
-  kernelFunc: gatherNd as unknown as KernelFunc
+  kernelFunc: gatherNd
 };

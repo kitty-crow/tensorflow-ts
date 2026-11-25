@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, FusedConv2D, FusedConv2DAttrs, FusedConv2DInputs, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {backend_util, FusedConv2D, FusedConv2DAttrs, FusedConv2DInputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
@@ -23,7 +23,7 @@ import {conv2DImpl} from './Conv2D_impl';
 
 export function fusedConv2d(args: {
   inputs: FusedConv2DInputs,
-  attrs: FusedConv2DAttrs,
+  attrs: KernelAttributes<FusedConv2DAttrs>,
   backend: WebGPUBackend
 }) {
   const {inputs, backend, attrs} = args;
@@ -59,5 +59,5 @@ export function fusedConv2d(args: {
 export const fusedConv2DConfig: KernelConfig = {
   kernelName: FusedConv2D,
   backendName: 'webgpu',
-  kernelFunc: fusedConv2d as unknown as KernelFunc,
+  kernelFunc: fusedConv2d,
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Rank, SparseToDense, SparseToDenseAttrs, SparseToDenseInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Rank, SparseToDense, SparseToDenseAttrs, SparseToDenseInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {scatterImplCPU} from '../kernel_utils/shared';
@@ -28,7 +28,7 @@ import {tile} from './Tile';
 export function sparseToDense(args: {
   inputs: SparseToDenseInputs,
   backend: WebGPUBackend,
-  attrs: SparseToDenseAttrs
+  attrs: KernelAttributes<SparseToDenseAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {sparseIndices, sparseValues, defaultValue} = inputs;
@@ -132,5 +132,5 @@ export function sparseToDense(args: {
 export const sparseToDenseConfig: KernelConfig = {
   kernelName: SparseToDense,
   backendName: 'webgpu',
-  kernelFunc: sparseToDense as unknown as KernelFunc
+  kernelFunc: sparseToDense
 };

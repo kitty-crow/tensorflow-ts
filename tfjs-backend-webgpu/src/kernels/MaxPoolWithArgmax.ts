@@ -16,14 +16,14 @@
  */
 
 import {MaxPoolWithArgmax, MaxPoolWithArgmaxAttrs, MaxPoolWithArgmaxInputs} from '@tensorflow/tfjs-core';
-import {backend_util, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {Pool2DProgram} from '../pool_webgpu';
 
 export function maxPoolWithArgmax(args: {
   inputs: MaxPoolWithArgmaxInputs,
-  attrs: MaxPoolWithArgmaxAttrs,
+  attrs: KernelAttributes<MaxPoolWithArgmaxAttrs>,
   backend: WebGPUBackend
 }): TensorInfo[] {
   const {inputs, backend, attrs} = args;
@@ -66,5 +66,5 @@ export function maxPoolWithArgmax(args: {
 export const maxPoolWithArgmaxConfig: KernelConfig = {
   kernelName: MaxPoolWithArgmax,
   backendName: 'webgpu',
-  kernelFunc: maxPoolWithArgmax as unknown as KernelFunc
+  kernelFunc: maxPoolWithArgmax
 };
