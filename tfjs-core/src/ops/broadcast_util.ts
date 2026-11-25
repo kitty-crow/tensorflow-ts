@@ -30,9 +30,10 @@ export function getBroadcastDims(
   const dims: number[] = [];
   for (let i = 0; i < inRank; i++) {
     const dim = inRank - 1 - i;
-    const a = inShape[dim] || 1;
-    const b = outShape[outShape.length - 1 - i] || 1;
-    if (b > 1 && a === 1) {
+    const a = inShape[dim] ?? 1;
+    const b = outShape[outShape.length - 1 - i] ?? 1;
+    // Preserve the historical falsy input-dimension fallback, including zero.
+    if (b > 1 && (a === 1 || a === 0 || Number.isNaN(a))) {
       dims.unshift(dim);
     }
   }

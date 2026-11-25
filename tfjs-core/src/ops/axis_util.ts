@@ -17,13 +17,15 @@
 
 import * as util from '../util';
 
+import {requiredDimension} from './shape_dimension';
+
 /**
  * Returns true if the axis specifies the inner most dimensions of the
  * array.
  */
 export function axesAreInnerMostDims(axes: number[], rank: number): boolean {
   for (let i = 0; i < axes.length; ++i) {
-    if (axes[axes.length - i - 1] !== rank - 1 - i) {
+    if ((axes[axes.length - i - 1] ?? null) !== rank - 1 - i) {
       return false;
     }
   }
@@ -33,14 +35,14 @@ export function axesAreInnerMostDims(axes: number[], rank: number): boolean {
 export function combineLocations(
     outputLoc: number[], reduceLoc: number[], axes: number[]): number[] {
   const rank = outputLoc.length + reduceLoc.length;
-  const loc = [];
+  const loc: number[] = [];
   let outIdx = 0;
   let reduceIdx = 0;
     for (let dim = 0; dim < rank; dim++) {
     if (axes.indexOf(dim) === -1) {
-      loc.push(outputLoc[outIdx++]);
+      loc.push(requiredDimension(outputLoc, outIdx++));
     } else {
-      loc.push(reduceLoc[reduceIdx++]);
+      loc.push(requiredDimension(reduceLoc, reduceIdx++));
     }
   }
   return loc;
@@ -48,14 +50,14 @@ export function combineLocations(
 
 export function computeOutAndReduceShapes(
     aShape: number[], axes: number[]): [number[], number[]] {
-  const outShape = [];
+  const outShape: number[] = [];
   const rank = aShape.length;
   for (let dim = 0; dim < rank; dim++) {
     if (axes.indexOf(dim) === -1) {
-      outShape.push(aShape[dim]);
+      outShape.push(requiredDimension(aShape, dim));
     }
   }
-  const reduceShape = axes.map(dim => aShape[dim]);
+  const reduceShape = axes.map(dim => requiredDimension(aShape, dim));
   return [outShape, reduceShape];
 }
 
@@ -95,9 +97,9 @@ export function getAxesPermutation(axes: number[], rank: number): number[]|
 
 /** Returns the axes permutation that undoes the original permutation. */
 export function getUndoAxesPermutation(axes: number[]): number[] {
-  return axes.map((axis, i) => [i, axis])
-      .sort((a, b) => a[1] - b[1])
-      .map(x => x[0]);
+  return axes.map((axis, index) => ({axis, index}))
+      .sort((a, b) => a.axis - b.axis)
+      .map(x => x.index);
 }
 
 export function getInnerMostAxes(numAxes: number, rank: number): number[] {

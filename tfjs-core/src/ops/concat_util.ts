@@ -17,8 +17,19 @@
 
 import * as util from '../util';
 
+import {requiredDimension} from './shape_dimension';
+
+function firstConcatShape(shapes: number[][]): number[] {
+  const first = shapes[0];
+  if (first == null) {
+    throw new Error('Concat requires at least one shape.');
+  }
+  return first;
+}
+
 export function assertParamsConsistent(shapes: number[][], axis: number) {
-  const rank = shapes[0].length;
+  const firstShape = firstConcatShape(shapes);
+  const rank = firstShape.length;
   shapes.forEach((shape, i) => {
     util.assert(
         shape.length === rank,
@@ -31,11 +42,11 @@ export function assertParamsConsistent(shapes: number[][], axis: number) {
       axis >= 0 && axis < rank,
       () => `Error in concat${rank}D: axis must be between 0 and ${rank - 1}.`);
 
-  const firstShape = shapes[0];
   shapes.forEach((shape, i) => {
     for (let r = 0; r < rank; r++) {
       util.assert(
-          (r === axis) || (shape[r] === firstShape[r]),
+          (r === axis) ||
+              (requiredDimension(shape, r) === requiredDimension(firstShape, r)),
           () => `Error in concat${rank}D: Shape of tensors[${i}] (${shape}) ` +
               `does not match the shape of the rest (${firstShape}) ` +
               `along the non-concatenated axis ${i}.`);
@@ -44,9 +55,10 @@ export function assertParamsConsistent(shapes: number[][], axis: number) {
 }
 
 export function computeOutShape(shapes: number[][], axis: number): number[] {
-  const outputShape = shapes[0].slice();
-  for (let i = 1; i < shapes.length; i++) {
-    outputShape[axis] += shapes[i][axis];
+  const outputShape = firstConcatShape(shapes).slice();
+  for (const shape of shapes.slice(1)) {
+    outputShape[axis] = requiredDimension(outputShape, axis) +
+        requiredDimension(shape, axis);
   }
   return outputShape;
 }

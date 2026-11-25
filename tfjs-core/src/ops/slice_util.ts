@@ -18,6 +18,8 @@
 import { TensorInfo } from '../tensor_info';
 import * as util from '../util';
 
+import {requiredDimension} from './shape_dimension';
+
 const NEW_AXIS = -2;
 const SHRINK_AXIS = -1;
 
@@ -120,7 +122,9 @@ export function computeOutShape(
     begin: number[], end: number[], strides: number[]): number[] {
   const size: number[] = [];
   for (let axis = 0; axis < begin.length; axis++) {
-    size[axis] = Math.ceil((end[axis] - begin[axis]) / strides[axis]);
+    size[axis] = Math.ceil(
+        (requiredDimension(end, axis) - requiredDimension(begin, axis)) /
+        requiredDimension(strides, axis));
   }
   return size;
 }
@@ -335,14 +339,15 @@ export function isSliceContinous(
   // Index of the first axis that has size > 1.
   let firstNonOneAxis = size.length;
   for (let i = 0; i < size.length; i++) {
-    if (size[i] > 1) {
+    if (requiredDimension(size, i) > 1) {
       firstNonOneAxis = i;
       break;
     }
   }
 
   for (let i = firstNonOneAxis + 1; i < size.length; i++) {
-    if (begin[i] > 0 || size[i] !== shape[i]) {
+    if (requiredDimension(begin, i) > 0 ||
+        requiredDimension(size, i) !== requiredDimension(shape, i)) {
       return false;
     }
   }
@@ -350,9 +355,10 @@ export function isSliceContinous(
 }
 
 export function computeFlatOffset(begin: number[], strides: number[]): number {
-  let flatOffset = begin.length > 0 ? begin[begin.length - 1] : 1;
+  let flatOffset = begin.length > 0 ?
+      requiredDimension(begin, begin.length - 1) : 1;
   for (let i = 0; i < begin.length - 1; i++) {
-    flatOffset += begin[i] * strides[i];
+    flatOffset += requiredDimension(begin, i) * requiredDimension(strides, i);
   }
   return flatOffset;
 }
