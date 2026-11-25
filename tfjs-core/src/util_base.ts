@@ -336,24 +336,29 @@ export function inferFromImplicitShape(
   let implicitIdx = -1;
 
   for (let i = 0; i < shape.length; ++i) {
-    if (shape[i] >= 0) {
-      shapeProd *= shape[i];
-    } else if (shape[i] === -1) {
-      if (implicitIdx !== -1) {
-        throw Error(
-            `Shapes can only have 1 implicit size. ` +
-            `Found -1 at dim ${implicitIdx} and dim ${i}`);
-      }
+    const dimension = shape[i];
+    if (dimension >= 0) {
+      shapeProd *= dimension;
+      continue;
+    }
+    if (dimension === -1 && implicitIdx !== -1) {
+      throw Error(
+          `Shapes can only have 1 implicit size. ` +
+          `Found -1 at dim ${implicitIdx} and dim ${i}`);
+    }
+    if (dimension === -1) {
       implicitIdx = i;
-    } else if (shape[i] < 0) {
-      throw Error(`Shapes can not be < 0. Found ${shape[i]} at dim ${i}`);
+      continue;
+    }
+    if (dimension < 0) {
+      throw Error(`Shapes can not be < 0. Found ${dimension} at dim ${i}`);
     }
   }
 
+  if (implicitIdx === -1 && size > 0 && size !== shapeProd) {
+    throw Error(`Size(${size}) must match the product of shape ${shape}`);
+  }
   if (implicitIdx === -1) {
-    if (size > 0 && size !== shapeProd) {
-      throw Error(`Size(${size}) must match the product of shape ${shape}`);
-    }
     return shape;
   }
 
@@ -408,21 +413,19 @@ export function squeezeShape(shape: number[], axis?: number[]):
       parseAxisParam(axis, shape).sort();
   let j = 0;
   for (let i = 0; i < shape.length; ++i) {
-    if (axes != null) {
-      if (axes[j] === i && shape[i] !== 1) {
-        throw new Error(
-            `Can't squeeze axis ${i} since its dim '${shape[i]}' is not 1`);
-      }
-      if ((axes[j] == null || axes[j] > i) && shape[i] === 1) {
-        newShape.push(shape[i]);
-        keptDims.push(i);
-      }
-      if (axes[j] <= i) {
-        j++;
-      }
+    const selectedAxis = axes === null ? null : axes[j] ?? null;
+    const dimension = shape[i];
+    if (selectedAxis === i && dimension !== 1) {
+      throw new Error(
+          `Can't squeeze axis ${i} since its dim '${dimension}' is not 1`);
     }
-    if (shape[i] !== 1) {
-      newShape.push(shape[i]);
+    const keepSingleton = axes !== null &&
+        (selectedAxis === null || selectedAxis > i);
+    if (selectedAxis !== null && selectedAxis <= i) {
+      j++;
+    }
+    if (dimension !== 1 || keepSingleton) {
+      newShape.push(dimension);
       keptDims.push(i);
     }
   }
@@ -663,17 +666,20 @@ function createNestedArray(
   return ret;
 }
 
+function scalarArrayValue(a: TypedArray): number {
+  const value = a[0];
+  if (value == null) {
+    throw new Error('A scalar tensor requires a value.');
+  }
+  return value;
+}
+
 // Provide a nested array of TypedArray in given shape.
 export function toNestedArray(
     shape: number[], a: TypedArray,
     isComplex = false): number|NestedNumericArray {
   if (shape.length === 0) {
-    // Scalar type should return a single number.
-    const value = a[0];
-    if (value == null) {
-      throw new Error('A scalar tensor requires a value.');
-    }
-    return value;
+    return scalarArrayValue(a);
   }
   const size = shape.reduce((acc, c) => acc * c) * (isComplex ? 2 : 1);
   if (size === 0) {
