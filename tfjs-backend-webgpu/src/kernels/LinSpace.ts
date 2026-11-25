@@ -15,12 +15,12 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, LinSpace, LinSpaceAttrs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelFunc, LinSpace, LinSpaceAttrs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {LinSpaceProgram} from '../lin_space_webgpu';
 
-export function linSpace(args: {backend: WebGPUBackend, attrs: KernelAttributes<LinSpaceAttrs>}):
+export function linSpace(args: {backend: WebGPUBackend, attrs: LinSpaceAttrs}):
     TensorInfo {
   const {backend, attrs} = args;
   const {start, stop, num} = attrs;
@@ -35,5 +35,5 @@ export function linSpace(args: {backend: WebGPUBackend, attrs: KernelAttributes<
 export const linSpaceConfig: KernelConfig = {
   kernelName: LinSpace,
   backendName: 'webgpu',
-  kernelFunc: linSpace
+  kernelFunc: linSpace as unknown as KernelFunc
 };
