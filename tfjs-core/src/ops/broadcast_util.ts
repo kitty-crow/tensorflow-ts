@@ -47,41 +47,35 @@ export function getReductionAxes(
     inShape: number[], outShape: number[]): number[] {
   const result: number[] = [];
   for (let i = 0; i < outShape.length; i++) {
-    const inDim = inShape[inShape.length - i - 1];
+    const inDim = inShape[inShape.length - i - 1] ?? null;
     const outAxis = outShape.length - i - 1;
-    const outDim = outShape[outAxis];
-    if (inDim == null || (inDim === 1 && outDim > 1)) {
+    const outDim = outShape[outAxis] ?? null;
+    if (inDim === null || (inDim === 1 && outDim !== null && outDim > 1)) {
       result.unshift(outAxis);
     }
   }
   return result;
 }
 
+/**
+ * Align shapes from the trailing dimensions: an absent leading dimension
+ * behaves like 1. A singleton expands to the other dimension, including 0;
+ * two non-singleton dimensions must agree.
+ */
 export function assertAndGetBroadcastShape(
     shapeA: number[], shapeB: number[]): number[] {
   const l = Math.max(shapeA.length, shapeB.length);
-  const result = new Array(l);
+  const result = new Array<number>(l);
 
   for (let i = 0; i < l; i++) {
-    let a = shapeA[shapeA.length - i - 1];
-    if (a == null) {
-      a = 1;
-    }
-    let b = shapeB[shapeB.length - i - 1];
-    if (b == null) {
-      b = 1;
-    }
-    if (a === 1) {
-      result[l - i - 1] = b;
-    } else if (b === 1) {
-      result[l - i - 1] = a;
-    } else if (a !== b) {
+    const a = shapeA[shapeA.length - i - 1] ?? 1;
+    const b = shapeB[shapeB.length - i - 1] ?? 1;
+    if (a !== 1 && b !== 1 && a !== b) {
       const errMsg = `Operands could not be broadcast together with shapes ` +
           `${shapeA} and ${shapeB}.`;
       throw Error(errMsg);
-    } else {
-      result[l - i - 1] = a;
     }
+    result[l - i - 1] = a === 1 ? b : a;
   }
   return result;
 }

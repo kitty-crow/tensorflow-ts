@@ -48,6 +48,19 @@ describe('broadcast_util.getBroadcastShape', () => {
     expect(res).toEqual([7, 2, 6]);
   });
 
+  it('aligns trailing axes with a zero leading dimension in either order', () => {
+    expect(broadcast_util.assertAndGetBroadcastShape([3, 1], [0, 1, 4]))
+        .toEqual([0, 3, 4]);
+    expect(broadcast_util.assertAndGetBroadcastShape([0, 1, 4], [3, 1]))
+        .toEqual([0, 3, 4]);
+  });
+
+  it('rejects zero against a non-singleton with the original message', () => {
+    expect(() => broadcast_util.assertAndGetBroadcastShape([0, 4], [2, 4]))
+        .toThrowError('Operands could not be broadcast together with shapes ' +
+            '0,4 and 2,4.');
+  });
+
   it('incompatible inner shape', () => {
     const f = () =>
         broadcast_util.assertAndGetBroadcastShape([7, 2, 5], [7, 2, 6]);
@@ -137,6 +150,19 @@ describe('broadcast_util.getBroadcastDims', () => {
 });
 
 describe('broadcast_util.getReductionAxes', () => {
+  it('reduces absent leading and expanded singleton axes in sorted order', () => {
+    expect(broadcast_util.getReductionAxes([1, 3, 1], [2, 5, 3, 7]))
+        .toEqual([0, 1, 3]);
+  });
+
+  it('preserves the existing singleton-to-zero reduction behaviour', () => {
+    expect(broadcast_util.getReductionAxes([1, 3], [0, 3])).toEqual([]);
+  });
+
+  it('does not reduce a matched zero dimension', () => {
+    expect(broadcast_util.getReductionAxes([0, 3], [2, 0, 3])).toEqual([0]);
+  });
+
   it('[] => []', () => {
     const axes = broadcast_util.getReductionAxes([], []);
     expect(axes).toEqual([]);
