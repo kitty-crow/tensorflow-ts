@@ -12,6 +12,7 @@ import {Tensor} from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-core/dist/public/chained_ops/register_all_chained_ops';
 import '../flags_layers';
 
+import {standardizeArgs} from '../layers/recurrent';
 import {collectMetrics, standardizeInputData} from './training';
 import {disposeNewTensors, ensureTensorsRank2OrHigher} from './training_tensors';
 
@@ -62,5 +63,20 @@ describe('training conditional regression coverage', () => {
     addedDispose.calls.reset();
     disposeNewTensors([added], added);
     expect(addedDispose).not.toHaveBeenCalled();
+  });
+});
+
+describe('recurrent argument parsing regression coverage', () => {
+  it('splits positional input, recurrent states and trailing constants', () => {
+    const input = new Tensor([1, 2, 3], 'float32', {}, 11);
+    const state = new Tensor([1, 4], 'float32', {}, 12);
+    const constant = new Tensor([1, 5], 'float32', {}, 13);
+    const parsed = standardizeArgs([input, state, constant], null, null, 1);
+    expect(parsed.inputs).toBe(input);
+    expect(parsed.initialState).toEqual([state]);
+    expect(parsed.constants).toEqual([constant]);
+    expect(standardizeArgs(input, state, constant).initialState).toEqual([state]);
+    expect(() => standardizeArgs([input], state, null)).toThrowError(/neither initialState or constants/);
+    expect(() => standardizeArgs([], null, null)).toThrowError(/requires its input tensor/);
   });
 });

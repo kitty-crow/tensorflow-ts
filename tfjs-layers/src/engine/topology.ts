@@ -490,27 +490,8 @@ export abstract class Layer extends serialization.Serializable {
         In this case we will later create an input layer
         to insert before the current layer
        */
-      let batchInputShape: Shape;
-      if (args.batchInputShape != null) {
-        batchInputShape = args.batchInputShape;
-      } else if (args.inputShape != null) {
-        let batchSize: number = null;
-        if (args.batchSize != null) {
-          batchSize = args.batchSize;
-        }
-        batchInputShape = [batchSize].concat(args.inputShape);
-      }
-      this.batchInputShape = batchInputShape;
-
-      // Set dtype.
-      let dtype = args.dtype;
-      if (dtype == null) {
-        dtype = args.inputDType;
-      }
-      if (dtype == null) {
-        dtype = 'float32';
-      }
-      this.dtype = dtype;
+      this.batchInputShape = resolveBatchInputShape(args);
+      this.dtype = args.dtype ?? args.inputDType ?? 'float32';
     }
 
     if (args.weights != null) {
@@ -1656,4 +1637,15 @@ function checkNoneSymbolic(tensors: MaybeSymbolic|
     }
   }
   return noneAreSymbolic;
+}
+
+/** Determine the input shape using the explicit batch shape in preference. */
+function resolveBatchInputShape(args: LayerArgs): Shape {
+  if (args.batchInputShape != null) {
+    return args.batchInputShape;
+  }
+  if (args.inputShape != null) {
+    return [args.batchSize ?? null].concat(args.inputShape);
+  }
+  return undefined;
 }

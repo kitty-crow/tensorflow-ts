@@ -289,14 +289,8 @@ export function sliceAlongAxis(
  * @returns The result of the concatenation.
  */
 export function concatenate(tensors: Tensor[], axis = -1): Tensor {
-  let rank: number;
   if (axis < 0) {
-    rank = tensors[0].rank;
-    if (rank !== 0) {
-      axis = rank;
-    } else {
-      axis = 0;
-    }
+    axis = tensors[0].rank;
   }
   if (axis === tensors[0].rank) {
     // Porting Note: This is necessary because tfc.concat() requires axis to be
@@ -394,16 +388,12 @@ export function dot(
         `dot requires both inputs to be rank >= 2` +
         ` but got x shape = ${a.shape} and y shape = ${b.shape}`);
   }
-  if (b.rank >= 3) {
-    const xLastDim = a.shape.slice(-1)[0];
-    const ySecondLastDim = b.shape.slice(-2)[0];
-    if (xLastDim !== ySecondLastDim) {
-      throw new NotImplementedError(
-          `If rank y >= 3, then the second last dim` +
-          ` of y must equal the last dim of x but got x shape = ${
-              a.shape} and ` +
-          ` y shape = ${b.shape}`);
-    }
+  if (b.rank >= 3 && a.shape.slice(-1)[0] !== b.shape.slice(-2)[0]) {
+    throw new NotImplementedError(
+        `If rank y >= 3, then the second last dim` +
+        ` of y must equal the last dim of x but got x shape = ${
+            a.shape} and ` +
+        ` y shape = ${b.shape}`);
   }
   // Handle basic 2D x 2D case.
   if ((a.rank === 2) && (b.rank === 2)) {
@@ -572,60 +562,21 @@ function reshapeBias(xRank: number, bias: Tensor, dataFormat: string) {
         `; expected it to be 1 or ${xRank}`);
   }
 
-  if (xRank === 5) {
-    switch (dataFormat) {
-      case 'channelsFirst': {
-        if (biasShape.length === 1) {
-          return tfc.reshape(bias, [1, biasShape[0], 1, 1, 1]);
-        } else {
-          return tfc.reshape(
-              bias, [1, biasShape[3], biasShape[0], biasShape[1], biasShape[2]]);
-        }
-      }
-      case 'channelsLast': {
-        if (biasShape.length === 1) {
-          return tfc.reshape(bias, [1, 1, 1, 1, biasShape[0]]);
-        } else {
-          return tfc.reshape(bias, [1].concat(biasShape));
-        }
-      }
-    }
-  } else if (xRank === 4) {
-    switch (dataFormat) {
-      case 'channelsFirst': {
-        if (biasShape.length === 1) {
-          return tfc.reshape(bias, [1, biasShape[0], 1, 1]);
-        } else {
-          return tfc.reshape(bias, [1, biasShape[2], biasShape[0], biasShape[1]]);
-        }
-      }
-      case 'channelsLast': {
-        if (biasShape.length === 1) {
-          return tfc.reshape(bias, [1, 1, 1, biasShape[0]]);
-        } else {
-          return tfc.reshape(bias, [1].concat(biasShape));
-        }
-      }
-    }
-  } else if (xRank === 3) {
-    switch (dataFormat) {
-      case 'channelsFirst': {
-        if (biasShape.length === 1) {
-          return tfc.reshape(bias, [1, biasShape[0], 1]);
-        } else {
-          return tfc.reshape(bias, [1, biasShape[1], biasShape[0]]);
-        }
-      }
-      case 'channelsLast': {
-        if (biasShape.length === 1) {
-          return tfc.reshape(bias, [1, 1, biasShape[0]]);
-        } else {
-          return tfc.reshape(bias, [1].concat(biasShape));
-        }
-      }
-    }
-  } else if (xRank < 3) {
+  if (xRank < 3) {
     return bias;
+  }
+  const supportedRank = xRank === 3 || xRank === 4 || xRank === 5;
+  if (supportedRank && dataFormat === 'channelsFirst') {
+    const shape = biasShape.length === 1 ?
+        [1, biasShape[0], ...Array<number>(xRank - 2).fill(1)] :
+        [1, biasShape[xRank - 2], ...biasShape.slice(0, xRank - 2)];
+    return tfc.reshape(bias, shape);
+  }
+  if (supportedRank && dataFormat === 'channelsLast') {
+    const shape = biasShape.length === 1 ?
+        [1, ...Array<number>(xRank - 2).fill(1), biasShape[0]] :
+        [1].concat(biasShape);
+    return tfc.reshape(bias, shape);
   }
   throw new ValueError(`Unsupported input rank by biasAdd: ${bias.rank}`);
 }

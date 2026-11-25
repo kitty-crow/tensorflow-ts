@@ -83,7 +83,8 @@ export class BrowserDownloads implements IOHandler {
       throw new Error(
           'BrowserDownloads.save() does not support saving model topology ' +
           'in binary formats yet.');
-    } else {
+    }
+    {
       const weightsManifest: WeightsManifestConfig = [{
         paths: ['./' + this.weightDataFileName],
         weights: modelArtifacts.weightSpecs
@@ -254,7 +255,8 @@ class BrowserFiles implements IOHandler {
 export const browserDownloadsRouter: IORouter = (url: string|string[]) => {
   if (!env().getBool('IS_BROWSER')) {
     return null;
-  } else {
+  }
+  {
     if (!Array.isArray(url) && url.startsWith(BrowserDownloads.URL_SCHEME)) {
       return browserDownloads(url.slice(BrowserDownloads.URL_SCHEME.length));
     } else {

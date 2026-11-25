@@ -160,52 +160,52 @@ export abstract class Merge extends Layer {
             reshapedInputs.push(x);
           }
           return this.mergeFunction(reshapedInputs);
-        } else {
-          // Transpose all inputs so that batch size is the last dimension.
-          // [batchSize, dim1, dim2, ...] -> [dim1, dim2, ..., batchSize]
-          let transposed = false;
-          for (const x of inputs) {
-            const xNDim = x.rank;
-            if (xNDim == null) {
-              const xShape = x.shape;
-              const batchSize = xShape[0];
-              const newShape = xShape.slice(1).concat([batchSize]);
-              let xTransposed = tfc.reshape(
-                  x, [batchSize].concat(mathUtils.arrayProd(xShape.slice(1))));
-              xTransposed = tfc.transpose(xTransposed, [1, 0]);
-              xTransposed = tfc.reshape(xTransposed, newShape);
-              reshapedInputs.push(xTransposed);
-              transposed = true;
-            } else if (xNDim > 1) {
-              const dims = mathUtils.range(1, xNDim).concat([0]);
-              reshapedInputs.push(tfc.transpose(x, dims));
-              transposed = true;
-            } else {
-              // We don't transpose inputs if they are 1D vectors or scalars.
-              reshapedInputs.push(x);
-            }
+        }
+        // Transpose all inputs so that batch size is the last dimension.
+        // [batchSize, dim1, dim2, ...] -> [dim1, dim2, ..., batchSize]
+        let transposed = false;
+        for (const x of inputs) {
+          const xNDim = x.rank;
+          if (xNDim == null) {
+            const xShape = x.shape;
+            const batchSize = xShape[0];
+            const newShape = xShape.slice(1).concat([batchSize]);
+            let xTransposed = tfc.reshape(
+                x, [batchSize].concat(mathUtils.arrayProd(xShape.slice(1))));
+            xTransposed = tfc.transpose(xTransposed, [1, 0]);
+            reshapedInputs.push(tfc.reshape(xTransposed, newShape));
+            transposed = true;
+            continue;
           }
-          let y = this.mergeFunction(reshapedInputs);
-          const yNDim = y.rank;
-          if (transposed) {
-            // If inputs have been transposed, we have to transpose the output
-            // too.
-            if (yNDim == null) {
-              const yShape = y.shape;
-              const yNDim = yShape.length;
-              const batchSize = yShape[yNDim - 1];
-              const newShape =
-                  [batchSize].concat(yShape.slice(0, yShape.length - 1));
-              y = tfc.reshape(
-                  tfc.transpose(tfc.reshape(y, [-1, batchSize]), [1, 0]),
-                  newShape);
-            } else if (yNDim > 1) {
-              const dims = [yNDim - 1].concat(mathUtils.range(0, yNDim - 1));
-              y = tfc.transpose(y, dims);
-            }
+          if (xNDim > 1) {
+            const dims = mathUtils.range(1, xNDim).concat([0]);
+            reshapedInputs.push(tfc.transpose(x, dims));
+            transposed = true;
+            continue;
           }
+          // We don't transpose inputs if they are 1D vectors or scalars.
+          reshapedInputs.push(x);
+        }
+        const y = this.mergeFunction(reshapedInputs);
+        const yNDim = y.rank;
+        if (!transposed) {
           return y;
         }
+        // Restore batch-first output layout after input transposition.
+        if (yNDim == null) {
+          const yShape = y.shape;
+          const rank = yShape.length;
+          const batchSize = yShape[rank - 1];
+          const newShape = [batchSize].concat(yShape.slice(0, rank - 1));
+          return tfc.reshape(
+              tfc.transpose(tfc.reshape(y, [-1, batchSize]), [1, 0]),
+              newShape);
+        }
+        if (yNDim > 1) {
+          const dims = [yNDim - 1].concat(mathUtils.range(0, yNDim - 1));
+          return tfc.transpose(y, dims);
+        }
+        return y;
       }
     });
   }
@@ -919,32 +919,19 @@ function batchDot(x: Tensor, y: Tensor, axes: number|[number, number]): Tensor {
   const axesArray = axes as [number, number];
 
   return tfc.tidy(() => {
-    let diff: number;
+    const diff = Math.abs(xNDim - yNDim);
     if (xNDim > yNDim) {
-      diff = xNDim - yNDim;
-      const diffShape: Shape = [];
-      for (let i = 0; i < diff; ++i) {
-        diffShape.push(1);
-      }
-      y = tfc.reshape(y, y.shape.concat(diffShape));
-    } else if (yNDim > xNDim) {
-      diff = yNDim - xNDim;
-      const diffShape: Shape = [];
-      for (let i = 0; i < diff; ++i) {
-        diffShape.push(1);
-      }
-      x = tfc.reshape(x, x.shape.concat(diffShape));
-    } else {
-      diff = 0;
+      y = tfc.reshape(y, y.shape.concat(Array<number>(diff).fill(1)));
+    }
+    if (yNDim > xNDim) {
+      x = tfc.reshape(x, x.shape.concat(Array<number>(diff).fill(1)));
     }
 
     let out: Tensor;
     if (x.shape.length === 2 && y.shape.length === 2) {
-      if (axesArray[0] === axesArray[1]) {
-        out = tfc.sum(tfc.mul(x, y), axesArray[0]);
-      } else {
-        out = tfc.sum(tfc.mul(tfc.transpose(x, [1, 0]), y), axesArray[1]);
-      }
+      out = axesArray[0] === axesArray[1] ?
+          tfc.sum(tfc.mul(x, y), axesArray[0]) :
+          tfc.sum(tfc.mul(tfc.transpose(x, [1, 0]), y), axesArray[1]);
     } else {
       const adjX = axesArray[0] !== x.shape.length - 1;
       const adjY = axesArray[1] === y.shape.length - 1;
@@ -952,12 +939,7 @@ function batchDot(x: Tensor, y: Tensor, axes: number|[number, number]): Tensor {
     }
 
     if (diff > 0) {
-      let idx: number;
-      if (xNDim > yNDim) {
-        idx = xNDim + yNDim - 3;
-      } else {
-        idx = xNDim - 1;
-      }
+      const idx = xNDim > yNDim ? xNDim + yNDim - 3 : xNDim - 1;
       const squeezeAxes: number[] = [];
       for (let i = idx; i < idx + diff; ++i) {
         squeezeAxes.push(i);

@@ -230,7 +230,8 @@ export class BrowserIndexedDB implements IOHandler {
 export const indexedDBRouter: IORouter = (url: string|string[]) => {
   if (!env().getBool('IS_BROWSER')) {
     return null;
-  } else {
+  }
+  {
     if (!Array.isArray(url) && url.startsWith(BrowserIndexedDB.URL_SCHEME)) {
       return browserIndexedDB(url.slice(BrowserIndexedDB.URL_SCHEME.length));
     } else {

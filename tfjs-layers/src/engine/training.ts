@@ -713,56 +713,20 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     this.lossWeightValues =
         standardizeLossWeights(configuredLossWeights, this.outputNames);
 
-    if (typeof args.optimizer === 'string') {
-      this.optimizer_ = optimizers.getOptimizer(args.optimizer);
-      this.isOptimizerOwned = true;
-    } else {
-      if (!(args.optimizer instanceof Optimizer)) {
-        throw new ValueError(
-            `User-defined optimizer must be an instance of tf.Optimizer.`);
-      }
-      this.optimizer_ = args.optimizer;
-      this.isOptimizerOwned = false;
+    const optimizer = args.optimizer;
+    if (typeof optimizer !== 'string' && !(optimizer instanceof Optimizer)) {
+      throw new ValueError(
+          `User-defined optimizer must be an instance of tf.Optimizer.`);
     }
+    this.optimizer_ = typeof optimizer === 'string' ?
+        optimizers.getOptimizer(optimizer) : optimizer;
+    this.isOptimizerOwned = typeof optimizer === 'string';
 
     // TODO(cais): Add sampleWeightMode.
 
     // Prepare loss functions.
-    let lossFunctions: LossOrMetricFn[] = [];
-    if (!Array.isArray(args.loss) && typeof args.loss !== 'string' &&
-        typeof args.loss !== 'function') {
-      args.loss = args.loss as {[outputName: string]: string};
-      for (const name in args.loss) {
-        if (this.outputNames.indexOf(name) === -1) {
-          throw new ValueError(
-              `Unknown entry in loss dictionary: "${name}". ` +
-              `Only expected the following keys: ${this.outputNames}`);
-        }
-      }
-      for (const name of this.outputNames) {
-        if (args.loss[name] == null) {
-          console.warn(
-              `Output "${name}" is missing from loss dictionary. We assume ` +
-              `this was done on purpose, and we will not be expecting data ` +
-              `to be passed to ${name} during training`);
-        }
-        lossFunctions.push(losses.get(args.loss[name]));
-      }
-    } else if (Array.isArray(args.loss)) {
-      if (args.loss.length !== this.outputs.length) {
-        throw new ValueError(
-            `When passing an Array as loss, it should have one entry per ` +
-            `model output. The model has ${this.outputs.length} output(s), ` +
-            `but you passed loss=${args.loss}.`);
-      }
-      const theLosses = args.loss as Array<string|LossOrMetricFn>;
-      lossFunctions = theLosses.map(l => losses.get(l));
-    } else {
-      const lossFunction = losses.get(args.loss);
-      this.outputs.forEach(_ => {
-        lossFunctions.push(lossFunction);
-      });
-    }
+    const lossFunctions = resolveLossFunctions(
+        args.loss, this.outputNames, this.outputs);
 
     this.lossFunctions = lossFunctions;
 
@@ -1041,30 +1005,34 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     if (inputs instanceof Tensor) {
       inputs = [inputs];
     }
+    if (Array.isArray(inputs) && inputs.length !== this.inputs.length) {
+      throw new ValueError(
+          `The number of inputs provided (${inputs.length}) ` +
+          `does not match the number of inputs of this model ` +
+          `(${this.inputs.length}).`);
+    }
     if (Array.isArray(inputs)) {
-      if (inputs.length !== this.inputs.length) {
-        throw new ValueError(
-            `The number of inputs provided (${inputs.length}) ` +
-            `does not match the number of inputs of this model ` +
-            `(${this.inputs.length}).`);
-      }
       for (let i = 0; i < this.inputs.length; ++i) {
         feedDict.add(this.inputs[i], inputs[i]);
       }
     } else {
-      for (const input of this.inputs) {
-        const tensorValue = inputs[input.name];
-        if (tensorValue == null) {
-          throw new ValueError(
-              `No value is provided for the model's input ${input.name}`);
-        }
-        feedDict.add(input, tensorValue);
-      }
+      this.addNamedExecutionInputs(feedDict, inputs);
     }
 
     // Run execution.
     const executeOutputs = execute(outputSymbolicTensors, feedDict) as Tensor[];
     return outputsIsArray ? executeOutputs : executeOutputs[0];
+  }
+
+  private addNamedExecutionInputs(feedDict: FeedDict, inputs: NamedTensorMap): void {
+    for (const input of this.inputs) {
+      const tensorValue = inputs[input.name];
+      if (tensorValue == null) {
+        throw new ValueError(
+            `No value is provided for the model's input ${input.name}`);
+      }
+      feedDict.add(input, tensorValue);
+    }
   }
 
   /**
@@ -1325,33 +1293,32 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       if (steps != null) {
         throw new NotImplementedError(
             'steps mode in testLoop() is not implemented yet');
-      } else {
-        const batches = makeBatches(numSamples, batchSize);
-        const indexArray = tensor1d(range(0, numSamples));
-        for (let batchIndex = 0; batchIndex < batches.length; ++batchIndex) {
-          const batchStart = batches[batchIndex][0];
-          const batchEnd = batches[batchIndex][1];
-          const batchIds =
-              K.sliceAlongFirstAxis(
-                  indexArray, batchStart, batchEnd - batchStart) as Tensor1D;
-          // TODO(cais): In ins, train flag can be a number, instead of an
-          //   Tensor? Do we need to handle this in tfjs-layers?
-          const insBatch = sliceArraysByIndices(ins, batchIds) as Scalar[];
-          const batchOuts = f(insBatch);
-          if (batchIndex === 0) {
-            for (let i = 0; i < batchOuts.length; ++i) {
-              outs.push(scalar(0));
-            }
-          }
+      }
+      const batches = makeBatches(numSamples, batchSize);
+      const indexArray = tensor1d(range(0, numSamples));
+      for (let batchIndex = 0; batchIndex < batches.length; ++batchIndex) {
+        const batchStart = batches[batchIndex][0];
+        const batchEnd = batches[batchIndex][1];
+        const batchIds =
+            K.sliceAlongFirstAxis(
+                indexArray, batchStart, batchEnd - batchStart) as Tensor1D;
+        // TODO(cais): In ins, train flag can be a number, instead of an
+        //   Tensor? Do we need to handle this in tfjs-layers?
+        const insBatch = sliceArraysByIndices(ins, batchIds) as Scalar[];
+        const batchOuts = f(insBatch);
+        if (batchIndex === 0) {
           for (let i = 0; i < batchOuts.length; ++i) {
-            const batchOut = batchOuts[i];
-            outs[i] =
-                tfc.add(outs[i], tfc.mul(batchEnd - batchStart, batchOut));
+            outs.push(scalar(0));
           }
         }
-        for (let i = 0; i < outs.length; ++i) {
-          outs[i] = tfc.div(outs[i], numSamples);
+        for (let i = 0; i < batchOuts.length; ++i) {
+          const batchOut = batchOuts[i];
+          outs[i] =
+              tfc.add(outs[i], tfc.mul(batchEnd - batchStart, batchOut));
         }
+      }
+      for (let i = 0; i < outs.length; ++i) {
+        outs[i] = tfc.div(outs[i], numSamples);
       }
       return outs;
     });
@@ -1605,19 +1572,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       let valIns: Tensor[];
       if (args.validationData != null && args.validationData.length > 0) {
         doValidation = true;
-        if (args.validationData.length === 2) {
-          // config.validationData consists of valX and valY.
-          inputValX = args.validationData[0];
-          inputValY = args.validationData[1];
-        } else if (args.validationData.length === 3) {
-          throw new NotImplementedError(
-              'validationData including sample weights is not supported yet.');
-        } else {
-          throw new ValueError(
-              `When passing validation data, it must contain 2 (valX, valY) ` +
-              `or 3 (valX, valY, valSampleWeight) items; ` +
-              `${args.validationData} is invalid.`);
-        }
+        [inputValX, inputValY] = requireValidationPair(args.validationData);
 
         const checkBatchAxis = true;
         const valStandardized =
@@ -1796,71 +1751,70 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       if (stepsPerEpoch != null) {
         throw new NotImplementedError(
             'stepsPerEpoch mode is not implemented yet.');
-      } else {
-        if (shuffle === 'batch') {
-          throw new NotImplementedError('batch shuffling is not implemneted'
-                                        + ' yet');
-        }
-        if (shuffle) {
-          util.shuffle(indexArray);
-        }
-        // Convert the potentially shuffled indices to Tensor1D, to avoid the
-        // cost of repeated creation of Array1Ds later on.
-        const epochIndexArray1D = tensor1d(indexArray);
+      }
+      if (shuffle === 'batch') {
+        throw new NotImplementedError('batch shuffling is not implemneted'
+                                      + ' yet');
+      }
+      if (shuffle) {
+        util.shuffle(indexArray);
+      }
+      // Convert the potentially shuffled indices to Tensor1D, to avoid the
+      // cost of repeated creation of Array1Ds later on.
+      const epochIndexArray1D = tensor1d(indexArray);
 
-        const batches = makeBatches(numTrainSamples, batchSize);
-        for (let batchIndex = 0; batchIndex < batches.length; ++batchIndex) {
-          const batchLogs: UnresolvedLogs = {};
-          await callbackList.onBatchBegin(batchIndex, batchLogs);
+      const batches = makeBatches(numTrainSamples, batchSize);
+      for (let batchIndex = 0; batchIndex < batches.length; ++batchIndex) {
+        const batchLogs: UnresolvedLogs = {};
+        await callbackList.onBatchBegin(batchIndex, batchLogs);
 
-          tfc.tidy(() => {
-            const batchStart = batches[batchIndex][0];
-            const batchEnd = batches[batchIndex][1];
-            const batchIds = K.sliceAlongFirstAxis(
-                                 epochIndexArray1D, batchStart,
-                                 batchEnd - batchStart) as Tensor1D;
-            batchLogs['batch'] = batchIndex;
-            batchLogs['size'] = batchEnd - batchStart;
+        tfc.tidy(() => {
+          const batchStart = batches[batchIndex][0];
+          const batchEnd = batches[batchIndex][1];
+          const batchIds = K.sliceAlongFirstAxis(
+                               epochIndexArray1D, batchStart,
+                               batchEnd - batchStart) as Tensor1D;
+          batchLogs['batch'] = batchIndex;
+          batchLogs['size'] = batchEnd - batchStart;
 
-            // TODO(cais): In ins, train flag can be a number, instead of an
-            //   Tensor? Do we need to handle this in tfjs-layers?
-            const insBatch = sliceArraysByIndices(ins, batchIds) as Tensor[];
-            const outs = f(insBatch);
-            for (let i = 0; i < outLabels.length; ++i) {
-              const label = outLabels[i];
-              const out = outs[i];
-              batchLogs[label] = out;
-              tfc.keep(out);
-              // TODO(cais): Use scope() to avoid ownership.
-            }
+          // TODO(cais): In ins, train flag can be a number, instead of an
+          //   Tensor? Do we need to handle this in tfjs-layers?
+          const insBatch = sliceArraysByIndices(ins, batchIds) as Tensor[];
+          const outs = f(insBatch);
+          for (let i = 0; i < outLabels.length; ++i) {
+            const label = outLabels[i];
+            const out = outs[i];
+            batchLogs[label] = out;
+            tfc.keep(out);
+            // TODO(cais): Use scope() to avoid ownership.
+          }
 
-            if (!(batchIndex === batches.length - 1)) return;
-            {  // Last batch.
-              if (doValidation) {
-                const valOuts = this.testLoop(valF, valIns, batchSize);
-                // Porting Notes: In tfjs-layers, valOuts is always an Array.
-                for (let i = 0; i < outLabels.length; ++i) {
-                  const label = outLabels[i];
-                  const out = valOuts[i];
-                  tfc.keep(out);
-                  // TODO(cais): Use scope() to avoid ownership.
-                  epochLogs['val_' + label] = out;
-                }
+          if (!(batchIndex === batches.length - 1)) return;
+          {  // Last batch.
+            if (doValidation) {
+              const valOuts = this.testLoop(valF, valIns, batchSize);
+              // Porting Notes: In tfjs-layers, valOuts is always an Array.
+              for (let i = 0; i < outLabels.length; ++i) {
+                const label = outLabels[i];
+                const out = valOuts[i];
+                tfc.keep(out);
+                // TODO(cais): Use scope() to avoid ownership.
+                epochLogs['val_' + label] = out;
               }
             }
-          });
-
-          await callbackList.onBatchEnd(batchIndex, batchLogs);
-          disposeTensorsInLogs(batchLogs);
-
-          if (this.stopTraining_) {
-            break;
           }
-          // TODO(cais): return outs as list of Tensor.
-        }
+        });
 
-        epochIndexArray1D.dispose();
+        await callbackList.onBatchEnd(batchIndex, batchLogs);
+        disposeTensorsInLogs(batchLogs);
+
+        if (this.stopTraining_) {
+          break;
+        }
+        // TODO(cais): return outs as list of Tensor.
       }
+
+      epochIndexArray1D.dispose();
       // TODO(cais): Run validation at the end of the epoch.
       await callbackList.onEpochEnd(epoch, epochLogs);
       if (this.stopTraining_) {
@@ -2100,27 +2054,8 @@ export class LayersModel extends Container implements tfc.InferenceModel {
         serialization.ConfigDict;
     const optimizer = deserialize(tsConfig) as Optimizer;
 
-    let loss;
-    if (typeof trainingConfig.loss === 'string') {
-      loss = toCamelCase(trainingConfig.loss);
-    } else if (Array.isArray(trainingConfig.loss)) {
-      loss = trainingConfig.loss.map(lossEntry => toCamelCase(lossEntry));
-    } else if (trainingConfig.loss != null) {
-      loss = {} as {[outputName: string]: LossIdentifier};
-      for (const key in trainingConfig.loss) {
-        loss[key] = toCamelCase(trainingConfig.loss[key]) as LossIdentifier;
-      }
-    }
-
-    let metrics;
-    if (Array.isArray(trainingConfig.metrics)) {
-      metrics = trainingConfig.metrics.map(metric => toCamelCase(metric));
-    } else if (trainingConfig.metrics != null) {
-      metrics = {} as {[outputName: string]: MetricsIdentifier};
-      for (const key in trainingConfig.metrics) {
-        metrics[key] = toCamelCase(trainingConfig.metrics[key]);
-      }
-    }
+    const loss = deserializeTrainingLoss(trainingConfig.loss);
+    const metrics = deserializeTrainingMetrics(trainingConfig.metrics);
 
     this.compile({
       loss,
@@ -2323,4 +2258,93 @@ function resolveSaveHandler(url: string): io.IOHandler {
         `URL '${url}'`);
   }
   return handlers[0];
+}
+
+/** Resolve loss functions in output order, validating the supplied representation. */
+function resolveLossFunctions(
+    loss: ModelCompileArgs['loss'], outputNames: string[],
+    outputs: SymbolicTensor[]): LossOrMetricFn[] {
+  if (Array.isArray(loss)) {
+    if (loss.length !== outputs.length) {
+      throw new ValueError(
+          `When passing an Array as loss, it should have one entry per ` +
+          `model output. The model has ${outputs.length} output(s), ` +
+          `but you passed loss=${loss}.`);
+    }
+    const configuredLosses: Array<string|LossOrMetricFn> = loss;
+    return configuredLosses.map(l => losses.get(l));
+  }
+  if (typeof loss === 'string' || typeof loss === 'function') {
+    const lossFunction = losses.get(loss);
+    const lossFunctions: LossOrMetricFn[] = [];
+    outputs.forEach(_ => lossFunctions.push(lossFunction));
+    return lossFunctions;
+  }
+  for (const name in loss) {
+    if (outputNames.indexOf(name) === -1) {
+      throw new ValueError(
+          `Unknown entry in loss dictionary: "${name}". ` +
+          `Only expected the following keys: ${outputNames}`);
+    }
+  }
+  const lossFunctions: LossOrMetricFn[] = [];
+  for (const name of outputNames) {
+    if (loss[name] == null) {
+      console.warn(
+          `Output "${name}" is missing from loss dictionary. We assume ` +
+          `this was done on purpose, and we will not be expecting data ` +
+          `to be passed to ${name} during training`);
+    }
+    lossFunctions.push(losses.get(loss[name]));
+  }
+  return lossFunctions;
+}
+
+/** Validate the explicitly supplied validation data tuple. */
+function requireValidationPair(
+    data: ModelFitArgs['validationData']): [Tensor|Tensor[], Tensor|Tensor[]] {
+  if (data.length === 2) {
+    return [data[0], data[1]];
+  }
+  if (data.length === 3) {
+    throw new NotImplementedError(
+        'validationData including sample weights is not supported yet.');
+  }
+  throw new ValueError(
+      `When passing validation data, it must contain 2 (valX, valY) ` +
+      `or 3 (valX, valY, valSampleWeight) items; ${data} is invalid.`);
+}
+
+/** Convert serialized loss names while preserving the user's representation. */
+function deserializeTrainingLoss(loss: TrainingConfig['loss']): ModelCompileArgs['loss'] {
+  if (typeof loss === 'string') {
+    return toCamelCase(loss);
+  }
+  if (Array.isArray(loss)) {
+    return loss.map(lossEntry => toCamelCase(lossEntry));
+  }
+  if (loss == null) {
+    return undefined;
+  }
+  const result: {[outputName: string]: LossIdentifier} = {};
+  for (const key in loss) {
+    result[key] = toCamelCase(loss[key]) as LossIdentifier;
+  }
+  return result;
+}
+
+/** Convert metric names without altering the order or structure of the config. */
+function deserializeTrainingMetrics(
+    metrics: TrainingConfig['metrics']): ModelCompileArgs['metrics'] {
+  if (Array.isArray(metrics)) {
+    return metrics.map(metric => toCamelCase(metric));
+  }
+  if (metrics == null) {
+    return undefined;
+  }
+  const result: {[outputName: string]: MetricsIdentifier} = {};
+  for (const key in metrics) {
+    result[key] = toCamelCase(metrics[key]) as MetricsIdentifier;
+  }
+  return result;
 }

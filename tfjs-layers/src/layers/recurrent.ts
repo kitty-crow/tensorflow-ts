@@ -66,23 +66,10 @@ export function standardizeArgs(
   constants: Tensor[]|SymbolicTensor[]
 } {
   if (Array.isArray(inputs)) {
-    if (initialState != null || constants != null) {
-      throw new ValueError(
-          'When inputs is an array, neither initialState or constants ' +
-          'should be provided');
-    }
-    if (numConstants != null) {
-      constants = inputs.slice(inputs.length - numConstants, inputs.length);
-      inputs = inputs.slice(0, inputs.length - numConstants);
-    }
-    if (inputs.length > 1) {
-      initialState = inputs.slice(1, inputs.length);
-    }
-    const input = inputs[0];
-    if (input == null) {
-      throw new ValueError('An RNN requires its input tensor.');
-    }
-    inputs = input;
+    const parsed = splitRnnInputs(inputs, initialState, constants, numConstants);
+    inputs = parsed.inputs;
+    initialState = parsed.initialState;
+    constants = parsed.constants;
   }
 
   function toListOrNull(x: Tensor|Tensor[]|SymbolicTensor|
@@ -100,6 +87,31 @@ export function standardizeArgs(
   constants = toListOrNull(constants);
 
   return {inputs, initialState, constants};
+}
+
+/** Split positional recurrent inputs, states and trailing constants. */
+function splitRnnInputs(
+    inputs: Tensor[]|SymbolicTensor[],
+    initialState: Tensor|Tensor[]|SymbolicTensor|SymbolicTensor[],
+    constants: Tensor|Tensor[]|SymbolicTensor|SymbolicTensor[],
+    numConstants: number) {
+  if (initialState != null || constants != null) {
+    throw new ValueError(
+        'When inputs is an array, neither initialState or constants ' +
+        'should be provided');
+  }
+  if (numConstants != null) {
+    constants = inputs.slice(inputs.length - numConstants, inputs.length);
+    inputs = inputs.slice(0, inputs.length - numConstants);
+  }
+  if (inputs.length > 1) {
+    initialState = inputs.slice(1, inputs.length);
+  }
+  const input = inputs[0];
+  if (input == null) {
+    throw new ValueError('An RNN requires its input tensor.');
+  }
+  return {inputs: input, initialState, constants};
 }
 
 /**
@@ -174,18 +186,14 @@ export function rnn(
     }
 
     if (mask != null) {
-      mask = tfc.cast(tfc.cast(mask, 'bool'), 'float32');
-      if (mask.rank === ndim - 1) {
-        mask = tfc.expandDims(mask, -1);
-      }
-      mask = tfc.transpose(mask, axes);
+      mask = prepareRnnMask(mask, ndim, axes);
     }
 
     if (goBackwards) {
       inputs = tfc.reverse(inputs, 0);
-      if (mask != null) {
-        mask = tfc.reverse(mask, 0);
-      }
+    }
+    if (goBackwards && mask != null) {
+      mask = tfc.reverse(mask, 0);
     }
 
     // Porting Note: PyKeras with TensorFlow backend uses a symbolic loop
@@ -582,67 +590,78 @@ export class RNN extends Layer {
             '- If using the functional API, specify the batch size by ' +
             'passing a `batchShape` option to your Input layer.');
       }
-      // Initialize state if null.
-      if (this.states_ == null) {
-        if (Array.isArray(this.cell.stateSize)) {
-          this.states_ =
-              this.cell.stateSize.map(dim => tfc.zeros([batchSize, dim]));
-        } else {
-          this.states_ = [tfc.zeros([batchSize, this.cell.stateSize])];
-        }
-      } else if (states == null) {
-        // Dispose old state tensors.
-        tfc.dispose(this.states_);
-        // For stateful RNNs, fully dispose kept old states.
-        if (this.keptStates != null) {
-          tfc.dispose(this.keptStates);
-          this.keptStates = [];
-        }
-
-        if (Array.isArray(this.cell.stateSize)) {
-          this.states_ =
-              this.cell.stateSize.map(dim => tfc.zeros([batchSize, dim]));
-        } else {
-          this.states_[0] = tfc.zeros([batchSize, this.cell.stateSize]);
-        }
-      } else {
-        if (!Array.isArray(states)) {
-          states = [states];
-        }
-        if (states.length !== this.states_.length) {
-          throw new ValueError(
-              `Layer ${this.name} expects ${this.states_.length} state(s), ` +
-              `but it received ${states.length} state value(s). Input ` +
-              `received: ${states}`);
-        }
-
-        if (training === true) {
-          // Store old state tensors for complete disposal later, i.e., during
-          // the next no-arg call to this method. We do not dispose the old
-          // states immediately because that BPTT (among other things) require
-          // them.
-          this.keptStates.push(this.states_.slice());
-        } else {
-          tfc.dispose(this.states_);
-        }
-
-        for (let index = 0; index < this.states_.length; ++index) {
-          const value = states[index];
-          const dim = Array.isArray(this.cell.stateSize) ?
-              this.cell.stateSize[index] :
-              this.cell.stateSize;
-          const expectedShape = [batchSize, dim];
-          if (!util.arraysEqual(value.shape, expectedShape)) {
-            throw new ValueError(
-                `State ${index} is incompatible with layer ${this.name}: ` +
-                `expected shape=${expectedShape}, received shape=${
-                    value.shape}`);
-          }
-          this.states_[index] = value;
-        }
-      }
+      this.resetStateValues(
+          states, training === true, this.states_ == null,
+          dim => [batchSize, dim],
+          index => [batchSize, Array.isArray(this.cell.stateSize) ?
+              this.cell.stateSize[index] : this.cell.stateSize]);
       this.states_ = this.states_.map(state => tfc.keep(state.clone()));
     });
+  }
+
+  /**
+   * Update the recurrent state's ownership and values. The caller supplies the
+   * state shape, which differs between dense and convolutional recurrent cells.
+   * Keep the scalar-state array on reset, as in the original implementations.
+   */
+  protected resetStateValues(
+      states: Tensor|Tensor[], training: boolean, uninitialized: boolean,
+      stateShape: (dim: number) => Shape,
+      expectedStateShape: (index: number) => Shape): void {
+    if (uninitialized) {
+      this.states_ = this.createZeroStateValues(stateShape);
+      return;
+    }
+    if (states == null) {
+      this.clearStateValues(stateShape);
+      return;
+    }
+    const values = Array.isArray(states) ? states : [states];
+    if (values.length !== this.states_.length) {
+      throw new ValueError(
+          `Layer ${this.name} expects ${this.states_.length} state(s), ` +
+          `but it received ${values.length} state value(s). Input ` +
+          `received: ${values}`);
+    }
+    if (training) {
+      // Retain old tensors for backpropagation through time.
+      this.keptStates.push(this.states_.slice());
+    } else {
+      tfc.dispose(this.states_);
+    }
+    for (let index = 0; index < this.states_.length; ++index) {
+      const value = values[index];
+      const expectedShape = expectedStateShape(index);
+      if (!util.arraysEqual(value.shape, expectedShape)) {
+        throw new ValueError(
+            `State ${index} is incompatible with layer ${this.name}: ` +
+            `expected shape=${expectedShape}, received shape=${value.shape}`);
+      }
+      this.states_[index] = value;
+    }
+  }
+
+  private createZeroStateValues(stateShape: (dim: number) => Shape): Tensor[] {
+    const sizes = this.cell.stateSize;
+    if (Array.isArray(sizes)) {
+      return sizes.map(dim => tfc.zeros(stateShape(dim)));
+    }
+    return [tfc.zeros(stateShape(sizes))];
+  }
+
+  private clearStateValues(stateShape: (dim: number) => Shape): void {
+    tfc.dispose(this.states_);
+    // Fully dispose the old states retained for backpropagation.
+    if (this.keptStates != null) {
+      tfc.dispose(this.keptStates);
+      this.keptStates = [];
+    }
+    const sizes = this.cell.stateSize;
+    if (Array.isArray(sizes)) {
+      this.states_ = sizes.map(dim => tfc.zeros(stateShape(dim)));
+      return;
+    }
+    this.states_[0] = tfc.zeros(stateShape(sizes));
   }
 
   override apply(
@@ -2130,4 +2149,13 @@ export function generateDropoutMask(args: {
   const masks = new Array<number>(count).fill(0).map(createMask);
 
   return masks.map(m => tfc.keep(m.clone()));
+}
+
+/** Convert and align a recurrent mask with the time-major input axes. */
+function prepareRnnMask(mask: Tensor, ndim: number, axes: number[]): Tensor {
+  mask = tfc.cast(tfc.cast(mask, 'bool'), 'float32');
+  if (mask.rank === ndim - 1) {
+    mask = tfc.expandDims(mask, -1);
+  }
+  return tfc.transpose(mask, axes);
 }

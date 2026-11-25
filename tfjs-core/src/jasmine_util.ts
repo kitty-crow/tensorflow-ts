@@ -147,7 +147,10 @@ export function setupTestFilters(
           (testFilter.startsWith != null &&
            name.startsWith(testFilter.startsWith)))) continue;
       {
-        if (testFilter.excludes != null) {
+        if (!(testFilter.excludes != null)) {
+          return true;
+        }
+        {
           for (let j = 0; j < testFilter.excludes.length; j++) {
             if (name.indexOf(testFilter.excludes[j]) > -1) {
               return false;

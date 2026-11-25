@@ -104,12 +104,9 @@ export function batchMatMulImpl({
       null;
   const containsFusedOps = hasBias || hasPreluActivationWeights ||
       hasLeakyreluAlpha || fusedActivation != null;
-  let out: TensorInfo;
-
   // Since the matrices are vectors, it is faster to call mul().sum()
   // because sum() is O(sqrt(N)) due to divide-and-conquer.
-  if ((outerShapeA === 1 || outerShapeB === 1) &&
-      sharedDim > MATMUL_SHARED_DIM_THRESHOLD && containsFusedOps === false) {
+  function computeVectorProduct(): TensorInfo {
     let aVec = a3d;
     let bVec = b3d;
     if (transposeA) {
@@ -149,9 +146,12 @@ export function batchMatMulImpl({
     }
 
     const product = multiply({inputs: {a: aVec3d, b: bVec3d}, backend});
-    out = sum({inputs: {x: product}, backend, attrs: {axis, keepDims: true}});
+    const out = sum({inputs: {x: product}, backend, attrs: {axis, keepDims: true}});
     intermediates.push(product);
-  } else {
+    return out;
+  }
+
+  function computePackedProduct(): TensorInfo {
     const dtype = upcastType(a.dtype, b.dtype);
 
     const program = new MatMulPackedProgram(
@@ -174,8 +174,12 @@ export function batchMatMulImpl({
       intermediates.push($leakyreluAlpha);
     }
 
-    out = backend.runWebGLProgram(program, inputs, dtype);
+    return backend.runWebGLProgram(program, inputs, dtype);
   }
+
+  const out = (outerShapeA === 1 || outerShapeB === 1) &&
+      sharedDim > MATMUL_SHARED_DIM_THRESHOLD && containsFusedOps === false ?
+      computeVectorProduct() : computePackedProduct();
 
   const outReshaped =
       reshape({inputs: {x: out}, backend, attrs: {shape: outShape}});

@@ -111,15 +111,14 @@ export class CSVDataset extends Dataset<TensorContainer> {
         duplicateNames.length === 0,
         () => 'Duplicate column names found: ' + duplicateNames.toString());
     // Check if keys in columnConfigs match columnNames.
-    if (this.columnConfigs) {
-      for (const key of Object.keys(this.columnConfigs)) {
-        const index = this.fullColumnNames.indexOf(key);
-        if (index === -1) {
-          throw new Error(
-              'The key "' + key +
-              '" provided in columnConfigs does not match any of the column ' +
-              'names (' + this.fullColumnNames.toString() + ').');
-        }
+    const configuredKeys = this.columnConfigs ? Object.keys(this.columnConfigs) : [];
+    for (const key of configuredKeys) {
+      const index = this.fullColumnNames.indexOf(key);
+      if (index === -1) {
+        throw new Error(
+            'The key "' + key +
+            '" provided in columnConfigs does not match any of the column ' +
+            'names (' + this.fullColumnNames.toString() + ').');
       }
     }
     this.columnNamesValidated = true;
@@ -219,58 +218,10 @@ export class CSVDataset extends Dataset<TensorContainer> {
       if (this.configuredColumnsOnly && !config) {
         // This column is not selected.
         continue;
-      } else {
-        const value = values[i];
-        let parsedValue = null;
-        if (value === '') {
-          // If default value is provided, use it. If default value is not
-          // provided, set as undefined.
-          if (config && config.default !== undefined) {
-            parsedValue = config.default;
-          } else if (config && (config.required || config.isLabel)) {
-            throw new Error(
-                `Required column ${key} is empty in this line: ${line}`);
-          } else {
-            parsedValue = undefined;
-          }
-        } else {
-          // A value is present, so parse it based on type
-          const valueAsNum = Number(value);
-          if (isNaN(valueAsNum)) {
-            // The value is a string and this column is declared as boolean
-            // in config, parse it as boolean.
-            if (config && config.dtype === 'bool') {
-              parsedValue = this.getBoolean(value);
-            } else {
-              // Set value as string
-              parsedValue = value;
-            }
-          } else if (!config || !config.dtype) {
-            // If this value is a number and no type config is provided, return
-            // it as number.
-            parsedValue = valueAsNum;
-          } else {
-            // If this value is a number and data type is provided, parse it
-            // according to provided data type.
-            switch (config.dtype) {
-              case 'float32':
-                parsedValue = valueAsNum;
-                break;
-              case 'int32':
-                parsedValue = Math.floor(valueAsNum);
-                break;
-              case 'bool':
-                parsedValue = this.getBoolean(value);
-                break;
-              default:
-                parsedValue = valueAsNum;
-            }
-          }
-        }
-        // Check if this column is label.
-        (config && config.isLabel) ? labels[key] = parsedValue :
-                                     features[key] = parsedValue;
       }
+      const parsedValue = this.parseColumnValue(values[i], config, key, line);
+      (config && config.isLabel) ? labels[key] = parsedValue :
+                                   features[key] = parsedValue;
     }
     // If label exists, return an object of features and labels as {xs:features,
     // ys:labels}, otherwise return features only.
@@ -279,6 +230,30 @@ export class CSVDataset extends Dataset<TensorContainer> {
 
     } else {
       return {xs: features, ys: labels};
+    }
+  }
+
+  /** Decode an individual field, respecting missing-value and dtype policy. */
+  private parseColumnValue(
+      value: string, config: ColumnConfig, key: string,
+      line: string): TensorContainer {
+    if (value === '') {
+      return missingColumnValue(config, key, line);
+    }
+    const numeric = Number(value);
+    if (isNaN(numeric)) {
+      return config && config.dtype === 'bool' ? this.getBoolean(value) : value;
+    }
+    if (!config || !config.dtype) {
+      return numeric;
+    }
+    switch (config.dtype) {
+      case 'int32':
+        return Math.floor(numeric);
+      case 'bool':
+        return this.getBoolean(value);
+      default:
+        return numeric;
     }
   }
 
@@ -396,3 +371,15 @@ export class CSVDataset extends Dataset<TensorContainer> {
 // TODO(soergel): add more basic datasets for parity with tf.data
 // tf.data.FixedLengthRecordDataset()
 // tf.data.TFRecordDataset()
+
+/** Resolve an empty field using its default before validating required fields. */
+function missingColumnValue(
+    config: ColumnConfig, key: string, line: string): TensorContainer {
+  if (config && config.default !== undefined) {
+    return config.default;
+  }
+  if (config && (config.required || config.isLabel)) {
+    throw new Error(`Required column ${key} is empty in this line: ${line}`);
+  }
+  return undefined;
+}

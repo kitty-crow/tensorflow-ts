@@ -638,27 +638,19 @@ export abstract class Container extends Layer {
             tokens.slice(0, -2).concat([tokens[tokens.length - 1]]);
         validatedName = shortenNameArray.join('/');
       }
-      if (nameToWeight[validatedName] != null) {
-        weightValueTuples.push([nameToWeight[validatedName], weights[name]]);
-      } else if (strict) {
+      const weight = nameToWeight[validatedName];
+      if (weight == null && strict) {
         throw new ValueError(
             `Provided weight data has no target variable: ${name}`);
+      }
+      if (weight != null) {
+        weightValueTuples.push([weight, weights[name]]);
       }
       delete nameToWeight[validatedName];
     }
 
     if (strict) {
-      // Check that all weights are set.
-      const unsetNames: string[] = [];
-      for (const name in nameToWeight) {
-        unsetNames.push(name);
-      }
-      if (unsetNames.length > 0) {
-        throw new ValueError(
-            `${unsetNames.length} of ${
-                totalWeightsCount} weights are not set: ` +
-            `${unsetNames}`);
-      }
+      assertAllWeightsSet(nameToWeight, totalWeightsCount);
     }
 
     batchSetValue(weightValueTuples);
@@ -920,28 +912,17 @@ export abstract class Container extends Layer {
           if (node.callArgs != null) {
             kwargs = node.callArgs;
           }
-          if (computedData.length === 1) {
-            const [computedTensor, computedMask] = computedData[0];
-            if (kwargs['mask'] == null) {
-              kwargs['mask'] = computedMask;
-            }
-            outputTensors =
-                generic_utils.toList(layer.call(computedTensor, kwargs));
-            outputMasks = generic_utils.toList(
-                layer.computeMask(computedTensor, computedMask));
-            computedTensors = [computedTensor];
-            computedMasks = [computedMask];
-          } else {
-            computedTensors = computedData.map(x => x[0]);
-            computedMasks = computedData.map(x => x[1]);
-            if (kwargs['mask'] == null) {
-              kwargs['mask'] = computedMasks;
-            }
-            outputTensors =
-                generic_utils.toList(layer.call(computedTensors, kwargs));
-            outputMasks = generic_utils.toList(
-                layer.computeMask(computedTensors, computedMasks));
+          const singleInput = computedData.length === 1;
+          computedTensors = computedData.map(x => x[0]);
+          computedMasks = computedData.map(x => x[1]);
+          const computedInput = singleInput ? computedTensors[0] : computedTensors;
+          const computedMask = singleInput ? computedMasks[0] : computedMasks;
+          if (kwargs['mask'] == null) {
+            kwargs['mask'] = computedMask;
           }
+          outputTensors = generic_utils.toList(layer.call(computedInput, kwargs));
+          outputMasks = generic_utils.toList(
+              layer.computeMask(computedInput, computedMask));
 
           if (layer.activityRegularizer) {
             throw new NotImplementedError(
@@ -1028,13 +1009,12 @@ export abstract class Container extends Layer {
   getLayer(nameOrIndex?: string|number, index?: number): Layer {
     if (index != null) {
       return this.findLayer(index);
-    } else {
-      if (nameOrIndex == null) {
-        throw new ValueError('Provide either a layer name or layer index');
-      }
-      if (typeof nameOrIndex === 'number') {
-        return this.findLayer(nameOrIndex);
-      }
+    }
+    if (nameOrIndex == null) {
+      throw new ValueError('Provide either a layer name or layer index');
+    }
+    if (typeof nameOrIndex === 'number') {
+      return this.findLayer(nameOrIndex);
     }
 
     for (const layer of this.layers) {
@@ -1126,10 +1106,7 @@ export abstract class Container extends Layer {
               const nodeIndex = node.nodeIndices[i];
               const tensorIndex = node.tensorIndices[i];
               const nodeKey = Container.nodeKey(inboundLayer, nodeIndex);
-              let newNodeIndex = nodeConversionMap[nodeKey];
-              if (newNodeIndex == null) {
-                newNodeIndex = 0;
-              }
+              const newNodeIndex = nodeConversionMap[nodeKey] ?? 0;
               nodeData.push(
                   [inboundLayer.name, newNodeIndex, tensorIndex, kwargs]);
             }
@@ -1378,5 +1355,18 @@ export abstract class Container extends Layer {
         // tslint:enable:no-any
       });
     });
+  }
+}
+
+/** Check that no required model weights remain unset. */
+function assertAllWeightsSet(
+    nameToWeight: {[name: string]: LayerVariable}, totalWeightsCount: number): void {
+  const unsetNames: string[] = [];
+  for (const name in nameToWeight) {
+    unsetNames.push(name);
+  }
+  if (unsetNames.length > 0) {
+    throw new ValueError(
+        `${unsetNames.length} of ${totalWeightsCount} weights are not set: ${unsetNames}`);
   }
 }

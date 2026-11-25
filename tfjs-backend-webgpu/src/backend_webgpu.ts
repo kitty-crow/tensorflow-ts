@@ -597,14 +597,13 @@ export class WebGPUBackend extends KernelBackend {
       throw new Error('Does not support reading buffer for complex64 dtype.');
     }
 
+    if (resource == null && values == null) {
+      throw new Error('There is no data on GPU or CPU.');
+    }
     if (resource == null) {
-      if (values != null) {
-        this.uploadToGPU(dataId);
-        srcTensorData = this.tensorMap.get(dataId);
-        resource = srcTensorData.resource;
-      } else {
-        throw new Error('There is no data on GPU or CPU.');
-      }
+      this.uploadToGPU(dataId);
+      srcTensorData = this.tensorMap.get(dataId);
+      resource = srcTensorData.resource;
     }
 
     const srcBuffer = resource as GPUBuffer;
@@ -740,41 +739,46 @@ export class WebGPUBackend extends KernelBackend {
     let buffer;
     const usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
         GPUBufferUsage.COPY_DST;
-    if (tensorData.values) {
-      buffer = this.bufferManager.acquireBuffer(size, usage, true);
-      if (buffer.mapState === 'unmapped') {
-        const stagingBuffer = this.bufferManager.acquireBuffer(
-            size, GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC, true,
-            false);
-        const arrayBuffer = stagingBuffer.getMappedRange();
-        if (tensorData.dtype === 'int32' || tensorData.dtype === 'bool') {
-          new Int32Array(arrayBuffer).set(tensorData.values as TypedArray);
-        } else {
-          new Float32Array(arrayBuffer).set(tensorData.values as Float32Array);
-        }
-        stagingBuffer.unmap();
-        this.ensureCommandEncoderReady();
-        this.endComputePassEncoder();
-        this.commandEncoder.copyBufferToBuffer(
-            stagingBuffer, 0, buffer, 0, size);
-
-        this.stagingPendingDisposal.push(stagingBuffer);
-      } else {
-        const arrayBuffer = buffer.getMappedRange();
-        if (tensorData.dtype === 'int32' || tensorData.dtype === 'bool') {
-          new Int32Array(arrayBuffer).set(tensorData.values as TypedArray);
-        } else {
-          new Float32Array(arrayBuffer).set(tensorData.values as Float32Array);
-        }
-        buffer.unmap();
-      }
-
-      // Once uploaded, don't store the values on cpu.
-      tensorData.values = null;
-    } else {
-      buffer = this.bufferManager.acquireBuffer(size, usage);
+    if (!tensorData.values) {
+      tensorData.resource = this.bufferManager.acquireBuffer(size, usage);
+      return;
     }
+    buffer = this.bufferManager.acquireBuffer(size, usage, true);
+    this.writeBufferValues(buffer, tensorData.values, tensorData.dtype, size);
+    // Once uploaded, don't store the values on cpu.
+    tensorData.values = null;
     tensorData.resource = buffer;
+  }
+
+  /** Upload values directly into a mapped buffer or through a staging buffer. */
+  private writeBufferValues(
+      buffer: GPUBuffer, values: BackendValues, dtype: DataType,
+      size: number): void {
+    if (buffer.mapState !== 'unmapped') {
+      writeMappedBuffer(buffer, values, dtype);
+      return;
+    }
+    const stagingBuffer = this.bufferManager.acquireBuffer(
+        size, GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC, true, false);
+    writeMappedBuffer(stagingBuffer, values, dtype);
+    this.ensureCommandEncoderReady();
+    this.endComputePassEncoder();
+    this.commandEncoder.copyBufferToBuffer(stagingBuffer, 0, buffer, 0, size);
+    this.stagingPendingDisposal.push(stagingBuffer);
+  }
+
+  private timestampWrites(): GPUComputePassTimestampWrites {
+    if (this.querySet == null) {
+      this.querySet = this.device.createQuerySet({
+        type: 'timestamp',
+        count: this.querySetCount,
+      });
+    }
+    return {
+      querySet: this.querySet,
+      beginningOfPassWriteIndex: 0,
+      endOfPassWriteIndex: 1,
+    };
   }
 
   private makeUniforms(programUniform: ProgramUniform): GPUBindingResource {
@@ -828,12 +832,15 @@ export class WebGPUBackend extends KernelBackend {
     const arrayBuffer = new ArrayBuffer(currentOffset);
     programUniform.forEach((d, i) => {
       const offset = offsets[i];
-      if (d.type === 'int32') {
-        new Int32Array(arrayBuffer, offset, d.data.length).set(d.data);
-      } else if (d.type === 'uint32') {
-        new Uint32Array(arrayBuffer, offset, d.data.length).set(d.data);
-      } else {
-        new Float32Array(arrayBuffer, offset, d.data.length).set(d.data);
+      switch (d.type) {
+        case 'int32':
+          new Int32Array(arrayBuffer, offset, d.data.length).set(d.data);
+          break;
+        case 'uint32':
+          new Uint32Array(arrayBuffer, offset, d.data.length).set(d.data);
+          break;
+        default:
+          new Float32Array(arrayBuffer, offset, d.data.length).set(d.data);
       }
     });
 
@@ -954,20 +961,9 @@ export class WebGPUBackend extends KernelBackend {
     const computePassDescriptor: GPUComputePassDescriptor = {};
     if (shouldTimeProgram && this.supportTimestampQuery) {
       this.endComputePassEncoder();
-      if (this.querySet == null) {
-        this.querySet = this.device.createQuerySet({
-          type: 'timestamp',
-          count: this.querySetCount,
-        });
-      }
-      computePassDescriptor.timestampWrites = {
-        querySet: this.querySet,
-        beginningOfPassWriteIndex: 0,
-        endOfPassWriteIndex: 1,
-      };
-      this.computePassEncoder =
-          this.commandEncoder.beginComputePass(computePassDescriptor);
-    } else if (!this.computePassEncoder) {
+      computePassDescriptor.timestampWrites = this.timestampWrites();
+    }
+    if (!this.computePassEncoder) {
       this.computePassEncoder =
           this.commandEncoder.beginComputePass(computePassDescriptor);
     }
@@ -1049,4 +1045,16 @@ export class WebGPUBackend extends KernelBackend {
     this.textureManager.dispose();
     this.disposed = true;
   }
+}
+
+/** Encode the source dtype into a mapped GPU buffer and unmap it. */
+function writeMappedBuffer(
+    buffer: GPUBuffer, values: BackendValues, dtype: DataType): void {
+  const arrayBuffer = buffer.getMappedRange();
+  if (dtype === 'int32' || dtype === 'bool') {
+    new Int32Array(arrayBuffer).set(values as TypedArray);
+  } else {
+    new Float32Array(arrayBuffer).set(values as Float32Array);
+  }
+  buffer.unmap();
 }

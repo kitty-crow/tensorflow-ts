@@ -117,24 +117,25 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
     if ((path as io.IOHandler).load != null) {
       // Path is an IO Handler.
       this.handler = path as IOHandler;
-    } else if (this.loadOptions.requestInit != null) {
+      return;
+    }
+    if (this.loadOptions.requestInit != null) {
       this.handler = this.io.browserHTTPRequest(
                          path as string, this.loadOptions) as IOHandler;
-    } else {
-      const handlers =
-          this.io.getLoadHandlers(path as string, this.loadOptions);
-      if (handlers.length === 0) {
-        // For backward compatibility: if no load handler can be found,
-        // assume it is a relative http path.
-        handlers.push(
-            this.io.browserHTTPRequest(path as string, this.loadOptions));
-      } else if (handlers.length > 1) {
-        throw new Error(
-            `Found more than one (${handlers.length}) load handlers for ` +
-            `URL '${[path]}'`);
-      }
-      this.handler = handlers[0] as IOHandler;
+      return;
     }
+    const handlers = this.io.getLoadHandlers(path as string, this.loadOptions);
+    if (handlers.length > 1) {
+      throw new Error(
+          `Found more than one (${handlers.length}) load handlers for ` +
+          `URL '${[path]}'`);
+    }
+    if (handlers.length === 0) {
+      // For backward compatibility, assume a relative HTTP path.
+      handlers.push(
+          this.io.browserHTTPRequest(path as string, this.loadOptions));
+    }
+    this.handler = handlers[0] as IOHandler;
   }
 
   /**
@@ -197,15 +198,12 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
     const graph = this.artifacts.modelTopology as tensorflow.IGraphDef;
 
     let signature = this.artifacts.signature;
-    if (this.artifacts.userDefinedMetadata != null) {
-      const metadata = this.artifacts.userDefinedMetadata;
-      if (metadata.signature != null) {
-        signature = metadata.signature;
-      }
-
-      if (metadata.structuredOutputKeys != null) {
-        this.structuredOutputKeys = metadata.structuredOutputKeys as string[];
-      }
+    const metadata = this.artifacts.userDefinedMetadata;
+    if (metadata != null && metadata.signature != null) {
+      signature = metadata.signature;
+    }
+    if (metadata != null && metadata.structuredOutputKeys != null) {
+      this.structuredOutputKeys = metadata.structuredOutputKeys as string[];
     }
     this.signature = signature;
 
@@ -280,17 +278,7 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
   async save(handlerOrURL: io.IOHandler|string, config?: io.SaveConfig):
       Promise<io.SaveResult> {
     if (typeof handlerOrURL === 'string') {
-      const handlers = this.io.getSaveHandlers(handlerOrURL);
-      if (handlers.length === 0) {
-        throw new Error(
-            `Cannot find any save handlers for URL '${handlerOrURL}'`);
-      }
-      if (handlers.length > 1) {
-        throw new Error(
-            `Found more than one (${handlers.length}) save handlers for ` +
-            `URL '${handlerOrURL}'`);
-      }
-      handlerOrURL = handlers[0];
+      handlerOrURL = this.resolveSaveHandler(handlerOrURL);
     }
     if (handlerOrURL.save == null) {
       throw new Error(
@@ -299,6 +287,20 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
     }
 
     return handlerOrURL.save(this.artifacts);
+  }
+
+  /** Resolve the only permissible registered save handler for a URL. */
+  private resolveSaveHandler(url: string): io.IOHandler {
+    const handlers = this.io.getSaveHandlers(url);
+    if (handlers.length === 0) {
+      throw new Error(`Cannot find any save handlers for URL '${url}'`);
+    }
+    if (handlers.length > 1) {
+      throw new Error(
+          `Found more than one (${handlers.length}) save handlers for ` +
+          `URL '${url}'`);
+    }
+    return handlers[0];
   }
 
   private addStructuredOutputNames(outputTensors: Tensor|Tensor[]) {
@@ -408,19 +410,25 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
     return this.addStructuredOutputNames(outputTensors);
   }
 
+  /** Fill captured resource inputs in an already named input map. */
+  private addCapturedSignatureInputs(inputs: NamedTensorMap): void {
+    const signatureInputs = this.signature?.inputs;
+    if (signatureInputs == null) {
+      return;
+    }
+    for (const input in signatureInputs) {
+      const tensor = signatureInputs[input];
+      if (tensor.resourceId != null) {
+        inputs[input] = this.resourceIdToCapturedInput[tensor.resourceId];
+      }
+    }
+  }
+
   private normalizeInputs(inputs: Tensor|Tensor[]|
                           NamedTensorMap): NamedTensorMap {
     if (!(inputs instanceof Tensor) && !Array.isArray(inputs)) {
       // The input is already a NamedTensorMap.
-      const signatureInputs = this.signature?.inputs;
-      if (signatureInputs != null) {
-        for (const input in signatureInputs) {
-          const tensor = signatureInputs[input];
-          if (tensor.resourceId != null) {
-            inputs[input] = this.resourceIdToCapturedInput[tensor.resourceId];
-          }
-        }
-      }
+      this.addCapturedSignatureInputs(inputs);
       return inputs;
     }
     inputs = Array.isArray(inputs) ? inputs : [inputs];
@@ -580,11 +588,12 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
   dispose() {
     this.executor.dispose();
 
-    if (this.initializer) {
-      this.initializer.dispose();
-      if (this.resourceIdToCapturedInput) {
-        dispose(this.resourceIdToCapturedInput);
-      }
+    const initializer = this.initializer;
+    if (initializer) {
+      initializer.dispose();
+    }
+    if (initializer && this.resourceIdToCapturedInput) {
+      dispose(this.resourceIdToCapturedInput);
     }
 
     this.resourceManager.dispose();
@@ -662,43 +671,52 @@ export function loadGraphModelSync(
         'model artifacts or an IOHandler that loads the model');
   }
 
-  let ioHandler: io.IOHandlerSync;
-  if (modelSource instanceof Array) {
-    const [modelJSON, weights] = modelSource;
-    if (!modelJSON) {
-      throw new Error('modelJSON must be the first element of the array');
-    }
-    if (!weights || !(weights instanceof ArrayBuffer)) {
-      throw new Error(
-          'An ArrayBuffer of weights must be the second element of' +
-          ' the array');
-    }
-    if (!('modelTopology' in modelJSON)) {
-      throw new Error('Model JSON is missing \'modelTopology\'');
-    }
-    if (!('weightsManifest' in modelJSON)) {
-      throw new Error('Model JSON is missing \'weightsManifest\'');
-    }
-
-    const weightSpecs = io.getWeightSpecs(modelJSON.weightsManifest);
-    const modelArtifacts =
-        io.getModelArtifactsForJSONSync(modelJSON, weightSpecs, weights);
-    ioHandler = io.fromMemorySync(modelArtifacts);
-  } else if ('load' in modelSource) {
-    // Then modelSource is already an IOHandlerSync.
-    ioHandler = modelSource;
-  } else if (
-      'modelTopology' in modelSource && 'weightSpecs' in modelSource &&
-      'weightData' in modelSource) {
-    // modelSource is of type ModelArtifacts.
-    ioHandler = io.fromMemorySync(modelSource);
-  } else {
-    throw new Error('Unknown model format');
-  }
+  const ioHandler = resolveSynchronousModelHandler(modelSource);
 
   const model = new GraphModel(ioHandler);
   model.load();
   return model;
+}
+
+/** Validate and convert each supported synchronous model representation. */
+function resolveSynchronousModelHandler(
+    modelSource: io.IOHandlerSync|io.ModelArtifacts|[io.ModelJSON, ArrayBuffer]):
+    io.IOHandlerSync {
+  if (modelSource instanceof Array) {
+    return modelJSONHandler(modelSource);
+  }
+  if ('load' in modelSource) {
+    return modelSource;
+  }
+  if ('modelTopology' in modelSource && 'weightSpecs' in modelSource &&
+      'weightData' in modelSource) {
+    return io.fromMemorySync(modelSource);
+  }
+  throw new Error('Unknown model format');
+}
+
+/** Validate the topology/weights pair before constructing its IO handler. */
+function modelJSONHandler(
+    source: [io.ModelJSON, ArrayBuffer]): io.IOHandlerSync {
+  const [modelJSON, weights] = source;
+  if (!modelJSON) {
+    throw new Error('modelJSON must be the first element of the array');
+  }
+  if (!weights || !(weights instanceof ArrayBuffer)) {
+    throw new Error(
+        'An ArrayBuffer of weights must be the second element of' +
+        ' the array');
+  }
+  if (!('modelTopology' in modelJSON)) {
+    throw new Error('Model JSON is missing \'modelTopology\'');
+  }
+  if (!('weightsManifest' in modelJSON)) {
+    throw new Error('Model JSON is missing \'weightsManifest\'');
+  }
+  const weightSpecs = io.getWeightSpecs(modelJSON.weightsManifest);
+  const modelArtifacts =
+      io.getModelArtifactsForJSONSync(modelJSON, weightSpecs, weights);
+  return io.fromMemorySync(modelArtifacts);
 }
 
 function getTFHubUrl(modelUrl: string): string {

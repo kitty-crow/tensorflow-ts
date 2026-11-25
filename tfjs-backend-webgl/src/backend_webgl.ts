@@ -143,13 +143,9 @@ export class MathBackendWebGL extends KernelBackend {
 
     let newGPGPU;
     if (gpuResource != null) {
-      if (gpuResource instanceof GPGPUContext) {
-        newGPGPU = gpuResource;
-      } else {
-        const gl =
-            getWebGLContext(env().getNumber('WEBGL_VERSION'), gpuResource);
-        newGPGPU = new GPGPUContext(gl);
-      }
+      newGPGPU = gpuResource instanceof GPGPUContext ? gpuResource :
+          new GPGPUContext(
+              getWebGLContext(env().getNumber('WEBGL_VERSION'), gpuResource));
       this.binaryCache = {};
       this.gpgpuCreatedLocally = false;
     } else {
@@ -262,6 +258,15 @@ export class MathBackendWebGL extends KernelBackend {
     this.disposeData(tensorInfo.dataId);
   }
 
+  /** Materialise a shallow slice before reading, retaining its packing. */
+  private cloneSliceForRead(
+      dataId: DataId, shape: number[], dtype: DataType,
+      isPacked: boolean): TensorInfo {
+    const program = isPacked ? new UnaryOpPackedProgram(shape, unary_op.CLONE) :
+                               new UnaryOpProgram(shape, unary_op.CLONE);
+    return this.runWebGLProgram(program, [{dataId, shape, dtype}], dtype);
+  }
+
   override readSync(dataId: DataId): BackendValues {
     const texData = this.texData.get(dataId);
     const {values, dtype, complexTensorInfos, slice, shape, isPacked} = texData;
@@ -270,14 +275,7 @@ export class MathBackendWebGL extends KernelBackend {
     // different tensor, and is using that original tensor's texture. Run
     // `clone` in order to copy that texture and read from it.
     if (slice != null) {
-      let program;
-      if (isPacked) {
-        program = new UnaryOpPackedProgram(shape, unary_op.CLONE);
-      } else {
-        program = new UnaryOpProgram(shape, unary_op.CLONE);
-      }
-      const res =
-          this.runWebGLProgram(program, [{dataId, shape, dtype}], dtype);
+      const res = this.cloneSliceForRead(dataId, shape, dtype, isPacked);
       const data = this.readSync(res.dataId);
       this.disposeIntermediateTensorInfo(res);
       return data;
@@ -323,14 +321,7 @@ export class MathBackendWebGL extends KernelBackend {
     // different tensor, and is using that original tensor's texture. Run
     // `clone` in order to copy that texture and read from it.
     if (slice != null) {
-      let program;
-      if (isPacked) {
-        program = new UnaryOpPackedProgram(shape, unary_op.CLONE);
-      } else {
-        program = new UnaryOpProgram(shape, unary_op.CLONE);
-      }
-      const res =
-          this.runWebGLProgram(program, [{dataId, shape, dtype}], dtype);
+      const res = this.cloneSliceForRead(dataId, shape, dtype, isPacked);
       const data = this.read(res.dataId);
       this.disposeIntermediateTensorInfo(res);
       return data;
@@ -340,16 +331,13 @@ export class MathBackendWebGL extends KernelBackend {
       return this.convertAndCacheOnCPU(dataId);
     }
 
-    if (env().getBool('DEBUG')) {
-      // getBool('WEBGL_DOWNLOAD_FLOAT_ENABLED') caused a blocking GPU call.
-      // For performance reason, only check it for debugging. In production,
-      // it doesn't handle this use case anyway, so behavior is not changed.
-      if (!env().getBool('WEBGL_DOWNLOAD_FLOAT_ENABLED') &&
-          env().getNumber('WEBGL_VERSION') === 2) {
-        throw new Error(
-            `tensor.data() with WEBGL_DOWNLOAD_FLOAT_ENABLED=false and ` +
-            `WEBGL_VERSION=2 not yet supported.`);
-      }
+    // Only check the blocking download-float flag in debug mode.
+    if (env().getBool('DEBUG') &&
+        !env().getBool('WEBGL_DOWNLOAD_FLOAT_ENABLED') &&
+        env().getNumber('WEBGL_VERSION') === 2) {
+      throw new Error(
+          `tensor.data() with WEBGL_DOWNLOAD_FLOAT_ENABLED=false and ` +
+          `WEBGL_VERSION=2 not yet supported.`);
     }
 
     let buffer: WebGLBuffer = null;
@@ -404,13 +392,18 @@ export class MathBackendWebGL extends KernelBackend {
     // Notify all pending reads.
     subscribers.forEach(resolve => resolve(dTypeVals));
     if (this.pendingDisposal.has(dataId)) {
-      this.pendingDisposal.delete(dataId);
-      if (this.disposeData(dataId)) {
-        engine().removeDataId(dataId, this);
-      }
-      this.pendingDeletes--;
+      this.completePendingDisposal(dataId);
     }
     return dTypeVals;
+  }
+
+  /** Complete disposal deferred until all pending reads finish. */
+  private completePendingDisposal(dataId: DataId): void {
+    this.pendingDisposal.delete(dataId);
+    if (this.disposeData(dataId)) {
+      engine().removeDataId(dataId, this);
+    }
+    this.pendingDeletes--;
   }
 
   /**
@@ -433,25 +426,17 @@ export class MathBackendWebGL extends KernelBackend {
     // different tensor, and is using that original tensor's texture. Run
     // `clone` in order to copy that texture and read from it.
     if (slice != null) {
-      let program;
-      if (isPacked) {
-        program = new UnaryOpPackedProgram(shape, unary_op.CLONE);
-      } else {
-        program = new UnaryOpProgram(shape, unary_op.CLONE);
-      }
-      const res =
-          this.runWebGLProgram(program, [{dataId, shape, dtype}], dtype);
+      const res = this.cloneSliceForRead(dataId, shape, dtype, isPacked);
       const gpuResouorce = this.readToGPU(res, options);
       this.disposeIntermediateTensorInfo(res);
       return gpuResouorce;
     }
 
+    if (texture == null && values != null) {
+      throw new Error('Data is not on GPU but on CPU.');
+    }
     if (texture == null) {
-      if (values != null) {
-        throw new Error('Data is not on GPU but on CPU.');
-      } else {
-        throw new Error('There is no data on GPU or CPU.');
-      }
+      throw new Error('There is no data on GPU or CPU.');
     }
 
     // Decode the texture so that it is stored densely (using four channels).
@@ -695,10 +680,10 @@ export class MathBackendWebGL extends KernelBackend {
       this.dataRefCount.set(key, refCount - 1);
     } else {
       this.dataRefCount.delete(key);
-      if (texture != null) {
-        this.numBytesInGPU -= this.computeBytes(texShape, dtype);
-        this.textureManager.releaseTexture(texture, texShape, usage, isPacked);
-      }
+    }
+    if (!(refCount > 1) && texture != null) {
+      this.numBytesInGPU -= this.computeBytes(texShape, dtype);
+      this.textureManager.releaseTexture(texture, texShape, usage, isPacked);
     }
 
     const texData = this.texData.get(dataId);
@@ -908,29 +893,25 @@ export class MathBackendWebGL extends KernelBackend {
 
       let texData = this.texData.get(input.dataId);
 
-      if (texData.texture == null) {
-        if (!program.packedInputs &&
-            util.sizeFromShape(input.shape) <=
-                env().getNumber('WEBGL_SIZE_UPLOAD_UNIFORM')) {
-          // Upload small tensors that live on the CPU as uniforms, not as
-          // textures. Do this only when the environment supports 32bit floats
-          // due to problems when comparing 16bit floats with 32bit floats.
-          // TODO(https://github.com/tensorflow/tfjs/issues/821): Make it
-          // possible for packed shaders to sample from uniforms.
-          return {
-            shape: input.shape,
-            texData: null,
-            isUniform: true,
-            uniformValues: texData.values as TypedArray
-          };
-        }
+      const needsUpload = texData.texture == null;
+      if (needsUpload && !program.packedInputs &&
+          util.sizeFromShape(input.shape) <=
+              env().getNumber('WEBGL_SIZE_UPLOAD_UNIFORM')) {
+        // Upload small CPU tensors as uniforms rather than textures.
+        // TODO(https://github.com/tensorflow/tfjs/issues/821): Make it
+        // possible for packed shaders to sample from uniforms.
+        return {
+          shape: input.shape,
+          texData: null,
+          isUniform: true,
+          uniformValues: texData.values as TypedArray
+        };
+      }
 
-        // This ensures that if a packed program's inputs have not yet been
-        // uploaded to the GPU, they get uploaded as packed right off the bat.
-        if (program.packedInputs) {
-          texData.isPacked = true;
-          texData.shape = input.shape;
-        }
+      // Upload packed inputs directly in packed form.
+      if (needsUpload && program.packedInputs) {
+        texData.isPacked = true;
+        texData.shape = input.shape;
       }
 
       this.uploadToGPU(input.dataId);
@@ -993,11 +974,7 @@ export class MathBackendWebGL extends KernelBackend {
     const glFlushThreshold = env().getNumber('WEBGL_FLUSH_THRESHOLD');
     // Manually GL flush requested
     if (glFlushThreshold > 0) {
-      const time = util.now();
-      if ((time - this.lastGlFlushTime) > glFlushThreshold) {
-        this.gpgpu.gl.flush();
-        this.lastGlFlushTime = time;
-      }
+      this.flushIfDue(glFlushThreshold);
     }
 
     if (!env().getBool('WEBGL_LAZILY_UNPACK') && outData.isPacked &&
@@ -1062,22 +1039,27 @@ export class MathBackendWebGL extends KernelBackend {
     this.disposed = true;
   }
 
+  private flushIfDue(threshold: number): void {
+    const time = util.now();
+    if ((time - this.lastGlFlushTime) > threshold) {
+      this.gpgpu.gl.flush();
+      this.lastGlFlushTime = time;
+    }
+  }
+
   override floatPrecision(): 16|32 {
     if (this.floatPrecisionValue == null) {
       this.floatPrecisionValue = tidy(() => {
-        if (!env().get('WEBGL_RENDER_FLOAT32_ENABLED')) {
-          // Momentarily switching DEBUG flag to false so we don't throw an
-          // error trying to upload a small value.
-          const debugFlag = env().getBool('DEBUG');
-          env().set('DEBUG', false);
-          const underflowCheckValue = this.abs(scalar(1e-8)).dataSync()[0];
-          env().set('DEBUG', debugFlag);
-
-          if (underflowCheckValue > 0) {
-            return 32;
-          }
+        if (env().get('WEBGL_RENDER_FLOAT32_ENABLED')) {
+          return 16;
         }
-        return 16;
+        // Momentarily switching DEBUG flag to false so we don't throw an
+        // error trying to upload a small value.
+        const debugFlag = env().getBool('DEBUG');
+        env().set('DEBUG', false);
+        const underflowCheckValue = this.abs(scalar(1e-8)).dataSync()[0];
+        env().set('DEBUG', debugFlag);
+        return underflowCheckValue > 0 ? 32 : 16;
       });
     }
     return this.floatPrecisionValue;
@@ -1110,77 +1092,71 @@ export class MathBackendWebGL extends KernelBackend {
       texData.texShape = texShape;
     }
 
-    if (values != null) {
-      const shapeAs3D = webgl_util.getShapeAs3D(shape);
-
-      let program;
-      let width = texShape[1], height = texShape[0];
-      const isByteArray =
-          values instanceof Uint8Array || values instanceof Uint8ClampedArray;
-
-      // texture for float array is PhysicalTextureType.PACKED_2X2_FLOAT32, we
-      // need to make sure the upload uses the same packed size
-      if (isPacked || !isByteArray) {
-        [width, height] = tex_util.getPackedMatrixTextureShapeWidthHeight(
-            texShape[0], texShape[1]);
-      }
-
-      if (isPacked) {
-        program = new EncodeMatrixPackedProgram(shapeAs3D, isByteArray);
-      } else {
-        program = new EncodeMatrixProgram(shapeAs3D, isByteArray);
-      }
-
-      // TexShape for float array needs to be the original shape, which byte
-      // array needs to be packed size. This allow the data upload shape to be
-      // matched with texture creation logic.
-      const tempDenseInputTexShape: [number, number] =
-          isByteArray ? [height, width] : texShape;
-      const tempDenseInputHandle =
-          this.makeTensorInfo(tempDenseInputTexShape, dtype);
-      const tempDenseInputTexData =
-          this.texData.get(tempDenseInputHandle.dataId);
-      if (isByteArray) {
-        tempDenseInputTexData.usage = TextureUsage.PIXELS;
-      } else {
-        tempDenseInputTexData.usage = TextureUsage.UPLOAD;
-      }
-      tempDenseInputTexData.texShape = tempDenseInputTexShape;
-      this.gpgpu.uploadDenseMatrixToTexture(
-          this.getTexture(tempDenseInputHandle.dataId), width, height,
-          values as TypedArray);
-
-      const customValues = [[height, width]];
-      // We want the output to remain packed regardless of the value of
-      // WEBGL_PACK.
-      const preventEagerUnpacking = true;
-      const encodedOutputTarget = this.runWebGLProgram(
-          program, [tempDenseInputHandle], dtype, customValues,
-          preventEagerUnpacking);
-
-      // Have the original texture assume the identity of the encoded output.
-      const outputTexData = this.texData.get(encodedOutputTarget.dataId);
-      texData.texShape = outputTexData.texShape;
-      texData.isPacked = outputTexData.isPacked;
-      texData.usage = outputTexData.usage;
-
-      if (!env().get('ENGINE_COMPILE_ONLY')) {
-        texData.texture = outputTexData.texture;
-        // Once uploaded, don't store the values on cpu.
-        texData.values = null;
-        this.texData.delete(encodedOutputTarget.dataId);
-      } else {
-        this.disposeData(encodedOutputTarget.dataId);
-      }
-
-      this.disposeIntermediateTensorInfo(tempDenseInputHandle);
-
-      if (shouldTimeProgram) {
-        this.uploadWaitMs += util.now() - start;
-      }
-    } else {
+    if (values == null) {
       const newTexture = this.acquireTexture(texShape, usage, dtype, isPacked);
       texData.texture = newTexture;
+      return;
+    }
+    const shapeAs3D = webgl_util.getShapeAs3D(shape);
+
+    let program;
+    let width = texShape[1], height = texShape[0];
+    const isByteArray =
+        values instanceof Uint8Array || values instanceof Uint8ClampedArray;
+
+    // texture for float array is PhysicalTextureType.PACKED_2X2_FLOAT32, we
+    // need to make sure the upload uses the same packed size
+    if (isPacked || !isByteArray) {
+      [width, height] = tex_util.getPackedMatrixTextureShapeWidthHeight(
+          texShape[0], texShape[1]);
+    }
+
+    program = isPacked ? new EncodeMatrixPackedProgram(shapeAs3D, isByteArray) :
+                         new EncodeMatrixProgram(shapeAs3D, isByteArray);
+
+    // TexShape for float array needs to be the original shape, which byte
+    // array needs to be packed size. This allow the data upload shape to be
+    // matched with texture creation logic.
+    const tempDenseInputTexShape: [number, number] =
+        isByteArray ? [height, width] : texShape;
+    const tempDenseInputHandle =
+        this.makeTensorInfo(tempDenseInputTexShape, dtype);
+    const tempDenseInputTexData =
+        this.texData.get(tempDenseInputHandle.dataId);
+    tempDenseInputTexData.usage =
+        isByteArray ? TextureUsage.PIXELS : TextureUsage.UPLOAD;
+    tempDenseInputTexData.texShape = tempDenseInputTexShape;
+    this.gpgpu.uploadDenseMatrixToTexture(
+        this.getTexture(tempDenseInputHandle.dataId), width, height,
+        values as TypedArray);
+
+    const customValues = [[height, width]];
+    // We want the output to remain packed regardless of the value of
+    // WEBGL_PACK.
+    const preventEagerUnpacking = true;
+    const encodedOutputTarget = this.runWebGLProgram(
+        program, [tempDenseInputHandle], dtype, customValues,
+        preventEagerUnpacking);
+
+    // Have the original texture assume the identity of the encoded output.
+    const outputTexData = this.texData.get(encodedOutputTarget.dataId);
+    texData.texShape = outputTexData.texShape;
+    texData.isPacked = outputTexData.isPacked;
+    texData.usage = outputTexData.usage;
+
+    if (!env().get('ENGINE_COMPILE_ONLY')) {
+      texData.texture = outputTexData.texture;
+      // Once uploaded, don't store the values on cpu.
+      texData.values = null;
+      this.texData.delete(encodedOutputTarget.dataId);
+    } else {
+      this.disposeData(encodedOutputTarget.dataId);
+    }
+
+    this.disposeIntermediateTensorInfo(tempDenseInputHandle);
+
+    if (shouldTimeProgram) {
+      this.uploadWaitMs += util.now() - start;
     }
   }
 
@@ -1256,18 +1232,18 @@ export class MathBackendWebGL extends KernelBackend {
 
   private checkCompletion_(binary: GPGPUBinary): boolean {
     if (this.gpgpu.gl.getProgramParameter(
-            binary.webGLProgram, this.gpgpu.gl.LINK_STATUS) === false) {
-      console.log(this.gpgpu.gl.getProgramInfoLog(binary.webGLProgram));
-      if (this.gpgpu.gl.getShaderParameter(
-              binary.fragmentShader, this.gpgpu.gl.COMPILE_STATUS) === false) {
-        webgl_util.logShaderSourceAndInfoLog(
-            binary.source,
-            this.gpgpu.gl.getShaderInfoLog(binary.fragmentShader));
-        throw new Error('Failed to compile fragment shader.');
-      }
-      throw new Error('Failed to link vertex and fragment shaders.');
+            binary.webGLProgram, this.gpgpu.gl.LINK_STATUS) !== false) {
+      return true;
     }
-    return true;
+    console.log(this.gpgpu.gl.getProgramInfoLog(binary.webGLProgram));
+    if (this.gpgpu.gl.getShaderParameter(
+            binary.fragmentShader, this.gpgpu.gl.COMPILE_STATUS) === false) {
+      webgl_util.logShaderSourceAndInfoLog(
+          binary.source,
+          this.gpgpu.gl.getShaderInfoLog(binary.fragmentShader));
+      throw new Error('Failed to compile fragment shader.');
+    }
+    throw new Error('Failed to link vertex and fragment shaders.');
   }
 
   getUniformLocations() {

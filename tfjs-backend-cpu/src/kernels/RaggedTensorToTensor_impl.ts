@@ -103,15 +103,15 @@ class RaggedTensorToTensorOp {
 
   private tensorShapeFromTensor(
       t: TypedArray, tShape: number[], isPartial = true) {
-    if (tShape.length === 0) {
-      if (t[0] === -1) {
-        return [];
-      }
-      throw new Error(
-          `The only valid scalar shape tensor is the fully unknown shape specified as -1.`);
+    if (tShape.length !== 0) {
+      // MakePartialShape/MakeShapeHelper.
+      return makeShape(t, isPartial);
     }
-    // MakePartialShape/MakeShapeHelper.
-    return makeShape(t, isPartial);
+    if (t[0] === -1) {
+      return [];
+    }
+    throw new Error(
+        `The only valid scalar shape tensor is the fully unknown shape specified as -1.`);
   }
 
   private calculateOutputSize(firstDim: number) {
@@ -239,27 +239,23 @@ class RaggedTensorToTensorOp {
     result.push(currentOutputIndex);
     for (let i = 1; i < indexSize; ++i) {
       const nextValueRowId = valueRowIds[i];
-      if (nextValueRowId === currentValueRowId) {
-        if (currentOutputIndex >= 0) {
-          ++currentOutputColumn;
-          if (currentOutputColumn < outputSize) {
-            currentOutputIndex += outputIndexMultiplier;
-          } else {
-            currentOutputIndex = -1;
-          }
-        }
-      } else {
-        currentOutputColumn = 0;
-        currentValueRowId = nextValueRowId;
-
-        if (nextValueRowId >= parentOutputIndex.length) {
-          throw new Error(
-              `Got nextValueRowId=${nextValueRowId} which is not less than ${
-                  parentOutputIndex.length}`);
-        }
-
-        currentOutputIndex = parentOutputIndex[nextValueRowId];
+      const sameRow = nextValueRowId === currentValueRowId;
+      if (sameRow && currentOutputIndex >= 0) {
+        ++currentOutputColumn;
+        currentOutputIndex = currentOutputColumn < outputSize ?
+            currentOutputIndex + outputIndexMultiplier : -1;
       }
+      if (sameRow) {
+        result.push(currentOutputIndex);
+        continue;
+      }
+      currentOutputColumn = 0;
+      currentValueRowId = nextValueRowId;
+      if (nextValueRowId >= parentOutputIndex.length) {
+        throw new Error(
+            `Got nextValueRowId=${nextValueRowId} which is not less than ${parentOutputIndex.length}`);
+      }
+      currentOutputIndex = parentOutputIndex[nextValueRowId];
       result.push(currentOutputIndex);
     }
 
@@ -411,19 +407,16 @@ class RaggedTensorToTensorOp {
         const outputSize = outputTensor.length;
         dstI = Math.floor(outputSize / valueElementSize);
       }
-      if (dstI > dstEnd) {
-        if (this.defaultValue.length === 1) {
-          outputBase
-              .subarray(dstEnd * valueElementSize, dstI * valueElementSize)
-              .fill(this.defaultValue[0]);
-          dstEnd = dstI;
-        } else {
-          while (dstI > dstEnd) {
-            const dst = outputBase.slice(dstEnd * valueElementSize);
-            copyArray(dst, defaultValue, valueElementSize);
-            ++dstEnd;
-          }
-        }
+      if (dstI > dstEnd && this.defaultValue.length === 1) {
+        outputBase
+            .subarray(dstEnd * valueElementSize, dstI * valueElementSize)
+            .fill(this.defaultValue[0]);
+        dstEnd = dstI;
+      }
+      while (dstI > dstEnd) {
+        const dst = outputBase.slice(dstEnd * valueElementSize);
+        copyArray(dst, defaultValue, valueElementSize);
+        ++dstEnd;
       }
 
       // Update indices.
@@ -449,17 +442,14 @@ function copyArray(dst: TypedArray, src: TypedArray, size: number) {
 
 function makeShape(shape: number[]|TypedArray, isPartial: boolean) {
   const out: number[] = [];
-  for (let dim of shape) {
-    if (dim < 0) {
-      if (!isPartial) {
-        throw new Error(`Dimension ${dim} must be >= 0`);
-      }
-      if (dim < -1) {
-        throw new Error(`Dimension ${dim} must be >= -1`);
-      }
-      dim = -1;
+  for (const dim of shape) {
+    if (dim < 0 && !isPartial) {
+      throw new Error(`Dimension ${dim} must be >= 0`);
     }
-    out.push(dim);
+    if (dim < -1) {
+      throw new Error(`Dimension ${dim} must be >= -1`);
+    }
+    out.push(dim < 0 ? -1 : dim);
   }
 
   return out;

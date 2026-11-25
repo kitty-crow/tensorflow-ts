@@ -273,7 +273,8 @@ export const httpRouter: IORouter =
         // an environment that is not the browser or node they have to setup a
         // global fetch polyfill.
         return null;
-      } else {
+      }
+      {
         let isHTTP = true;
         if (Array.isArray(url)) {
           isHTTP = url.every(urlItem => isHTTPScheme(urlItem));

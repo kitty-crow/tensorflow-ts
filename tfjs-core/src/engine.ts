@@ -227,16 +227,17 @@ export class Engine implements TensorTracker, DataMover {
           `sure to await tf.ready() or await tf.setBackend() before calling ` +
           `other methods`);
     }
-    if (this.backendInstance == null) {
-      const {name, asyncInit} = this.initializeBackendsAndReturnBest();
-      if (asyncInit) {
-        throw new Error(
-            `The highest priority backend '${name}' has not yet been ` +
-            `initialized. Make sure to await tf.ready() or ` +
-            `await tf.setBackend() before calling other methods`);
-      }
-      this.setBackend(name);
+    if (this.backendInstance != null) {
+      return this.backendInstance;
     }
+    const {name, asyncInit} = this.initializeBackendsAndReturnBest();
+    if (asyncInit) {
+      throw new Error(
+          `The highest priority backend '${name}' has not yet been ` +
+          `initialized. Make sure to await tf.ready() or ` +
+          `await tf.setBackend() before calling other methods`);
+    }
+    this.setBackend(name);
     return this.backendInstance;
   }
 
@@ -245,21 +246,15 @@ export class Engine implements TensorTracker, DataMover {
   }
 
   findBackend(backendName: string): KernelBackend {
-    if (!(backendName in this.registry)) {
-      // If the backend hasn't been initialized but we have a registry entry for
-      // it, initialize it and return it.
-      if (!(backendName in this.registryFactory)) {
-        return null;
-      }
-      {
-        const {asyncInit} = this.initializeBackend(backendName);
-        if (asyncInit) {
-          // Backend is not ready yet.
-          return null;
-        }
-      }
+    if (backendName in this.registry) {
+      return this.registry[backendName];
     }
-    return this.registry[backendName];
+    // Initialize a registered backend if it is not already available.
+    if (!(backendName in this.registryFactory)) {
+      return null;
+    }
+    const {asyncInit} = this.initializeBackend(backendName);
+    return asyncInit ? null : this.registry[backendName];
   }
 
   findBackendFactory(backendName: string):
@@ -454,27 +449,27 @@ export class Engine implements TensorTracker, DataMover {
   tidy<T extends TensorContainer>(nameOrFn: string|ScopeFn<T>, fn?: ScopeFn<T>):
       T {
     let name: string = null;
-    if (fn == null) {
-      // Called with only 1 argument.
-      if (typeof nameOrFn !== 'function') {
-        throw new Error('Please provide a function to tidy()');
-      }
-      fn = nameOrFn;
+    const singleArgument = fn == null;
+    if (singleArgument && typeof nameOrFn !== 'function') {
+      throw new Error('Please provide a function to tidy()');
+    }
+    if (!singleArgument && typeof nameOrFn !== 'string' &&
+        !(nameOrFn instanceof String)) {
+      throw new Error(
+          'When calling with two arguments, the first argument ' +
+          'to tidy() must be a string');
+    }
+    if (!singleArgument && typeof fn !== 'function') {
+      throw new Error(
+          'When calling with two arguments, the 2nd argument ' +
+          'to tidy() must be a function');
+    }
+    if (singleArgument) {
+      // The single-argument guard above verifies this callable.
+      fn = nameOrFn as ScopeFn<T>;
     } else {
-      // Called with 2 arguments.
-      if (typeof nameOrFn !== 'string' && !(nameOrFn instanceof String)) {
-        throw new Error(
-            'When calling with two arguments, the first argument ' +
-            'to tidy() must be a string');
-      }
-      if (typeof fn !== 'function') {
-        throw new Error(
-            'When calling with two arguments, the 2nd argument ' +
-            'to tidy() must be a function');
-      }
       name = nameOrFn as string;
-      // TODO(nsthorat,smilkov): Do operation logging and performance
-      // profiling.
+      // TODO(nsthorat,smilkov): Do operation logging and performance profiling.
     }
     let result: T;
     return this.scopedRun(
@@ -777,35 +772,35 @@ export class Engine implements TensorTracker, DataMover {
       kernelName: string, inputs: NamedTensorMap,
       outputs: Tensor[]): Tensor[]|null {
     const gradConfig = getGradient(kernelName);
-    if (gradConfig != null) {
-      const inputsToSave: string[] = gradConfig.inputsToSave || [];
-      const outputsToSave: boolean[] = gradConfig.outputsToSave || [];
-
-      // If saveAllInputs is true, all inputs will be saved. Otherwise, inputs
-      // specified in inputsToSave will be saved.
-      let inputTensorsToSave: Tensor[];
-      if (gradConfig.saveAllInputs) {
-        util.assert(
-            Array.isArray(inputs),
-            () => 'saveAllInputs is true, expected inputs to be an array.');
-
-        inputTensorsToSave = Object.keys(inputs).map((key) => inputs[key]);
-      } else {
-        inputTensorsToSave = inputsToSave.map((inputName) => inputs[inputName]);
-      }
-
-      const outputTensorsToSave: Tensor[] =
-          outputs.filter((_, i) => outputsToSave[i]);
-
-      return inputTensorsToSave.concat(outputTensorsToSave);
+    if (gradConfig == null) {
+      // We return an empty list rather than throw an error because the kernel we
+      // are looking up may not actually be relevant to backproping through the
+      // overall function
+      //
+      // See 'does not error if irrelevant (pruned) ops are missing grads' test
+      // in gradients_test.ts for an example.
+      return [];
     }
-    // We return an empty list rather than throw an error because the kernel we
-    // are looking up may not actually be relevant to backproping through the
-    // overall function
-    //
-    // See 'does not error if irrelevant (pruned) ops are missing grads' test
-    // in gradients_test.ts for an example.
-    return [];
+    const inputsToSave: string[] = gradConfig.inputsToSave || [];
+    const outputsToSave: boolean[] = gradConfig.outputsToSave || [];
+
+    // If saveAllInputs is true, all inputs will be saved. Otherwise, inputs
+    // specified in inputsToSave will be saved.
+    let inputTensorsToSave: Tensor[];
+    if (gradConfig.saveAllInputs) {
+      util.assert(
+          Array.isArray(inputs),
+          () => 'saveAllInputs is true, expected inputs to be an array.');
+
+      inputTensorsToSave = Object.keys(inputs).map((key) => inputs[key]);
+    } else {
+      inputTensorsToSave = inputsToSave.map((inputName) => inputs[inputName]);
+    }
+
+    const outputTensorsToSave: Tensor[] =
+        outputs.filter((_, i) => outputsToSave[i]);
+
+    return inputTensorsToSave.concat(outputTensorsToSave);
   }
 
   /**
@@ -974,15 +969,14 @@ export class Engine implements TensorTracker, DataMover {
     info.numTensors = this.state.numTensors;
     info.numDataBuffers = this.state.numDataBuffers;
     info.numBytes = this.state.numBytes;
-    if (this.state.numStringTensors > 0) {
-      info.unreliable = true;
-      if (info.reasons == null) {
-        info.reasons = [];
-      }
-      info.reasons.push(
-          'Memory usage by string tensors is approximate ' +
-          '(2 bytes per character)');
+    if (!(this.state.numStringTensors > 0)) {
+      return info;
     }
+    info.unreliable = true;
+    info.reasons ??= [];
+    info.reasons.push(
+        'Memory usage by string tensors is approximate ' +
+        '(2 bytes per character)');
     return info;
   }
 

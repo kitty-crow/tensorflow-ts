@@ -9,7 +9,7 @@
  */
 
 import * as tfc from '@tensorflow/tfjs-core';
-import {Tensor, util} from '@tensorflow/tfjs-core';
+import {Tensor} from '@tensorflow/tfjs-core';
 
 import {Activation} from '../activations';
 import * as K from '../backend/tfjs_backend';
@@ -223,65 +223,9 @@ class ConvRNN2D extends RNN {
             'passing a `batchShape` option to your Input layer.');
       }
 
-      // Initialize state if null.
-      if (this.getStates() == null) {
-        if (Array.isArray(this.cell.stateSize)) {
-          this.states_ = this.cell.stateSize.map(() => tfc.zeros(stateShape));
-        } else {
-          this.states_ = [tfc.zeros(stateShape)];
-        }
-      } else if (states == null) {
-        // Dispose old state tensors.
-        tfc.dispose(this.states_);
-
-        // For stateful RNNs, fully dispose kept old states.
-        if (this.keptStates != null) {
-          tfc.dispose(this.keptStates);
-          this.keptStates = [];
-        }
-
-        if (Array.isArray(this.cell.stateSize)) {
-          this.states_ = this.cell.stateSize.map(() => tfc.zeros(stateShape));
-        } else {
-          this.states_[0] = tfc.zeros(stateShape);
-        }
-      } else {
-        if (!Array.isArray(states)) {
-          states = [states];
-        }
-
-        if (states.length !== this.states_.length) {
-          throw new ValueError(
-              `Layer ${this.name} expects ${this.states_.length} state(s), ` +
-              `but it received ${states.length} state value(s). Input ` +
-              `received: ${states}`);
-        }
-
-        if (training) {
-          // Store old state tensors for complete disposal later, i.e., during
-          // the next no-arg call to this method. We do not dispose the old
-          // states immediately because that BPTT (among other things) require
-          // them.
-          this.keptStates.push(this.states_.slice());
-        } else {
-          tfc.dispose(this.states_);
-        }
-
-        for (let index = 0; index < this.states_.length; ++index) {
-          const value = states[index];
-
-          const expectedShape = stateShape;
-
-          if (!util.arraysEqual(value.shape, expectedShape)) {
-            throw new ValueError(
-                `State ${index} is incompatible with layer ${this.name}: ` +
-                `expected shape=${expectedShape}, received shape=${
-                    value.shape}`);
-          }
-
-          this.states_[index] = value;
-        }
-      }
+      this.resetStateValues(
+          states, training, this.getStates() == null,
+          () => stateShape, () => stateShape);
 
       this.states_ = this.states_.map(state => tfc.keep(state.clone()));
     });

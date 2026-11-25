@@ -291,12 +291,10 @@ export function execute(
     if (probe != null) {
       // For optional probing of memory usage during execution.
       const numTensors = memory().numTensors;
-      if (numTensors > probe.maxNumTensors) {
-        probe.maxNumTensors = numTensors;
-      }
-      if (numTensors < probe.minNumTensors) {
-        probe.minNumTensors = numTensors;
-      }
+      probe.maxNumTensors = numTensors > probe.maxNumTensors ?
+          numTensors : probe.maxNumTensors;
+      probe.minNumTensors = numTensors < probe.minNumTensors ?
+          numTensors : probe.minNumTensors;
     }
 
     const symbolic = sorted[i];
@@ -395,33 +393,31 @@ function getTopologicalSortAndRecipientCounts(
   let finalSorted: SymbolicTensor[] = [];
   let finalRecipientMap: RecipientMap = {};
   if (fetches.length === 1) {
-    // Special-casing 1 fetch for efficiency.
+    // Special-case a single fetch for efficiency.
     const out =
         getTopologicalSortAndRecipientCountsForOneFetch(fetches[0], feedDict);
-    finalSorted = out.sorted;
-    finalRecipientMap = out.recipientMap;
-  } else {
-    const visited = new Set<string>();
-    for (const fetch of fetches) {
-      const {sorted, recipientMap} =
-          getTopologicalSortAndRecipientCountsForOneFetch(fetch, feedDict);
+    return {sorted: out.sorted, recipientCounts: recipientMap2Counts(out.recipientMap)};
+  }
+  const visited = new Set<string>();
+  for (const fetch of fetches) {
+    const {sorted, recipientMap} =
+        getTopologicalSortAndRecipientCountsForOneFetch(fetch, feedDict);
 
-      // Merge sorted SymbolicTensor Arrays.
-      for (const symbolicTensor of sorted) {
-        if (!visited.has(symbolicTensor.name)) {
-          finalSorted.push(symbolicTensor);
-          visited.add(symbolicTensor.name);
-        }
+    // Merge sorted SymbolicTensor Arrays.
+    for (const symbolicTensor of sorted) {
+      if (!visited.has(symbolicTensor.name)) {
+        finalSorted.push(symbolicTensor);
+        visited.add(symbolicTensor.name);
       }
+    }
 
-      // Merge recipient maps.
-      for (const name in recipientMap) {
-        if (finalRecipientMap[name] == null) {
-          finalRecipientMap[name] = new Set<string>();
-        }
-        recipientMap[name].forEach(
-            recipient => finalRecipientMap[name].add(recipient));
+    // Merge recipient maps.
+    for (const name in recipientMap) {
+      if (finalRecipientMap[name] == null) {
+        finalRecipientMap[name] = new Set<string>();
       }
+      recipientMap[name].forEach(
+          recipient => finalRecipientMap[name].add(recipient));
     }
   }
   return {
@@ -481,26 +477,20 @@ export function getTopologicalSortAndRecipientCountsForOneFetch(
       stack.pop();
       sorted.push(top);
       visited.add(top.name);
-      if (topIsMarked) {
-        marks.pop();
+      removeVisitedMark(marks, topIsMarked);
+      continue;
+    }
+    // A non-input SymbolicTensor whose upstream tensors have not been visited.
+    marks.push(stack.length - 1);
+    for (const input of top.inputs) {
+      // Count recipients regardless of whether the input has been visited.
+      const recipients = recipientMap[input.name] ?? new Set<string>();
+      recipientMap[input.name] = recipients;
+      recipients.add(top.name);
+      if (visited.has(input.name)) {
+        continue;
       }
-    } else {
-      // A non-input SymbolicTensor whose upstream SymbolicTensors haven't
-      // been visited yet. Push them onto the stack.
-      marks.push(stack.length - 1);
-      for (const input of top.inputs) {
-        // Increment the recipient count. Note that this needs to happen
-        // regardless of whether the SymbolicTensor has been visited before.
-        if (recipientMap[input.name] == null) {
-          recipientMap[input.name] = new Set<string>();
-        }
-        recipientMap[input.name].add(top.name);
-
-        if (visited.has(input.name)) {
-          continue;  // Avoid repeated visits to the same SymbolicTensor.
-        }
-        stack.push(input);
-      }
+      stack.push(input);
     }
   }
   return {sorted, recipientMap};
@@ -514,21 +504,21 @@ export function getTopologicalSortAndRecipientCountsForOneFetch(
  */
 function getNodeOutputs(fetch: SymbolicTensor): SymbolicTensor|
     SymbolicTensor[] {
-  let layerOutputs: SymbolicTensor|SymbolicTensor[];
   if (fetch.sourceLayer.inboundNodes.length === 1) {
-    layerOutputs = fetch.sourceLayer.output;
-  } else {
-    let nodeIndex: number = null;
-    for (let i = 0; i < fetch.sourceLayer.inboundNodes.length; ++i) {
-      for (const outputTensor of fetch.sourceLayer.inboundNodes[i]
-               .outputTensors) {
-        if (outputTensor.id === fetch.id) {
-          nodeIndex = i;
-          break;
-        }
-      }
-    }
-    layerOutputs = fetch.sourceLayer.getOutputAt(nodeIndex);
+    return fetch.sourceLayer.output;
   }
-  return layerOutputs;
+  let nodeIndex: number = null;
+  for (let i = 0; i < fetch.sourceLayer.inboundNodes.length; ++i) {
+    const outputs = fetch.sourceLayer.inboundNodes[i].outputTensors;
+    if (outputs.some(outputTensor => outputTensor.id === fetch.id)) {
+      nodeIndex = i;
+    }
+  }
+  return fetch.sourceLayer.getOutputAt(nodeIndex);
+}
+
+function removeVisitedMark(marks: number[], topIsMarked: boolean): void {
+  if (topIsMarked) {
+    marks.pop();
+  }
 }

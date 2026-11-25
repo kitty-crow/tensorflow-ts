@@ -244,19 +244,7 @@ export async function loadLayersModel(
     options = {};
   }
   if (typeof pathOrIOHandler === 'string') {
-    const handlers = io.getLoadHandlers(pathOrIOHandler, options);
-    if (handlers.length === 0) {
-      // For backward compatibility: if no load handler can be found,
-      // assume it is a relative http path.
-      // TODO(cais): Reformat the args into a single `LoadOptions` once the core
-      // is refactored.
-      handlers.push(io.browserHTTPRequest(pathOrIOHandler, options));
-    } else if (handlers.length > 1) {
-      throw new ValueError(
-          `Found more than one (${handlers.length}) load handlers for ` +
-          `URL '${pathOrIOHandler}'`);
-    }
-    pathOrIOHandler = handlers[0];
+    pathOrIOHandler = resolveLayersLoadHandler(pathOrIOHandler, options);
   }
   return loadLayersModelFromIOHandler(pathOrIOHandler, undefined, options);
 }
@@ -310,26 +298,27 @@ export async function loadLayersModelFromIOHandler(
   }
 
   // If weightData is present, load the weights into the model.
-  if (artifacts.weightData != null) {
-    // Loading weights requires weightSpecs.
-    if (artifacts.weightSpecs == null) {
-      throw new ValueError(
-          'LayersModel artifacts contains weight data, but not weight specs. ' +
-          'Therefore loading of weights cannot proceed.');
-    }
-
-    const {modelWeights, optimizerWeights} = decodeModelAndOptimizerWeights(
-        artifacts.weightData, artifacts.weightSpecs);
-    model.loadWeights(modelWeights, strict);
-
-    if (model.optimizer != null && optimizerWeights.length > 0) {
-      await model.optimizer.setWeights(optimizerWeights);
-    }
-
-    // Dispose temporary weight values.
-    dispose(modelWeights);
-    dispose(optimizerWeights.map(w => w.tensor));
+  if (artifacts.weightData == null) {
+    return model;
   }
+  // Loading weights requires weightSpecs.
+  if (artifacts.weightSpecs == null) {
+    throw new ValueError(
+        'LayersModel artifacts contains weight data, but not weight specs. ' +
+        'Therefore loading of weights cannot proceed.');
+  }
+
+  const {modelWeights, optimizerWeights} = decodeModelAndOptimizerWeights(
+      artifacts.weightData, artifacts.weightSpecs);
+  model.loadWeights(modelWeights, strict);
+
+  if (model.optimizer != null && optimizerWeights.length > 0) {
+    await model.optimizer.setWeights(optimizerWeights);
+  }
+
+  // Dispose temporary weight values.
+  dispose(modelWeights);
+  dispose(optimizerWeights.map(w => w.tensor));
   return model;
 }
 
@@ -1002,11 +991,11 @@ export class Sequential extends LayersModel {
       fastWeightInit = false): T {
     let configArray: serialization.ConfigDictArray;
     let extraModelConfig: serialization.ConfigDict = {};
+    if (config instanceof Array &&
+        (config[0].className == null || config[0]['className'] === 'Merge')) {
+      throw new ValueError('Legacy serialization format not supported yet.');
+    }
     if (config instanceof Array) {
-      if (!(config[0].className != null) ||
-          config[0]['className'] === 'Merge') {
-        throw new ValueError('Legacy serialization format not supported yet.');
-      }
       configArray = config;
     } else {
       util.assert(
@@ -1104,3 +1093,19 @@ export class Sequential extends LayersModel {
   }
 }
 serialization.registerClass(Sequential);
+
+/** Resolve a model URL, falling back to HTTP only when no handler exists. */
+function resolveLayersLoadHandler(url: string, options: io.LoadOptions): io.IOHandler {
+  const handlers = io.getLoadHandlers(url, options);
+  if (handlers.length === 0) {
+    // For backward compatibility, treat unmatched paths as relative HTTP URLs.
+    handlers.push(io.browserHTTPRequest(url, options));
+    return handlers[0];
+  }
+  if (handlers.length > 1) {
+    throw new ValueError(
+        `Found more than one (${handlers.length}) load handlers for ` +
+        `URL '${url}'`);
+  }
+  return handlers[0];
+}

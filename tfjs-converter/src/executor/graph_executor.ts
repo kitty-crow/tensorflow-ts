@@ -372,7 +372,9 @@ export class GraphExecutor implements FunctionExecutor {
         if (count === 1) {
           tensor.dispose();
           delete intermediateTensorConsumerCount[tensor.id];
-        } else if (count != null) {
+          continue;
+        }
+        if (count != null) {
           intermediateTensorConsumerCount[tensor.id]--;
         }
       }
@@ -590,12 +592,9 @@ export class GraphExecutor implements FunctionExecutor {
                     !getTensor(node.name, tensorsMap, context))
             .map(node => node.name);
     if (missingOutputs.length > 0) {
-      let alternativeMsg = '';
-      if (dynamicNode != null) {
-        alternativeMsg =
-            `Alternatively, to avoid the dynamic ops, use model.execute() ` +
-            `and specify the inputs [${syncInputs}]`;
-      }
+      const alternativeMsg = dynamicNode != null ?
+          `Alternatively, to avoid the dynamic ops, use model.execute() ` +
+              `and specify the inputs [${syncInputs}]` : '';
       throw new Error(
           `Cannot compute the outputs [${missingOutputs}] from the provided ` +
           `inputs [${names}]. Consider providing the following inputs: ` +
@@ -625,42 +624,42 @@ export class GraphExecutor implements FunctionExecutor {
 
       // only process nodes that are not in the tensorMap yet, this include
       // inputNodes and internal initNodes.
-      if (tensorMap[item.node.name] == null) {
-        const tensors =
-            executeOp(item.node, tensorMap, context, this._resourceManager);
-        if (!nodeName) {
-          [nodeName] = getNodeNameAndIndex(item.node.name, context);
-        }
-        const currentContext = context.currentContext;
-        if (util.isPromise(tensors)) {
-          promises.push(tensors.then(t => {
-            tensorMap[nodeName] = t;
-            if (this.keepIntermediateTensors) {
-              this.clonedTensorsMap[nodeName] = this.cloneTensorList(t);
-            }
-            context.currentContext = currentContext;
-            this.checkTensorForDisposal(
-                nodeName, item.node, tensorMap, context, tensorsToKeep,
-                outputNodeNameSet, intermediateTensorConsumerCount);
-            this.processChildNodes(
-                item.node, stack, context, tensorMap, added, usedNodes);
-            return t;
-          }));
-        } else {
-          tensorMap[nodeName] = tensors;
+      if (tensorMap[item.node.name] != null) {
+        this.processChildNodes(
+            item.node, stack, context, tensorMap, added, usedNodes);
+        continue;
+      }
+      const tensors =
+          executeOp(item.node, tensorMap, context, this._resourceManager);
+      if (!nodeName) {
+        [nodeName] = getNodeNameAndIndex(item.node.name, context);
+      }
+      const currentContext = context.currentContext;
+      if (util.isPromise(tensors)) {
+        promises.push(tensors.then(t => {
+          tensorMap[nodeName] = t;
           if (this.keepIntermediateTensors) {
-            this.clonedTensorsMap[nodeName] = this.cloneTensorList(tensors);
+            this.clonedTensorsMap[nodeName] = this.cloneTensorList(t);
           }
+          context.currentContext = currentContext;
           this.checkTensorForDisposal(
               nodeName, item.node, tensorMap, context, tensorsToKeep,
               outputNodeNameSet, intermediateTensorConsumerCount);
           this.processChildNodes(
               item.node, stack, context, tensorMap, added, usedNodes);
-        }
-      } else {
-        this.processChildNodes(
-            item.node, stack, context, tensorMap, added, usedNodes);
+          return t;
+        }));
+        continue;
       }
+      tensorMap[nodeName] = tensors;
+      if (this.keepIntermediateTensors) {
+        this.clonedTensorsMap[nodeName] = this.cloneTensorList(tensors);
+      }
+      this.checkTensorForDisposal(
+          nodeName, item.node, tensorMap, context, tensorsToKeep,
+          outputNodeNameSet, intermediateTensorConsumerCount);
+      this.processChildNodes(
+          item.node, stack, context, tensorMap, added, usedNodes);
     }
     return promises;
   }
@@ -674,18 +673,12 @@ export class GraphExecutor implements FunctionExecutor {
       if (added[nodeName] || !usedNodes.has(childNode.name)) {
         return;
       }
-      // Merge op can be pushed if any of its inputs has value.
-      if (childNode.op === 'Merge') {
-        if (childNode.inputNames.some(name => {
-              return !!getTensor(name, tensorMap, context);
-            })) {
-          added[nodeName] = true;
-          stack.push({contexts: context.currentContext, node: childNode});
-        }
-      } else  // Otherwise all inputs must to have value.
-          if (childNode.inputNames.every(name => {
-                return !!getTensor(name, tensorMap, context);
-              })) {
+      // Merge may run as soon as any input is available; other ops need all.
+      const hasValue = (name: string) => !!getTensor(name, tensorMap, context);
+      const ready = childNode.op === 'Merge' ?
+          childNode.inputNames.some(hasValue) :
+          childNode.inputNames.every(hasValue);
+      if (ready) {
         added[nodeName] = true;
         stack.push({contexts: context.currentContext, node: childNode});
       }
