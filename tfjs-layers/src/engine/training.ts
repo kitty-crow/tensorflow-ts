@@ -421,7 +421,8 @@ export function collectMetrics(
   }
   const nestedMetrics: Array<Array<string|LossOrMetricFn>> = [];
   for (const name of outputNames) {
-    const outputMetrics = metrics.hasOwnProperty(name) ? metrics[name] : [];
+    const outputMetrics: string|LossOrMetricFn|Array<string|LossOrMetricFn> =
+        metrics.hasOwnProperty(name) ? metrics[name] : [];
     nestedMetrics.push(Array.isArray(outputMetrics) ? outputMetrics : [outputMetrics]);
   }
   return nestedMetrics;
