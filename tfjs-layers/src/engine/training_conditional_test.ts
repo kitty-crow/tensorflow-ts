@@ -9,6 +9,8 @@
  */
 
 import {Tensor} from '@tensorflow/tfjs-core';
+import '@tensorflow/tfjs-core/dist/public/chained_ops/register_all_chained_ops';
+import '../flags_layers';
 
 import {collectMetrics, standardizeInputData} from './training';
 import {disposeNewTensors, ensureTensorsRank2OrHigher} from './training_tensors';
