@@ -19,11 +19,13 @@ import {ExpandDims} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
 import {reshape} from '../ops/reshape';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const expandDimsGradConfig: GradConfig = {
   kernelName: ExpandDims,
   inputsToSave: ['input'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [input] = saved;
     return {input: () => reshape(dy, input.shape)};
   }

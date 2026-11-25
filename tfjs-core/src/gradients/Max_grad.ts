@@ -21,6 +21,7 @@ import {Tensor} from '../tensor';
 import * as util from '../util';
 
 import {gradForMinAndMax} from './min_max_grad_util';
+import {assertArrayLength} from '../util_base';
 
 export const maxGradConfig: GradConfig = {
   kernelName: Max,
@@ -29,6 +30,7 @@ export const maxGradConfig: GradConfig = {
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
     const maxAttrs: MaxAttrs = attrs as unknown as MaxAttrs;
     const {reductionIndices} = maxAttrs;
+    assertArrayLength(saved, 2);
     const x = saved[0];
     const y = saved[1];
     const origAxes = util.parseAxisParam(reductionIndices, x.shape);

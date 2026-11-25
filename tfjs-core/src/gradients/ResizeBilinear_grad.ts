@@ -20,11 +20,13 @@ import {GradConfig} from '../kernel_registry';
 import {NamedAttrMap} from '../kernel_registry';
 import {Tensor, Tensor4D} from '../tensor';
 import {NamedTensorMap} from '../tensor_types';
+import {assertArrayLength} from '../util_base';
 
 export const resizeBilinearGradConfig: GradConfig = {
   kernelName: ResizeBilinear,
   inputsToSave: ['images'],
   gradFunc: (dy: Tensor4D, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [images] = saved;
 
     const inputs: ResizeBilinearGradInputs = {dy, images};

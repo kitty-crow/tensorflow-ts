@@ -27,11 +27,13 @@ import {scalar} from '../ops/scalar';
 import {where} from '../ops/where';
 import {zerosLike} from '../ops/zeros_like';
 import {Tensor, Tensor1D} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const unsortedSegmentSumGradConfig: GradConfig = {
   kernelName: UnsortedSegmentSum,
   inputsToSave: ['segmentIds'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [segmentIds] = saved;
 
     const derX = () => {

@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../engine';
 import {Range, RangeAttrs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor1D} from '../tensor';
 
 /**
@@ -46,8 +45,8 @@ export function range(
     throw new Error('Cannot have a step of zero');
   }
 
-  const attrs: RangeAttrs = {start, stop, step, dtype};
+  const attrs = {start, stop, step, dtype} satisfies RangeAttrs;
 
   return ENGINE.runKernel(Range, {} /* inputs */,
-      attrs as unknown as NamedAttrMap);
+      attrs);
 }

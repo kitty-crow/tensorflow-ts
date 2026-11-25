@@ -22,11 +22,13 @@ import {logicalNot} from '../ops/logical_not';
 import {mul} from '../ops/mul';
 import {zerosLike} from '../ops/zeros_like';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const selectGradConfig: GradConfig = {
   kernelName: Select,
   inputsToSave: ['condition'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [condition] = saved;
     return {
       // TODO(julianoks): Return null for condition gradient

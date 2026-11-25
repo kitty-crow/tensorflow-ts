@@ -24,11 +24,13 @@ import {ones} from '../ops/ones';
 import {reshape} from '../ops/reshape';
 import {Tensor} from '../tensor';
 import * as util from '../util';
+import {assertArrayLength} from '../util_base';
 
 export const meanGradConfig: GradConfig = {
   kernelName: Mean,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     const {axis} = attrs as unknown as MeanAttrs;
     const axes = util.parseAxisParam(axis, x.shape);

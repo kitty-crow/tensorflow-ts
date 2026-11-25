@@ -21,11 +21,13 @@ import {getAxesPermutation} from '../ops/axis_util';
 import {cumsum} from '../ops/cumsum';
 import {transpose} from '../ops/transpose';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const cumsumGradConfig: GradConfig = {
   kernelName: Cumsum,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     const {axis, exclusive, reverse}: CumsumAttrs =
         attrs as unknown as CumsumAttrs;

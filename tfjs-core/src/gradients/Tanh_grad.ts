@@ -22,11 +22,13 @@ import {scalar} from '../ops/scalar';
 import {square} from '../ops/square';
 import {sub} from '../ops/sub';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const tanhGradConfig: GradConfig = {
   kernelName: Tanh,
   outputsToSave: [true],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [y] = saved;
 
     return {x: () => mul(sub(scalar(1), square(y)), dy)};

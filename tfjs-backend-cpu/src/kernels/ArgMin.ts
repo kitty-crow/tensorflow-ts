@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {ArgMin, ArgMinAttrs, ArgMinInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {ArgMin, ArgMinAttrs, ArgMinInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 import {transpose} from './Transpose';
 
 export function argMin(
-    args: {inputs: ArgMinInputs, backend: MathBackendCPU, attrs: ArgMinAttrs}):
+    args: {inputs: ArgMinInputs, backend: MathBackendCPU, attrs: KernelAttributes<ArgMinAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -73,5 +73,5 @@ export function argMin(
 export const argMinConfig: KernelConfig = {
   kernelName: ArgMin,
   backendName: 'cpu',
-  kernelFunc: argMin as unknown as KernelFunc
+  kernelFunc: argMin
 };

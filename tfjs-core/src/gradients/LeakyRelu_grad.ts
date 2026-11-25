@@ -20,11 +20,13 @@ import {greater} from '../ops/greater';
 import {mul} from '../ops/mul';
 import {where} from '../ops/where';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const leakyReluGradConfig: GradConfig = {
   kernelName: LeakyRelu,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     const {alpha} = attrs as unknown as LeakyReluAttrs;
     const mask = greater(x, 0);

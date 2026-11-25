@@ -24,11 +24,13 @@ import {sqrt} from '../ops/sqrt';
 import {square} from '../ops/square';
 import {sub} from '../ops/sub';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const asinGradConfig: GradConfig = {
   kernelName: Asin,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => div(dy, sqrt(sub(scalar(1), square(cast(x, 'float32')))))};
   }

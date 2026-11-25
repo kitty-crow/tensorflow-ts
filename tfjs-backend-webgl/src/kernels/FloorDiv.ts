@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {FloorDiv, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {FloorDiv, KernelConfig} from '@tensorflow/tfjs-core';
 
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 
@@ -64,5 +64,5 @@ export const floorDiv = binaryKernelFunc(
 export const floorDivConfig: KernelConfig = {
   kernelName: FloorDiv,
   backendName: 'webgl',
-  kernelFunc: floorDiv as unknown as KernelFunc
+  kernelFunc: floorDiv
 };

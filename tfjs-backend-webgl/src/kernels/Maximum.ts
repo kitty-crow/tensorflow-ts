@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Maximum} from '@tensorflow/tfjs-core';
+import {KernelConfig, Maximum} from '@tensorflow/tfjs-core';
 
 import {CHECK_NAN_SNIPPET} from '../binaryop_gpu';
 import {CHECK_NAN_SNIPPET_PACKED} from '../binaryop_packed_gpu';
@@ -45,5 +45,5 @@ export const maximum = binaryKernelFunc({
 export const maximumConfig: KernelConfig = {
   kernelName: Maximum,
   backendName: 'webgl',
-  kernelFunc: maximum as unknown as KernelFunc
+  kernelFunc: maximum
 };

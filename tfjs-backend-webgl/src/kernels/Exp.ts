@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Exp, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {Exp, KernelConfig} from '@tensorflow/tfjs-core';
 
 import {CHECK_NAN_SNIPPET_UNARY, unaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 import {expImplCPU} from '../kernel_utils/shared';
@@ -45,5 +45,5 @@ export const exp = unaryKernelFunc({
 export const expConfig: KernelConfig = {
   kernelName: Exp,
   backendName: 'webgl',
-  kernelFunc: exp as unknown as KernelFunc
+  kernelFunc: exp
 };

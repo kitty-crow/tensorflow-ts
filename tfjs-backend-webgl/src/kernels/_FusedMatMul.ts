@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {_FusedMatMul, _FusedMatMulAttrs, _FusedMatMulInputs, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {_FusedMatMul, _FusedMatMulAttrs, _FusedMatMulInputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {batchMatMulImpl} from './BatchMatMul_impl';
 
 export function _fusedMatMul(args: {
   inputs: _FusedMatMulInputs,
-  attrs: _FusedMatMulAttrs,
+  attrs: KernelAttributes<_FusedMatMulAttrs>,
   backend: MathBackendWebGL
 }) {
   const {inputs, backend, attrs} = args;
@@ -45,5 +45,5 @@ export function _fusedMatMul(args: {
 export const _fusedMatMulConfig: KernelConfig = {
   kernelName: _FusedMatMul,
   backendName: 'webgl',
-  kernelFunc: _fusedMatMul as unknown as KernelFunc,
+  kernelFunc: _fusedMatMul,
 };

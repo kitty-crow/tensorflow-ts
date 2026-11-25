@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, ResizeBilinearGrad, ResizeBilinearGradAttrs, ResizeBilinearGradInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, ResizeBilinearGrad, ResizeBilinearGradAttrs, ResizeBilinearGradInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function resizeBilinearGrad(args: {
   inputs: ResizeBilinearGradInputs,
   backend: MathBackendCPU,
-  attrs: ResizeBilinearGradAttrs
+  attrs: KernelAttributes<ResizeBilinearGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {images, dy} = inputs;
@@ -112,5 +112,5 @@ export function resizeBilinearGrad(args: {
 export const resizeBilinearGradConfig: KernelConfig = {
   kernelName: ResizeBilinearGrad,
   backendName: 'cpu',
-  kernelFunc: resizeBilinearGrad as unknown as KernelFunc
+  kernelFunc: resizeBilinearGrad
 };

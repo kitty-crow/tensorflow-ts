@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../engine';
 import {Pack, PackAttrs, PackInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
 import {NamedTensorMap} from '../tensor_types';
 import {convertToTensorArray} from '../tensor_util_env';
@@ -55,11 +54,11 @@ function stack_<T extends Tensor>(
   }
 
   const inputs: PackInputs = $tensors;
-  const attrs: PackAttrs = {axis};
+  const attrs = {axis} satisfies PackAttrs;
 
   return ENGINE.runKernel(
       Pack, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      attrs);
 }
 
 export const stack = /* @__PURE__ */ op({stack_});

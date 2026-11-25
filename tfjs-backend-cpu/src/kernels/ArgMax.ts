@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {ArgMax, ArgMaxAttrs, ArgMaxInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {ArgMax, ArgMaxAttrs, ArgMaxInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 import {transpose} from './Transpose';
 
 export function argMax(
-    args: {inputs: ArgMaxInputs, backend: MathBackendCPU, attrs: ArgMaxAttrs}):
+    args: {inputs: ArgMaxInputs, backend: MathBackendCPU, attrs: KernelAttributes<ArgMaxAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -73,5 +73,5 @@ export function argMax(
 export const argMaxConfig: KernelConfig = {
   kernelName: ArgMax,
   backendName: 'cpu',
-  kernelFunc: argMax as unknown as KernelFunc
+  kernelFunc: argMax
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, Cumprod, CumprodAttrs, CumprodInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
+import {backend_util, Cumprod, CumprodAttrs, CumprodInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {transpose} from './Transpose';
 
 export function cumprod(
     args: {inputs: CumprodInputs, backend: MathBackendCPU,
-           attrs: CumprodAttrs}): TensorInfo {
+           attrs: KernelAttributes<CumprodAttrs>}): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
   const {axis, exclusive, reverse} = attrs;
@@ -84,5 +84,5 @@ export function cumprod(
 export const cumprodConfig: KernelConfig = {
   kernelName: Cumprod,
   backendName: 'cpu',
-  kernelFunc: cumprod as unknown as KernelFunc
+  kernelFunc: cumprod
 };

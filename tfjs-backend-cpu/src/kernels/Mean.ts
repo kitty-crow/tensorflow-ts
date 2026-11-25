@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Mean, MeanAttrs, MeanInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Mean, MeanAttrs, MeanInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {cast} from './Cast';
@@ -23,7 +23,7 @@ import {div} from './RealDiv';
 import {sum} from './Sum';
 
 export function mean(
-    args: {inputs: MeanInputs, backend: MathBackendCPU, attrs: MeanAttrs}):
+    args: {inputs: MeanInputs, backend: MathBackendCPU, attrs: KernelAttributes<MeanAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -55,5 +55,5 @@ export function mean(
 export const meanConfig: KernelConfig = {
   kernelName: Mean,
   backendName: 'cpu',
-  kernelFunc: mean as unknown as KernelFunc
+  kernelFunc: mean
 };

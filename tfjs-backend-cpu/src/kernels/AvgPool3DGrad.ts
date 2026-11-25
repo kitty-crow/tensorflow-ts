@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {AvgPool3DGrad, AvgPool3DGradAttrs, AvgPool3DGradInputs, backend_util, buffer, KernelConfig, KernelFunc, Rank, TensorInfo} from '@tensorflow/tfjs-core';
+import {AvgPool3DGrad, AvgPool3DGradAttrs, AvgPool3DGradInputs, backend_util, buffer, KernelConfig, KernelAttributes, Rank, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function avgPool3DGrad(args: {
   inputs: AvgPool3DGradInputs,
   backend: MathBackendCPU,
-  attrs: AvgPool3DGradAttrs
+  attrs: KernelAttributes<AvgPool3DGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input} = inputs;
@@ -108,5 +108,5 @@ export function avgPool3DGrad(args: {
 export const avgPool3DGradConfig: KernelConfig = {
   kernelName: AvgPool3DGrad,
   backendName: 'cpu',
-  kernelFunc: avgPool3DGrad as unknown as KernelFunc
+  kernelFunc: avgPool3DGrad
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {GreaterEqual, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {GreaterEqual, KernelConfig} from '@tensorflow/tfjs-core';
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 import {greaterEqualImplCPU} from '../kernel_utils/shared';
 
@@ -34,5 +34,5 @@ export const greaterEqual = binaryKernelFunc({
 export const greaterEqualConfig: KernelConfig = {
   kernelName: GreaterEqual,
   backendName: 'webgl',
-  kernelFunc: greaterEqual as unknown as KernelFunc
+  kernelFunc: greaterEqual
 };

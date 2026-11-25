@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {buffer, CropAndResize, CropAndResizeAttrs, CropAndResizeInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {buffer, CropAndResize, CropAndResizeAttrs, CropAndResizeInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
 export function cropAndResize(args: {
   inputs: CropAndResizeInputs,
   backend: MathBackendCPU,
-  attrs: CropAndResizeAttrs
+  attrs: KernelAttributes<CropAndResizeAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {image, boxes, boxInd} = inputs;
@@ -167,5 +167,5 @@ export function cropAndResize(args: {
 export const cropAndResizeConfig: KernelConfig = {
   kernelName: CropAndResize,
   backendName: 'cpu',
-  kernelFunc: cropAndResize as unknown as KernelFunc
+  kernelFunc: cropAndResize
 };

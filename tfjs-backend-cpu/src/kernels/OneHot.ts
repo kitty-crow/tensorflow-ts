@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, OneHot, OneHotAttrs, OneHotInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, OneHot, OneHotAttrs, OneHotInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 
 export function oneHot(
-    args: {inputs: OneHotInputs, backend: MathBackendCPU, attrs: OneHotAttrs}):
+    args: {inputs: OneHotInputs, backend: MathBackendCPU, attrs: KernelAttributes<OneHotAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {indices} = inputs;
@@ -47,5 +47,5 @@ export function oneHot(
 export const oneHotConfig: KernelConfig = {
   kernelName: OneHot,
   backendName: 'cpu',
-  kernelFunc: oneHot as unknown as KernelFunc
+  kernelFunc: oneHot
 };

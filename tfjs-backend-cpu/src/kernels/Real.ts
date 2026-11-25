@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Real, RealInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, Real, RealInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -36,5 +36,5 @@ export function real(args: {inputs: RealInputs, backend: MathBackendCPU}):
 export const realConfig: KernelConfig = {
   kernelName: Real,
   backendName: 'cpu',
-  kernelFunc: real as unknown as KernelFunc
+  kernelFunc: real
 };

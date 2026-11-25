@@ -19,7 +19,6 @@ import {ENGINE} from '../engine';
 import {tidy} from '../globals';
 import {Transpose, TransposeAttrs, TransposeInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -79,10 +78,10 @@ function transpose_<T extends Tensor>(
       let $real = real($x);
       let $imag = imag($x);
       $real = ENGINE.runKernel(
-          Transpose, {x: $real} as unknown as NamedTensorMap,
+          Transpose, {x: $real},
           attrs);
       $imag = ENGINE.runKernel(
-          Transpose, {x: $imag} as unknown as NamedTensorMap,
+          Transpose, {x: $imag},
           attrs);
       if (conjugate) {
         $imag = neg($imag);

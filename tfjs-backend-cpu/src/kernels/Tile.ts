@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo, Tile, TileAttrs, TileInputs} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, TensorInfo, Tile, TileAttrs, TileInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 import {tileImpl} from './Tile_impl';
 
 export function tile(
-    args: {inputs: TileInputs, backend: MathBackendCPU, attrs: TileAttrs}):
+    args: {inputs: TileInputs, backend: MathBackendCPU, attrs: KernelAttributes<TileAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -37,5 +37,5 @@ export function tile(
 export const tileConfig: KernelConfig = {
   kernelName: Tile,
   backendName: 'cpu',
-  kernelFunc: tile as unknown as KernelFunc
+  kernelFunc: tile
 };

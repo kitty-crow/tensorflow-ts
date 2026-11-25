@@ -17,9 +17,7 @@
 
 import {ENGINE} from '../engine';
 import {FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor, Tensor1D, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank, TensorLike} from '../types';
 import * as util from '../util';
@@ -90,20 +88,20 @@ function batchNorm_<R extends Rank>(
 
   const x4D: Tensor4D = xAs4D($x);
 
-  const inputs: FusedBatchNormInputs = {
+  const inputs = {
     x: x4D,
     scale: $scale,
     offset: $offset,
     mean: $mean,
     variance: $variance
-  };
+  } satisfies FusedBatchNormInputs;
 
-  const attrs: FusedBatchNormAttrs = {varianceEpsilon};
+  const attrs = {varianceEpsilon} satisfies FusedBatchNormAttrs;
 
   // tslint:disable-next-line: no-unnecessary-type-assertion
   const res = ENGINE.runKernel(
-                  FusedBatchNorm, inputs as unknown as NamedTensorMap,
-                  attrs as unknown as NamedAttrMap) as Tensor<R>;
+                  FusedBatchNorm, inputs,
+                  attrs) as Tensor<R>;
 
   return reshape(res, $x.shape);
 }

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Reverse, ReverseAttrs, ReverseInputs, TensorBuffer, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Reverse, ReverseAttrs, ReverseInputs, TensorBuffer, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {identity} from './Identity';
 
 export function reverse(
     args:
-        {inputs: ReverseInputs, backend: MathBackendCPU, attrs: ReverseAttrs}):
+        {inputs: ReverseInputs, backend: MathBackendCPU, attrs: KernelAttributes<ReverseAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -54,5 +54,5 @@ export function reverse(
 export const reverseConfig: KernelConfig = {
   kernelName: Reverse,
   backendName: 'cpu',
-  kernelFunc: reverse as unknown as KernelFunc
+  kernelFunc: reverse
 };

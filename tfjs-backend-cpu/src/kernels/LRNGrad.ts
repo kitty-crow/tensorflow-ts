@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, LRNGrad, LRNGradAttrs, LRNGradInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, LRNGrad, LRNGradAttrs, LRNGradInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 
 export function lRNGrad(
     args:
-        {inputs: LRNGradInputs, backend: MathBackendCPU, attrs: LRNGradAttrs}):
+        {inputs: LRNGradInputs, backend: MathBackendCPU, attrs: KernelAttributes<LRNGradAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, y, dy} = inputs;
@@ -69,5 +69,5 @@ export function lRNGrad(
 export const LRNGradConfig: KernelConfig = {
   kernelName: LRNGrad,
   backendName: 'cpu',
-  kernelFunc: lRNGrad as unknown as KernelFunc
+  kernelFunc: lRNGrad
 };

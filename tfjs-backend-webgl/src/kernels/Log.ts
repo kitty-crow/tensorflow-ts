@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Log} from '@tensorflow/tfjs-core';
+import {KernelConfig, Log} from '@tensorflow/tfjs-core';
 
 import {CHECK_NAN_SNIPPET_UNARY, unaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 import {logImplCPU} from '../kernel_utils/shared';
@@ -42,5 +42,5 @@ export const log = unaryKernelFunc(
 export const logConfig: KernelConfig = {
   kernelName: Log,
   backendName: 'webgl',
-  kernelFunc: log as unknown as KernelFunc
+  kernelFunc: log
 };

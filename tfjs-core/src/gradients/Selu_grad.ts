@@ -24,11 +24,13 @@ import {scalar} from '../ops/scalar';
 import {SELU_SCALE, SELU_SCALEALPHA} from '../ops/selu_util';
 import {where} from '../ops/where';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const seluGradConfig: GradConfig = {
   kernelName: Selu,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {
       x: () => {

@@ -23,11 +23,13 @@ import {logicalAnd} from '../ops/logical_and';
 import {where} from '../ops/where';
 import {zerosLike} from '../ops/zeros_like';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const clipByValueGradConfig: GradConfig = {
   kernelName: ClipByValue,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     const {clipValueMin, clipValueMax} = attrs as unknown as ClipByValueAttrs;
     return {

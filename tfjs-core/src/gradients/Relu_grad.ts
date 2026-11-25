@@ -20,11 +20,13 @@ import {cast} from '../ops/cast';
 import {mul} from '../ops/mul';
 import {step} from '../ops/step';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const reluGradConfig: GradConfig = {
   kernelName: Relu,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => mul(dy, cast(step(x), 'float32'))};
   }

@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, buffer, KernelConfig, KernelFunc, MaxPoolGrad, MaxPoolGradAttrs, MaxPoolGradInputs, Rank, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, buffer, KernelConfig, KernelAttributes, MaxPoolGrad, MaxPoolGradAttrs, MaxPoolGradInputs, Rank, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {maxPoolPositions} from '../utils/pool_utils';
 export function maxPoolGrad(args: {
   inputs: MaxPoolGradInputs,
   backend: MathBackendCPU,
-  attrs: MaxPoolGradAttrs
+  attrs: KernelAttributes<MaxPoolGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input, output} = inputs;
@@ -97,5 +97,5 @@ export function maxPoolGrad(args: {
 export const maxPoolGradConfig: KernelConfig = {
   kernelName: MaxPoolGrad,
   backendName: 'cpu',
-  kernelFunc: maxPoolGrad as unknown as KernelFunc
+  kernelFunc: maxPoolGrad
 };

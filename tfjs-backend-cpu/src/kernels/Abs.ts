@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Abs, AbsInputs, KernelConfig, KernelFunc, TypedArray, util} from '@tensorflow/tfjs-core';
+import {Abs, AbsInputs, KernelConfig, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -44,5 +44,5 @@ export const abs = (args: {inputs: AbsInputs, backend: MathBackendCPU}) => {
 export const absConfig: KernelConfig = {
   kernelName: Abs,
   backendName: 'cpu',
-  kernelFunc: abs as unknown as KernelFunc,
+  kernelFunc: abs,
 };

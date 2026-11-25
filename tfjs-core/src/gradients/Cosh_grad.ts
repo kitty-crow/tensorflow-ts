@@ -21,11 +21,13 @@ import {cast} from '../ops/cast';
 import {mul} from '../ops/mul';
 import {sinh} from '../ops/sinh';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const coshGradConfig: GradConfig = {
   kernelName: Cosh,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
 
     return {x: () => mul(sinh(cast(x, 'float32')), dy)};

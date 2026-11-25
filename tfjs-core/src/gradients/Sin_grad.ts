@@ -21,11 +21,13 @@ import {cast} from '../ops/cast';
 import {cos} from '../ops/cos';
 import {mul} from '../ops/mul';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const sinGradConfig: GradConfig = {
   kernelName: Sin,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => mul(cos(cast(x, 'float32')), dy)};
   }

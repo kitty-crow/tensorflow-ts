@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, NumericDataType, TensorInfo, TopK, TopKAttrs, TopKInputs, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, NumericDataType, TensorInfo, TopK, TopKAttrs, TopKInputs, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 import {topKImpl} from './TopK_impl';
 
 export function topK(
-    args: {inputs: TopKInputs, backend: MathBackendCPU, attrs: TopKAttrs}):
+    args: {inputs: TopKInputs, backend: MathBackendCPU, attrs: KernelAttributes<TopKAttrs>}):
     [TensorInfo, TensorInfo] {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -45,5 +45,5 @@ export function topK(
 export const topKConfig: KernelConfig = {
   kernelName: TopK,
   backendName: 'cpu',
-  kernelFunc: topK as unknown as KernelFunc
+  kernelFunc: topK
 };

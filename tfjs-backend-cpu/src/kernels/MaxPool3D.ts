@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -24,7 +24,7 @@ import {pool3d} from '../utils/pool_utils';
 export function maxPool3D(args: {
   inputs: MaxPool3DInputs,
   backend: MathBackendCPU,
-  attrs: MaxPool3DAttrs
+  attrs: KernelAttributes<MaxPool3DAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -46,5 +46,5 @@ export function maxPool3D(args: {
 export const maxPool3DConfig: KernelConfig = {
   kernelName: MaxPool3D,
   backendName: 'cpu',
-  kernelFunc: maxPool3D as unknown as KernelFunc
+  kernelFunc: maxPool3D
 };

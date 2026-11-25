@@ -20,11 +20,13 @@ import * as broadcast_util from '../ops/broadcast_util';
 import {reshape} from '../ops/reshape';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const addGradConfig: GradConfig = {
   kernelName: Add,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 2);
     const [a, b] = saved;
     const outShape =
         broadcast_util.assertAndGetBroadcastShape(a.shape, b.shape);

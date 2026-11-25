@@ -21,11 +21,13 @@ import {mul} from '../ops/mul';
 import {scalar} from '../ops/scalar';
 import {sub} from '../ops/sub';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const squaredDifferenceGradConfig: GradConfig = {
   kernelName: SquaredDifference,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 2);
     const [a, b] = saved;
     const two = scalar(2);
     const derA = () => mul(dy, mul(two, sub(a, b)));

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Complex, ComplexInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {Complex, ComplexInputs, KernelConfig, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -45,5 +45,5 @@ export function complex(args: {inputs: ComplexInputs, backend: MathBackendCPU}):
 export const complexConfig: KernelConfig = {
   kernelName: Complex,
   backendName: 'cpu',
-  kernelFunc: complex as unknown as KernelFunc
+  kernelFunc: complex
 };

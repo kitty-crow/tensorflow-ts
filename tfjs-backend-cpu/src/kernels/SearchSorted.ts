@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, SearchSorted, SearchSortedAttrs, SearchSortedInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, SearchSorted, SearchSortedAttrs, SearchSortedInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -24,7 +24,7 @@ import {searchSortedImpl} from './SearchSorted_impl';
 export function searchSorted(args: {
   inputs: SearchSortedInputs,
   backend: MathBackendCPU,
-  attrs: SearchSortedAttrs
+  attrs: KernelAttributes<SearchSortedAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {sortedSequence, values} = inputs;
@@ -43,5 +43,5 @@ export function searchSorted(args: {
 export const searchSortedConfig: KernelConfig = {
   kernelName: SearchSorted,
   backendName: 'cpu',
-  kernelFunc: searchSorted as unknown as KernelFunc,
+  kernelFunc: searchSorted,
 };

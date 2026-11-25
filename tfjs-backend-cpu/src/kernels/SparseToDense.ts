@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Rank, SparseToDense, SparseToDenseAttrs, SparseToDenseInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Rank, SparseToDense, SparseToDenseAttrs, SparseToDenseInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {scatterImpl} from './Scatter_impl';
@@ -23,7 +23,7 @@ import {scatterImpl} from './Scatter_impl';
 export function sparseToDense(args: {
   inputs: SparseToDenseInputs,
   backend: MathBackendCPU,
-  attrs: SparseToDenseAttrs
+  attrs: KernelAttributes<SparseToDenseAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {sparseIndices, sparseValues, defaultValue} = inputs;
@@ -82,5 +82,5 @@ export function sparseToDense(args: {
 export const sparseToDenseConfig: KernelConfig = {
   kernelName: SparseToDense,
   backendName: 'cpu',
-  kernelFunc: sparseToDense as unknown as KernelFunc
+  kernelFunc: sparseToDense
 };

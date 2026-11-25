@@ -22,11 +22,13 @@ import {ones} from '../ops/ones';
 import {reshape} from '../ops/reshape';
 import {Tensor} from '../tensor';
 import {parseAxisParam} from '../util';
+import {assertArrayLength} from '../util_base';
 
 export const sumGradConfig: GradConfig = {
   kernelName: Sum,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     const expandedDyShape = x.shape.slice();
     const {axis} = attrs as unknown as SumAttrs;

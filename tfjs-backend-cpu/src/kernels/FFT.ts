@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {FFT, FFTInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {FFT, FFTInputs, KernelConfig, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {fftBatch} from '../utils/fft_utils';
@@ -52,5 +52,5 @@ export function fft(args: {inputs: FFTInputs, backend: MathBackendCPU}):
 export const fftConfig: KernelConfig = {
   kernelName: FFT,
   backendName: 'cpu',
-  kernelFunc: fft as unknown as KernelFunc
+  kernelFunc: fft
 };

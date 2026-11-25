@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Identity, IdentityInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {Identity, IdentityInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 
@@ -32,5 +32,5 @@ export function identity(
 export const identityConfig: KernelConfig = {
   kernelName: Identity,
   backendName: 'webgl',
-  kernelFunc: identity as unknown as KernelFunc
+  kernelFunc: identity
 };

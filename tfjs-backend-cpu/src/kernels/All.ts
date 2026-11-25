@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {All, AllAttrs, AllInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {All, AllAttrs, AllInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {reshape} from './Reshape';
 import {transpose} from './Transpose';
 
 export function all(
-    args: {inputs: AllInputs, backend: MathBackendCPU, attrs: AllAttrs}):
+    args: {inputs: AllInputs, backend: MathBackendCPU, attrs: KernelAttributes<AllAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -79,5 +79,5 @@ export function all(
 export const allConfig: KernelConfig = {
   kernelName: All,
   backendName: 'cpu',
-  kernelFunc: all as unknown as KernelFunc
+  kernelFunc: all
 };

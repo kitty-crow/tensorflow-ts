@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function resizeBilinear(args: {
   inputs: ResizeBilinearInputs,
   backend: MathBackendCPU,
-  attrs: ResizeBilinearAttrs
+  attrs: KernelAttributes<ResizeBilinearAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {images} = inputs;
@@ -107,5 +107,5 @@ export function resizeBilinear(args: {
 export const resizeBilinearConfig: KernelConfig = {
   kernelName: ResizeBilinear,
   backendName: 'cpu',
-  kernelFunc: resizeBilinear as unknown as KernelFunc
+  kernelFunc: resizeBilinear
 };

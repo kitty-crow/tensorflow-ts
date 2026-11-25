@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Less} from '@tensorflow/tfjs-core';
+import {KernelConfig, Less} from '@tensorflow/tfjs-core';
 
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 import {lessImplCPU} from '../kernel_utils/shared';
@@ -35,5 +35,5 @@ export const less = binaryKernelFunc({
 export const lessConfig: KernelConfig = {
   kernelName: Less,
   backendName: 'webgl',
-  kernelFunc: less as unknown as KernelFunc
+  kernelFunc: less
 };

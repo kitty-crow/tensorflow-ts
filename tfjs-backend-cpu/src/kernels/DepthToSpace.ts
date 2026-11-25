@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
 export function depthToSpace(args: {
   inputs: DepthToSpaceInputs,
   backend: MathBackendCPU,
-  attrs: DepthToSpaceAttrs
+  attrs: KernelAttributes<DepthToSpaceAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -72,5 +72,5 @@ export function depthToSpace(args: {
 export const depthToSpaceConfig: KernelConfig = {
   kernelName: DepthToSpace,
   backendName: 'cpu',
-  kernelFunc: depthToSpace as unknown as KernelFunc
+  kernelFunc: depthToSpace
 };

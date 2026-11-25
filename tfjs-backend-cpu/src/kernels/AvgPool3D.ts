@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -24,7 +24,7 @@ import {pool3d} from '../utils/pool_utils';
 export function avgPool3D(args: {
   inputs: AvgPool3DInputs,
   backend: MathBackendCPU,
-  attrs: AvgPool3DAttrs
+  attrs: KernelAttributes<AvgPool3DAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -46,5 +46,5 @@ export function avgPool3D(args: {
 export const avgPool3DConfig: KernelConfig = {
   kernelName: AvgPool3D,
   backendName: 'cpu',
-  kernelFunc: avgPool3D as unknown as KernelFunc
+  kernelFunc: avgPool3D
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Imag, ImagInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {Imag, ImagInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -36,5 +36,5 @@ export function imag(args: {inputs: ImagInputs, backend: MathBackendCPU}):
 export const imagConfig: KernelConfig = {
   kernelName: Imag,
   backendName: 'cpu',
-  kernelFunc: imag as unknown as KernelFunc
+  kernelFunc: imag
 };

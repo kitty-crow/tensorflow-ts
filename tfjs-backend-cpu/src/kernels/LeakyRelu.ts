@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, LeakyRelu, LeakyReluAttrs, LeakyReluInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, LeakyRelu, LeakyReluAttrs, LeakyReluInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function leakyRelu(args: {
   inputs: LeakyReluInputs,
   backend: MathBackendCPU,
-  attrs: LeakyReluAttrs
+  attrs: KernelAttributes<LeakyReluAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -45,5 +45,5 @@ export function leakyRelu(args: {
 export const leakyReluConfig: KernelConfig = {
   kernelName: LeakyRelu,
   backendName: 'cpu',
-  kernelFunc: leakyRelu as unknown as KernelFunc
+  kernelFunc: leakyRelu
 };

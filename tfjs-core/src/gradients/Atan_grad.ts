@@ -22,11 +22,13 @@ import {cast} from '../ops/cast';
 import {div} from '../ops/div';
 import {square} from '../ops/square';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const atanGradConfig: GradConfig = {
   kernelName: Atan,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
 
     return {x: () => div(dy, add(square(cast(x, 'float32')), 1))};

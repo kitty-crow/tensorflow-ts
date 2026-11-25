@@ -169,10 +169,10 @@ function fromPixels_(
   const kernel = getKernel(FromPixels, ENGINE.backendName);
   if (kernel != null) {
     const inputs: FromPixelsInputs = {pixels};
-    const attrs: FromPixelsAttrs = {numChannels};
+    const attrs = {numChannels} satisfies FromPixelsAttrs;
     return ENGINE.runKernel(
         FromPixels, inputs as unknown as NamedTensorMap,
-        attrs as unknown as NamedAttrMap);
+        attrs);
   }
 
   const [width, height] = sourceKind === 'video' ?
@@ -454,10 +454,10 @@ export function draw(
   validateImgTensor($img);
   validateImageOptions(options?.imageOptions);
 
-  const inputs: DrawInputs = {image: $img};
+  const inputs = {image: $img} satisfies DrawInputs;
   const attrs: DrawAttrs = {canvas, options};
   ENGINE.runKernel(
-      Draw, inputs as unknown as NamedTensorMap,
+      Draw, inputs,
       attrs as unknown as NamedAttrMap);
 }
 

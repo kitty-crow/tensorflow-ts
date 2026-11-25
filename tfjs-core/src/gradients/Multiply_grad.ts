@@ -23,11 +23,13 @@ import {mul} from '../ops/mul';
 import {reshape} from '../ops/reshape';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const multiplyGradConfig: GradConfig = {
   kernelName: Multiply,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 2);
     const [a, b] = saved;
     const outShape = assertAndGetBroadcastShape(a.shape, b.shape);
 

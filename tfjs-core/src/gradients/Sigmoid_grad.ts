@@ -21,11 +21,13 @@ import {mul} from '../ops/mul';
 import {scalar} from '../ops/scalar';
 import {sub} from '../ops/sub';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const sigmoidGradConfig: GradConfig = {
   kernelName: Sigmoid,
   outputsToSave: [true],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [y] = saved;
 
     return {x: () => mul(dy, mul(y, sub(scalar(1), y)))};

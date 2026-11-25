@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, LessEqual} from '@tensorflow/tfjs-core';
+import {KernelConfig, LessEqual} from '@tensorflow/tfjs-core';
 
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 import {lessEqualImplCPU} from '../kernel_utils/shared';
@@ -35,5 +35,5 @@ export const lessEqual = binaryKernelFunc({
 export const lessEqualConfig: KernelConfig = {
   kernelName: LessEqual,
   backendName: 'webgl',
-  kernelFunc: lessEqual as unknown as KernelFunc
+  kernelFunc: lessEqual
 };

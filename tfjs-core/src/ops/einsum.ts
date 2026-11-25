@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../engine';
 import {Einsum, EinsumAttrs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
 import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
@@ -103,10 +102,10 @@ import {op} from './operation';
 export function einsum_(equation: string, ...tensors: Tensor[]): Tensor {
   const $tensors =
       tensors.map((t, i) => convertToTensor(t, `tensors${i}`, 'einsum'));
-  const attrs: EinsumAttrs = {equation};
+  const attrs = {equation} satisfies EinsumAttrs;
   return ENGINE.runKernel(
       Einsum, $tensors as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      attrs);
 }
 
 export const einsum = /* @__PURE__ */ op({einsum_});

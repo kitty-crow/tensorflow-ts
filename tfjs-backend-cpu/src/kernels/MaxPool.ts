@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, KernelConfig, KernelFunc, MaxPool, MaxPoolAttrs, MaxPoolInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, MaxPool, MaxPoolAttrs, MaxPoolInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {identity} from './Identity';
 
 export function maxPool(
     args:
-        {inputs: MaxPoolInputs, backend: MathBackendCPU, attrs: MaxPoolAttrs}):
+        {inputs: MaxPoolInputs, backend: MathBackendCPU, attrs: KernelAttributes<MaxPoolAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -57,5 +57,5 @@ export function maxPool(
 export const maxPoolConfig: KernelConfig = {
   kernelName: MaxPool,
   backendName: 'cpu',
-  kernelFunc: maxPool as unknown as KernelFunc
+  kernelFunc: maxPool
 };

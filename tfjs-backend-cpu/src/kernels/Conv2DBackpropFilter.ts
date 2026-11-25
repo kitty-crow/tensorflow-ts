@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, Conv2DBackpropFilter, Conv2DBackpropFilterAttrs, Conv2DBackpropFilterInputs, KernelConfig, KernelFunc, TensorBuffer, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, Conv2DBackpropFilter, Conv2DBackpropFilterAttrs, Conv2DBackpropFilterInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function conv2DBackpropFilter(args: {
   inputs: Conv2DBackpropFilterInputs,
   backend: MathBackendCPU,
-  attrs: Conv2DBackpropFilterAttrs
+  attrs: KernelAttributes<Conv2DBackpropFilterAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, dy} = inputs;
@@ -89,5 +89,5 @@ export function conv2DBackpropFilter(args: {
 export const conv2DBackpropFilterConfig: KernelConfig = {
   kernelName: Conv2DBackpropFilter,
   backendName: 'cpu',
-  kernelFunc: conv2DBackpropFilter as unknown as KernelFunc
+  kernelFunc: conv2DBackpropFilter
 };

@@ -24,11 +24,13 @@ import {sum} from '../ops/sum';
 import {where} from '../ops/where';
 import {zerosLike} from '../ops/zeros_like';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const preluGradConfig: GradConfig = {
   kernelName: Prelu,
   inputsToSave: ['x', 'alpha'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 2);
     const [x, alpha] = saved;
     const mask = greater(x, 0);
 

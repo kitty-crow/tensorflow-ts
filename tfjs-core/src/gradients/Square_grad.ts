@@ -20,11 +20,13 @@ import {GradConfig} from '../kernel_registry';
 import {cast} from '../ops/cast';
 import {mul} from '../ops/mul';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const squareGradConfig: GradConfig = {
   kernelName: Square,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => mul(dy, mul(cast(x, 'float32'), 2))};
   }

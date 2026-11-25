@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {All, AllAttrs, AllInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {All, AllAttrs, AllInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {reduce} from '../kernel_utils/reduce';
@@ -24,7 +24,7 @@ import {reshape} from './Reshape';
 import {transpose} from './Transpose';
 
 export function all(
-    args: {inputs: AllInputs, backend: MathBackendWebGL, attrs: AllAttrs}):
+    args: {inputs: AllInputs, backend: MathBackendWebGL, attrs: KernelAttributes<AllAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -71,5 +71,5 @@ export function all(
 export const allConfig: KernelConfig = {
   kernelName: All,
   backendName: 'webgl',
-  kernelFunc: all as unknown as KernelFunc
+  kernelFunc: all
 };

@@ -19,11 +19,13 @@ import {Exp} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
 import {mul} from '../ops/mul';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const expGradConfig: GradConfig = {
   kernelName: Exp,
   outputsToSave: [true],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [y] = saved;
     return {x: () => mul(dy, y)};
   }

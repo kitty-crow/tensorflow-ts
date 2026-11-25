@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {DataType, KernelConfig, KernelFunc, Neg, TensorInfo, TypedArray, UnaryInputs, util} from '@tensorflow/tfjs-core';
+import {DataType, KernelConfig, Neg, TensorInfo, TypedArray, UnaryInputs, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -44,5 +44,5 @@ export function neg(args: {inputs: UnaryInputs, backend: MathBackendCPU}):
 export const negConfig: KernelConfig = {
   kernelName: Neg,
   backendName: 'cpu',
-  kernelFunc: neg as unknown as KernelFunc
+  kernelFunc: neg
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {inferFromImplicitShape, squeezeShape, toNestedArray} from './util_base';
+import {assertArrayLength, inferFromImplicitShape, squeezeShape, toNestedArray} from './util_base';
 
 describe('shape utility regression coverage', () => {
   it('infers a missing dimension without mutating the input', () => {
@@ -47,5 +47,22 @@ describe('shape utility regression coverage', () => {
   it('preserves scalar zero and rejects missing scalar values', () => {
     expect(toNestedArray([], new Float32Array([0])) === 0).toBe(true);
     expect(() => toNestedArray([], new Float32Array(0))).toThrowError();
+  });
+});
+
+describe('saved tensor array contract', () => {
+  it('retains valid references and order', () => {
+    const first = {id: 1};
+    const second = {id: 2};
+    const saved = [first, second];
+    assertArrayLength(saved, 2);
+    const [a, b] = saved;
+    expect(a).toBe(first);
+    expect(b).toBe(second);
+  });
+  it('rejects too few, too many and sparse entries', () => {
+    expect(() => assertArrayLength([1], 2)).toThrowError();
+    expect(() => assertArrayLength([1, 2, 3], 2)).toThrowError();
+    expect(() => assertArrayLength(new Array<number>(2), 2)).toThrowError();
   });
 });

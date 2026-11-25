@@ -20,11 +20,13 @@ import {GradConfig} from '../kernel_registry';
 import {mul} from '../ops/mul';
 import {sigmoid} from '../ops/sigmoid';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const softplusGradConfig: GradConfig = {
   kernelName: Softplus,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
 
     return {x: () => mul(dy, sigmoid(x))};

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function batchNorm(args: {
   inputs: FusedBatchNormInputs,
   backend: MathBackendCPU,
-  attrs: FusedBatchNormAttrs
+  attrs: KernelAttributes<FusedBatchNormAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, scale, offset, mean, variance} = inputs;
@@ -90,5 +90,5 @@ export function batchNorm(args: {
 export const batchNormConfig: KernelConfig = {
   kernelName: FusedBatchNorm,
   backendName: 'cpu',
-  kernelFunc: batchNorm as unknown as KernelFunc,
+  kernelFunc: batchNorm,
 };

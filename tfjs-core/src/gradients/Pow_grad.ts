@@ -29,12 +29,14 @@ import {sum} from '../ops/sum';
 import {where} from '../ops/where';
 import {zerosLike} from '../ops/zeros_like';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const powGradConfig: GradConfig = {
   kernelName: Pow,
   inputsToSave: ['a', 'b'],
   outputsToSave: [true],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 3);
     const [a, b, y] = saved;
     const base = a;
     const exp = b;

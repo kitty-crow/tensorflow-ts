@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Equal, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {Equal, KernelConfig} from '@tensorflow/tfjs-core';
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 import {equalImplCPU} from '../kernel_utils/shared';
 const PACKED_EQUAL = `
@@ -34,5 +34,5 @@ export const equal = binaryKernelFunc({
 export const equalConfig: KernelConfig = {
   kernelName: Equal,
   backendName: 'webgl',
-  kernelFunc: equal as unknown as KernelFunc
+  kernelFunc: equal
 };

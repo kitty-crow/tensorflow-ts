@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, LRN, LRNAttrs, LRNInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, LRN, LRNAttrs, LRNInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 
 export function lRN(
-    args: {inputs: LRNInputs, backend: MathBackendCPU, attrs: LRNAttrs}):
+    args: {inputs: LRNInputs, backend: MathBackendCPU, attrs: KernelAttributes<LRNAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -63,5 +63,5 @@ export function lRN(
 export const LRNConfig: KernelConfig = {
   kernelName: LRN,
   backendName: 'cpu',
-  kernelFunc: lRN as unknown as KernelFunc
+  kernelFunc: lRN
 };

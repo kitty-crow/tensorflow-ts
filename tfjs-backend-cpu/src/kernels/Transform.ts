@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, NumericDataType, TensorInfo, Transform, TransformAttrs, TransformInputs, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, NumericDataType, TensorInfo, Transform, TransformAttrs, TransformInputs, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
 export function transform(args: {
   inputs: TransformInputs,
-  attrs: TransformAttrs,
+  attrs: KernelAttributes<TransformAttrs>,
   backend: MathBackendCPU
 }): TensorInfo {
   const {inputs, attrs, backend} = args;
@@ -118,7 +118,7 @@ export function transform(args: {
 export const transformConfig: KernelConfig = {
   kernelName: Transform,
   backendName: 'cpu',
-  kernelFunc: transform as unknown as KernelFunc
+  kernelFunc: transform
 };
 
 function mapCoord(

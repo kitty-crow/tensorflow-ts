@@ -27,6 +27,7 @@ import {sum} from '../ops/sum';
 import {tile} from '../ops/tile';
 import {Tensor} from '../tensor';
 import {Rank, ShapeMap} from '../types';
+import {assertArrayLength} from '../util_base';
 
 export const fusedBatchNormGradConfig: GradConfig = {
   kernelName: FusedBatchNorm,
@@ -34,6 +35,7 @@ export const fusedBatchNormGradConfig: GradConfig = {
   gradFunc: <R extends Rank>(
       dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
     const {varianceEpsilon} = attrs as unknown as FusedBatchNormAttrs;
+    assertArrayLength(saved, 4);
     const [x, mean, variance, scale] = saved;
 
     const scaleValue = scale == null ? scalar(1) : scale;

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {BatchMatMul, BatchMatMulAttrs, BatchMatMulInputs, broadcast_util, buffer, KernelConfig, KernelFunc, TypedArray, util} from '@tensorflow/tfjs-core';
+import {BatchMatMul, BatchMatMulAttrs, BatchMatMulInputs, broadcast_util, buffer, KernelConfig, KernelAttributes, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -24,7 +24,7 @@ import {reshape} from './Reshape';
 
 export function batchMatMul(args: {
   inputs: BatchMatMulInputs,
-  attrs: BatchMatMulAttrs,
+  attrs: KernelAttributes<BatchMatMulAttrs>,
   backend: MathBackendCPU
 }) {
   const {inputs, backend, attrs} = args;
@@ -135,5 +135,5 @@ export function batchMatMul(args: {
 export const batchMatMulConfig: KernelConfig = {
   kernelName: BatchMatMul,
   backendName: 'cpu',
-  kernelFunc: batchMatMul as unknown as KernelFunc,
+  kernelFunc: batchMatMul,
 };

@@ -19,11 +19,13 @@ import {ArgMax} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
 import {zerosLike} from '../ops/zeros_like';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const argMaxGradConfig: GradConfig = {
   kernelName: ArgMax,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => zerosLike(x)};
   }

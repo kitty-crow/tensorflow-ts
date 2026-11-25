@@ -23,11 +23,13 @@ import {square} from '../ops/square';
 import {sub} from '../ops/sub';
 import {scalar} from '../ops/scalar';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const atanhGradConfig: GradConfig = {
   kernelName: Atanh,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
 
     return {x: () => div(dy, sub(scalar(1), square(cast(x, 'float32'))))};

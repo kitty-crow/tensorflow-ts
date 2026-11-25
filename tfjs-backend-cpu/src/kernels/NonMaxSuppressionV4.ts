@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {kernel_impls, KernelConfig, KernelFunc, NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 const nonMaxSuppressionV4Impl = kernel_impls.nonMaxSuppressionV4Impl;
 import {MathBackendCPU} from '../backend_cpu';
@@ -24,7 +24,7 @@ import {assertNotComplex} from '../cpu_util';
 export function nonMaxSuppressionV4(args: {
   inputs: NonMaxSuppressionV4Inputs,
   backend: MathBackendCPU,
-  attrs: NonMaxSuppressionV4Attrs
+  attrs: KernelAttributes<NonMaxSuppressionV4Attrs>
 }): [TensorInfo, TensorInfo] {
   const {inputs, backend, attrs} = args;
   const {boxes, scores} = inputs;
@@ -49,5 +49,5 @@ export function nonMaxSuppressionV4(args: {
 export const nonMaxSuppressionV4Config: KernelConfig = {
   kernelName: NonMaxSuppressionV4,
   backendName: 'cpu',
-  kernelFunc: nonMaxSuppressionV4 as unknown as KernelFunc
+  kernelFunc: nonMaxSuppressionV4
 };

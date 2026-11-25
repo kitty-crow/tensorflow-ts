@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, buffer, KernelConfig, KernelFunc, MaxPool3DGrad, MaxPool3DGradAttrs, MaxPool3DGradInputs, Rank, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, buffer, KernelConfig, KernelAttributes, MaxPool3DGrad, MaxPool3DGradAttrs, MaxPool3DGradInputs, Rank, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -24,7 +24,7 @@ import {maxPool3dPositions} from '../utils/pool_utils';
 export function maxPool3DGrad(args: {
   inputs: MaxPool3DGradInputs,
   backend: MathBackendCPU,
-  attrs: MaxPool3DGradAttrs
+  attrs: KernelAttributes<MaxPool3DGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input} = inputs;
@@ -119,5 +119,5 @@ export function maxPool3DGrad(args: {
 export const maxPool3DGradConfig: KernelConfig = {
   kernelName: MaxPool3DGrad,
   backendName: 'cpu',
-  kernelFunc: maxPool3DGrad as unknown as KernelFunc
+  kernelFunc: maxPool3DGrad
 };

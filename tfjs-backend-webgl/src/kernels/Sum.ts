@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Sum, SumAttrs, SumInputs} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Sum, SumAttrs, SumInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 
 import {sumImpl} from './Sum_impl';
 
 export function sum(
-    args: {inputs: SumInputs, attrs: SumAttrs, backend: MathBackendWebGL}) {
+    args: {inputs: SumInputs, attrs: KernelAttributes<SumAttrs>, backend: MathBackendWebGL}) {
   const {inputs, backend, attrs} = args;
 
   const {x} = inputs;
@@ -34,5 +34,5 @@ export function sum(
 export const sumConfig: KernelConfig = {
   kernelName: Sum,
   backendName: 'webgl',
-  kernelFunc: sum as unknown as KernelFunc
+  kernelFunc: sum
 };

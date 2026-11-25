@@ -21,6 +21,7 @@ import {conv3DBackpropInput} from '../ops/conv3d_backprop_input';
 import {tupleValuesAreOne} from '../ops/conv_util';
 import {Tensor, Tensor5D} from '../tensor';
 import * as util from '../util';
+import {assertArrayLength} from '../util_base';
 
 export const conv3DGradConfig: GradConfig = {
   kernelName: Conv3D,
@@ -33,6 +34,7 @@ export const conv3DGradConfig: GradConfig = {
             'Error in gradient of conv3D: dilation rates greater than 1 are ' +
             `not yet supported in gradients. Got dilations '${dilations}'`);
 
+    assertArrayLength(saved, 2);
     const [x5D, $filter] = saved;
 
     return {

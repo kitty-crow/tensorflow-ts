@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, RaggedRange, RaggedRangeInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, RaggedRange, RaggedRangeInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -46,5 +46,5 @@ export function raggedRange(
 export const raggedRangeConfig: KernelConfig = {
   kernelName: RaggedRange,
   backendName: 'cpu',
-  kernelFunc: raggedRange as unknown as KernelFunc,
+  kernelFunc: raggedRange,
 };

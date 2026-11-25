@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Rank, TensorInfo, TensorScatterUpdate, TensorScatterUpdateAttrs, TensorScatterUpdateInputs} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Rank, TensorInfo, TensorScatterUpdate, TensorScatterUpdateAttrs, TensorScatterUpdateInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -24,7 +24,7 @@ import {scatterImpl} from './Scatter_impl';
 export function tensorScatterUpdate(args: {
   inputs: TensorScatterUpdateInputs,
   backend: MathBackendCPU,
-  attrs: TensorScatterUpdateAttrs
+  attrs: KernelAttributes<TensorScatterUpdateAttrs>
 }): TensorInfo {
   const {inputs, backend} = args;
   const {tensor, indices, updates} = inputs;
@@ -45,5 +45,5 @@ export function tensorScatterUpdate(args: {
 export const tensorScatterUpdateConfig: KernelConfig = {
   kernelName: TensorScatterUpdate,
   backendName: 'cpu',
-  kernelFunc: tensorScatterUpdate as unknown as KernelFunc
+  kernelFunc: tensorScatterUpdate
 };

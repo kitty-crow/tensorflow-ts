@@ -24,11 +24,13 @@ import {scalar} from '../ops/scalar';
 import {sqrt} from '../ops/sqrt';
 import {square} from '../ops/square';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const asinhGradConfig: GradConfig = {
   kernelName: Asinh,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
 
     return {

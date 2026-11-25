@@ -26,11 +26,13 @@ import {reshape} from '../ops/reshape';
 import {square} from '../ops/square';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const divGradConfig: GradConfig = {
   kernelName: RealDiv,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 2);
     const [a, b] = saved;
     const outShape =
         broadcast_util.assertAndGetBroadcastShape(a.shape, b.shape);

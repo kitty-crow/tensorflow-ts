@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Sum, SumAttrs, SumInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Sum, SumAttrs, SumInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -26,7 +26,7 @@ import {reshape} from './Reshape';
 import {transpose} from './Transpose';
 
 export function sum(
-    args: {inputs: SumInputs, backend: MathBackendCPU, attrs: SumAttrs}):
+    args: {inputs: SumInputs, backend: MathBackendCPU, attrs: KernelAttributes<SumAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -92,5 +92,5 @@ export function sum(
 export const sumConfig: KernelConfig = {
   kernelName: Sum,
   backendName: 'cpu',
-  kernelFunc: sum as unknown as KernelFunc
+  kernelFunc: sum
 };

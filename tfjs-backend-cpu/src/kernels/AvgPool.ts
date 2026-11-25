@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {AvgPool, AvgPoolAttrs, AvgPoolInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {AvgPool, AvgPoolAttrs, AvgPoolInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {identity} from './Identity';
 
 export function avgPool(
     args:
-        {inputs: AvgPoolInputs, backend: MathBackendCPU, attrs: AvgPoolAttrs}):
+        {inputs: AvgPoolInputs, backend: MathBackendCPU, attrs: KernelAttributes<AvgPoolAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -57,5 +57,5 @@ export function avgPool(
 export const avgPoolConfig: KernelConfig = {
   kernelName: AvgPool,
   backendName: 'cpu',
-  kernelFunc: avgPool as unknown as KernelFunc
+  kernelFunc: avgPool
 };

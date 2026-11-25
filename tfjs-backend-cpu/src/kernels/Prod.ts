@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, DataType, KernelConfig, KernelFunc, Prod, ProdAttrs, ProdInputs, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
+import {backend_util, DataType, KernelConfig, KernelAttributes, Prod, ProdAttrs, ProdInputs, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -45,7 +45,7 @@ export function prodImpl(
 }
 
 export function prod(
-    args: {inputs: ProdInputs, backend: MathBackendCPU, attrs: ProdAttrs}):
+    args: {inputs: ProdInputs, backend: MathBackendCPU, attrs: KernelAttributes<ProdAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -84,5 +84,5 @@ export function prod(
 export const prodConfig: KernelConfig = {
   kernelName: Prod,
   backendName: 'cpu',
-  kernelFunc: prod as unknown as KernelFunc
+  kernelFunc: prod
 };

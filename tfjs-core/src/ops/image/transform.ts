@@ -16,9 +16,7 @@
  */
 import {ENGINE} from '../../engine';
 import {Transform, TransformAttrs, TransformInputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor2D, Tensor4D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import * as util from '../../util';
@@ -82,13 +80,12 @@ function transform_(
           'Error in transform: outputShape must be [height, width] or null, ' +
           `but got ${outputShape}.`);
 
-  const inputs: TransformInputs = {image: $image, transforms: $transforms};
-  const attrs:
-      TransformAttrs = {interpolation, fillMode, fillValue, outputShape};
+  const inputs = {image: $image, transforms: $transforms} satisfies TransformInputs;
+  const attrs = {interpolation, fillMode, fillValue, outputShape} satisfies TransformAttrs;
 
   return ENGINE.runKernel(
-      Transform, inputs as unknown as NamedTensorMap,
-      attrs as unknown as NamedAttrMap);
+      Transform, inputs,
+      attrs);
 }
 
 export const transform = /* @__PURE__ */ op({transform_});

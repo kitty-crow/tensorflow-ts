@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {ExpandDims, ExpandDimsAttrs, ExpandDimsInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {ExpandDims, ExpandDimsAttrs, ExpandDimsInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {reshape} from './Reshape';
@@ -23,7 +23,7 @@ import {reshape} from './Reshape';
 export function expandDims(args: {
   inputs: ExpandDimsInputs,
   backend: MathBackendCPU,
-  attrs: ExpandDimsAttrs
+  attrs: KernelAttributes<ExpandDimsAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {input} = inputs;
@@ -48,5 +48,5 @@ export function expandDims(args: {
 export const expandDimsConfig: KernelConfig = {
   kernelName: ExpandDims,
   backendName: 'cpu',
-  kernelFunc: expandDims as unknown as KernelFunc
+  kernelFunc: expandDims
 };

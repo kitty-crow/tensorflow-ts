@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs, KernelConfig, KernelFunc, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function depthwiseConv2dNativeBackpropInput(args: {
   inputs: DepthwiseConv2dNativeBackpropInputInputs,
   backend: MathBackendCPU,
-  attrs: DepthwiseConv2dNativeBackpropInputAttrs
+  attrs: KernelAttributes<DepthwiseConv2dNativeBackpropInputAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, filter} = inputs;
@@ -106,5 +106,5 @@ export function depthwiseConv2dNativeBackpropInput(args: {
 export const depthwiseConv2dNativeBackpropInputConfig: KernelConfig = {
   kernelName: DepthwiseConv2dNativeBackpropInput,
   backendName: 'cpu',
-  kernelFunc: depthwiseConv2dNativeBackpropInput as unknown as KernelFunc
+  kernelFunc: depthwiseConv2dNativeBackpropInput
 };

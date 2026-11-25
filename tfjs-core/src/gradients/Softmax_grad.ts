@@ -21,11 +21,13 @@ import {mul} from '../ops/mul';
 import {sub} from '../ops/sub';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const softmaxGradConfig: GradConfig = {
   kernelName: Softmax,
   outputsToSave: [true],
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [y] = saved;
     const {dim} = attrs as unknown as SoftmaxAttrs;
     const keepDims = true;

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, ReshapeAttrs, ReshapeInputs, SpaceToBatchND, SpaceToBatchNDAttrs, SpaceToBatchNDInputs, TensorInfo, TransposeAttrs, TransposeInputs, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, ReshapeAttrs, ReshapeInputs, SpaceToBatchND, SpaceToBatchNDAttrs, SpaceToBatchNDInputs, TensorInfo, TransposeAttrs, TransposeInputs, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -27,7 +27,7 @@ import {transpose} from './Transpose';
 export function spaceToBatchND(args: {
   inputs: SpaceToBatchNDInputs,
   backend: MathBackendCPU,
-  attrs: SpaceToBatchNDAttrs
+  attrs: KernelAttributes<SpaceToBatchNDAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -85,5 +85,5 @@ export function spaceToBatchND(args: {
 export const spaceToBatchNDConfig: KernelConfig = {
   kernelName: SpaceToBatchND,
   backendName: 'cpu',
-  kernelFunc: spaceToBatchND as unknown as KernelFunc
+  kernelFunc: spaceToBatchND
 };

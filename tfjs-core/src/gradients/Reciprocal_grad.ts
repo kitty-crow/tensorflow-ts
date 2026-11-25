@@ -21,11 +21,13 @@ import {div} from '../ops/div';
 import {neg} from '../ops/neg';
 import {square} from '../ops/square';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const reciprocalGradConfig: GradConfig = {
   kernelName: Reciprocal,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => div(dy, neg(square(x)))};
   }

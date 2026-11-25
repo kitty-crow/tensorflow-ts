@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../engine';
 import {LinSpace, LinSpaceAttrs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor1D} from '../tensor';
 
 /**
@@ -37,6 +36,6 @@ export function linspace(start: number, stop: number, num: number): Tensor1D {
     throw new Error('The number of values should be positive.');
   }
 
-  const attrs: LinSpaceAttrs = {start, stop, num};
-  return ENGINE.runKernel(LinSpace, {}, attrs as unknown as NamedAttrMap);
+  const attrs = {start, stop, num} satisfies LinSpaceAttrs;
+  return ENGINE.runKernel(LinSpace, {}, attrs);
 }

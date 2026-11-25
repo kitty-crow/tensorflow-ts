@@ -22,11 +22,13 @@ import {div} from '../ops/div';
 import {mul} from '../ops/mul';
 import {sqrt} from '../ops/sqrt';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const sqrtGradConfig: GradConfig = {
   kernelName: Sqrt,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
 
     return {x: () => div(dy, mul(sqrt(cast(x, 'float32')), 2))};

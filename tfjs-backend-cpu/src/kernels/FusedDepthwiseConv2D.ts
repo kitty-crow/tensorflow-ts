@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {FusedDepthwiseConv2D, FusedDepthwiseConv2DAttrs, FusedDepthwiseConv2DInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {FusedDepthwiseConv2D, FusedDepthwiseConv2DAttrs, FusedDepthwiseConv2DInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {applyActivation} from '../utils/fused_utils';
@@ -25,7 +25,7 @@ import {depthwiseConv2dNative} from './DepthwiseConv2dNative';
 export function fusedDepthwiseConv2D(args: {
   inputs: FusedDepthwiseConv2DInputs,
   backend: MathBackendCPU,
-  attrs: FusedDepthwiseConv2DAttrs
+  attrs: KernelAttributes<FusedDepthwiseConv2DAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, filter, bias, preluActivationWeights} = inputs;
@@ -63,5 +63,5 @@ export function fusedDepthwiseConv2D(args: {
 export const fusedDepthwiseConv2DConfig: KernelConfig = {
   kernelName: FusedDepthwiseConv2D,
   backendName: 'cpu',
-  kernelFunc: fusedDepthwiseConv2D as unknown as KernelFunc
+  kernelFunc: fusedDepthwiseConv2D
 };

@@ -18,11 +18,13 @@ import {Reshape} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
 import {reshape} from '../ops/reshape';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const reshapeGradConfig: GradConfig = {
   kernelName: Reshape,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => reshape(dy, x.shape)};
   }

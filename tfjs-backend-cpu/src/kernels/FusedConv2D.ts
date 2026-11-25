@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {FusedConv2D, FusedConv2DAttrs, FusedConv2DInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {FusedConv2D, FusedConv2DAttrs, FusedConv2DInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {applyActivation} from '../utils/fused_utils';
@@ -26,7 +26,7 @@ import {reshape} from './Reshape';
 export function fusedConv2D(args: {
   inputs: FusedConv2DInputs,
   backend: MathBackendCPU,
-  attrs: FusedConv2DAttrs
+  attrs: KernelAttributes<FusedConv2DAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, filter, bias, preluActivationWeights} = inputs;
@@ -97,5 +97,5 @@ export function fusedConv2D(args: {
 export const fusedConv2DConfig: KernelConfig = {
   kernelName: FusedConv2D,
   backendName: 'cpu',
-  kernelFunc: fusedConv2D as unknown as KernelFunc
+  kernelFunc: fusedConv2D
 };

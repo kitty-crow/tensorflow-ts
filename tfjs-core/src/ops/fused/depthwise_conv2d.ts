@@ -18,9 +18,8 @@
 import {ENGINE} from '../../engine';
 import {customGrad} from '../../gradients';
 import {FusedDepthwiseConv2D, FusedDepthwiseConv2DAttrs, FusedDepthwiseConv2DInputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor, Tensor3D, Tensor4D} from '../../tensor';
-import {GradSaveFunc, NamedTensorMap} from '../../tensor_types';
+import {GradSaveFunc} from '../../tensor_types';
 import {makeTypesMatch} from '../../tensor_util';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
@@ -198,13 +197,13 @@ function fusedDepthwiseConv2d_<T extends Tensor3D|Tensor4D>({
     return [xDer, filterDer];
   };
 
-  const inputs: FusedDepthwiseConv2DInputs = {
+  const inputs = {
     x: x4D,
     filter: $filter,
     bias: $bias,
     preluActivationWeights: $preluActivationWeights
-  };
-  const attrs: FusedDepthwiseConv2DAttrs = {
+  } satisfies FusedDepthwiseConv2DInputs;
+  const attrs = {
     strides,
     pad,
     dataFormat,
@@ -212,7 +211,7 @@ function fusedDepthwiseConv2d_<T extends Tensor3D|Tensor4D>({
     dimRoundingMode,
     activation,
     leakyreluAlpha
-  };
+  } satisfies FusedDepthwiseConv2DAttrs;
 
   // Depending on the the params passed in we will have different number of
   // inputs and thus a a different number of elements in the gradient.
@@ -221,8 +220,8 @@ function fusedDepthwiseConv2d_<T extends Tensor3D|Tensor4D>({
         customGrad((x4D: Tensor4D, filter: Tensor4D, save: GradSaveFunc) => {
           // tslint:disable-next-line: no-unnecessary-type-assertion
           let res: Tensor4D|Tensor3D = ENGINE.runKernel(
-              FusedDepthwiseConv2D, inputs as unknown as NamedTensorMap,
-              attrs as unknown as NamedAttrMap);
+              FusedDepthwiseConv2D, inputs,
+              attrs);
 
           save([filter, x4D, res]);
 
@@ -240,8 +239,8 @@ function fusedDepthwiseConv2d_<T extends Tensor3D|Tensor4D>({
         (x4D: Tensor4D, filter: Tensor4D, bias: Tensor, save: GradSaveFunc) => {
           // tslint:disable-next-line: no-unnecessary-type-assertion
           let res: Tensor4D|Tensor3D = ENGINE.runKernel(
-              FusedDepthwiseConv2D, inputs as unknown as NamedTensorMap,
-              attrs as unknown as NamedAttrMap);
+              FusedDepthwiseConv2D, inputs,
+              attrs);
 
           save([filter, x4D, res, bias]);
 

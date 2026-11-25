@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {Cast, CastAttrs, CastInputs, DataType, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {Cast, CastAttrs, CastInputs, DataType, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {createSimpleBinaryKernelImpl} from '../utils/binary_impl';
@@ -47,7 +47,7 @@ export function castImpl(
 }
 
 export function cast(
-    args: {inputs: CastInputs, backend: MathBackendCPU, attrs: CastAttrs}):
+    args: {inputs: CastInputs, backend: MathBackendCPU, attrs: KernelAttributes<CastAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -96,5 +96,5 @@ export function cast(
 export const castConfig: KernelConfig = {
   kernelName: Cast,
   backendName: 'cpu',
-  kernelFunc: cast as unknown as KernelFunc
+  kernelFunc: cast
 };

@@ -34,6 +34,12 @@ type AttributeValue =
 /** These are extra non-tensor/primitive params passed to kernel functions. */
 export type Attribute = AttributeValue | RecursiveArray<AttributeValue>;
 
+/** Structural view of a kernel's attributes, retaining every declared property
+ * and its type and optionality. Interface-backed attributes can then be checked
+ * against the registry's attribute map without a double assertion.
+ */
+export type KernelAttributes<A> = { [K in keyof A]: A[K] };
+
 /** Specifies the code to run when executing a kernel. */
 export type KernelFunc = (params: {
   inputs: NamedTensorInfoMap,

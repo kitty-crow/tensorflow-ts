@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Select, SelectInputs, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, Select, SelectInputs, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -57,5 +57,5 @@ export function select(args: {inputs: SelectInputs, backend: MathBackendCPU}):
 export const selectConfig: KernelConfig = {
   kernelName: Select,
   backendName: 'cpu',
-  kernelFunc: select as unknown as KernelFunc
+  kernelFunc: select
 };

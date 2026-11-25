@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, KernelConfig, KernelFunc, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 
 export function conv2D(
-    args: {inputs: Conv2DInputs, backend: MathBackendCPU, attrs: Conv2DAttrs}):
+    args: {inputs: Conv2DInputs, backend: MathBackendCPU, attrs: KernelAttributes<Conv2DAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, filter} = inputs;
@@ -105,5 +105,5 @@ export function conv2D(
 export const conv2DConfig: KernelConfig = {
   kernelName: Conv2D,
   backendName: 'cpu',
-  kernelFunc: conv2D as unknown as KernelFunc
+  kernelFunc: conv2D
 };

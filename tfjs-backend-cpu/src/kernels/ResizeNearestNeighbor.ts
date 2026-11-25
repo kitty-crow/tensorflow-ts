@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, ResizeNearestNeighbor, ResizeNearestNeighborAttrs, ResizeNearestNeighborInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, ResizeNearestNeighbor, ResizeNearestNeighborAttrs, ResizeNearestNeighborInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function resizeNearestNeighbor(args: {
   inputs: ResizeNearestNeighborInputs,
   backend: MathBackendCPU,
-  attrs: ResizeNearestNeighborAttrs
+  attrs: KernelAttributes<ResizeNearestNeighborAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {images} = inputs;
@@ -94,5 +94,5 @@ export function resizeNearestNeighbor(args: {
 export const resizeNearestNeighborConfig: KernelConfig = {
   kernelName: ResizeNearestNeighbor,
   backendName: 'cpu',
-  kernelFunc: resizeNearestNeighbor as unknown as KernelFunc
+  kernelFunc: resizeNearestNeighbor
 };

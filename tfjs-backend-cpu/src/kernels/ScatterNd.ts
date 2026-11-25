@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Rank, ScatterNd, ScatterNdAttrs, ScatterNdInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Rank, ScatterNd, ScatterNdAttrs, ScatterNdInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {scatterImpl} from './Scatter_impl';
@@ -23,7 +23,7 @@ import {scatterImpl} from './Scatter_impl';
 export function scatterNd(args: {
   inputs: ScatterNdInputs,
   backend: MathBackendCPU,
-  attrs: ScatterNdAttrs
+  attrs: KernelAttributes<ScatterNdAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {indices, updates} = inputs;
@@ -46,5 +46,5 @@ export function scatterNd(args: {
 export const scatterNdConfig: KernelConfig = {
   kernelName: ScatterNd,
   backendName: 'cpu',
-  kernelFunc: scatterNd as unknown as KernelFunc
+  kernelFunc: scatterNd
 };

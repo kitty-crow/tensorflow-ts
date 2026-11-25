@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Minimum} from '@tensorflow/tfjs-core';
+import {KernelConfig, Minimum} from '@tensorflow/tfjs-core';
 
 import {CHECK_NAN_SNIPPET} from '../binaryop_gpu';
 import {CHECK_NAN_SNIPPET_PACKED} from '../binaryop_packed_gpu';
@@ -45,5 +45,5 @@ export const minimum = binaryKernelFunc({
 export const minimumConfig: KernelConfig = {
   kernelName: Minimum,
   backendName: 'webgl',
-  kernelFunc: minimum as unknown as KernelFunc
+  kernelFunc: minimum
 };

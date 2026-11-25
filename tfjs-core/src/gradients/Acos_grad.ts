@@ -25,11 +25,13 @@ import {sqrt} from '../ops/sqrt';
 import {square} from '../ops/square';
 import {sub} from '../ops/sub';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const acosGradConfig: GradConfig = {
   kernelName: Acos,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
 
     return {

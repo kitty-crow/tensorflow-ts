@@ -18,9 +18,8 @@
 import {ENGINE} from '../../engine';
 import {customGrad} from '../../gradients';
 import {_FusedMatMul, _FusedMatMulAttrs, _FusedMatMulInputs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor, Tensor3D} from '../../tensor';
-import {GradSaveFunc, NamedTensorMap} from '../../tensor_types';
+import {GradSaveFunc} from '../../tensor_types';
 import {makeTypesMatch} from '../../tensor_util';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
@@ -167,14 +166,13 @@ function fusedMatMul_({
       }
     };
 
-    const inputs: _FusedMatMulInputs = {
+    const inputs = {
       a: a3D,
       b: b3D,
       bias: $bias,
       preluActivationWeights: $preluActivationWeights
-    };
-    const attrs: _FusedMatMulAttrs =
-        {transposeA, transposeB, activation, leakyreluAlpha};
+    } satisfies _FusedMatMulInputs;
+    const attrs = {transposeA, transposeB, activation, leakyreluAlpha} satisfies _FusedMatMulAttrs;
 
     // Depending on the the params passed in we will have different number of
     // inputs and thus a a different number of elements in the gradient.
@@ -184,8 +182,8 @@ function fusedMatMul_({
             const res =
                 // tslint:disable-next-line: no-unnecessary-type-assertion
                 ENGINE.runKernel(
-                    _FusedMatMul, inputs as unknown as NamedTensorMap,
-                    attrs as unknown as NamedAttrMap) as Tensor;
+                    _FusedMatMul, inputs,
+                    attrs) as Tensor;
 
             save([a3D, b3D, res]);
 
@@ -198,8 +196,8 @@ function fusedMatMul_({
             const res =
                 // tslint:disable-next-line: no-unnecessary-type-assertion
                 ENGINE.runKernel(
-                    _FusedMatMul, inputs as unknown as NamedTensorMap,
-                    attrs as unknown as NamedAttrMap) as Tensor;
+                    _FusedMatMul, inputs,
+                    attrs) as Tensor;
 
             save([a3D, b3D, res, $bias]);
 

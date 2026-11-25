@@ -16,13 +16,13 @@
  */
 
 import {backend_util, SplitVAttrs, SplitVInputs} from '@tensorflow/tfjs-core';
-import {KernelConfig, KernelFunc, SplitV, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, SplitV, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {slice} from './Slice';
 
 export function splitV(
-    args: {inputs: SplitVInputs, backend: MathBackendCPU, attrs: SplitVAttrs}):
+    args: {inputs: SplitVInputs, backend: MathBackendCPU, attrs: KernelAttributes<SplitVAttrs>}):
     TensorInfo[] {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -46,5 +46,5 @@ export function splitV(
 export const splitVConfig: KernelConfig = {
   kernelName: SplitV,
   backendName: 'cpu',
-  kernelFunc: splitV as unknown as KernelFunc
+  kernelFunc: splitV
 };

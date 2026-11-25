@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo, Transpose, TransposeAttrs, TransposeInputs, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, TensorInfo, Transpose, TransposeAttrs, TransposeInputs, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -24,7 +24,7 @@ import {transposeImpl} from './Transpose_impl';
 
 export function transpose(args: {
   inputs: TransposeInputs,
-  attrs: TransposeAttrs,
+  attrs: KernelAttributes<TransposeAttrs>,
   backend: MathBackendCPU
 }): TensorInfo {
   const {inputs, attrs, backend} = args;
@@ -50,5 +50,5 @@ export function transpose(args: {
 export const transposeConfig: KernelConfig = {
   kernelName: Transpose,
   backendName: 'cpu',
-  kernelFunc: transpose as unknown as KernelFunc
+  kernelFunc: transpose
 };

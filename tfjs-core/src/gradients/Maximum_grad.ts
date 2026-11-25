@@ -22,11 +22,13 @@ import {greaterEqual} from '../ops/greater_equal';
 import {less} from '../ops/less';
 import {mul} from '../ops/mul';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const maximumGradConfig: GradConfig = {
   kernelName: Maximum,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 2);
     const [a, b] = saved;
     const derA = () => mul(dy, cast(greaterEqual(a, b), 'float32'));
     const derB = () => mul(dy, cast(less(a, b), 'float32'));

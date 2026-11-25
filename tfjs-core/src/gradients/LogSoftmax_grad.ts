@@ -22,12 +22,14 @@ import {mul} from '../ops/mul';
 import {sub} from '../ops/sub';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const logSoftmaxGradConfig: GradConfig = {
   kernelName: LogSoftmax,
   inputsToSave: [],
   outputsToSave: [true],
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [value] = saved;
     const {axis} = attrs as unknown as LogSoftmaxAttrs;
     return {

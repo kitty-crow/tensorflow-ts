@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Min, MinAttrs, MinInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Min, MinAttrs, MinInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {reshape} from './Reshape';
 import {transpose} from './Transpose';
 
 export function min(
-    args: {inputs: MinInputs, backend: MathBackendCPU, attrs: MinAttrs}):
+    args: {inputs: MinInputs, backend: MathBackendCPU, attrs: KernelAttributes<MinAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -82,5 +82,5 @@ export function min(
 export const minConfig: KernelConfig = {
   kernelName: Min,
   backendName: 'cpu',
-  kernelFunc: min as unknown as KernelFunc
+  kernelFunc: min
 };

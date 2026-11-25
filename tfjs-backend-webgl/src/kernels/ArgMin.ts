@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {ArgMin, ArgMinAttrs, ArgMinInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {ArgMin, ArgMinAttrs, ArgMinInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {argMinMaxReduce} from '../kernel_utils/arg_min_max';
@@ -23,7 +23,7 @@ import {transpose} from './Transpose';
 
 export function argMin(
     args:
-        {inputs: ArgMinInputs, backend: MathBackendWebGL, attrs: ArgMinAttrs}):
+        {inputs: ArgMinInputs, backend: MathBackendWebGL, attrs: KernelAttributes<ArgMinAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -51,5 +51,5 @@ export function argMin(
 export const argMinConfig: KernelConfig = {
   kernelName: ArgMin,
   backendName: 'webgl',
-  kernelFunc: argMin as unknown as KernelFunc
+  kernelFunc: argMin
 };

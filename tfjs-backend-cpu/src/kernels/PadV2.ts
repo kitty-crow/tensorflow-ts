@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, NumericDataType, PadV2, PadV2Attrs, PadV2Inputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, NumericDataType, PadV2, PadV2Attrs, PadV2Inputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 
 export function padV2(
-    args: {inputs: PadV2Inputs, backend: MathBackendCPU, attrs: PadV2Attrs}):
+    args: {inputs: PadV2Inputs, backend: MathBackendCPU, attrs: KernelAttributes<PadV2Attrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -65,5 +65,5 @@ export function padV2(
 export const padV2Config: KernelConfig = {
   kernelName: PadV2,
   backendName: 'cpu',
-  kernelFunc: padV2 as unknown as KernelFunc
+  kernelFunc: padV2
 };

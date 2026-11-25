@@ -19,11 +19,13 @@ import {Elu, EluGrad, EluGradInputs} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
 import {Tensor} from '../tensor';
 import {NamedTensorMap} from '../tensor_types';
+import {assertArrayLength} from '../util_base';
 
 export const eluGradConfig: GradConfig = {
   kernelName: Elu,
   outputsToSave: [true],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [y] = saved;
 
     const inputs: EluGradInputs = {dy, y};

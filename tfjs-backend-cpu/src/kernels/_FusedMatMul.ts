@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {_FusedMatMul, _FusedMatMulAttrs, _FusedMatMulInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {_FusedMatMul, _FusedMatMulAttrs, _FusedMatMulInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {applyActivation} from '../utils/fused_utils';
@@ -25,7 +25,7 @@ import {batchMatMul} from './BatchMatMul';
 
 export function _fusedMatMul(args: {
   inputs: _FusedMatMulInputs,
-  attrs: _FusedMatMulAttrs,
+  attrs: KernelAttributes<_FusedMatMulAttrs>,
   backend: MathBackendCPU
 }) {
   const {inputs, backend, attrs} = args;
@@ -64,5 +64,5 @@ export function _fusedMatMul(args: {
 export const _fusedMatMulConfig: KernelConfig = {
   kernelName: _FusedMatMul,
   backendName: 'cpu',
-  kernelFunc: _fusedMatMul as unknown as KernelFunc,
+  kernelFunc: _fusedMatMul,
 };

@@ -22,11 +22,13 @@ import {mul} from '../ops/mul';
 import {neg} from '../ops/neg';
 import {square} from '../ops/square';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const erfGradConfig: GradConfig = {
   kernelName: Erf,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     const a = mul(exp(neg(square(x))), 2 / Math.sqrt(Math.PI));
     return {x: () => mul(dy, a)};

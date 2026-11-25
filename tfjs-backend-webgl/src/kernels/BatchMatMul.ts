@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {BatchMatMul, BatchMatMulAttrs, BatchMatMulInputs, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {BatchMatMul, BatchMatMulAttrs, BatchMatMulInputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {batchMatMulImpl} from './BatchMatMul_impl';
 
 export function batchMatMul(args: {
   inputs: BatchMatMulInputs,
-  attrs: BatchMatMulAttrs,
+  attrs: KernelAttributes<BatchMatMulAttrs>,
   backend: MathBackendWebGL
 }) {
   const {inputs, backend, attrs} = args;
@@ -35,5 +35,5 @@ export function batchMatMul(args: {
 export const batchMatMulConfig: KernelConfig = {
   kernelName: BatchMatMul,
   backendName: 'webgl',
-  kernelFunc: batchMatMul as unknown as KernelFunc,
+  kernelFunc: batchMatMul,
 };

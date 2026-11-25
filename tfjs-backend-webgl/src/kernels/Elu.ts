@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Elu, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {Elu, KernelConfig} from '@tensorflow/tfjs-core';
 import {unaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 
 const ELU = `return (x >= 0.0) ? x : (exp(x) - 1.0);`;
@@ -36,5 +36,5 @@ const elu = unaryKernelFunc({opSnippet: ELU, packedOpSnippet: ELU_PACKED});
 export const eluConfig: KernelConfig = {
   kernelName: Elu,
   backendName: 'webgl',
-  kernelFunc: elu as unknown as KernelFunc
+  kernelFunc: elu
 };

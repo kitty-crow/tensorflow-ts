@@ -26,11 +26,13 @@ import {reshape} from '../ops/reshape';
 import {square} from '../ops/square';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const floorDivGradConfig: GradConfig = {
   kernelName: FloorDiv,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 2);
     const [a, b] = saved;
     const outShape = assertAndGetBroadcastShape(a.shape, b.shape);
 

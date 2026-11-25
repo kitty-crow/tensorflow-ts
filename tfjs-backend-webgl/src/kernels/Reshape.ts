@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Reshape, ReshapeAttrs, ReshapeInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Reshape, ReshapeAttrs, ReshapeInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {packedReshape} from '../kernel_utils/reshape';
@@ -24,7 +24,7 @@ import {isReshapeFree} from '../webgl_util';
 export function reshape(args: {
   inputs: ReshapeInputs,
   backend: MathBackendWebGL,
-  attrs: ReshapeAttrs
+  attrs: KernelAttributes<ReshapeAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -55,5 +55,5 @@ export function reshape(args: {
 export const reshapeConfig: KernelConfig = {
   kernelName: Reshape,
   backendName: 'webgl',
-  kernelFunc: reshape as unknown as KernelFunc
+  kernelFunc: reshape
 };

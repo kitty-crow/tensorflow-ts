@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../engine';
 import {Fill, FillAttrs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
 import {DataType, Rank, ShapeMap} from '../types';
 import {inferDtype} from '../util';
@@ -42,9 +41,9 @@ function fill<R extends Rank>(
   assertNonNegativeIntegerDimensions(shape);
 
   dtype = dtype || inferDtype(value);
-  const attrs: FillAttrs = {shape, value, dtype};
+  const attrs = {shape, value, dtype} satisfies FillAttrs;
 
-  return ENGINE.runKernel(Fill, {}, attrs as unknown as NamedAttrMap);
+  return ENGINE.runKernel(Fill, {}, attrs);
 }
 
 export {fill};

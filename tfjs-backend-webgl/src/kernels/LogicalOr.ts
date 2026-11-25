@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, LogicalOr} from '@tensorflow/tfjs-core';
+import {KernelConfig, LogicalOr} from '@tensorflow/tfjs-core';
 
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 
@@ -33,5 +33,5 @@ export const logicalOr = binaryKernelFunc(
 export const logicalOrConfig: KernelConfig = {
   kernelName: LogicalOr,
   backendName: 'webgl',
-  kernelFunc: logicalOr as unknown as KernelFunc
+  kernelFunc: logicalOr
 };

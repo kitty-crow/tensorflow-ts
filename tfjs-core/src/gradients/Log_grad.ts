@@ -20,11 +20,13 @@ import {GradConfig} from '../kernel_registry';
 import {cast} from '../ops/cast';
 import {div} from '../ops/div';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const logGradConfig: GradConfig = {
   kernelName: Log,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => div(dy, cast(x, 'float32'))};
   }

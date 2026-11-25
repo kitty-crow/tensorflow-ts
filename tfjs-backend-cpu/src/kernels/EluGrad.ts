@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {EluGrad, EluGradInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {EluGrad, EluGradInputs, KernelConfig, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -45,5 +45,5 @@ export function eluGrad(args: {inputs: EluGradInputs, backend: MathBackendCPU}):
 export const eluGradConfig: KernelConfig = {
   kernelName: EluGrad,
   backendName: 'cpu',
-  kernelFunc: eluGrad as unknown as KernelFunc
+  kernelFunc: eluGrad
 };

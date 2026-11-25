@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, BackendValues, buffer, DataType, KernelConfig, KernelFunc, Slice, slice_util, SliceAttrs, SliceInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, BackendValues, buffer, DataType, KernelConfig, KernelAttributes, Slice, slice_util, SliceAttrs, SliceInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -56,7 +56,7 @@ export function sliceImpl(
 }
 
 export function slice(
-    args: {inputs: SliceInputs, backend: MathBackendCPU, attrs: SliceAttrs}):
+    args: {inputs: SliceInputs, backend: MathBackendCPU, attrs: KernelAttributes<SliceAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -75,5 +75,5 @@ export function slice(
 export const sliceConfig: KernelConfig = {
   kernelName: Slice,
   backendName: 'cpu',
-  kernelFunc: slice as unknown as KernelFunc
+  kernelFunc: slice
 };

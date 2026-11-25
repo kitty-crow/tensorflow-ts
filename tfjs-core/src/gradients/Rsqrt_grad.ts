@@ -22,11 +22,13 @@ import {mul} from '../ops/mul';
 import {neg} from '../ops/neg';
 import {pow} from '../ops/pow';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const rsqrtGradConfig: GradConfig = {
   kernelName: Rsqrt,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     return {x: () => neg(div(dy, mul(pow(x, 1.5), 2)))};
   }

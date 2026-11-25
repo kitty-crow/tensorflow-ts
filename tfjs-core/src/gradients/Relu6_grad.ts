@@ -21,11 +21,13 @@ import {lessEqual} from '../ops/less_equal';
 import {mul} from '../ops/mul';
 import {step} from '../ops/step';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const relu6GradConfig: GradConfig = {
   kernelName: Relu6,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     const mask = mul(lessEqual(x, 6), step(x));
 

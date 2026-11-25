@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, LogicalAnd} from '@tensorflow/tfjs-core';
+import {KernelConfig, LogicalAnd} from '@tensorflow/tfjs-core';
 
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 
@@ -35,5 +35,5 @@ export const logicalAnd = binaryKernelFunc({
 export const logicalAndConfig: KernelConfig = {
   kernelName: LogicalAnd,
   backendName: 'webgl',
-  kernelFunc: logicalAnd as unknown as KernelFunc
+  kernelFunc: logicalAnd
 };

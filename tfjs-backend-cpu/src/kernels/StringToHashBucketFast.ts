@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, StringToHashBucketFast, StringToHashBucketFastAttrs, StringToHashBucketFastInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, StringToHashBucketFast, StringToHashBucketFastAttrs, StringToHashBucketFastInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -24,7 +24,7 @@ import {stringToHashBucketFastImpl} from './StringToHashBucketFast_impl';
 export function stringToHashBucketFast(args: {
   inputs: StringToHashBucketFastInputs,
   backend: MathBackendCPU,
-  attrs: StringToHashBucketFastAttrs
+  attrs: KernelAttributes<StringToHashBucketFastAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {numBuckets} = attrs;
@@ -46,5 +46,5 @@ export function stringToHashBucketFast(args: {
 export const stringToHashBucketFastConfig: KernelConfig = {
   kernelName: StringToHashBucketFast,
   backendName: 'cpu',
-  kernelFunc: stringToHashBucketFast as unknown as KernelFunc,
+  kernelFunc: stringToHashBucketFast,
 };

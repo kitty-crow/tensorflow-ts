@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelFunc, Max, MaxAttrs, MaxInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelAttributes, Max, MaxAttrs, MaxInputs, TensorInfo} from '@tensorflow/tfjs-core';
 import {backend_util, KernelConfig} from '@tensorflow/tfjs-core';
 import {TypedArray, util} from '@tensorflow/tfjs-core';
 
@@ -26,7 +26,7 @@ import {maxImpl} from './Max_impl';
 import {transposeImpl} from './Transpose_impl';
 
 export function max(
-    args: {inputs: MaxInputs, backend: MathBackendCPU, attrs: MaxAttrs}):
+    args: {inputs: MaxInputs, backend: MathBackendCPU, attrs: KernelAttributes<MaxAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -74,5 +74,5 @@ export function max(
 export const maxConfig: KernelConfig = {
   kernelName: Max,
   backendName: 'cpu',
-  kernelFunc: max as unknown as KernelFunc
+  kernelFunc: max
 };

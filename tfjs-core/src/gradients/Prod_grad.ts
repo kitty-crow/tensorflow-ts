@@ -23,6 +23,7 @@ import {mul} from '../ops/mul';
 import {reshape} from '../ops/reshape';
 import {transpose} from '../ops/transpose';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 // Gradient for product operation on a single axis.
 function prodGradFn_(x: Tensor, dy: Tensor, axis: number): Tensor {
@@ -90,6 +91,7 @@ export const prodGradConfig: GradConfig = {
   kernelName: Prod,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor|Tensor[], saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
     const {axis} = (attrs as {}) as ProdAttrs;
     const axisArr = axis == null ? x.shape.map((_, i) => i) :

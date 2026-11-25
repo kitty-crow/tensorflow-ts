@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Multinomial, MultinomialAttrs, MultinomialInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Multinomial, MultinomialAttrs, MultinomialInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 import * as seedrandom from 'seedrandom';
 
 import {MathBackendCPU} from '../backend_cpu';
@@ -26,7 +26,7 @@ import {softmax} from './Softmax';
 export function multinomial(args: {
   inputs: MultinomialInputs,
   backend: MathBackendCPU,
-  attrs: MultinomialAttrs
+  attrs: KernelAttributes<MultinomialAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {logits} = inputs;
@@ -82,5 +82,5 @@ export function multinomial(args: {
 export const multinomialConfig: KernelConfig = {
   kernelName: Multinomial,
   backendName: 'cpu',
-  kernelFunc: multinomial as unknown as KernelFunc
+  kernelFunc: multinomial
 };

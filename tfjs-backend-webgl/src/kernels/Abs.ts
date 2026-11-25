@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Abs, AbsInputs, env, KernelConfig, KernelFunc, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {Abs, AbsInputs, env, KernelConfig, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {simpleAbsImplCPU} from '../kernel_utils/shared';
@@ -49,5 +49,5 @@ export function abs(args: {inputs: AbsInputs, backend: MathBackendWebGL}):
 export const absConfig: KernelConfig = {
   kernelName: Abs,
   backendName: 'webgl',
-  kernelFunc: abs as unknown as KernelFunc
+  kernelFunc: abs
 };

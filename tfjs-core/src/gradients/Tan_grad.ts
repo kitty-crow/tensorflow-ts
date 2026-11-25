@@ -21,11 +21,13 @@ import {cos} from '../ops/cos';
 import {div} from '../ops/div';
 import {square} from '../ops/square';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const tanGradConfig: GradConfig = {
   kernelName: Tan,
   inputsToSave: ['x'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const [x] = saved;
 
     return {x: () => div(dy, square(cos(x)))};

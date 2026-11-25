@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {AvgPoolGrad, AvgPoolGradAttrs, AvgPoolGradInputs, backend_util, buffer, KernelConfig, KernelFunc, Rank, TensorInfo} from '@tensorflow/tfjs-core';
+import {AvgPoolGrad, AvgPoolGradAttrs, AvgPoolGradInputs, backend_util, buffer, KernelConfig, KernelAttributes, Rank, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -22,7 +22,7 @@ import {assertNotComplex} from '../cpu_util';
 export function avgPoolGrad(args: {
   inputs: AvgPoolGradInputs,
   backend: MathBackendCPU,
-  attrs: AvgPoolGradAttrs
+  attrs: KernelAttributes<AvgPoolGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input} = inputs;
@@ -88,5 +88,5 @@ export function avgPoolGrad(args: {
 export const avgPoolGradConfig: KernelConfig = {
   kernelName: AvgPoolGrad,
   backendName: 'cpu',
-  kernelFunc: avgPoolGrad as unknown as KernelFunc
+  kernelFunc: avgPoolGrad
 };

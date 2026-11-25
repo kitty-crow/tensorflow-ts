@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Softmax, SoftmaxAttrs, SoftmaxInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Softmax, SoftmaxAttrs, SoftmaxInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -28,7 +28,7 @@ import {sum} from './Sum';
 
 export function softmax(
     args:
-        {inputs: SoftmaxInputs, backend: MathBackendCPU, attrs: SoftmaxAttrs}):
+        {inputs: SoftmaxInputs, backend: MathBackendCPU, attrs: KernelAttributes<SoftmaxAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {logits} = inputs;
@@ -79,5 +79,5 @@ export function softmax(
 export const softmaxConfig: KernelConfig = {
   kernelName: Softmax,
   backendName: 'cpu',
-  kernelFunc: softmax as unknown as KernelFunc
+  kernelFunc: softmax
 };

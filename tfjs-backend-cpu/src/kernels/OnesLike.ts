@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, OnesLike, OnesLikeInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, OnesLike, OnesLikeInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {complex} from './Complex';
@@ -54,5 +54,5 @@ export function onesLike(
 export const onesLikeConfig: KernelConfig = {
   kernelName: OnesLike,
   backendName: 'cpu',
-  kernelFunc: onesLike as unknown as KernelFunc
+  kernelFunc: onesLike
 };

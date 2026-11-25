@@ -17,7 +17,6 @@
 
 import {ENGINE} from '../../engine';
 import {StaticRegexReplace, StaticRegexReplaceAttrs} from '../../kernel_names';
-import {NamedAttrMap} from '../../kernel_registry';
 import {Tensor} from '../../tensor';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
@@ -48,9 +47,9 @@ function staticRegexReplace_(
 
   const $input = convertToTensor(input, 'input', 'staticRegexReplace',
                                  'string');
-  const attrs: StaticRegexReplaceAttrs = {pattern, rewrite, replaceGlobal};
+  const attrs = {pattern, rewrite, replaceGlobal} satisfies StaticRegexReplaceAttrs;
   return ENGINE.runKernel(StaticRegexReplace, {x: $input},
-                          attrs as unknown as NamedAttrMap);
+                          attrs);
 }
 
 export const staticRegexReplace = /* @__PURE__ */ op({staticRegexReplace_});

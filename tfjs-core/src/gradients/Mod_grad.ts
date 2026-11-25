@@ -25,11 +25,13 @@ import {neg} from '../ops/neg';
 import {reshape} from '../ops/reshape';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const modGradConfig: GradConfig = {
   kernelName: Mod,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 2);
     const [a, b] = saved;
     const outShape = assertAndGetBroadcastShape(a.shape, b.shape);
 

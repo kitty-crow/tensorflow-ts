@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Identity, IdentityInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {Identity, IdentityInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -32,5 +32,5 @@ export function identity(
 export const identityConfig: KernelConfig = {
   kernelName: Identity,
   backendName: 'cpu',
-  kernelFunc: identity as unknown as KernelFunc
+  kernelFunc: identity
 };

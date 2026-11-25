@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Any, AnyAttrs, AnyInputs, backend_util, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {Any, AnyAttrs, AnyInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {reduce} from '../kernel_utils/reduce';
@@ -23,7 +23,7 @@ import {reshape} from './Reshape';
 import {transpose} from './Transpose';
 
 export function any(
-    args: {inputs: AnyInputs, backend: MathBackendWebGL, attrs: AnyAttrs}):
+    args: {inputs: AnyInputs, backend: MathBackendWebGL, attrs: KernelAttributes<AnyAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -70,5 +70,5 @@ export function any(
 export const anyConfig: KernelConfig = {
   kernelName: Any,
   backendName: 'webgl',
-  kernelFunc: any as unknown as KernelFunc
+  kernelFunc: any
 };

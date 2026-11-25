@@ -16,7 +16,6 @@
  */
 import {ENGINE} from '../engine';
 import {Concat, ConcatAttrs, ConcatInputs} from '../kernel_names';
-import {NamedAttrMap} from '../kernel_registry';
 import {Tensor} from '../tensor';
 import {NamedTensorMap} from '../tensor_types';
 import {convertToTensorArray} from '../tensor_util_env';
@@ -86,11 +85,11 @@ function concat_<T extends Tensor>(tensors: Array<T|TensorLike>, axis = 0): T {
   }
 
   const inputs: ConcatInputs = $tensors;
-  const attr: ConcatAttrs = {axis};
+  const attr = {axis} satisfies ConcatAttrs;
 
   return ENGINE.runKernel(
       Concat, inputs as unknown as NamedTensorMap,
-      attr as unknown as NamedAttrMap);
+      attr);
 }
 
 export const concat = /* @__PURE__ */ op({concat_});

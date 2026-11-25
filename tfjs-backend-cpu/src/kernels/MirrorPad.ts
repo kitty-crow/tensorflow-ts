@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, MirrorPad, MirrorPadAttrs, MirrorPadInputs, NumericDataType, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, MirrorPad, MirrorPadAttrs, MirrorPadInputs, NumericDataType, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../cpu_util';
 export function mirrorPad(args: {
   inputs: MirrorPadInputs,
   backend: MathBackendCPU,
-  attrs: MirrorPadAttrs
+  attrs: KernelAttributes<MirrorPadAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -74,5 +74,5 @@ export function mirrorPad(args: {
 export const mirrorPadConfig: KernelConfig = {
   kernelName: MirrorPad,
   backendName: 'cpu',
-  kernelFunc: mirrorPad as unknown as KernelFunc
+  kernelFunc: mirrorPad
 };

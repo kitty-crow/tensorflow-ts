@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {buffer, Diag, DiagInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {buffer, Diag, DiagInputs, KernelConfig, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -41,5 +41,5 @@ export function diag(args: {inputs: DiagInputs, backend: MathBackendCPU}):
 export const diagConfig: KernelConfig = {
   kernelName: Diag,
   backendName: 'cpu',
-  kernelFunc: diag as unknown as KernelFunc
+  kernelFunc: diag
 };

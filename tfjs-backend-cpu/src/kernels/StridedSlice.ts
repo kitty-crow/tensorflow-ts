@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Rank, slice_util, StridedSlice, StridedSliceAttrs, StridedSliceInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Rank, slice_util, StridedSlice, StridedSliceAttrs, StridedSliceInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -26,7 +26,7 @@ import {stridedSliceImpl} from './StridedSlice_impl';
 export function stridedSlice(args: {
   inputs: StridedSliceInputs,
   backend: MathBackendCPU,
-  attrs: StridedSliceAttrs
+  attrs: KernelAttributes<StridedSliceAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -89,5 +89,5 @@ export function stridedSlice(args: {
 export const stridedSliceConfig: KernelConfig = {
   kernelName: StridedSlice,
   backendName: 'cpu',
-  kernelFunc: stridedSlice as unknown as KernelFunc
+  kernelFunc: stridedSlice
 };

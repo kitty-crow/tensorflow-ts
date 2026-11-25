@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Mod} from '@tensorflow/tfjs-core';
+import {KernelConfig, Mod} from '@tensorflow/tfjs-core';
 
 import {CHECK_NAN_SNIPPET_PACKED} from '../binaryop_packed_gpu';
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
@@ -39,5 +39,5 @@ export const mod = binaryKernelFunc({
 export const modConfig: KernelConfig = {
   kernelName: Mod,
   backendName: 'webgl',
-  kernelFunc: mod as unknown as KernelFunc
+  kernelFunc: mod
 };

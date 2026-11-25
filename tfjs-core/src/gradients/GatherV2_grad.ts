@@ -24,11 +24,13 @@ import {transpose} from '../ops/transpose';
 import {unsortedSegmentSum} from '../ops/unsorted_segment_sum';
 import {Tensor, Tensor1D} from '../tensor';
 import {parseAxisParam} from '../util';
+import {assertArrayLength} from '../util_base';
 
 export const gatherGradConfig: GradConfig = {
   kernelName: GatherV2,
   inputsToSave: ['x', 'indices'],
   gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+    assertArrayLength(saved, 2);
     const [x, indices] = saved;
     const {axis, batchDims} = attrs as unknown as GatherV2Attrs;
 

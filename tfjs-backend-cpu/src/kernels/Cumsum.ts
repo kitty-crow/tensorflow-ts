@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {backend_util, Cumsum, CumsumAttrs, CumsumInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
+import {backend_util, Cumsum, CumsumAttrs, CumsumInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 import {transpose} from './Transpose';
 
 export function cumsum(
-    args: {inputs: CumsumInputs, backend: MathBackendCPU, attrs: CumsumAttrs}):
+    args: {inputs: CumsumInputs, backend: MathBackendCPU, attrs: KernelAttributes<CumsumAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -84,5 +84,5 @@ export function cumsum(
 export const cumsumConfig: KernelConfig = {
   kernelName: Cumsum,
   backendName: 'cpu',
-  kernelFunc: cumsum as unknown as KernelFunc
+  kernelFunc: cumsum
 };

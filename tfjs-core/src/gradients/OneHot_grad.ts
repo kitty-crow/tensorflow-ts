@@ -19,11 +19,13 @@ import {OneHot} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
 import {zeros} from '../ops/zeros';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 export const oneHotGradConfig: GradConfig = {
   kernelName: OneHot,
   inputsToSave: ['indices'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
+    assertArrayLength(saved, 1);
     const indices = saved[0];
     return {indices: () => zeros(indices.shape, 'float32')};
   }

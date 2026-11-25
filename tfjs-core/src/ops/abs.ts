@@ -18,7 +18,6 @@
 import {ENGINE} from '../engine';
 import {Abs, AbsInputs, ComplexAbs, ComplexAbsInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
@@ -40,12 +39,11 @@ function abs_<T extends Tensor>(x: T|TensorLike): T {
   const $x = convertToTensor(x, 'x', 'abs');
 
   if ($x.dtype === 'complex64') {
-    const inputs: ComplexAbsInputs = {x: $x};
-    return ENGINE.runKernel(ComplexAbs, inputs as unknown as NamedTensorMap);
-  } else {
-    const inputs: AbsInputs = {x: $x};
-    return ENGINE.runKernel(Abs, inputs as unknown as NamedTensorMap);
+    const inputs = {x: $x} satisfies ComplexAbsInputs;
+    return ENGINE.runKernel(ComplexAbs, inputs);
   }
+  const inputs = {x: $x} satisfies AbsInputs;
+  return ENGINE.runKernel(Abs, inputs);
 }
 
 export const abs = /* @__PURE__ */ op({abs_});
