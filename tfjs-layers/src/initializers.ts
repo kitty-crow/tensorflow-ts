@@ -319,12 +319,16 @@ export class VarianceScaling extends Initializer {
     const fanIn = fans[0];
     const fanOut = fans[1];
     let scale = this.scale;
-    if (this.mode === 'fanIn') {
-      scale /= Math.max(1, fanIn);
-    } else if (this.mode === 'fanOut') {
-      scale /= Math.max(1, fanOut);
-    } else {
-      scale /= Math.max(1, (fanIn + fanOut) / 2);
+    switch (this.mode) {
+      case 'fanIn':
+        scale /= Math.max(1, fanIn);
+        break;
+      case 'fanOut':
+        scale /= Math.max(1, fanOut);
+        break;
+      default:
+        scale /= Math.max(1, (fanIn + fanOut) / 2);
+        break;
     }
 
     if (!(this.distribution === 'normal')) {

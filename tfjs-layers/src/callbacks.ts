@@ -136,17 +136,17 @@ export class EarlyStopping extends Callback {
       this.mode = 'auto';
     }
 
-    if (this.mode === 'min') {
-      this.monitorFunc = less;
-    } else if (this.mode === 'max') {
-      this.monitorFunc = greater;
-    } else {
-      // For mode === 'auto'.
-      if (this.monitor.indexOf('acc') !== -1) {
-        this.monitorFunc = greater;
-      } else {
+    switch (this.mode) {
+      case 'min':
         this.monitorFunc = less;
-      }
+        break;
+      case 'max':
+        this.monitorFunc = greater;
+        break;
+      default:
+        // For mode === 'auto'.
+        this.monitorFunc = this.monitor.indexOf('acc') !== -1 ? greater : less;
+        break;
     }
 
     if (this.monitorFunc === less) {

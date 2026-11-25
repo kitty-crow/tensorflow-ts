@@ -158,15 +158,19 @@ export class PReLU extends Layer {
     this.alphaConstraint = getConstraint(args.alphaConstraint);
     if (args.sharedAxes == null) {
       this.sharedAxes = null;
-    } else if (Array.isArray(args.sharedAxes)) {
-      this.sharedAxes = args.sharedAxes;
-    } else if (typeof args.sharedAxes === 'number') {
-      this.sharedAxes = [args.sharedAxes];
-    } else {
-      throw new ValueError(
-          `Expected sharedAxes to be a number or an array of numbers, ` +
-          `but got ${args.sharedAxes}`);
+      return;
     }
+    if (Array.isArray(args.sharedAxes)) {
+      this.sharedAxes = args.sharedAxes;
+      return;
+    }
+    if (typeof args.sharedAxes === 'number') {
+      this.sharedAxes = [args.sharedAxes];
+      return;
+    }
+    throw new ValueError(
+        `Expected sharedAxes to be a number or an array of numbers, ` +
+        `but got ${args.sharedAxes}`);
   }
 
   override build(inputShape: Shape|Shape[]) {

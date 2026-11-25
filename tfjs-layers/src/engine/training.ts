@@ -94,15 +94,43 @@ function hasUnexpectedInputData(
   if (data == null) {
     return false;
   }
-  if (isDataDict(data)) {
-    for (const key in data) {
-      if (data.hasOwnProperty(key)) {
-        return true;
-      }
-    }
-    return false;
+  if (!isDataDict(data)) {
+    return true;
   }
-  return true;
+  for (const key in data) {
+    if (data.hasOwnProperty(key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Resolve named inputs in model order, rejecting missing entries. */
+function collectNamedInputTensors(
+    values: {[inputName: string]: Tensor}, names: string[]): Tensor[] {
+  const tensors: Tensor[] = [];
+  for (const name of names) {
+    if (values[name] == null) {
+      throw new ValueError(
+          `No data provided for "${name}". Need data for each key in: ` +
+          `${names}`);
+    }
+    tensors.push(values[name]);
+  }
+  return tensors;
+}
+
+/** Validate positional input count without copying the user's array. */
+function validatePositionalInputs(
+    values: Tensor[], names: string[], exceptionPrefix: string): Tensor[] {
+  if (values.length !== names.length) {
+    throw new ValueError(
+        `Error when checking model ${exceptionPrefix}: the Array of ` +
+        `Tensors that you are passing to your model is not the size the ` +
+        `model expected. Expected to see ${names.length} Tensor(s), but ` +
+        `instead got the following list of Tensor(s): ${values}`);
+  }
+  return values;
 }
 
 /** Resolve and validate each supported tensor input representation. */
@@ -110,28 +138,11 @@ function collectInputTensors(
     data: Tensor|Tensor[]|{[inputName: string]: Tensor}, names: string[],
     exceptionPrefix: string): Tensor[] {
   if (isDataDict(data)) {
-    const values = data as {[inputName: string]: Tensor};
-    const tensors: Tensor[] = [];
-    for (const name of names) {
-      if (values[name] == null) {
-        throw new ValueError(
-            `No data provided for "${name}". Need data for each key in: ` +
-            `${names}`);
-      }
-      tensors.push(values[name]);
-    }
-    return tensors;
+    return collectNamedInputTensors(data as {[inputName: string]: Tensor},
+        names);
   }
   if (isDataArray(data)) {
-    const values = data as Tensor[];
-    if (values.length !== names.length) {
-      throw new ValueError(
-          `Error when checking model ${exceptionPrefix}: the Array of ` +
-          `Tensors that you are passing to your model is not the size the ` +
-          `model expected. Expected to see ${names.length} Tensor(s), but ` +
-          `instead got the following list of Tensor(s): ${values}`);
-    }
-    return values;
+    return validatePositionalInputs(data as Tensor[], names, exceptionPrefix);
   }
   const value = data as Tensor;
   if (names.length > 1) {
@@ -194,12 +205,13 @@ function verifyInputShapes(
 export function standardizeInputData(
     data: Tensor|Tensor[]|{[inputName: string]: Tensor}, names: string[],
     shapes?: Shape[], checkBatchAxis = true, exceptionPrefix = ''): Tensor[] {
-  if (names == null || names.length === 0) {
-    if (hasUnexpectedInputData(data)) {
-      throw new ValueError(
-          `Error when checking model ${exceptionPrefix} expected no data, ` +
-          `but got ${data}`);
-    }
+  const expectsNoInputs = names == null || names.length === 0;
+  if (expectsNoInputs && hasUnexpectedInputData(data)) {
+    throw new ValueError(
+        `Error when checking model ${exceptionPrefix} expected no data, ` +
+        `but got ${data}`);
+  }
+  if (expectsNoInputs) {
     return [];
   }
   if (data == null) {
@@ -328,25 +340,21 @@ function checkLossAndTargetCompatibility(
 function checkInputData(
     data: Tensor|Tensor[], names: string[], shapes?: Shape[],
     checkBatchAxis = true, exceptionPrefix = '') {
-  let arrays: Tensor[];
-  if (Array.isArray(data)) {
-    if (data.length !== names.length) {
-      throw new ValueError(
-          `Error when checking model ${exceptionPrefix}: the Array of ` +
-          `Tensors that you are passing to your model is not the size the ` +
-          `the model expected. Expected to see ${names.length} Tensor(s),` +
-          ` but instead got ${data.length} Tensors(s).`);
-    }
-    arrays = data;
-  } else {
-    if (names.length > 1) {
-      throw new ValueError(
-          `The model expects ${names.length} ${exceptionPrefix} Tensors, ` +
-          `but only received one Tensor. Found: array with shape ` +
-          `${JSON.stringify(data.shape)}.`);
-    }
-    arrays = [data];
+  const isArray = Array.isArray(data);
+  if (isArray && data.length !== names.length) {
+    throw new ValueError(
+        `Error when checking model ${exceptionPrefix}: the Array of ` +
+        `Tensors that you are passing to your model is not the size the ` +
+        `the model expected. Expected to see ${names.length} Tensor(s),` +
+        ` but instead got ${data.length} Tensors(s).`);
   }
+  if (!isArray && names.length > 1) {
+    throw new ValueError(
+        `The model expects ${names.length} ${exceptionPrefix} Tensors, ` +
+        `but only received one Tensor. Found: array with shape ` +
+        `${JSON.stringify(data.shape)}.`);
+  }
+  const arrays = isArray ? data : [data];
 
   if (!(shapes != null)) return;
   {
@@ -399,36 +407,24 @@ export function collectMetrics(
     return outputNames.map(name => []);
   }
 
-  let wrappedMetrics: Array<string|LossOrMetricFn>|
-      {[outputName: string]: string | LossOrMetricFn};
   if (typeof metrics === 'string' || typeof metrics === 'function') {
-    wrappedMetrics = [metrics];
-  } else if (Array.isArray(metrics) || typeof metrics === 'object') {
-    wrappedMetrics = metrics as Array<string|LossOrMetricFn>|
-        {[outputName: string]: string} | {[outputName: string]: LossOrMetricFn};
-  } else {
+    const sharedMetrics = [metrics];
+    return outputNames.map(name => sharedMetrics);
+  }
+  if (Array.isArray(metrics)) {
+    return outputNames.map(name => metrics);
+  }
+  if (typeof metrics !== 'object') {
     throw new TypeError(
         'Type of metrics argument not understood. Expected an string,' +
         `function, Array, or Object, found: ${metrics}`);
   }
-
-  if (Array.isArray(wrappedMetrics)) {
-    // We then apply all metrics to all outputs.
-    return outputNames.map(
-        name => wrappedMetrics as Array<string|LossOrMetricFn>);
-  } else {
-    // In this case, metrics is a dict.
-    const nestedMetrics: Array<Array<string|LossOrMetricFn>> = [];
-    for (const name of outputNames) {
-      let outputMetrics: string|LossOrMetricFn|Array<string|LossOrMetricFn> =
-          wrappedMetrics.hasOwnProperty(name) ? wrappedMetrics[name] : [];
-      if (!Array.isArray(outputMetrics)) {
-        outputMetrics = [outputMetrics];
-      }
-      nestedMetrics.push(outputMetrics);
-    }
-    return nestedMetrics;
+  const nestedMetrics: Array<Array<string|LossOrMetricFn>> = [];
+  for (const name of outputNames) {
+    const outputMetrics = metrics.hasOwnProperty(name) ? metrics[name] : [];
+    nestedMetrics.push(Array.isArray(outputMetrics) ? outputMetrics : [outputMetrics]);
   }
+  return nestedMetrics;
 }
 
 /** Validate a positional loss-weight list without mutating the caller's list. */
@@ -1004,26 +1000,20 @@ export class LayersModel extends Container implements tfc.InferenceModel {
   private checkNumSamples(
       ins: Tensor|Tensor[], batchSize?: number, steps?: number,
       stepsName = 'steps'): number {
-    let numSamples: number;
+    if (steps != null && batchSize != null) {
+      throw new ValueError(
+          `If ${stepsName} is set, batchSize must be null or undefined.` +
+          `Got batchSize = ${batchSize}`);
+    }
     if (steps != null) {
-      numSamples = null;
-      if (batchSize != null) {
-        throw new ValueError(
-            `If ${stepsName} is set, batchSize must be null or undefined.` +
-            `Got batchSize = ${batchSize}`);
-      }
-    } else if (ins != null) {
-      if (Array.isArray(ins)) {
-        numSamples = ins[0].shape[0];
-      } else {
-        numSamples = ins.shape[0];
-      }
-    } else {
+      return null;
+    }
+    if (ins == null) {
       throw new ValueError(
           `Either the input data should have a defined shape, or ` +
           `${stepsName} shoud be specified.`);
     }
-    return numSamples;
+    return Array.isArray(ins) ? ins[0].shape[0] : ins.shape[0];
   }
 
   /**
@@ -1769,13 +1759,13 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       doValidation = true;
       // TODO(cais): verbose message.
     }
+    if (validationSteps != null && stepsPerEpoch == null) {
+      throw new ValueError(
+          'Can only use `validationSteps` when doing step-wise training, ' +
+          'i.e., `stepsPerEpoch` must be set.');
+    }
     if (validationSteps != null) {
       doValidation = true;
-      if (stepsPerEpoch == null) {
-        throw new ValueError(
-            'Can only use `validationSteps` when doing step-wise training, ' +
-            'i.e., `stepsPerEpoch` must be set.');
-      }
     }
 
     const numTrainSamples =
@@ -2044,31 +2034,22 @@ export class LayersModel extends Container implements tfc.InferenceModel {
 
   private getLossIdentifiers(): LossIdentifier|LossIdentifier[]|
       {[outputName: string]: LossIdentifier} {
-    let lossNames: LossIdentifier|LossIdentifier[]|
-        {[outputName: string]: LossIdentifier};
     if (typeof this.loss === 'string') {
-      lossNames = toSnakeCase(this.loss) as LossIdentifier;
-    } else if (Array.isArray(this.loss)) {
-      for (const loss of this.loss) {
-        if (typeof loss !== 'string') {
-          throw new Error('Serialization of non-string loss is not supported.');
-        }
+      return toSnakeCase(this.loss) as LossIdentifier;
+    }
+    if (Array.isArray(this.loss)) {
+      return serializeLossList(this.loss);
+    }
+    const outputNames = Object.keys(this.loss);
+    const lossNames: {[outputName: string]: LossIdentifier} = {};
+    const losses =
+        this.loss as {[outputName: string]: LossOrMetricFn | string};
+    for (const outputName of outputNames) {
+      if (typeof losses[outputName] !== 'string') {
+        throw new Error('Serialization of non-string loss is not supported.');
       }
-      lossNames = (this.loss as string[]).map(name => toSnakeCase(name)) as
-          LossIdentifier[];
-    } else {
-      const outputNames = Object.keys(this.loss);
-      lossNames = {} as {[outputName: string]: LossIdentifier};
-      const losses =
-          this.loss as {[outputName: string]: LossOrMetricFn | string};
-      for (const outputName of outputNames) {
-        if (typeof losses[outputName] === 'string') {
-          lossNames[outputName] =
-              toSnakeCase(losses[outputName] as string) as LossIdentifier;
-        } else {
-          throw new Error('Serialization of non-string loss is not supported.');
-        }
-      }
+      lossNames[outputName] =
+          toSnakeCase(losses[outputName] as string) as LossIdentifier;
     }
     return lossNames;
   }
@@ -2232,17 +2213,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
   async save(handlerOrURL: io.IOHandler|string, config?: io.SaveConfig):
       Promise<io.SaveResult> {
     if (typeof handlerOrURL === 'string') {
-      const handlers = io.getSaveHandlers(handlerOrURL);
-      if (handlers.length === 0) {
-        throw new ValueError(
-            `Cannot find any save handlers for URL '${handlerOrURL}'`);
-      }
-      if (handlers.length > 1) {
-        throw new ValueError(
-            `Found more than one (${handlers.length}) save handlers for ` +
-            `URL '${handlerOrURL}'`);
-      }
-      handlerOrURL = handlers[0];
+      handlerOrURL = resolveSaveHandler(handlerOrURL);
     }
     if (handlerOrURL.save == null) {
       throw new ValueError(
@@ -2327,3 +2298,28 @@ export class Functional extends LayersModel {
   static override className = 'Functional';
 }
 serialization.registerClass(Functional);
+
+/** Validate every loss before serializing the positional list. */
+function serializeLossList(losses: Array<LossOrMetricFn|string>): LossIdentifier[] {
+  for (const loss of losses) {
+    if (typeof loss !== 'string') {
+      throw new Error('Serialization of non-string loss is not supported.');
+    }
+  }
+  return (losses as string[]).map(name => toSnakeCase(name)) as LossIdentifier[];
+}
+
+/** Resolve a URL to exactly one registered save handler. */
+function resolveSaveHandler(url: string): io.IOHandler {
+  const handlers = io.getSaveHandlers(url);
+  if (handlers.length === 0) {
+    throw new ValueError(
+        `Cannot find any save handlers for URL '${url}'`);
+  }
+  if (handlers.length > 1) {
+    throw new ValueError(
+        `Found more than one (${handlers.length}) save handlers for ` +
+        `URL '${url}'`);
+  }
+  return handlers[0];
+}

@@ -61,21 +61,22 @@ export class TextureManager {
     }
 
     let newTexture: Texture;
-    if (physicalTexType === PhysicalTextureType.PACKED_2X2_FLOAT32) {
-      newTexture = this.gpgpu.createPackedMatrixTexture(shapeRC[0], shapeRC[1]);
-    } else if (physicalTexType === PhysicalTextureType.PACKED_2X2_FLOAT16) {
-      newTexture =
-          this.gpgpu.createFloat16PackedMatrixTexture(shapeRC[0], shapeRC[1]);
-    } else if (physicalTexType === PhysicalTextureType.UNPACKED_FLOAT32) {
-      newTexture =
-          this.gpgpu.createFloat32MatrixTexture(shapeRC[0], shapeRC[1]);
-    } else if (physicalTexType === PhysicalTextureType.UNPACKED_FLOAT16) {
-      newTexture =
-          this.gpgpu.createFloat16MatrixTexture(shapeRC[0], shapeRC[1]);
-    } else if (
-        physicalTexType === PhysicalTextureType.PACKED_4X1_UNSIGNED_BYTE) {
-      newTexture =
-          this.gpgpu.createUnsignedBytesMatrixTexture(shapeRC[0], shapeRC[1]);
+    switch (physicalTexType) {
+      case PhysicalTextureType.PACKED_2X2_FLOAT32:
+        newTexture = this.gpgpu.createPackedMatrixTexture(shapeRC[0], shapeRC[1]);
+        break;
+      case PhysicalTextureType.PACKED_2X2_FLOAT16:
+        newTexture = this.gpgpu.createFloat16PackedMatrixTexture(shapeRC[0], shapeRC[1]);
+        break;
+      case PhysicalTextureType.UNPACKED_FLOAT32:
+        newTexture = this.gpgpu.createFloat32MatrixTexture(shapeRC[0], shapeRC[1]);
+        break;
+      case PhysicalTextureType.UNPACKED_FLOAT16:
+        newTexture = this.gpgpu.createFloat16MatrixTexture(shapeRC[0], shapeRC[1]);
+        break;
+      case PhysicalTextureType.PACKED_4X1_UNSIGNED_BYTE:
+        newTexture = this.gpgpu.createUnsignedBytesMatrixTexture(shapeRC[0], shapeRC[1]);
+        break;
     }
     this.usedTextures[shapeKey].push(newTexture);
 

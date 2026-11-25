@@ -18,6 +18,7 @@
 import {ClipVec4Program} from './clip_vec4_webgpu';
 import {FillProgram} from './fill_webgpu';
 import {OneHotProgram} from './onehot_webgpu';
+import {ReduceProgram} from './reduce_webgpu';
 import {ResizeBilinearProgram} from './resize_bilinear_webgpu';
 import {MergeProgram, SwapProgram} from './top_k_webgpu';
 
@@ -79,5 +80,36 @@ describe('flat WebGPU program dispatch', () => {
     expect(swap.shaderKey).toBe('swap');
     expect(merge.shaderKey).toBe('merge');
     expect(swap.getUserCode()).not.toBe(merge.getUserCode());
+  });
+});
+
+describe('reduction dispatch selection', () => {
+  it('preserves workgroup boundaries and the device limit', () => {
+    expect(new ReduceProgram({batchSize: 1, inSize: 4095, outSize: 1, windowSize: 4095}, 'sum', 512)
+        .workgroupSize).toEqual([64, 1, 1]);
+    expect(new ReduceProgram({batchSize: 1, inSize: 4096, outSize: 1, windowSize: 4096}, 'sum', 512)
+        .workgroupSize).toEqual([256, 1, 1]);
+    expect(new ReduceProgram({batchSize: 1, inSize: 32768, outSize: 1, windowSize: 32768}, 'sum', 256)
+        .workgroupSize).toEqual([256, 1, 1]);
+    expect(new ReduceProgram({batchSize: 1, inSize: 32768, outSize: 1, windowSize: 32768}, 'sum', 512)
+        .workgroupSize).toEqual([512, 1, 1]);
+  });
+
+  it('preserves operation-specific reduction code and initial values', () => {
+    const info = {batchSize: 2, inSize: 8, outSize: 1, windowSize: 8};
+    expect(new ReduceProgram(info, 'min', 256).getUserCode())
+        .toContain('candidate < bestValue');
+    expect(new ReduceProgram(info, 'max', 256).getUserCode())
+        .toContain('candidate > bestValue');
+    expect(new ReduceProgram(info, 'sum', 256).getUserCode())
+        .toContain('bestValue = bestValue + candidate');
+    expect(new ReduceProgram(info, 'mean', 256).getUserCode())
+        .toContain('bestValue / f32(uniforms.reduceSize)');
+    expect(new ReduceProgram(info, 'prod', 256).getUserCode())
+        .toContain('bestValue = bestValue * candidate');
+    expect(new ReduceProgram(info, 'all', 256).getUserCode())
+        .toContain('bestValue >= 1.0 && candidate >= 1.0');
+    expect(new ReduceProgram(info, 'any', 256).getUserCode())
+        .toContain('bestValue >= 1.0 || candidate >= 1.0');
   });
 });

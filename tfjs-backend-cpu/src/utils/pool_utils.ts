@@ -67,7 +67,8 @@ export function pool(
               const pixel = xValues[xCOffset + d];
               if ((poolType === 'max' && pixel > minMaxValue)) {
                 minMaxValue = pixel;
-              } else if (poolType === 'avg') {
+              }
+              if (poolType === 'avg') {
                 avgValue += pixel;
                 count++;
               }
@@ -232,7 +233,8 @@ export function pool3d(
                   const pixel = xValues[xColOffset + channel];
                   if ((poolType === 'max' && pixel > minMaxValue)) {
                     minMaxValue = pixel;
-                  } else if (poolType === 'avg') {
+                  }
+                  if (poolType === 'avg') {
                     avgValue += pixel;
                     count++;
                   }

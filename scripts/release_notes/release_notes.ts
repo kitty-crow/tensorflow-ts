@@ -339,18 +339,26 @@ parser.addArgument('--project', {
 
 const args = parser.parseArgs();
 
-if (args.project === 'union') {
-  generateTfjsPackageNotes();
-} else if (args.project === 'vis') {
-  generateVisNotes();
-} else if (args.project === 'rn') {
-  generateReactNativeNotes();
-} else if (args.project === 'tfdf') {
-  generateTfdfNotes();
-} else if (args.project === 'tflite') {
-  generateTfliteNotes();
-} else if (args.project === 'webgpu') {
-  generateWebgpuNotes();
-} else if (args.project === 'automl') {
-  generateAutomlNotes();
+switch (args.project) {
+  case 'union':
+    generateTfjsPackageNotes();
+    break;
+  case 'vis':
+    generateVisNotes();
+    break;
+  case 'rn':
+    generateReactNativeNotes();
+    break;
+  case 'tfdf':
+    generateTfdfNotes();
+    break;
+  case 'tflite':
+    generateTfliteNotes();
+    break;
+  case 'webgpu':
+    generateWebgpuNotes();
+    break;
+  case 'automl':
+    generateAutomlNotes();
+    break;
 }

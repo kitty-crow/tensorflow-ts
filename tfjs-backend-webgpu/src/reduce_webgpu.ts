@@ -43,13 +43,9 @@ export class ReduceProgram implements WebGPUProgram {
     // become the bottleneck. Increasing workgroupSize can reduce the times of
     // accessing global memory. The threshold value is just to make sure the
     // reduceSize is large enough for a bigger workgroupSize.
-    if (reduceInfo.inSize >= 32768 && maxComputeWorkgroupSizeX >= 512) {
-      this.workgroupSize = [512, 1, 1];
-    } else if (reduceInfo.inSize >= 4096) {
-      this.workgroupSize = [256, 1, 1];
-    } else {
-      this.workgroupSize = [64, 1, 1];
-    }
+    this.workgroupSize = [
+      reduceWorkgroupSize(reduceInfo.inSize, maxComputeWorkgroupSizeX), 1, 1
+    ];
     this.dispatchLayout = flatDispatchLayout(this.outputShape);
     // A work group only outputs a data, so we transfer [1, 1, 1] to compute
     // dispatch size.
@@ -64,25 +60,33 @@ export class ReduceProgram implements WebGPUProgram {
     let reduceOp = ``;
     let initValue = '0.0';
     const workgroupSizeX = this.workgroupSize[0];
-    if (this.reduceType === 'min' || this.reduceType === 'max') {
-      reduceOp = `
+    switch (this.reduceType) {
+      case 'min':
+      case 'max':
+        reduceOp = `
          if (isnan(candidate)) {
           bestValue = uniforms.NAN;
          } else if (!isnan(bestValue) && candidate ${
           this.reduceType === 'min' ? '<' : '>'} bestValue)
            {  bestValue = candidate; }`;
-      initValue = 'f32(x[offset])';
-    } else if (this.reduceType === 'sum' || this.reduceType === 'mean') {
-      reduceOp = ' bestValue = bestValue + candidate; ';
-    } else if (this.reduceType === 'prod') {
-      reduceOp = ' bestValue = bestValue * candidate; ';
-      initValue = '1.0';
-    } else if (this.reduceType === 'all') {
-      reduceOp = ' bestValue = f32(bestValue >= 1.0 && candidate >= 1.0); ';
-      initValue = '1.0';
-    } else if (this.reduceType === 'any') {
-      reduceOp = ' bestValue = f32(bestValue >= 1.0 || candidate >= 1.0); ';
-      initValue = '0.0';
+        initValue = 'f32(x[offset])';
+        break;
+      case 'sum':
+      case 'mean':
+        reduceOp = ' bestValue = bestValue + candidate; ';
+        break;
+      case 'prod':
+        reduceOp = ' bestValue = bestValue * candidate; ';
+        initValue = '1.0';
+        break;
+      case 'all':
+        reduceOp = ' bestValue = f32(bestValue >= 1.0 && candidate >= 1.0); ';
+        initValue = '1.0';
+        break;
+      case 'any':
+        reduceOp = ' bestValue = f32(bestValue >= 1.0 || candidate >= 1.0); ';
+        initValue = '0.0';
+        break;
     }
 
     const outputSnippet = this.reduceType === 'mean' ?
@@ -142,4 +146,14 @@ export class ReduceProgram implements WebGPUProgram {
      `;
     return userCode;
   }
+}
+
+function reduceWorkgroupSize(inSize: number, maxComputeWorkgroupSizeX: number): number {
+  if (inSize >= 32768 && maxComputeWorkgroupSizeX >= 512) {
+    return 512;
+  }
+  if (inSize >= 4096) {
+    return 256;
+  }
+  return 64;
 }

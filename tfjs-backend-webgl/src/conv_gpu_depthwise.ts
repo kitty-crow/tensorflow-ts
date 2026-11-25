@@ -17,6 +17,7 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {GPGPUProgram, useShapeUniforms} from './gpgpu_math';
+import {selectActivationSource} from './activation_source';
 
 export class DepthwiseConv2DProgram implements GPGPUProgram {
   variableNames = ['x', 'W'];
@@ -41,28 +42,22 @@ export class DepthwiseConv2DProgram implements GPGPUProgram {
     const filterWidth = convInfo.filterWidth;
     const channelMul = convInfo.outChannels / convInfo.inChannels;
 
-    let activationSnippet = '', applyActivationSnippet = '';
-    if (activation) {
-      if (hasPreluActivation) {
-        activationSnippet = `float activation(float a) {
+    const activationSnippet = selectActivationSource(
+        activation, hasPreluActivation, hasLeakyReluAlpha,
+        () => `float activation(float a) {
           float b = getPreluActivationWeightsAtOutCoords();
           ${activation}
-        }`;
-      } else if (hasLeakyReluAlpha) {
-        activationSnippet = `float activation(float a) {
+        }`,
+        () => `float activation(float a) {
           float b = getLeakyreluAlphaAtOutCoords();
           ${activation}
-        }`;
-      } else {
-        activationSnippet = `
+        }`,
+        () => `
           float activation(float x) {
             ${activation}
           }
-        `;
-      }
-
-      applyActivationSnippet = `result = activation(result);`;
-    }
+        `);
+    const applyActivationSnippet = activation ? `result = activation(result);` : '';
 
     const addBiasSnippet = addBias ? 'result += getBiasAtOutCoords();' : '';
     if (addBias) {

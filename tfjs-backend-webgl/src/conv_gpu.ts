@@ -17,6 +17,7 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {GPGPUProgram} from './gpgpu_math';
+import {selectActivationSource} from './activation_source';
 
 export class Conv2DProgram implements GPGPUProgram {
   variableNames = ['x', 'W'];
@@ -45,28 +46,22 @@ export class Conv2DProgram implements GPGPUProgram {
     const colDim = isChannelsLast ? 2 : 3;
     const channelDim = isChannelsLast ? 3 : 1;
 
-    let activationSnippet = '', applyActivationSnippet = '';
-    if (activation) {
-      if (hasPreluActivationWeights) {
-        activationSnippet = `float activation(float a) {
+    const activationSnippet = selectActivationSource(
+        activation, hasPreluActivationWeights, hasLeakyreluAlpha,
+        () => `float activation(float a) {
           float b = getPreluActivationWeightsAtOutCoords();
           ${activation}
-        }`;
-      } else if (hasLeakyreluAlpha) {
-        activationSnippet = `float activation(float a) {
+        }`,
+        () => `float activation(float a) {
           float b = getLeakyreluAlphaAtOutCoords();
           ${activation}
-        }`;
-      } else {
-        activationSnippet = `
+        }`,
+        () => `
           float activation(float x) {
             ${activation}
           }
-        `;
-      }
-
-      applyActivationSnippet = `result = activation(result);`;
-    }
+        `);
+    const applyActivationSnippet = activation ? `result = activation(result);` : '';
 
     const addBiasSnippet = addBias ? 'result += getBiasAtOutCoords();' : '';
     if (addBias) {

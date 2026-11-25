@@ -463,16 +463,23 @@ export class Bidirectional extends Wrapper {
       }
 
       let output: Tensor|Tensor[];
-      if (this.mergeMode === 'concat') {
-        output = K.concatenate([y as Tensor, yRev as Tensor]);
-      } else if (this.mergeMode === 'sum') {
-        output = tfc.add(y as Tensor, yRev as Tensor);
-      } else if (this.mergeMode === 'ave') {
-        output = tfc.mul(.5, tfc.add(y as Tensor, yRev as Tensor));
-      } else if (this.mergeMode === 'mul') {
-        output = tfc.mul(y as Tensor, yRev as Tensor);
-      } else if (this.mergeMode == null) {
-        output = [y as Tensor, yRev as Tensor];
+      switch (this.mergeMode) {
+        case 'concat':
+          output = K.concatenate([y as Tensor, yRev as Tensor]);
+          break;
+        case 'sum':
+          output = tfc.add(y as Tensor, yRev as Tensor);
+          break;
+        case 'ave':
+          output = tfc.mul(.5, tfc.add(y as Tensor, yRev as Tensor));
+          break;
+        case 'mul':
+          output = tfc.mul(y as Tensor, yRev as Tensor);
+          break;
+        case null:
+        case undefined:
+          output = [y as Tensor, yRev as Tensor];
+          break;
       }
 
       // TODO(cais): Properly set learning phase.

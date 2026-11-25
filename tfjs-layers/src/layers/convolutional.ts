@@ -450,24 +450,7 @@ export abstract class BaseConv extends Layer {
           `for 1D convolution, but received ` +
           `${JSON.stringify(this.dilationRate)}`);
     }
-    if (this.rank === 2) {
-      if (typeof this.dilationRate === 'number') {
-        this.dilationRate = [this.dilationRate, this.dilationRate];
-      } else if (this.dilationRate.length !== 2) {
-        throw new ValueError(
-            `dilationRate must be a number or array of two numbers for 2D ` +
-            `convolution, but received ${JSON.stringify(this.dilationRate)}`);
-      }
-    } else if (this.rank === 3) {
-      if (typeof this.dilationRate === 'number') {
-        this.dilationRate =
-            [this.dilationRate, this.dilationRate, this.dilationRate];
-      } else if (this.dilationRate.length !== 3) {
-        throw new ValueError(
-            `dilationRate must be a number or array of three numbers for 3D ` +
-            `convolution, but received ${JSON.stringify(this.dilationRate)}`);
-      }
-    }
+    this.dilationRate = validateConvDilation(this.rank, this.dilationRate);
   }
 
   protected static verifyArgs(args: BaseConvLayerArgs) {
@@ -568,32 +551,34 @@ export abstract class Conv extends BaseConv {
           this.activation.getClassName());
 
       if (fusedActivationName != null && this.rank === 2) {
-        outputs = conv2dWithBiasActivation(
+        return conv2dWithBiasActivation(
             inputs, this.kernel.read(), biasValue, this.strides, this.padding,
             this.dataFormat, this.dilationRate as [number, number],
             fusedActivationName);
-      } else {
-        if (this.rank === 1) {
+      }
+      switch (this.rank) {
+        case 1:
           outputs = conv1dWithBias(
               inputs, this.kernel.read(), biasValue, this.strides[0],
               this.padding, this.dataFormat, this.dilationRate[0]);
-        } else if (this.rank === 2) {
+          break;
+        case 2:
           // TODO(cais): Move up to constructor.
           outputs = conv2dWithBiasActivation(
               inputs, this.kernel.read(), biasValue, this.strides, this.padding,
               this.dataFormat, this.dilationRate as [number, number]);
-        } else if (this.rank === 3) {
+          break;
+        case 3:
           outputs = conv3dWithBias(
               inputs, this.kernel.read(), biasValue, this.strides, this.padding,
               this.dataFormat, this.dilationRate as [number, number, number]);
-        } else {
+          break;
+        default:
           throw new NotImplementedError(
               'convolutions greater than 3D are not implemented yet.');
-        }
-
-        if (this.activation != null) {
-          outputs = this.activation.apply(outputs);
-        }
+      }
+      if (this.activation != null) {
+        outputs = this.activation.apply(outputs);
       }
 
       return outputs;
@@ -1452,3 +1437,24 @@ export class UpSampling2D extends Layer {
   }
 }
 serialization.registerClass(UpSampling2D);
+
+/** Validate each supported convolution rank without nesting its checks. */
+function validateConvDilation(rank: number, dilationRate: number[]): number[] {
+  if (rank === 2 && typeof dilationRate === 'number') {
+    return [dilationRate, dilationRate];
+  }
+  if (rank === 2 && dilationRate.length !== 2) {
+    throw new ValueError(
+        `dilationRate must be a number or array of two numbers for 2D ` +
+        `convolution, but received ${JSON.stringify(dilationRate)}`);
+  }
+  if (rank === 3 && typeof dilationRate === 'number') {
+    return [dilationRate, dilationRate, dilationRate];
+  }
+  if (rank === 3 && dilationRate.length !== 3) {
+    throw new ValueError(
+        `dilationRate must be a number or array of three numbers for 3D ` +
+        `convolution, but received ${JSON.stringify(dilationRate)}`);
+  }
+  return dilationRate;
+}

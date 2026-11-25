@@ -260,13 +260,14 @@ export function ensureTensorsRank2OrHigher(tensors: Tensor|Tensor[]): Tensor[] {
     const tensor = tensors[i];
     if (tensor.rank === 1) {
       outs.push(expandDims(tensor, 1));
-    } else if (tensor.rank === 0) {
+      continue;
+    }
+    if (tensor.rank === 0) {
       throw new Error(
           'Expected tensor to be at least 1D, but received a 0D tensor ' +
           '(scalar).');
-    } else {
-      outs.push(tensor);
     }
+    outs.push(tensor);
   }
   return outs;
 }
@@ -290,42 +291,38 @@ export function disposeNewTensors(
     return;
   }
   const oldTensorIds: number[] = [];
-  if (refTensors instanceof Tensor) {
-    oldTensorIds.push(refTensors.id);
-  } else if (Array.isArray(refTensors)) {
-    refTensors.forEach(t => oldTensorIds.push(t.id));
-  } else if (refTensors != null) {
-    // `oldTensors` is a map from string name to Tensor.
-    for (const name in refTensors) {
-      const oldTensor = refTensors[name];
-      oldTensorIds.push(oldTensor.id);
-    }
-  }
+  visitTensorContainer(refTensors, tensor => oldTensorIds.push(tensor.id));
 
   const tensorsToDispose: Tensor[] = [];
-  if (tensors instanceof Tensor) {
-    if (oldTensorIds.indexOf(tensors.id) === -1) {
-      tensorsToDispose.push(tensors);
+  visitTensorContainer(tensors, tensor => {
+    if (oldTensorIds.indexOf(tensor.id) === -1) {
+      tensorsToDispose.push(tensor);
     }
-  } else if (Array.isArray(tensors)) {
-    tensors.forEach(t => {
-      if (oldTensorIds.indexOf(t.id) === -1) {
-        tensorsToDispose.push(t);
-      }
-    });
-  } else if (tensors != null) {
-    // `oldTensors` is a map from string name to Tensor.
-    for (const name in tensors) {
-      const tensor = tensors[name];
-      if (oldTensorIds.indexOf(tensor.id) === -1) {
-        tensorsToDispose.push(tensor);
-      }
-    }
-  }
+  });
 
   tensorsToDispose.forEach(t => {
     if (!t.isDisposed) {
       t.dispose();
     }
   });
+}
+
+/** Visit the same tensor representations used for training memory cleanup. */
+function visitTensorContainer(
+    tensors: Tensor|Tensor[]|{[inputName: string]: Tensor},
+    visit: (tensor: Tensor) => void): void {
+  if (tensors instanceof Tensor) {
+    visit(tensors);
+    return;
+  }
+  if (Array.isArray(tensors)) {
+    tensors.forEach(visit);
+    return;
+  }
+  if (tensors == null) {
+    return;
+  }
+  for (const name in tensors) {
+    visit(tensors[name]);
+  }
 }

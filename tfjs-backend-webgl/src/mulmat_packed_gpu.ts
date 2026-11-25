@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram, useShapeUniforms} from './gpgpu_math';
+import {selectActivationSource} from './activation_source';
 
 export class MatMulPackedProgram implements GPGPUProgram {
   variableNames = ['matrixA', 'matrixB'];
@@ -41,26 +42,20 @@ export class MatMulPackedProgram implements GPGPUProgram {
     const aSwizzle = transposeA ? ['a.xxyy', 'a.zzww'] : ['a.xxzz', 'a.yyww'];
     const bSwizzle = transposeB ? ['b.xzxz', 'b.ywyw'] : ['b.xyxy', 'b.zwzw'];
 
-    let activationSnippet = '', applyActivationSnippet = '';
-    if (activation) {
-      if (hasPreluActivation) {
-        activationSnippet = `vec4 activation(vec4 a) {
+    const activationSnippet = selectActivationSource(
+        activation, hasPreluActivation, hasLeakyreluActivation,
+        () => `vec4 activation(vec4 a) {
           vec4 b = getPreluActivationWeightsAtOutCoords();
           ${activation}
-        }`;
-      } else if (hasLeakyreluActivation) {
-        activationSnippet = `vec4 activation(vec4 a) {
+        }`,
+        () => `vec4 activation(vec4 a) {
           vec4 b = getLeakyreluAlphaAtOutCoords();
           ${activation}
-        }`;
-      } else {
-        activationSnippet = `vec4 activation(vec4 x) {
+        }`,
+        () => `vec4 activation(vec4 x) {
           ${activation}
-        }`;
-      }
-
-      applyActivationSnippet = `result = activation(result);`;
-    }
+        }`);
+    const applyActivationSnippet = activation ? `result = activation(result);` : '';
 
     const addBiasSnippet = addBias ? 'result += getBiasAtOutCoords();' : '';
     if (addBias) {
