@@ -1022,9 +1022,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     expectTensorsClose(
         valLosses as number[], [386.35848999023438, 1808.7342529296875]);
     expectTensorsClose(
-        layer1.getWeights()[0], mul(scalar(-0.61341441), ones([4, 10])));
+        requiredTestElement(layer1.getWeights(), 0), mul(scalar(-0.61341441), ones([4, 10])));
     expectTensorsClose(
-        layer2.getWeights()[0], mul(scalar(-1.77405429), ones([10, 1])));
+        requiredTestElement(layer2.getWeights(), 0), mul(scalar(-1.77405429), ones([10, 1])));
 
     // Freeze the 1st layer and compile the model again.
     layer1.trainable = false;
@@ -1041,10 +1041,10 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
         valLosses as number[], [75.336524963378906, 3.1378798484802246]);
     // Expect no change in the value of layer1's kernel, due to the freezing.
     expectTensorsClose(
-        layer1.getWeights()[0], mul(scalar(-0.61341441), ones([4, 10])));
+        requiredTestElement(layer1.getWeights(), 0), mul(scalar(-0.61341441), ones([4, 10])));
     // Expect change in the value of layer2's kernel.
     expectTensorsClose(
-        layer2.getWeights()[0], mul(scalar(-0.11295), ones([10, 1])));
+        requiredTestElement(layer2.getWeights(), 0), mul(scalar(-0.11295), ones([10, 1])));
   });
 
   it('Setting trainable of layer from fit callback', async () => {
@@ -1068,9 +1068,9 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       callbacks: {
         onEpochEnd: async (epoch, logs) => {
           layer1KernelValues.push(
-              requiredTestElement(model.layers, 0).getWeights()[0].dataSync() as Float32Array);
+              requiredTestElement(requiredTestElement(model.layers, 0).getWeights(), 0).dataSync() as Float32Array);
           layer2KernelValues.push(
-              requiredTestElement(model.layers, 1).getWeights()[0].dataSync() as Float32Array);
+              requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0).dataSync() as Float32Array);
           // Freeze the first dense layer after the 2nd epoch and unfreeze it
           // after the 3rd epoch.
           switch (epoch) {
@@ -1342,7 +1342,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     const history =
         await model.fit(inputs, targets, {batchSize: numSamples, epochs: 2});
     expectTensorsClose(
-        requiredTestElement(model.layers, 1).getWeights()[0],
+        requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0),
         tensor2d([0.829, 0.829, 0.829, 0.829], [4, 1]));
     expect(historyMetric(history, 'loss').length).toEqual(2);
     expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(17);
@@ -1379,7 +1379,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     const history =
         await model.fit(inputs, targets, {batchSize: numSamples, epochs: 2});
     expectTensorsClose(
-        requiredTestElement(model.layers, 1).getWeights()[0],
+        requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0),
         tensor2d([0.884, 0.884, 0.884, 0.884], [4, 1]));
     expect(historyMetric(history, 'loss').length).toEqual(2);
     expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(9.08);
@@ -1392,16 +1392,16 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     await model.fit(inputs, targets, {batchSize: numSamples, epochs: 2});
     const w = zeros([4, 1]);
     requiredTestElement(model.layers, 1).setWeights([w]);
-    expectTensorsClose(requiredTestElement(model.layers, 1).getWeights()[0], w);
+    expectTensorsClose(requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0), w);
   });
 
   it('and then set weights to own weights', async () => {
     createDenseModelAndData(false, 'l1l2');
     model.compile({optimizer: 'SGD', loss: 'meanSquaredError'});
     await model.fit(inputs, targets, {batchSize: numSamples, epochs: 2});
-    const w = requiredTestElement(model.layers, 1).getWeights()[0];
+    const w = requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0);
     requiredTestElement(model.layers, 1).setWeights([w]);
-    expectTensorsClose(requiredTestElement(model.layers, 1).getWeights()[0], w);
+    expectTensorsClose(requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0), w);
   });
 
   class CustomCallbackForTest extends tfl.CustomCallback {

@@ -40,7 +40,7 @@ describeWithFlags('MicrophoneIterator', MEDIA_ENVS, () => {
       await tfd.microphone({sampleRateHz: 48000});
       fail();
     } catch (e) {
-      expect(e.message).toEqual(
+      expect(test_util.requiredTestErrorMessage(e)).toEqual(
           'Mismatch in sampling rate: Expected: 48000; Actual: 44100');
     }
   });
@@ -68,7 +68,7 @@ describeWithFlags('MicrophoneIterator', MEDIA_ENVS, () => {
       await tfd.microphone({fftSize: 1000});
       fail();
     } catch (e) {
-      expect(e.message).toEqual(
+      expect(test_util.requiredTestErrorMessage(e)).toEqual(
           'Invalid fftSize: it must be a power of 2 between 2 to 4 and ' +
           '2 to 14, but got 1000');
     }

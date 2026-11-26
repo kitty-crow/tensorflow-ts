@@ -25,6 +25,10 @@ import {maximumGradConfig} from './gradients/Maximum_grad';
 import {Tensor} from './tensor';
 import {TensorInfo} from './tensor_info';
 import {Rank} from './types';
+import {sparseReshape} from './ops/sparse/sparse_reshape';
+import {maxPoolWithArgmax} from './ops/max_pool_with_argmax';
+import {NamedTensorMap} from './tensor_types';
+import {requiredTestElement, requiredTestErrorMessage, testFailureDescription} from './test_util';
 
 describe('kernel signature and saved-tensor contracts', () => {
   it('registers a structurally typed attribute contract without erasure', () => {
@@ -177,5 +181,72 @@ describe('shared broadcast gradient reduction', () => {
       [Sum, {x: gradient}, {axis: [0], keepDims: false}],
       [Reshape, {x: reduced}, {shape: [1, 2]}]
     ]);
+  });
+});
+
+describe('named multi-output kernel contracts', () => {
+  it('retains sparse output names, identity and named map compatibility', () => {
+    const indices = new Tensor<Rank.R2>([1, 2], 'int32', {}, 30);
+    const shape = new Tensor<Rank.R1>([2], 'int32', {}, 31);
+    const reshapedIndices = new Tensor<Rank.R2>([1, 1], 'int32', {}, 32);
+    const reshapedShape = new Tensor<Rank.R1>([1], 'int32', {}, 33);
+    spyOn(ENGINE, 'startScope');
+    spyOn(ENGINE, 'endScope');
+    spyOn(ENGINE, 'runKernel').and.returnValue([reshapedIndices, reshapedShape]);
+    const result = sparseReshape(indices, shape, shape);
+    const map: NamedTensorMap = result;
+    expect(Object.keys(map)).toEqual(['outputIndices', 'outputShape']);
+    expect(result.outputIndices === reshapedIndices).toBeTrue();
+    expect(result.outputShape === reshapedShape).toBeTrue();
+  });
+
+  it('retains pooled values and indexes in kernel order', () => {
+    const input = new Tensor<Rank.R4>([1, 2, 2, 1], 'float32', {}, 34);
+    const pooled = new Tensor<Rank.R4>([1, 1, 1, 1], 'float32', {}, 35);
+    const indexes = new Tensor<Rank.R4>([1, 1, 1, 1], 'int32', {}, 36);
+    spyOn(ENGINE, 'startScope');
+    spyOn(ENGINE, 'endScope');
+    spyOn(ENGINE, 'runKernel').and.returnValue([pooled, indexes]);
+    const result = maxPoolWithArgmax(input, 2, 1, 'valid');
+    expect(Object.keys(result)).toEqual(['result', 'indexes']);
+    expect(result.result === pooled).toBeTrue();
+    expect(result.indexes === indexes).toBeTrue();
+  });
+
+  it('rejects incomplete or surplus multi-output kernel results', () => {
+    const input = new Tensor<Rank.R4>([1, 2, 2, 1], 'float32', {}, 37);
+    spyOn(ENGINE, 'startScope');
+    const endScope = spyOn(ENGINE, 'endScope');
+    const dispatch = spyOn(ENGINE, 'runKernel').and.returnValues(
+        [input], [input, input, input]);
+    expect(() => maxPoolWithArgmax(input, 2, 1, 'valid'))
+        .toThrowError('Expected an array with exactly 2 elements.');
+    expect(() => maxPoolWithArgmax(input, 2, 1, 'valid'))
+        .toThrowError('Expected an array with exactly 2 elements.');
+    expect(dispatch.calls.count()).toBe(2);
+    expect(endScope).toHaveBeenCalledWith(null);
+  });
+
+  it('requires test fixture entries without changing zero or null values', () => {
+    const fixture = [0, null];
+    expect(requiredTestElement(fixture, 0)).toBe(0);
+    expect(requiredTestElement(fixture, 1)).toBeNull();
+    expect(() => requiredTestElement(fixture, 2))
+        .toThrowError('Missing required test element at index 2.');
+  });
+});
+
+describe('checked rejection fixtures', () => {
+  it('retains error messages, including cross-realm error-like objects', () => {
+    expect(requiredTestErrorMessage(new Error('bad input'))).toBe('bad input');
+    expect(requiredTestErrorMessage({message: 'bad input'})).toBe('bad input');
+    expect(() => requiredTestErrorMessage('bad input')).toThrowError();
+    expect(() => requiredTestErrorMessage(null)).toThrowError();
+  });
+  it('reports non-Error promise rejections without dereferencing them', () => {
+    expect(testFailureDescription({stack: 'stack', message: 'message'})).toBe('stack');
+    expect(testFailureDescription({message: 'message'})).toBe('message');
+    expect(testFailureDescription('network failure')).toBe('network failure');
+    expect(testFailureDescription(null)).toBe('null');
   });
 });

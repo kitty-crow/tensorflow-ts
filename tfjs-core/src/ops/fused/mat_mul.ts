@@ -32,6 +32,7 @@ import {applyActivation, getFusedBiasGradient, getFusedDyActivation, shouldFuse}
 import {matMul as unfusedMatMul} from '../mat_mul';
 import {op} from '../operation';
 import {reshape} from '../reshape';
+import {matrixDimensions} from '../shape_dimension';
 
 /**
  * Computes the dot product of two matrices with optional activation and bias.
@@ -87,15 +88,12 @@ function fusedMatMul_({
     let $b = convertToTensor(b, 'b', 'fused matMul');
     [$a, $b] = makeTypesMatch($a, $b);
 
-    const innerShapeA =
-        transposeA ? $a.shape[$a.rank - 2] : $a.shape[$a.rank - 1];
-    const innerShapeB =
-        transposeB ? $b.shape[$b.rank - 1] : $b.shape[$b.rank - 2];
-
-    const outerShapeA =
-        transposeA ? $a.shape[$a.rank - 1] : $a.shape[$a.rank - 2];
-    const outerShapeB =
-        transposeB ? $b.shape[$b.rank - 2] : $b.shape[$b.rank - 1];
+    const [aRows, aCols] = matrixDimensions($a.shape);
+    const [bRows, bCols] = matrixDimensions($b.shape);
+    const innerShapeA = transposeA ? aRows : aCols;
+    const innerShapeB = transposeB ? bCols : bRows;
+    const outerShapeA = transposeA ? aCols : aRows;
+    const outerShapeB = transposeB ? bRows : bCols;
 
     const outerDimsA = $a.shape.slice(0, -2);
     const outerDimsB = $b.shape.slice(0, -2);

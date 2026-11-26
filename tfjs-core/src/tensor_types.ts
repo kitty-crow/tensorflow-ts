@@ -22,6 +22,9 @@ export type NamedTensorMap = {
   [name: string]: Tensor;
 };
 
+/** A named tensor map whose documented output keys are guaranteed present. */
+export type NamedTensorMapWith<K extends string> = NamedTensorMap & Record<K, Tensor>;
+
 export interface NamedTensor {
   name: string;
   tensor: Tensor;

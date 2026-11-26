@@ -18,9 +18,10 @@
 import {ENGINE} from '../../engine';
 import {StringSplit, StringSplitAttrs, StringSplitInputs} from '../../kernel_names';
 import {Scalar, Tensor, Tensor1D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
+import {NamedTensorMapWith} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {ScalarLike, TensorLike} from '../../types';
+import {assertArrayLength} from '../../util_base';
 import {op} from '../operation';
 
 /**
@@ -57,7 +58,7 @@ import {op} from '../operation';
  */
 function stringSplit_(
     input: Tensor1D|TensorLike, delimiter: Scalar|ScalarLike,
-    skipEmpty = true): NamedTensorMap {
+    skipEmpty = true): NamedTensorMapWith<'indices'|'values'|'shape'> {
   const $input = convertToTensor(input, 'input', 'stringSplit', 'string');
   const $delimiter =
       convertToTensor(delimiter, 'delimiter', 'stringSplit', 'string');
@@ -75,6 +76,7 @@ function stringSplit_(
   const inputs: StringSplitInputs = {input: $input, delimiter: $delimiter};
   const result: Tensor[] =
       ENGINE.runKernel(StringSplit, inputs as {}, attrs as {});
+  assertArrayLength(result, 3);
   return {indices: result[0], values: result[1], shape: result[2]};
 }
 

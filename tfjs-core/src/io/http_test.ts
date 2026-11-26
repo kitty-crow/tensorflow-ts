@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {requiredTestElement, requiredTestValue} from '../test_util';
+import {requiredTestElement, requiredTestValue, requiredTestErrorMessage, testFailureDescription} from '../test_util';
 import * as tf from '../index';
 import {BROWSER_ENVS, CHROME_ENVS, describeWithFlags, NODE_ENVS} from '../jasmine_util';
 import {HTTPRequest, httpRouter, parseUrl} from './http';
@@ -173,7 +173,7 @@ describeWithFlags('http-load fetch', NODE_ENVS, () => {
     try {
       tf.io.http('./model.json');
     } catch (err) {
-      expect(err.message).toMatch(/Unable to find fetch polyfill./);
+      expect(requiredTestErrorMessage(err)).toMatch(/Unable to find fetch polyfill./);
     }
   });
 });
@@ -274,8 +274,8 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
           };
           jsonFileReader.readAsText(jsonFile);
         })
-        .catch(err => {
-          done.fail(err.stack);
+        .catch((err: unknown) => {
+          done.fail(testFailureDescription(err));
         });
   });
 
@@ -313,8 +313,8 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
           };
           jsonFileReader.readAsText(jsonFile);
         })
-        .catch(err => {
-          done.fail(err.stack);
+        .catch((err: unknown) => {
+          done.fail(testFailureDescription(err));
         });
   });
 
@@ -385,8 +385,8 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
           };
           jsonFileReader.readAsText(jsonFile);
         })
-        .catch(err => {
-          done.fail(err.stack);
+        .catch((err: unknown) => {
+          done.fail(testFailureDescription(err));
         });
   });
 
@@ -398,7 +398,7 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
               'Calling http at invalid URL succeeded ' +
               'unexpectedly');
         })
-        .catch(err => {
+        .catch((err: unknown) => {
           expect().nothing();
           done();
         });
@@ -779,8 +779,8 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
                 'Loading from missing modelTopology and weightsManifest ' +
                 'succeeded unexpectedly.');
           })
-          .catch(err => {
-            expect(err.message)
+          .catch((err: unknown) => {
+            expect(requiredTestErrorMessage(err))
                 .toMatch(/contains neither model topology or manifest/);
           });
       expect().nothing();

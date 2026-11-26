@@ -54,14 +54,12 @@ export function batchMatMulImpl({
   leakyreluAlpha = 0,
   activation = null
 }: BatchMatMulConfig): TensorInfo {
-  const aRank = a.shape.length;
-  const bRank = b.shape.length;
-
-  const innerShapeA = transposeA ? a.shape[aRank - 2] : a.shape[aRank - 1];
-  const innerShapeB = transposeB ? b.shape[bRank - 1] : b.shape[bRank - 2];
-
-  const outerShapeA = transposeA ? a.shape[aRank - 1] : a.shape[aRank - 2];
-  const outerShapeB = transposeB ? b.shape[bRank - 2] : b.shape[bRank - 1];
+  const [aRows, aCols] = backend_util.matrixDimensions(a.shape);
+  const [bRows, bCols] = backend_util.matrixDimensions(b.shape);
+  const innerShapeA = transposeA ? aRows : aCols;
+  const innerShapeB = transposeB ? bCols : bRows;
+  const outerShapeA = transposeA ? aCols : aRows;
+  const outerShapeB = transposeB ? bRows : bCols;
 
   const outerDimsA = a.shape.slice(0, -2);
   const outerDimsB = b.shape.slice(0, -2);
@@ -94,7 +92,7 @@ export function batchMatMulImpl({
   const intermediates: TensorInfo[] = [a3d, b3d];
 
   const batchDim = Math.max(batchDimA, batchDimB);
-  const sharedDim = transposeA ? a3d.shape[1] : a3d.shape[2];
+  const sharedDim = innerShapeA;
 
   const hasBias = bias != null;
   const hasPreluActivationWeights = preluActivationWeights != null;

@@ -18,9 +18,10 @@
 import {ENGINE} from '../engine';
 import {MaxPoolWithArgmax, MaxPoolWithArgmaxAttrs, MaxPoolWithArgmaxInputs} from '../kernel_names';
 import {Tensor, Tensor4D} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
+import {NamedTensorMapWith} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
+import {assertArrayLength} from '../util_base';
 
 import {op} from './operation';
 
@@ -60,7 +61,7 @@ import {op} from './operation';
 function maxPoolWithArgmax_<T extends Tensor4D>(
     x: T|TensorLike, filterSize: [number, number]|number,
     strides: [number, number]|number, pad: 'valid'|'same'|number,
-    includeBatchInIndex = false): NamedTensorMap {
+    includeBatchInIndex = false): NamedTensorMapWith<'result'|'indexes'> {
   const $x = convertToTensor(x, 'x', 'maxPoolWithArgmax');
 
   const inputs = {x: $x} satisfies MaxPoolWithArgmaxInputs;
@@ -71,6 +72,7 @@ function maxPoolWithArgmax_<T extends Tensor4D>(
                      MaxPoolWithArgmax, inputs,
                      attrs) as Tensor[];
 
+  assertArrayLength(result, 2);
   return {result: result[0], indexes: result[1]};
 }
 

@@ -21,7 +21,7 @@
 
 import * as tf from '../index';
 import {BROWSER_ENVS, describeWithFlags, runWithLock} from '../jasmine_util';
-import {expectArrayBuffersEqual, requiredTestValue} from '../test_util';
+import {expectArrayBuffersEqual, requiredTestValue, requiredTestErrorMessage} from '../test_util';
 import {browserIndexedDB, BrowserIndexedDB, BrowserIndexedDBManager, deleteDatabase, indexedDBRouter} from './indexed_db';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 
@@ -174,7 +174,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
          await handler.load();
          fail('Loading nonexistent model from IndexedDB succeeded unexpectly');
        } catch (err) {
-         expect(err.message)
+         expect(requiredTestErrorMessage(err))
              .toEqual(
                  'Cannot find model ' +
                  'with path \'NonexistentModel\' in IndexedDB.');
@@ -299,7 +299,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
          await new BrowserIndexedDBManager().removeModel('nonexistent');
          fail('Deleting nonexistent model succeeded unexpectedly.');
        } catch (err) {
-         expect(err.message)
+         expect(requiredTestErrorMessage(err))
              .toEqual(
                  'Cannot find model with path \'nonexistent\' in IndexedDB.');
        }

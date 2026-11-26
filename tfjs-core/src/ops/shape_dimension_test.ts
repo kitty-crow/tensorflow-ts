@@ -19,6 +19,7 @@ import * as axis from './axis_util';
 import * as broadcast from './broadcast_util';
 import * as concat from './concat_util';
 import * as slice from './slice_util';
+import {depthToSpaceOutputShape, imageDimensions, matrixDimensions} from './shape_dimension';
 
 describe('checked shape utility regressions', () => {
   it('interleaves coordinates including zero', () => {
@@ -85,5 +86,26 @@ describe('checked shape utility regressions', () => {
   it('rejects missing required slice coordinates', () => {
     expect(() => slice.computeOutShape([0], [], [1])).toThrowError();
     expect(() => slice.computeFlatOffset([1, 2], [])).toThrowError();
+  });
+});
+
+describe('checked matrix and image dimensions', () => {
+  it('reads trailing dimensions, including zero and rectangular matrices', () => {
+    expect(matrixDimensions([3, 2, 0])).toEqual([2, 0]);
+    expect(matrixDimensions([2, 5])).toEqual([2, 5]);
+    expect(() => matrixDimensions([2])).toThrowError();
+  });
+  it('preserves image dimensions and rejects missing channels', () => {
+    expect(imageDimensions([1, 0, 3, 4])).toEqual([1, 0, 3, 4]);
+    expect(() => imageDimensions([1, 2, 3])).toThrowError();
+  });
+  it('computes depth to space for each layout without changing input', () => {
+    const nhwc = [2, 3, 5, 12];
+    expect(depthToSpaceOutputShape(nhwc, 2, 'NHWC')).toEqual([2, 6, 10, 3]);
+    expect(depthToSpaceOutputShape([2, 12, 3, 5], 2, 'NCHW'))
+        .toEqual([2, 3, 6, 10]);
+    expect(depthToSpaceOutputShape([0, 3, 5, 12], 2, 'NHWC'))
+        .toEqual([0, 6, 10, 3]);
+    expect(nhwc).toEqual([2, 3, 5, 12]);
   });
 });

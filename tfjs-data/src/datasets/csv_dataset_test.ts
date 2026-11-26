@@ -338,7 +338,7 @@ describe('CSVDataset', () => {
       await dataset.columnNames();
       fail();
     } catch (e) {
-      expect(e.message).toEqual(
+      expect(fixtureTestUtil.requiredTestErrorMessage(e)).toEqual(
           'The length of provided columnNames (2) does not match the length ' +
           'of the header line read from file (3).');
     }
@@ -376,7 +376,7 @@ describe('CSVDataset', () => {
       await iter.toArray();
       fail();
     } catch (e) {
-      expect(e.message).toEqual(
+      expect(fixtureTestUtil.requiredTestErrorMessage(e)).toEqual(
           'Required column baz is empty in this line: qrs,tu,');
     }
   });
@@ -427,7 +427,7 @@ describe('CSVDataset', () => {
       await dataset.columnNames();
       fail();
     } catch (e) {
-      expect(e.message).toEqual('Duplicate column names found: foo');
+      expect(fixtureTestUtil.requiredTestErrorMessage(e)).toEqual('Duplicate column names found: foo');
     }
   });
 
@@ -441,7 +441,7 @@ describe('CSVDataset', () => {
       await iter.toArrayForTest();
       fail();
     } catch (e) {
-      expect(e.message).toEqual(
+      expect(fixtureTestUtil.requiredTestErrorMessage(e)).toEqual(
           'Invalid row in csv file. Should have 3 elements in a row, ' +
           'but got 2,');
     }
@@ -485,7 +485,7 @@ describe('CSVDataset', () => {
          expect(await dataset.columnNames()).toEqual(['A', 'B', 'C']);
          fail();
        } catch (e) {
-         expect(e.message).toEqual(
+         expect(fixtureTestUtil.requiredTestErrorMessage(e)).toEqual(
              'Delimiter should not be provided when delimWhitespace is true.');
        }
      });

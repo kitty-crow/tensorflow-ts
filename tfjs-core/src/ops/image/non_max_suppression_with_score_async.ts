@@ -16,7 +16,7 @@
  */
 import {nonMaxSuppressionV5Impl} from '../../backends/non_max_suppression_impl';
 import {Tensor1D, Tensor2D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
+import {NamedTensorMapWith} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import {nonMaxSuppSanityCheck} from '../nonmax_util';
@@ -55,7 +55,7 @@ async function nonMaxSuppressionWithScoreAsync_(
     boxes: Tensor2D|TensorLike, scores: Tensor1D|TensorLike,
     maxOutputSize: number, iouThreshold = 0.5,
     scoreThreshold = Number.NEGATIVE_INFINITY,
-    softNmsSigma = 0.0): Promise<NamedTensorMap> {
+    softNmsSigma = 0.0): Promise<NamedTensorMapWith<'selectedIndices'|'selectedScores'>> {
   const $boxes = convertToTensor(boxes, 'boxes', 'nonMaxSuppressionAsync');
   const $scores = convertToTensor(scores, 'scores', 'nonMaxSuppressionAsync');
 

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {DepthToSpaceProgram} from '../depth_to_space_webgpu';
@@ -29,18 +29,8 @@ export function depthToSpace(args: {
   const {x} = inputs;
   const {blockSize, dataFormat} = attrs;
 
-  const batchSize = x.shape[0];
-  const inputHeight = (dataFormat === 'NHWC') ? x.shape[1] : x.shape[2];
-  const inputWidth = (dataFormat === 'NHWC') ? x.shape[2] : x.shape[3];
-  const inputDepth = (dataFormat === 'NHWC') ? x.shape[3] : x.shape[1];
-
-  const outputHeight = inputHeight * blockSize;
-  const outputWidth = inputWidth * blockSize;
-  const outputDepth = inputDepth / (blockSize * blockSize);
-
-  const outputShape = (dataFormat === 'NHWC') ?
-      [batchSize, outputHeight, outputWidth, outputDepth] :
-      [batchSize, outputDepth, outputHeight, outputWidth];
+  const outputShape =
+      backend_util.depthToSpaceOutputShape(x.shape, blockSize, dataFormat);
 
   const uniformData = [
     {type: 'int32', data: [blockSize]},

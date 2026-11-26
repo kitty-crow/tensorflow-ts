@@ -17,6 +17,8 @@
 
 import {backend_util, buffer, DataType, Rank, TensorBuffer, TypedArray} from '@tensorflow/tfjs-core';
 
+import {rankFourStrides, rankFiveStrides} from '../cpu_util';
+
 export function pool(
     xValues: TypedArray, xShape: number[], dtype: DataType, strides: number[],
     convInfo: backend_util.Conv2DInfo,
@@ -34,6 +36,7 @@ export function pool(
       (poolType === 'max' ? Number.NEGATIVE_INFINITY :
                             Number.POSITIVE_INFINITY);
 
+  const [batchStride, rowStride, colStride] = rankFourStrides(strides);
   const output = buffer(convInfo.outShape, dtype);
   const outputVals = output.values;
 
@@ -44,7 +47,7 @@ export function pool(
 
   for (let b = 0; b < convInfo.batchSize; ++b) {
     const outputBatchOffset = b * outputBatchStrides;
-    const inputBatchOffset = b * strides[0];
+    const inputBatchOffset = b * batchStride;
     for (let d = 0; d < convInfo.inChannels; ++d) {
       for (let yR = 0; yR < convInfo.outHeight; ++yR) {
         const xRCorner = yR * strideHeight - padTop;
@@ -61,9 +64,9 @@ export function pool(
           let avgValue = 0;
           let count = 0;
           for (let xR = xRMin; xR < xRMax; xR += dilationHeight) {
-            const xROffset = inputBatchOffset + xR * strides[1];
+            const xROffset = inputBatchOffset + xR * rowStride;
             for (let xC = xCMin; xC < xCMax; xC += dilationWidth) {
-              const xCOffset = xROffset + xC * strides[2];
+              const xCOffset = xROffset + xC * colStride;
               const pixel = xValues[xCOffset + d];
               if ((poolType === 'max' && pixel > minMaxValue)) {
                 minMaxValue = pixel;
@@ -176,6 +179,7 @@ export function pool3d(
       (poolType === 'max' ? Number.NEGATIVE_INFINITY :
                             Number.POSITIVE_INFINITY);
 
+  const [batchStride, depthStride, rowStride, colStride] = rankFiveStrides(strides);
   const output = buffer(convInfo.outShape, dtype);
   const outputVals = output.values;
 
@@ -188,7 +192,7 @@ export function pool3d(
 
   for (let batch = 0; batch < convInfo.batchSize; ++batch) {
     const outputBatchOffset = batch * outputBatchStrides;
-    const inputBatchOffset = batch * strides[0];
+    const inputBatchOffset = batch * batchStride;
     for (let channel = 0; channel < convInfo.inChannels; ++channel) {
       for (let yDepth = 0; yDepth < convInfo.outDepth; ++yDepth) {
         const xDepthCorner = yDepth * strideDepth - padFront;
@@ -224,12 +228,12 @@ export function pool3d(
             let count = 0;
             for (let xDepth = xDepthMin; xDepth < xDepthMax;
                  xDepth += dilationDepth) {
-              const xDepthOffset = inputBatchOffset + xDepth * strides[1];
+              const xDepthOffset = inputBatchOffset + xDepth * depthStride;
               for (let xRow = xRowMin; xRow < xRowMax; xRow += dilationHeight) {
-                const xRowOffset = xDepthOffset + xRow * strides[2];
+                const xRowOffset = xDepthOffset + xRow * rowStride;
                 for (let xCol = xColMin; xCol < xColMax;
                      xCol += dilationWidth) {
-                  const xColOffset = xRowOffset + xCol * strides[3];
+                  const xColOffset = xRowOffset + xCol * colStride;
                   const pixel = xValues[xColOffset + channel];
                   if ((poolType === 'max' && pixel > minMaxValue)) {
                     minMaxValue = pixel;

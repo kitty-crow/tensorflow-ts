@@ -163,8 +163,8 @@ describeMathCPU('Nested model topology', () => {
     expect(outerModel.getLayer(0) instanceof tfl.Sequential).toEqual(true);
     // Expect all-one values based on the kernel and bias initializers specified
     // above.
-    expectTensorsClose(outerModel.getLayer(1).getWeights()[0], ones([2, 1]));
-    expectTensorsClose(outerModel.getLayer(1).getWeights()[1], ones([1]));
+    expectTensorsClose(requiredTestElement(outerModel.getLayer(1).getWeights(), 0), ones([2, 1]));
+    expectTensorsClose(requiredTestElement(outerModel.getLayer(1).getWeights(), 1), ones([1]));
     // Expect there to be only two layers.
     expect(() => outerModel.getLayer(2)).toThrow();
   });
@@ -220,8 +220,8 @@ describeMathCPU('Nested model topology', () => {
 
     // The kernel start off as zeros. Set them all to ones.
     outerModel.setWeights([ones([3, 2]), ones([2, 1])]);
-    expectTensorsClose(outerModel.getWeights()[0], ones([3, 2]));
-    expectTensorsClose(outerModel.getWeights()[1], ones([2, 1]));
+    expectTensorsClose(requiredTestElement(outerModel.getWeights(), 0), ones([3, 2]));
+    expectTensorsClose(requiredTestElement(outerModel.getWeights(), 1), ones([2, 1]));
     expectTensorsClose(
         outerModel.predict(ones([1, 3])) as Tensor, tensor2d([[6]]));
   });

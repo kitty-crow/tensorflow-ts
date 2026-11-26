@@ -259,3 +259,25 @@ export async function play(video: HTMLVideoElement) {
     });
   }
 }
+
+/** Requires a real string message when a test expects a rejection. */
+export function requiredTestErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'message' in error &&
+      typeof error.message === 'string') {
+    return error.message;
+  }
+  throw new Error('Expected a rejection with a string message.');
+}
+
+/** Reports rejected promises without assuming that the reason is an Error. */
+export function testFailureDescription(error: unknown): string {
+  if (typeof error === 'object' && error !== null) {
+    if ('stack' in error && typeof error.stack === 'string') {
+      return error.stack;
+    }
+    if ('message' in error && typeof error.message === 'string') {
+      return error.message;
+    }
+  }
+  return String(error);
+}

@@ -18,9 +18,10 @@
 import {ENGINE} from '../../engine';
 import {StringNGrams, StringNGramsAttrs, StringNGramsInputs} from '../../kernel_names';
 import {Tensor, Tensor1D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
+import {NamedTensorMapWith} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
+import {assertArrayLength} from '../../util_base';
 import {op} from '../operation';
 
 /**
@@ -67,7 +68,7 @@ import {op} from '../operation';
 function stringNGrams_(
     data: Tensor1D|TensorLike, dataSplits: Tensor|TensorLike, separator: string,
     nGramWidths: number[], leftPad: string, rightPad: string, padWidth: number,
-    preserveShortSequences: boolean): NamedTensorMap {
+    preserveShortSequences: boolean): NamedTensorMapWith<'nGrams'|'nGramsSplits'> {
   const $data = convertToTensor(data, 'data', 'stringNGrams', 'string');
   if ($data.dtype !== 'string') {
     throw new Error('Data must be of datatype string');
@@ -93,6 +94,7 @@ function stringNGrams_(
   const inputs: StringNGramsInputs = {data: $data, dataSplits: $dataSplits};
   const result: Tensor[] =
       ENGINE.runKernel(StringNGrams, inputs as {}, attrs as {});
+  assertArrayLength(result, 2);
   return {nGrams: result[0], nGramsSplits: result[1]};
 }
 

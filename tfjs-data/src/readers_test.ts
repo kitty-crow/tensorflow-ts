@@ -16,6 +16,7 @@
  */
 
 import * as tfd from './readers';
+import {test_util} from '@tensorflow/tfjs-core';
 import {describeAllEnvs, describeNodeEnvs, replaceHTMLVideoElementSource, setupFakeVideoStream, MEDIA_ENVS} from './util/test_utils';
 // tslint:disable-next-line: no-imports-from-dist
 import {describeWithFlags} from '@tensorflow/tfjs-core/dist/jasmine_util';
@@ -217,7 +218,7 @@ describeNodeEnvs('readers in node', () => {
       await tfd.webcam();
       fail();
     } catch (e) {
-      expect(e.message).toEqual(
+      expect(test_util.requiredTestErrorMessage(e)).toEqual(
           'tf.data.webcam is only supported in browser environment.');
     }
   });
@@ -227,7 +228,7 @@ describeNodeEnvs('readers in node', () => {
       await tfd.microphone();
       fail();
     } catch (e) {
-      expect(e.message).toEqual(
+      expect(test_util.requiredTestErrorMessage(e)).toEqual(
           'microphone API is only supported in browser environment.');
     }
   });

@@ -18,9 +18,10 @@
 import {ENGINE} from '../../engine';
 import {SparseReshape, SparseReshapeInputs} from '../../kernel_names';
 import {Tensor, Tensor1D, Tensor2D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
+import {NamedTensorMapWith} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
+import {assertArrayLength} from '../../util_base';
 import {op} from '../operation';
 
 /**
@@ -59,7 +60,7 @@ import {op} from '../operation';
  */
 function sparseReshape_(
     inputIndices: Tensor2D|TensorLike, inputShape: Tensor1D|TensorLike,
-    newShape: Tensor1D|TensorLike): NamedTensorMap {
+    newShape: Tensor1D|TensorLike): NamedTensorMapWith<'outputIndices'|'outputShape'> {
   const $inputIndices =
       convertToTensor(inputIndices, 'inputIndices', 'sparseReshape', 'int32');
   const $inputShape =
@@ -86,6 +87,7 @@ function sparseReshape_(
     newShape: $newShape
   };
   const result: Tensor[] = ENGINE.runKernel(SparseReshape, inputs as {});
+  assertArrayLength(result, 2);
   return {outputIndices: result[0], outputShape: result[1]};
 }
 

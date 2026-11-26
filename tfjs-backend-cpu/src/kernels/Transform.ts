@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, NumericDataType, TensorInfo, Transform, TransformAttrs, TransformInputs, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, NumericDataType, TensorInfo, Transform, TransformAttrs, TransformInputs, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
+import {rankFourStrides} from '../cpu_util';
 
 export function transform(args: {
   inputs: TransformInputs,
@@ -28,20 +29,16 @@ export function transform(args: {
   const {image, transforms} = inputs;
   const {interpolation, fillMode, fillValue, outputShape} = attrs;
 
-  const [batch, imageHeight, imageWidth, numChannels] = image.shape;
+  const [batch, imageHeight, imageWidth, numChannels] = backend_util.imageDimensions(image.shape);
   const [outHeight, outWidth] =
       outputShape != null ? outputShape : [imageHeight, imageWidth];
-  const outShape = [batch, outHeight, outWidth, numChannels];
+  const outShape: [number, number, number, number] =
+      [batch, outHeight, outWidth, numChannels];
 
-  const inStrides = util.computeStrides(image.shape);
-  const batchInStride = inStrides[0];
-  const rowInStride = inStrides[1];
-  const colInStride = inStrides[2];
-
-  const outStrides = util.computeStrides(outShape);
-  const batchOutStride = outStrides[0];
-  const rowOutStride = outStrides[1];
-  const colOutStride = outStrides[2];
+  const [batchInStride, rowInStride, colInStride] =
+      rankFourStrides(util.computeStrides(image.shape));
+  const [batchOutStride, rowOutStride, colOutStride] =
+      rankFourStrides(util.computeStrides(outShape));
 
   const outVals = util.getTypedArrayFromDType(
       image.dtype as NumericDataType, util.sizeFromShape(outShape));

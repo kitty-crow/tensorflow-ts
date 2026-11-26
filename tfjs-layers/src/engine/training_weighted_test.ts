@@ -418,7 +418,7 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
     expect(historyMetricAt(history, lossKey1, 0)).toBeCloseTo(0.4390);
     expect(historyMetricAt(history, lossKey1, 1)).toBeCloseTo(0.2333);
     expect(historyMetricAt(history, lossKey1, 2)).toBeCloseTo(0.2298);
-    expectTensorsClose(model.getWeights()[0], tensor2d([
+    expectTensorsClose(requiredTestElement(model.getWeights(), 0), tensor2d([
                          [-0.3333333, -0.03197281, 0.3653062],
                          [-2.0025878, 1.9823718, 0.02021614]
                        ]));
@@ -478,7 +478,7 @@ describeMathCPUAndWebGL2('LayersModel.fit() with classWeight', () => {
     expect(historyMetricAt(history, lossKey1, 0)).toBeCloseTo(0.4390);
     expect(historyMetricAt(history, lossKey1, 1)).toBeCloseTo(0.2333);
     expect(historyMetricAt(history, lossKey1, 2)).toBeCloseTo(0.2298);
-    expectTensorsClose(model.getWeights()[0], tensor2d([
+    expectTensorsClose(requiredTestElement(model.getWeights(), 0), tensor2d([
                          [-0.3333333, -0.03197281, 0.3653062],
                          [-2.0025878, 1.9823718, 0.02021614]
                        ]));

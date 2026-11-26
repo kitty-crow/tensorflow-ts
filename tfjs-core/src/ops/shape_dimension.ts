@@ -23,3 +23,34 @@ export function requiredDimension(values: readonly number[], index: number): num
   }
   return dimension;
 }
+
+/** Returns the two trailing dimensions of a matrix or batched matrix. */
+export function matrixDimensions(shape: readonly number[]): [number, number] {
+  return [
+    requiredDimension(shape, shape.length - 2),
+    requiredDimension(shape, shape.length - 1)
+  ];
+}
+
+/** Reads the four dimensions of a rank-four image. */
+export function imageDimensions(shape: readonly number[]):
+    [number, number, number, number] {
+  return [
+    requiredDimension(shape, 0), requiredDimension(shape, 1),
+    requiredDimension(shape, 2), requiredDimension(shape, 3)
+  ];
+}
+
+/** Computes the spatial expansion and channel reduction in layout order. */
+export function depthToSpaceOutputShape(
+    shape: readonly number[], blockSize: number, dataFormat: 'NHWC'|'NCHW'):
+    [number, number, number, number] {
+  const [batch, d1, d2, d3] = imageDimensions(shape);
+  const depth = dataFormat === 'NHWC' ? d3 : d1;
+  const height = dataFormat === 'NHWC' ? d1 : d2;
+  const width = dataFormat === 'NHWC' ? d2 : d3;
+  const outputDepth = depth / (blockSize * blockSize);
+  return dataFormat === 'NHWC' ?
+      [batch, height * blockSize, width * blockSize, outputDepth] :
+      [batch, outputDepth, height * blockSize, width * blockSize];
+}

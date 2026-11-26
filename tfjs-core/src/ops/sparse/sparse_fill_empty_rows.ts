@@ -18,9 +18,10 @@
 import {ENGINE} from '../../engine';
 import {SparseFillEmptyRows, SparseFillEmptyRowsInputs} from '../../kernel_names';
 import {Scalar, Tensor, Tensor1D, Tensor2D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
+import {NamedTensorMapWith} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {ScalarLike, TensorLike} from '../../types';
+import {assertArrayLength} from '../../util_base';
 import {op} from '../operation';
 
 /**
@@ -82,7 +83,7 @@ import {op} from '../operation';
 function sparseFillEmptyRows_(
     indices: Tensor2D|TensorLike, values: Tensor1D|TensorLike,
     denseShape: Tensor1D|TensorLike,
-    defaultValue: Scalar|ScalarLike): NamedTensorMap {
+    defaultValue: Scalar|ScalarLike): NamedTensorMapWith<'outputIndices'|'outputValues'|'emptyRowIndicator'|'reverseIndexMap'> {
   const $indices =
       convertToTensor(indices, 'indices', 'sparseFillEmptyRows', 'int32');
   const $values = convertToTensor(values, 'values', 'sparseFillEmptyRows');
@@ -116,6 +117,7 @@ function sparseFillEmptyRows_(
   };
 
   const result: Tensor[] = ENGINE.runKernel(SparseFillEmptyRows, inputs as {});
+  assertArrayLength(result, 4);
   return {
     outputIndices: result[0],
     outputValues: result[1],

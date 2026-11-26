@@ -16,7 +16,7 @@
  */
 
 import * as tf from '../index';
-import {requiredTestValue} from '../test_util';
+import {requiredTestValue, requiredTestErrorMessage} from '../test_util';
 import {BROWSER_ENVS, describeWithFlags, runWithLock} from '../jasmine_util';
 import {arrayBufferToBase64String, base64StringToArrayBuffer} from './io_utils';
 import {browserLocalStorage, BrowserLocalStorage, BrowserLocalStorageManager, localStorageRouter, purgeLocalStorageArtifacts} from './local_storage';
@@ -210,7 +210,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
        try {
          await handler.load();
        } catch (err) {
-         expect(err.message)
+         expect(requiredTestErrorMessage(err))
              .toEqual(
                  'In local storage, there is no model with name ' +
                  '\'NonexistentModel\'');
@@ -230,7 +230,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
        try {
          await handler2.load();
        } catch (err) {
-         expect(err.message)
+         expect(requiredTestErrorMessage(err))
              .toEqual(
                  'In local storage, the topology of model ' +
                  '\'FooModel\' is missing.');
@@ -250,7 +250,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
        try {
          await handler2.load();
        } catch (err) {
-         expect(err.message)
+         expect(requiredTestErrorMessage(err))
              .toEqual(
                  'In local storage, the weight specs of model ' +
                  '\'FooModel\' are missing.');
@@ -276,7 +276,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
              'Loading of model with missing weight data ' +
              'succeeded unexpectedly.');
        } catch (err) {
-         expect(err.message)
+         expect(requiredTestErrorMessage(err))
              .toEqual(
                  'In local storage, the binary weight values of model ' +
                  '\'FooModel\' are missing.');
@@ -298,7 +298,7 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
              'unexpectedly.');
        } catch (err) {
          expect(
-             (err.message as string)
+             (requiredTestErrorMessage(err) as string)
                  .indexOf('Failed to save model \'FooModel\' to local storage'))
              .toEqual(0);
        }

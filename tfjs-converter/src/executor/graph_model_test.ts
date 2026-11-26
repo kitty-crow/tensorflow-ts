@@ -26,7 +26,7 @@ import {GraphModel, loadGraphModel, loadGraphModelSync} from './graph_model';
 import {HASH_TABLE_MODEL_V2} from './test_data/hash_table_v2_model_loader';
 import {STRUCTURED_OUTPUTS_MODEL} from './test_data/structured_outputs_model_loader';
 // tslint:disable-next-line: no-imports-from-dist
-import {expectArrayBuffersEqual, requiredTestValue} from '@tensorflow/tfjs-core/dist/test_util';
+import {expectArrayBuffersEqual, requiredTestValue, requiredTestErrorMessage} from '@tensorflow/tfjs-core/dist/test_util';
 
 const HOST = 'http://example.org';
 const MODEL_URL = `${HOST}/model.json`;
@@ -452,7 +452,7 @@ describe('loadGraphModel', () => {
     try {
       await loadGraphModel(null);
     } catch (err) {
-      errorMsg = err.message;
+      errorMsg = requiredTestErrorMessage(err);
     }
     expect(errorMsg).toMatch(/modelUrl in loadGraphModel\(\) cannot be null/);
   });
@@ -517,7 +517,7 @@ describe('loadGraphModelSync', () => {
           [modelJson] as unknown as [io.ModelJSON, ArrayBuffer]);
     })
         .toThrowMatching(
-            err => err.message.includes('weights must be the second element'));
+            err => requiredTestErrorMessage(err).includes('weights must be the second element'));
   });
 
   it('Throws an error if modelJSON is missing \'modelTopology\'', () => {
@@ -529,7 +529,7 @@ describe('loadGraphModelSync', () => {
       return loadGraphModelSync([badInput as io.ModelJSON, weights]);
     })
         .toThrowMatching(
-            err => err.message.includes('missing \'modelTopology\''));
+            err => requiredTestErrorMessage(err).includes('missing \'modelTopology\''));
   });
 
   it('Throws an error if modelJSON is missing \'weightsManifest\'', () => {
@@ -541,14 +541,14 @@ describe('loadGraphModelSync', () => {
       return loadGraphModelSync([badInput as io.ModelJSON, weights]);
     })
         .toThrowMatching(
-            err => err.message.includes('missing \'weightsManifest\''));
+            err => requiredTestErrorMessage(err).includes('missing \'weightsManifest\''));
   });
 
   it('Throws an error if modelSource is an unknown format', () => {
     const badInput = {foo: 'bar'};
     expect(() => {
       return loadGraphModelSync(badInput as io.ModelArtifacts);
-    }).toThrowMatching(err => err.message.includes('Unknown model format'));
+    }).toThrowMatching(err => requiredTestErrorMessage(err).includes('Unknown model format'));
   });
 
   it('Expect an error when moderUrl is null', () => {
@@ -556,7 +556,7 @@ describe('loadGraphModelSync', () => {
     try {
       loadGraphModelSync(null);
     } catch (err) {
-      errorMsg = err.message;
+      errorMsg = requiredTestErrorMessage(err);
     }
     expect(errorMsg).toMatch(
         /modelUrl in loadGraphModelSync\(\) cannot be null/);

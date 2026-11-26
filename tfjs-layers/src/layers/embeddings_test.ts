@@ -15,7 +15,7 @@
 import {DataType, Tensor, tensor2d, tensor3d, test_util} from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
-import {describeMathCPU, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, expectTensorsClose, requiredTestElement} from '../utils/test_utils';
 
 const expectArraysClose = test_util.expectArraysClose;
 
@@ -89,7 +89,7 @@ describeMathCPU('Embedding Layers: Tensor', () => {
     const y = embeddingLayer.apply(x) as Tensor;
     const yExpectedShape = [1, 2, 4, 3];
     expect(y.shape).toEqual(yExpectedShape);
-    const weights = embeddingLayer.getWeights()[0];
+    const weights = requiredTestElement(embeddingLayer.getWeights(), 0);
     expect(embeddingLayer.computeOutputShape(x.shape)).toEqual(yExpectedShape);
     // Collect embedded output elements.
     const yData0 = y.slice([0, 0, 0, 0], [1, 1, 1, 3]).dataSync();

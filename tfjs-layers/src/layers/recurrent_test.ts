@@ -1026,13 +1026,13 @@ describeMathCPUAndWebGL2('SimpleRNN Tensor', () => {
     await model.fit(x, y, {epochs: 2});
 
     expectTensorsClose(
-        requiredTestElement(model.layers, 0).getWeights()[0],
+        requiredTestElement(requiredTestElement(model.layers, 0).getWeights(), 0),
         tfc.mul(scalar(0.8484658), tfc.ones([4, 1])));
     expectTensorsClose(
-        requiredTestElement(model.layers, 0).getWeights()[1],
+        requiredTestElement(requiredTestElement(model.layers, 0).getWeights(), 1),
         tfc.mul(scalar(0.8484799), tfc.ones([1, 1])));
     expectTensorsClose(
-        requiredTestElement(model.layers, 1).getWeights()[0],
+        requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0),
         tfc.mul(scalar(80.967026), tfc.ones([1, 1])));
   });
 });
@@ -1569,13 +1569,13 @@ describeMathCPUAndWebGL2('GRU Tensor', () => {
     const y = tfc.ones([batchSize, 1]);
     await model.fit(x, y, {epochs: 2});
     expectTensorsClose(
-        requiredTestElement(model.layers, 0).getWeights()[0],
+        requiredTestElement(requiredTestElement(model.layers, 0).getWeights(), 0),
         K.tile(tensor2d([[-0.03750037, 0, 1.7500007]], [1, 3]), [4, 1]));
     expectTensorsClose(
-        requiredTestElement(model.layers, 0).getWeights()[1],
+        requiredTestElement(requiredTestElement(model.layers, 0).getWeights(), 1),
         tensor2d([[-1.562513e-02, 0, 2.086183e-07]], [1, 3]));
     expectTensorsClose(
-        requiredTestElement(model.layers, 1).getWeights()[0], tensor2d([[1.2187521]], [1, 1]));
+        requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0), tensor2d([[1.2187521]], [1, 1]));
   });
 
   // Reference Python code:
@@ -2251,16 +2251,16 @@ describeMathCPUAndWebGL2('LSTM Tensor', () => {
       await model.fit(x, y, {epochs: 2});
 
       expectTensorsClose(
-          requiredTestElement(model.layers, 0).getWeights()[0],
+          requiredTestElement(requiredTestElement(model.layers, 0).getWeights(), 0),
           K.tile(
               tensor2d(
                   [[0.11455188, 0.06545822, 0.8760446, 0.18237013]], [1, 4]),
               [4, 1]));
       expectTensorsClose(
-          requiredTestElement(model.layers, 0).getWeights()[1],
+          requiredTestElement(requiredTestElement(model.layers, 0).getWeights(), 1),
           tensor2d([[0.02831176, 0.01934617, 0.00025817, 0.05784169]], [1, 4]));
       expectTensorsClose(
-          requiredTestElement(model.layers, 1).getWeights()[0], tensor2d([[1.4559253]], [1, 1]));
+          requiredTestElement(requiredTestElement(model.layers, 1).getWeights(), 0), tensor2d([[1.4559253]], [1, 1]));
     });
   }
 
@@ -3020,13 +3020,13 @@ describeMathCPU('StackedRNNCells Symbolic', () => {
     expect(stackedRNN.trainableWeights.length).toEqual(6);
     expect(stackedRNN.nonTrainableWeights.length).toEqual(0);
     // Kernel, recurrent kernel and bias of 1st cell.
-    expect(stackedRNN.getWeights()[0].shape).toEqual([7, 3]);
-    expect(stackedRNN.getWeights()[1].shape).toEqual([3, 3]);
-    expect(stackedRNN.getWeights()[2].shape).toEqual([3]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 0).shape).toEqual([7, 3]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 1).shape).toEqual([3, 3]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 2).shape).toEqual([3]);
     // Kernel, recurrent kernel and bias of 2nd cell.
-    expect(stackedRNN.getWeights()[3].shape).toEqual([3, 2]);
-    expect(stackedRNN.getWeights()[4].shape).toEqual([2, 2]);
-    expect(stackedRNN.getWeights()[5].shape).toEqual([2]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 3).shape).toEqual([3, 2]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 4).shape).toEqual([2, 2]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 5).shape).toEqual([2]);
   });
 
   it('With LSTMCell', () => {
@@ -3047,14 +3047,14 @@ describeMathCPU('StackedRNNCells Symbolic', () => {
     expect(stackedRNN.trainableWeights.length).toEqual(6);
     expect(stackedRNN.nonTrainableWeights.length).toEqual(0);
     // Kernel, recurrent kernel and bias of 1st cell.
-    expect(stackedRNN.getWeights()[0].shape).toEqual([7, 12]);
-    expect(stackedRNN.getWeights()[1].shape).toEqual([3, 12]);
-    expect(stackedRNN.getWeights()[2].shape).toEqual([12]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 0).shape).toEqual([7, 12]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 1).shape).toEqual([3, 12]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 2).shape).toEqual([12]);
     // expect(stackedRNN.getWeights()[2].shape).toEqual([3]);
     // Kernel, recurrent kernel and bias of 2nd cell.
-    expect(stackedRNN.getWeights()[3].shape).toEqual([3, 8]);
-    expect(stackedRNN.getWeights()[4].shape).toEqual([2, 8]);
-    expect(stackedRNN.getWeights()[5].shape).toEqual([8]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 3).shape).toEqual([3, 8]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 4).shape).toEqual([2, 8]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 5).shape).toEqual([8]);
   });
 
   it('RNN with cell array creates StackedRNNCell', () => {
@@ -3073,14 +3073,14 @@ describeMathCPU('StackedRNNCells Symbolic', () => {
     expect(stackedRNN.trainableWeights.length).toEqual(6);
     expect(stackedRNN.nonTrainableWeights.length).toEqual(0);
     // Kernel, recurrent kernel and bias of 1st cell.
-    expect(stackedRNN.getWeights()[0].shape).toEqual([7, 9]);
-    expect(stackedRNN.getWeights()[1].shape).toEqual([3, 9]);
-    expect(stackedRNN.getWeights()[2].shape).toEqual([9]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 0).shape).toEqual([7, 9]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 1).shape).toEqual([3, 9]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 2).shape).toEqual([9]);
     // expect(stackedRNN.getWeights()[2].shape).toEqual([3]);
     // Kernel, recurrent kernel and bias of 2nd cell.
-    expect(stackedRNN.getWeights()[3].shape).toEqual([3, 6]);
-    expect(stackedRNN.getWeights()[4].shape).toEqual([2, 6]);
-    expect(stackedRNN.getWeights()[5].shape).toEqual([6]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 3).shape).toEqual([3, 6]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 4).shape).toEqual([2, 6]);
+    expect(requiredTestElement(stackedRNN.getWeights(), 5).shape).toEqual([6]);
   });
 });
 

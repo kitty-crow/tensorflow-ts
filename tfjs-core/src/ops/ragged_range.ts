@@ -18,9 +18,10 @@
 import {ENGINE} from '../engine';
 import {RaggedRange, RaggedRangeInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {NamedTensorMap} from '../tensor_types';
+import {NamedTensorMapWith} from '../tensor_types';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
+import {assertArrayLength} from '../util_base';
 import {op} from './operation';
 
 /**
@@ -40,7 +41,7 @@ import {op} from './operation';
 
 function raggedRange_(
     starts: Tensor|TensorLike, limits: Tensor|TensorLike,
-    deltas: Tensor|TensorLike): NamedTensorMap {
+    deltas: Tensor|TensorLike): NamedTensorMapWith<'rtNestedSplits'|'rtDenseValues'> {
   const $starts = convertToTensor(starts, 'starts', 'raggedRange');
   const $limits =
       convertToTensor(limits, 'limits', 'raggedRange', $starts.dtype);
@@ -54,6 +55,7 @@ function raggedRange_(
   };
 
   const result: Tensor[] = ENGINE.runKernel(RaggedRange, inputs as {});
+  assertArrayLength(result, 2);
   return {
     rtNestedSplits: result[0],
     rtDenseValues: result[1],

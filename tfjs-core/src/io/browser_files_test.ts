@@ -19,7 +19,7 @@
  * Unit tests for file-related IOHandlers.
  */
 
-import {requiredTestElement, requiredTestValue} from '../test_util';
+import {requiredTestElement, requiredTestValue, requiredTestErrorMessage} from '../test_util';
 import * as tf from '../index';
 import {BROWSER_ENVS, describeWithFlags} from '../jasmine_util';
 import {browserDownloads, BrowserDownloads, browserDownloadsRouter} from './browser_files';
@@ -545,7 +545,7 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
           'Loading with mismatch in number of paths and number of files ' +
           'succeeded unexpectedly.');
     } catch (err) {
-      expect(err.message)
+      expect(requiredTestErrorMessage(err))
           .toEqual(
               'Mismatch in the number of files in weights manifest (1) ' +
               'and the number of weight files provided (2).');
@@ -594,7 +594,7 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
           'Loading with mismatching paths and file names ' +
           'succeeded unexpectedly.');
     } catch (err) {
-      expect(err.message)
+      expect(requiredTestErrorMessage(err))
           .toEqual(
               'Weight file with basename \'model.weights.2.bin\' is not ' +
               'provided.');
@@ -643,7 +643,7 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
       await filesHandler.load();
       fail('Loading with duplicate basenames in paths succeeded unexpectedly.');
     } catch (err) {
-      expect(err.message)
+      expect(requiredTestErrorMessage(err))
           .toEqual(
               'Duplicate file basename found in weights manifest: ' +
               '\'model.weights.1.bin\'');
@@ -669,7 +669,7 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
           'Loading with Files IOHandler with missing modelTopology ' +
           'succeeded unexpectedly.');
     } catch (err) {
-      expect(err.message)
+      expect(requiredTestErrorMessage(err))
           .toMatch(/modelTopology field is missing from file model\.json/);
     }
   });

@@ -16,6 +16,7 @@
  */
 
 import * as tf from '../index';
+import {requiredTestErrorMessage, testFailureDescription} from '../test_util';
 import {CHROME_ENVS, describeWithFlags, runWithLock} from '../jasmine_util';
 import {deleteDatabase} from './indexed_db';
 import {CompositeArrayBuffer} from './composite_array_buffer';
@@ -100,7 +101,7 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
           expect(out).toEqual({});
           done();
         })
-        .catch(err => done.fail(err.stack));
+        .catch((err: unknown) => done.fail(testFailureDescription(err)));
   });
 
   // TODO(cais): Reenable this test once we fix
@@ -125,9 +126,9 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                     .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
                 done();
               })
-              .catch(err => done.fail(err.stack));
+              .catch((err: unknown) => done.fail(testFailureDescription(err)));
         })
-        .catch(err => done.fail(err.stack));
+        .catch((err: unknown) => done.fail(testFailureDescription(err)));
   });
 
   // TODO(cais): Reenable this test once we fix
@@ -175,11 +176,11 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                               saveResult2.modelArtifactsInfo.weightDataBytes);
                       done();
                     })
-                    .catch(err => done.fail(err.stack));
+                    .catch((err: unknown) => done.fail(testFailureDescription(err)));
               })
-              .catch(err => done.fail(err.stack));
+              .catch((err: unknown) => done.fail(testFailureDescription(err)));
         })
-        .catch(err => done.fail(err.stack));
+        .catch((err: unknown) => done.fail(testFailureDescription(err)));
   });
 
   // TODO(cais): Reenable this test once we fix
@@ -216,17 +217,17 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                                         expect(Object.keys(out)).toEqual([]);
                                         done();
                                       })
-                                      .catch(err => done.fail(err));
+                                      .catch((err: unknown) => done.fail(testFailureDescription(err)));
                                 })
-                                .catch(err => done.fail(err));
+                                .catch((err: unknown) => done.fail(testFailureDescription(err)));
                           })
-                          .catch(err => done.fail(err));
+                          .catch((err: unknown) => done.fail(testFailureDescription(err)));
                     })
-                    .catch(err => done.fail(err.stack));
+                    .catch((err: unknown) => done.fail(testFailureDescription(err)));
               })
-              .catch(err => done.fail(err.stack));
+              .catch((err: unknown) => done.fail(testFailureDescription(err)));
         })
-        .catch(err => done.fail(err.stack));
+        .catch((err: unknown) => done.fail(testFailureDescription(err)));
   });
 
   // TODO(cais): Reenable this test once we fix
@@ -275,12 +276,12 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                             .toEqual(new Uint8Array(weightData1));
                         done();
                       })
-                      .catch(err => done.fail(err.stack));
+                      .catch((err: unknown) => done.fail(testFailureDescription(err)));
                 });
               })
-              .catch(err => done.fail(err.stack));
+              .catch((err: unknown) => done.fail(testFailureDescription(err)));
         })
-        .catch(err => done.fail(err.stack));
+        .catch((err: unknown) => done.fail(testFailureDescription(err)));
   });
 
   // TODO(cais): Reenable this test once we fix
@@ -319,14 +320,14 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                             .toEqual(new Uint8Array(weightData1));
                         done();
                       })
-                      .catch(err => {
-                        done.fail(err.stack);
+                      .catch((err: unknown) => {
+                        done.fail(testFailureDescription(err));
                       });
                 });
               })
-              .catch(err => done.fail(err.stack));
+              .catch((err: unknown) => done.fail(testFailureDescription(err)));
         })
-        .catch(err => done.fail(err.stack));
+        .catch((err: unknown) => done.fail(testFailureDescription(err)));
   });
 
   it('Failed copyModel to invalid source URL', runWithLock(done => {
@@ -336,8 +337,8 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
            .then(out => {
              done.fail('Copying from invalid URL succeeded unexpectedly.');
            })
-           .catch(err => {
-             expect(err.message)
+           .catch((err: unknown) => {
+             expect(requiredTestErrorMessage(err))
                  .toEqual(
                      'Copying failed because no load handler is found for ' +
                      'source URL invalidurl.');
@@ -357,15 +358,15 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                  .then(out => {
                    done.fail('Copying to invalid URL succeeded unexpectedly.');
                  })
-                 .catch(err => {
-                   expect(err.message)
+                 .catch((err: unknown) => {
+                   expect(requiredTestErrorMessage(err))
                        .toEqual(
                            'Copying failed because no save handler is found ' +
                            'for destination URL invalidurl.');
                    done();
                  });
            })
-           .catch(err => done.fail(err.stack));
+           .catch((err: unknown) => done.fail(testFailureDescription(err)));
      }));
 
   it('Failed moveModel to invalid destination URL', runWithLock(done => {
@@ -381,8 +382,8 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                  .then(out => {
                    done.fail('Copying to invalid URL succeeded unexpectedly.');
                  })
-                 .catch(err => {
-                   expect(err.message)
+                 .catch((err: unknown) => {
+                   expect(requiredTestErrorMessage(err))
                        .toEqual(
                            'Copying failed because no save handler is found ' +
                            'for destination URL invalidurl.');
@@ -393,10 +394,10 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                          expect(Object.keys(out)).toEqual([url1]);
                          done();
                        })
-                       .catch(err => done.fail(err.stack));
+                       .catch((err: unknown) => done.fail(testFailureDescription(err)));
                  });
            })
-           .catch(err => done.fail(err.stack));
+           .catch((err: unknown) => done.fail(testFailureDescription(err)));
      }));
 
   it('Failed deletedModel: Absent scheme', runWithLock(done => {
@@ -406,11 +407,11 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
              done.fail(
                  'Removing model with missing scheme succeeded unexpectedly.');
            })
-           .catch(err => {
-             expect(err.message)
+           .catch((err: unknown) => {
+             expect(requiredTestErrorMessage(err))
                  .toMatch(/The url string provided does not contain a scheme/);
-             expect(err.message.indexOf('localstorage')).toBeGreaterThan(0);
-             expect(err.message.indexOf('indexeddb')).toBeGreaterThan(0);
+             expect(requiredTestErrorMessage(err).indexOf('localstorage')).toBeGreaterThan(0);
+             expect(requiredTestErrorMessage(err).indexOf('indexeddb')).toBeGreaterThan(0);
              done();
            });
      }));
@@ -421,8 +422,8 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
            .then(out => {
              done.fail('Removing nonexistent model succeeded unexpectedly.');
            })
-           .catch(err => {
-             expect(err.message)
+           .catch((err: unknown) => {
+             expect(requiredTestErrorMessage(err))
                  .toEqual(
                      'Cannot find model manager for scheme \'invalidscheme\'');
              done();
@@ -435,8 +436,8 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
            .then(out => {
              done.fail('Removing nonexistent model succeeded unexpectedly.');
            })
-           .catch(err => {
-             expect(err.message)
+           .catch((err: unknown) => {
+             expect(requiredTestErrorMessage(err))
                  .toEqual(
                      'Cannot find model ' +
                      'with path \'nonexistent\' in IndexedDB.');
@@ -450,8 +451,8 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
            .then(out => {
              done.fail('Copying nonexistent model succeeded unexpectedly.');
            })
-           .catch(err => {
-             expect(err.message)
+           .catch((err: unknown) => {
+             expect(requiredTestErrorMessage(err))
                  .toEqual(
                      'Cannot find model ' +
                      'with path \'nonexistent\' in IndexedDB.');
@@ -467,8 +468,8 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                  'Copying with identical ' +
                  'old & new paths succeeded unexpectedly.');
            })
-           .catch(err => {
-             expect(err.message)
+           .catch((err: unknown) => {
+             expect(requiredTestErrorMessage(err))
                  .toEqual('Old path and new path are the same: \'a/1\'');
              done();
            });
@@ -482,8 +483,8 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                  'Copying with identical ' +
                  'old & new paths succeeded unexpectedly.');
            })
-           .catch(err => {
-             expect(err.message)
+           .catch((err: unknown) => {
+             expect(requiredTestErrorMessage(err))
                  .toEqual('Old path and new path are the same: \'a/1\'');
              done();
            });

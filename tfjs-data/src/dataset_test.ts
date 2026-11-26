@@ -164,7 +164,7 @@ describeAllEnvs('Dataset', () => {
       await tfd.zip('test' as any);
       fail();
     } catch (e) {
-      expect(e.message).toEqual(
+      expect(tf.test_util.requiredTestErrorMessage(e)).toEqual(
           'The argument to zip() must be an object or array.');
     }
   });
@@ -180,7 +180,7 @@ describeAllEnvs('Dataset', () => {
       // Instead this error is thrown because the leaves of the structure
       // are the letters t, e, s, and t, as well a number for the length. I
       // think it's a fine error message for this situation anyway.
-      expect(e.message).toEqual(
+      expect(tf.test_util.requiredTestErrorMessage(e)).toEqual(
           'Leaves of the structure passed to zip() must be Datasets, ' +
           'not primitives.');
     }
@@ -212,7 +212,7 @@ describeAllEnvs('Dataset', () => {
       await tfd.zip({a, abc}).iterator();
       fail();
     } catch (e) {
-      expect(e.message).toEqual('Circular references are not supported.');
+      expect(tf.test_util.requiredTestErrorMessage(e)).toEqual('Circular references are not supported.');
     }
   });
 
@@ -239,7 +239,7 @@ describeAllEnvs('Dataset', () => {
          await (await tfd.zip([a, b]).iterator()).toArray();
          fail();
        } catch (e) {
-         expect(e.message).toMatch(/propagate me!/);
+         expect(tf.test_util.requiredTestErrorMessage(e)).toMatch(/propagate me!/);
        }
      });
 
@@ -420,7 +420,7 @@ describeAllEnvs('Dataset', () => {
       await (await dataset.iterator()).collect();
       done.fail();
     } catch (e) {
-      expect(e.message).toEqual('TODO');
+      expect(tf.test_util.requiredTestErrorMessage(e)).toEqual('TODO');
       done();
     }
     expect(tf.memory().numTensors).toBe(0);
@@ -949,7 +949,7 @@ describeAllEnvs('Dataset', () => {
          await ds.toArrayForTest();
          fail();
        } catch (e) {
-         expect(e.message).toEqual(
+         expect(tf.test_util.requiredTestErrorMessage(e)).toEqual(
              'Can not convert infinite data stream to array.');
        }
      });
@@ -983,7 +983,7 @@ describeAllEnvs('Dataset with DEBUG mode', () => {
          await (await dataset.iterator()).toArray();
          fail();
        } catch (e) {
-         expect(e.message).toEqual(
+         expect(tf.test_util.requiredTestErrorMessage(e)).toEqual(
              'Element arr[0][1] should have 2 elements, ' +
              'but has 1 elements');
        }

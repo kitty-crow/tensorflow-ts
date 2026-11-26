@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, TensorInfo, Transform, TransformAttrs, TransformInputs} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, TensorInfo, Transform, TransformAttrs, TransformInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {TransformProgram} from '../transform_gpu';
@@ -29,12 +29,11 @@ export function transform(args: {
   const {image, transforms} = inputs;
   const {interpolation, fillMode, fillValue, outputShape} = attrs;
 
-  const [batch, imageHeight, imageWidth, numChannels] = image.shape;
+  const [batch, imageHeight, imageWidth, numChannels] = backend_util.imageDimensions(image.shape);
   const [outHeight, outWidth] =
       outputShape != null ? outputShape : [imageHeight, imageWidth];
-  const outShape =
-      [batch, outHeight, outWidth,
-       numChannels] as [number, number, number, number];
+  const outShape: [number, number, number, number] =
+      [batch, outHeight, outWidth, numChannels];
 
   const program = new TransformProgram(
       imageHeight, imageWidth, interpolation, fillMode, fillValue, outShape);

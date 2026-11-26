@@ -16,7 +16,7 @@ import {ones, Tensor, tensor1d, tensor2d, zeros} from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
 
 describeMathCPU('ReLU: Symbolic', () => {
   it('Correct output shape', () => {
@@ -120,7 +120,7 @@ describeMathCPUAndWebGL2('PReLU: Tensor', () => {
     expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.051329);
     expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(0.049144);
     expectTensorsClose(
-        model.getWeights()[2], tensor1d([0.0410104, 0.0410104, 0.0410104]));
+        requiredTestElement(model.getWeights(), 2), tensor1d([0.0410104, 0.0410104, 0.0410104]));
   });
 
   // Reference Python code:
@@ -157,7 +157,7 @@ describeMathCPUAndWebGL2('PReLU: Tensor', () => {
     expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(7.408153);
     expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(4.190359);
     expectTensorsClose(
-        model.getWeights()[2], tensor2d([[0.648351, 0.648351, 0.648351]]));
+        requiredTestElement(model.getWeights(), 2), tensor2d([[0.648351, 0.648351, 0.648351]]));
   });
 });
 

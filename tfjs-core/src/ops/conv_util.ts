@@ -16,6 +16,7 @@
  */
 
 import * as util from '../util';
+import {requiredDimension} from './shape_dimension';
 
 type PadType = 'SAME'|'VALID'|'NUMBER'|'EXPLICIT';
 
@@ -408,9 +409,11 @@ function computeOutputShape4D(
   }
   const outShape: [number, number, number, number] = [0, 0, 0, outChannels];
   for (let index = 0; index < 3; index++) {
-    if (inShape[index] + 2 * zeroPad >= filterShape[index]) {
+    const input = requiredDimension(inShape, index);
+    const filter = requiredDimension(filterShape, index);
+    if (input + 2 * zeroPad >= filter) {
       outShape[index] = round(
-          (inShape[index] - filterShape[index] + 2 * zeroPad) / strides[index] +
+          (input - filter + 2 * zeroPad) / requiredDimension(strides, index) +
               1,
           roundingMode);
     }
@@ -431,6 +434,7 @@ function parseTupleParam(param: number|number[]): [number, number, number] {
     return [param, param, param];
   }
   if (param.length === 2) {
+    util.assertArrayLength(param, 2);
     return [param[0], param[1], 1];
   }
   return param as [number, number, number];
@@ -696,19 +700,16 @@ export function getShapeForBatchMatMul(
     shape: number[], isChannelsLast: boolean): number[] {
   const length = shape.length;
   if (length >= 3) {
-    return isChannelsLast ?
-        [
-          ...shape.slice(0, -3) /* batch */,
-          shape[length - 3] * shape[length - 2] /* height * width */,
-          shape[length - 1] /* channel */
-        ] :
-        [
-          ...shape.slice(0, -3) /* batch */, shape[length - 3] /* channel */,
-          shape[length - 2] * shape[length - 1] /* height * width */
-        ];
+    const first = requiredDimension(shape, length - 3);
+    const second = requiredDimension(shape, length - 2);
+    const third = requiredDimension(shape, length - 1);
+    const batch = shape.slice(0, -3);
+    return isChannelsLast ? [ ...batch, first * second, third ] :
+        [ ...batch, first, second * third ];
   }
-  if (!isChannelsLast && length === 1 && shape[0] > 1) {
-    return [shape[0], 1];
+  const [channel] = shape;
+  if (!isChannelsLast && length === 1 && channel != null && channel > 1) {
+    return [channel, 1];
   } else {
     return null;
   }

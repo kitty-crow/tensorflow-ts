@@ -155,23 +155,23 @@ export function sliceAlongFirstAxis(
         return tfc.slice1d(array as Tensor1D, start, size);
       case 2:
         return tfc.slice2d(
-            array as Tensor2D, [start, 0], [size, array.shape[1]]);
+            array as Tensor2D, [start, 0], [size, tfc.backend_util.requiredDimension(array.shape, 1)]);
       case 3:
         return tfc.slice3d(
             array as Tensor3D, [start, 0, 0],
-            [size, array.shape[1], array.shape[2]]);
+            [size, tfc.backend_util.requiredDimension(array.shape, 1), tfc.backend_util.requiredDimension(array.shape, 2)]);
       case 4:
         return tfc.slice4d(
             array as Tensor4D, [start, 0, 0, 0],
-            [size, array.shape[1], array.shape[2], array.shape[3]]);
+            [size, tfc.backend_util.requiredDimension(array.shape, 1), tfc.backend_util.requiredDimension(array.shape, 2), tfc.backend_util.requiredDimension(array.shape, 3)]);
       case 5:
         return tfc.slice(array as Tensor5D, [start, 0, 0, 0, 0], [
-          size, array.shape[1], array.shape[2], array.shape[3], array.shape[4]
+          size, tfc.backend_util.requiredDimension(array.shape, 1), tfc.backend_util.requiredDimension(array.shape, 2), tfc.backend_util.requiredDimension(array.shape, 3), tfc.backend_util.requiredDimension(array.shape, 4)
         ]);
       case 6:
         return tfc.slice(array, [start, 0, 0, 0, 0, 0], [
-          size, array.shape[1], array.shape[2], array.shape[3], array.shape[4],
-          array.shape[5]
+          size, tfc.backend_util.requiredDimension(array.shape, 1), tfc.backend_util.requiredDimension(array.shape, 2), tfc.backend_util.requiredDimension(array.shape, 3), tfc.backend_util.requiredDimension(array.shape, 4),
+          tfc.backend_util.requiredDimension(array.shape, 5)
         ]);
       default:
         throw new ValueError(
@@ -197,15 +197,15 @@ export function sliceAlongLastAxis(
         return tfc.slice1d(array as Tensor1D, start, size);
       case 2:
         return tfc.slice2d(
-            array as Tensor2D, [0, start], [array.shape[0], size]);
+            array as Tensor2D, [0, start], [tfc.backend_util.requiredDimension(array.shape, 0), size]);
       case 3:
         return tfc.slice3d(
             array as Tensor3D, [0, 0, start],
-            [array.shape[0], array.shape[1], size]);
+            [tfc.backend_util.requiredDimension(array.shape, 0), tfc.backend_util.requiredDimension(array.shape, 1), size]);
       case 4:
         return tfc.slice4d(
             array as Tensor4D, [0, 0, 0, start],
-            [array.shape[0], array.shape[1], array.shape[2], size]);
+            [tfc.backend_util.requiredDimension(array.shape, 0), tfc.backend_util.requiredDimension(array.shape, 1), tfc.backend_util.requiredDimension(array.shape, 2), size]);
       default:
         throw new ValueError(
             `sliceAlongLastAxis() received an unsupported tensor rank: ` +
@@ -247,7 +247,7 @@ export function sliceAlongAxis(
           case 2:
             return tfc.slice3d(
                 array as Tensor3D, [0, start, 0],
-                [array.shape[0], size, array.shape[2]]);
+                [tfc.backend_util.requiredDimension(array.shape, 0), size, tfc.backend_util.requiredDimension(array.shape, 2)]);
           case 3:
             return sliceAlongLastAxis(array, start, size);
           default:
@@ -262,11 +262,11 @@ export function sliceAlongAxis(
           case 2:
             return tfc.slice4d(
                 array as Tensor4D, [0, start, 0, 0],
-                [array.shape[0], size, array.shape[2], array.shape[3]]);
+                [tfc.backend_util.requiredDimension(array.shape, 0), size, tfc.backend_util.requiredDimension(array.shape, 2), tfc.backend_util.requiredDimension(array.shape, 3)]);
           case 3:
             return tfc.slice4d(
                 array as Tensor4D, [0, 0, start, 0],
-                [array.shape[0], array.shape[1], size, array.shape[3]]);
+                [tfc.backend_util.requiredDimension(array.shape, 0), tfc.backend_util.requiredDimension(array.shape, 1), size, tfc.backend_util.requiredDimension(array.shape, 3)]);
           case 4:
             return sliceAlongLastAxis(array, start, size);
           default:
@@ -388,7 +388,9 @@ export function dot(
         `dot requires both inputs to be rank >= 2` +
         ` but got x shape = ${a.shape} and y shape = ${b.shape}`);
   }
-  if (b.rank >= 3 && a.shape.slice(-1)[0] !== b.shape.slice(-2)[0]) {
+  const [, aLastDim] = tfc.backend_util.matrixDimensions(a.shape);
+  const [ySecondLastDim, bLastDim] = tfc.backend_util.matrixDimensions(b.shape);
+  if (b.rank >= 3 && aLastDim !== ySecondLastDim) {
     throw new NotImplementedError(
         `If rank y >= 3, then the second last dim` +
         ` of y must equal the last dim of x but got x shape = ${
@@ -412,15 +414,12 @@ export function dot(
     });
   } else {
     // Reshape x into the analogous 2D Tensor.
-    const aFirstDims = a.shape.slice();  // Holds all but the last dim of x.
-    const aLastDim = aFirstDims.pop();
+    const aFirstDims = a.shape.slice(0, -1);
     a = tfc.reshape(a, [-1, aLastDim]);
 
     // Reshape y into the analogous 2D Tensor, and keep track of the
     // required dimensions to reproduce the output shape.
-    const bShape = b.shape.slice();
-    const bLastDim = bShape.pop();
-    const ySecondLastDim = bShape.pop();
+    const bShape = b.shape.slice(0, -2);
     const yOtherDims = [...bShape, bLastDim];
     // permutation should be like [r-2, 0, 1, 2, ... r-4, r-3, r-1]
     // where r is the rank of y.

@@ -63,3 +63,5 @@ export function fromUint8ToStringArray(vals: Uint8Array[]) {
 export function fromStringArrayToUint8(strings: string[]) {
   return strings.map(s => encodeString(s));
 }
+
+export {requiredDimension, matrixDimensions, imageDimensions, depthToSpaceOutputShape} from '../ops/shape_dimension';

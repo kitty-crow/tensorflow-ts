@@ -361,11 +361,11 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     expectTensorsClose(layer.apply(x) as Tensor, x, 0.01);
     expect(layer.getWeights().length).toEqual(3);
     // First weight is gamma.
-    expectTensorsClose(layer.getWeights()[0], onesLike(layer.getWeights()[0]));
+    expectTensorsClose(requiredTestElement(layer.getWeights(), 0), onesLike(requiredTestElement(layer.getWeights(), 0)));
     // Second weight is moving mean.
-    expectTensorsClose(layer.getWeights()[1], zerosLike(layer.getWeights()[1]));
+    expectTensorsClose(requiredTestElement(layer.getWeights(), 1), zerosLike(requiredTestElement(layer.getWeights(), 1)));
     // Third weight is moving variance.
-    expectTensorsClose(layer.getWeights()[2], onesLike(layer.getWeights()[2]));
+    expectTensorsClose(requiredTestElement(layer.getWeights(), 2), onesLike(requiredTestElement(layer.getWeights(), 2)));
   });
 
   it('no scale', () => {
@@ -374,11 +374,11 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     expectTensorsClose(layer.apply(x) as Tensor, x, 0.01);
     expect(layer.getWeights().length).toEqual(3);
     // First weight is beta.
-    expectTensorsClose(layer.getWeights()[0], zerosLike(layer.getWeights()[0]));
+    expectTensorsClose(requiredTestElement(layer.getWeights(), 0), zerosLike(requiredTestElement(layer.getWeights(), 0)));
     // Second weight is moving mean.
-    expectTensorsClose(layer.getWeights()[1], zerosLike(layer.getWeights()[1]));
+    expectTensorsClose(requiredTestElement(layer.getWeights(), 1), zerosLike(requiredTestElement(layer.getWeights(), 1)));
     // Third weight is moving variance.
-    expectTensorsClose(layer.getWeights()[2], onesLike(layer.getWeights()[2]));
+    expectTensorsClose(requiredTestElement(layer.getWeights(), 2), onesLike(requiredTestElement(layer.getWeights(), 2)));
   });
 
   it('no center, no scale', () => {
@@ -387,9 +387,9 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     expectTensorsClose(layer.apply(x) as Tensor, x, 0.01);
     expect(layer.getWeights().length).toEqual(2);
     // First weight is moving mean.
-    expectTensorsClose(layer.getWeights()[0], zerosLike(layer.getWeights()[0]));
+    expectTensorsClose(requiredTestElement(layer.getWeights(), 0), zerosLike(requiredTestElement(layer.getWeights(), 0)));
     // Second weight is moving variance.
-    expectTensorsClose(layer.getWeights()[1], onesLike(layer.getWeights()[1]));
+    expectTensorsClose(requiredTestElement(layer.getWeights(), 1), onesLike(requiredTestElement(layer.getWeights(), 1)));
   });
 
   // Use the following Python code to get the reference values for assertion:
@@ -420,17 +420,17 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     const history = await model.fit(xs1, ys, {epochs: 2, batchSize: 3});
     expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.9998891353607178);
     expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.9899163246154785);
-    const gammaValue = layer1.getWeights()[0];
+    const gammaValue = requiredTestElement(layer1.getWeights(), 0);
     expectTensorsClose(
         gammaValue, [0.9900254, 0.9900257, 0.9900262, 0.9900271]);
-    const betaValue = layer1.getWeights()[1];
+    const betaValue = requiredTestElement(layer1.getWeights(), 1);
     expectTensorsClose(
         betaValue,
         [2.9802322e-10, 1.4901161e-10, 9.1269614e-10, -7.4505802e-10]);
-    const movingMeanValue = layer1.getWeights()[2];
+    const movingMeanValue = requiredTestElement(layer1.getWeights(), 2);
     expectTensorsClose(
         movingMeanValue, [0.09949999, 0.11276666, 0.12603334, 0.13929999]);
-    const movingVarianceValue = layer1.getWeights()[3];
+    const movingVarianceValue = requiredTestElement(layer1.getWeights(), 3);
     expectTensorsClose(
         movingVarianceValue, [1.4709667, 1.2763889, 1.1437222, 1.0729666]);
   });
@@ -478,7 +478,7 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(15.999907493591309);
     expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.025602197274565697);
     expect(historyMetricAt(history, 'loss', 2)).toBeCloseTo(0.022478966042399406);
-    const dense1KernelValue = layer1.getWeights()[0];
+    const dense1KernelValue = requiredTestElement(layer1.getWeights(), 0);
     expectTensorsClose(
         dense1KernelValue,
         tensor2d(
@@ -489,21 +489,21 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
               [0.99999934, 0.99999934, 0.99999934, 0.99999934]
             ],
             [4, 4]));
-    const gammaValue = layer2.getWeights()[0];
+    const gammaValue = requiredTestElement(layer2.getWeights(), 0);
     expectTensorsClose(
         gammaValue, [0.18779878, 0.18779878, 0.18779878, 0.18779878]);
-    const betaValue = layer2.getWeights()[1];
+    const betaValue = requiredTestElement(layer2.getWeights(), 1);
     expectTensorsClose(
         betaValue,
         [5.5367128e-08, 5.5367128e-08, 5.5367128e-08, 5.5367128e-08]);
-    const movingMeanValue = layer2.getWeights()[2];
+    const movingMeanValue = requiredTestElement(layer2.getWeights(), 2);
     // TODO(cais): Update this to tf.keras.
     expectTensorsClose(
         movingMeanValue, [0.7128234, 0.7128234, 0.7128234, 0.7128234]);
-    const movingVarianceValue = layer2.getWeights()[3];
+    const movingVarianceValue = requiredTestElement(layer2.getWeights(), 3);
     expectTensorsClose(
         movingVarianceValue, [6.276868, 6.276868, 6.276868, 6.276868]);
-    const dense2KernelValue = layer3.getWeights()[0];
+    const dense2KernelValue = requiredTestElement(layer3.getWeights(), 0);
     expectTensorsClose(
         dense2KernelValue,
         tensor2d(
@@ -665,13 +665,13 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     const history = await model.fit(xs1, ys, {epochs: 2, batchSize: 3});
     expect(historyMetricAt(history, 'loss', 0)).toBeCloseTo(0.9999215006828308);
     expect(historyMetricAt(history, 'loss', 1)).toBeCloseTo(0.980024516582489);
-    const gammaValue = layer1.getWeights()[0];
+    const gammaValue = requiredTestElement(layer1.getWeights(), 0);
     expectTensorsClose(gammaValue, [0.98010117, 0.98010194]);
-    const betaValue = layer1.getWeights()[1];
+    const betaValue = requiredTestElement(layer1.getWeights(), 1);
     expectTensorsClose(betaValue, [-1.1175870e-09, 8.1956386e-10]);
-    const movingMeanValue = layer1.getWeights()[2];
+    const movingMeanValue = requiredTestElement(layer1.getWeights(), 2);
     expectTensorsClose(movingMeanValue, [0.11276666, 0.12603334]);
-    const movingVarianceValue = layer1.getWeights()[3];
+    const movingVarianceValue = requiredTestElement(layer1.getWeights(), 3);
     expectTensorsClose(movingVarianceValue, [1.3161889, 1.1835222], 1e-5);
   });
 });

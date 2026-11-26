@@ -16,7 +16,7 @@
  */
 import * as tf from '../index';
 import {BROWSER_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose, expectArraysEqual} from '../test_util';
+import {expectArraysClose, expectArraysEqual, requiredTestErrorMessage} from '../test_util';
 import {WeightsManifestConfig} from './types';
 
 describeWithFlags('loadWeights', BROWSER_ENVS, () => {
@@ -397,7 +397,7 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
       await tf.io.loadWeights(manifest, './', weightsNamesToFetch);
       fail();
     } catch (e) {
-      expect(e.message).toContain('Could not find weights');
+      expect(requiredTestErrorMessage(e)).toContain('Could not find weights');
     }
   });
 
@@ -418,7 +418,7 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
       await tf.io.loadWeights(manifest, './', weightsNamesToFetch);
       fail();
     } catch (e) {
-      expect(e.message).toContain('Unsupported dtype');
+      expect(requiredTestErrorMessage(e)).toContain('Unsupported dtype');
     }
   });
 

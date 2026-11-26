@@ -18,9 +18,10 @@
 import {ENGINE} from '../../engine';
 import {NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs} from '../../kernel_names';
 import {Tensor, Tensor1D, Tensor2D} from '../../tensor';
-import {NamedTensorMap} from '../../tensor_types';
+import {NamedTensorMapWith} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
+import {assertArrayLength} from '../../util_base';
 
 import {nonMaxSuppSanityCheck} from '../nonmax_util';
 import {op} from '../operation';
@@ -52,7 +53,7 @@ function nonMaxSuppressionPadded_(
     boxes: Tensor2D|TensorLike, scores: Tensor1D|TensorLike,
     maxOutputSize: number, iouThreshold = 0.5,
     scoreThreshold = Number.NEGATIVE_INFINITY,
-    padToMaxOutputSize = false): NamedTensorMap {
+    padToMaxOutputSize = false): NamedTensorMapWith<'selectedIndices'|'validOutputs'> {
   const $boxes = convertToTensor(boxes, 'boxes', 'nonMaxSuppression');
   const $scores = convertToTensor(scores, 'scores', 'nonMaxSuppression');
 
@@ -76,6 +77,7 @@ function nonMaxSuppressionPadded_(
                      NonMaxSuppressionV4, inputs,
                      attrs) as Tensor[];
 
+  assertArrayLength(result, 2);
   return {selectedIndices: result[0], validOutputs: result[1]};
 }
 
