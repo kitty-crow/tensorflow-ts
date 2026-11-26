@@ -15,38 +15,14 @@
  * =============================================================================
  */
 
-import {IFFT, IFFTInputs, KernelConfig, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {IFFT, IFFTInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {fftBatch} from '../utils/fft_utils';
-import {reshape} from './Reshape';
+import {fftAlongLastAxis} from '../utils/fft_utils';
 
 export function ifft(args: {inputs: IFFTInputs, backend: MathBackendCPU}):
     TensorInfo {
-  const {inputs, backend} = args;
-  const {input} = inputs;
-
-  const inputSize = util.sizeFromShape(input.shape);
-
-  // Collapse all outer dimensions to a single batch dimension.
-  const innerDimensionSize = input.shape[input.shape.length - 1];
-  const batch = inputSize / innerDimensionSize;
-
-  const input2D = reshape({
-    inputs: {x: input},
-    backend,
-    attrs: {shape: [batch, innerDimensionSize]}
-  });
-
-  const result = fftBatch(input2D, true, backend);
-
-  const resultReshaped =
-      reshape({inputs: {x: result}, backend, attrs: {shape: input.shape}});
-
-  backend.disposeIntermediateTensorInfo(input2D);
-  backend.disposeIntermediateTensorInfo(result);
-
-  return resultReshaped;
+  return fftAlongLastAxis(args.inputs.input, true, args.backend);
 }
 
 export const ifftConfig: KernelConfig = {

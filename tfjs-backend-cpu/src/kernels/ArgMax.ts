@@ -15,59 +15,15 @@
  * =============================================================================
  */
 
-import {ArgMax, ArgMaxAttrs, ArgMaxInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {ArgMax, ArgMaxAttrs, ArgMaxInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
-import {transpose} from './Transpose';
+import {argMinMaxImpl} from './arg_min_max_impl';
 
 export function argMax(
     args: {inputs: ArgMaxInputs, backend: MathBackendCPU, attrs: KernelAttributes<ArgMaxAttrs>}):
     TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {axis} = attrs;
-
-  assertNotComplex(x, 'argMax');
-
-  let axes = util.parseAxisParam(axis, x.shape);
-  const permutedAxes = backend_util.getAxesPermutation(axes, x.shape.length);
-  let $x = x;
-  const intermediateTensorInfos: TensorInfo[] = [];
-  if (permutedAxes != null) {
-    $x = transpose({inputs: {x}, backend, attrs: {perm: permutedAxes}});
-    intermediateTensorInfos.push($x);
-    axes = backend_util.getInnerMostAxes(axes.length, $x.shape.length);
-  }
-
-  axes = [axes[0]];
-  backend_util.assertAxesAreInnerMostDims('argMax', axes, $x.shape.length);
-  const [outShape, reduceShape] =
-      backend_util.computeOutAndReduceShapes($x.shape, axes);
-
-  const outSize = util.sizeFromShape(outShape);
-  const vals = util.makeZerosTypedArray(outSize, 'int32');
-  const reduceSize = util.sizeFromShape(reduceShape);
-
-  const aVals = backend.requireValues($x.dataId) as TypedArray;
-  for (let i = 0; i < vals.length; ++i) {
-    const offset = i * reduceSize;
-    let max = aVals[offset];
-    let maxIndex = 0;
-    for (let j = 0; j < reduceSize; ++j) {
-      const value = aVals[offset + j];
-      if (value > max) {
-        max = value;
-        maxIndex = j;
-      }
-    }
-    vals[i] = maxIndex;
-  }
-
-  intermediateTensorInfos.forEach(
-      t => backend.disposeIntermediateTensorInfo(t));
-
-  return backend.makeTensorInfo(outShape, 'int32', vals);
+  return argMinMaxImpl(args.inputs.x, args.attrs.axis, args.backend, true);
 }
 
 export const argMaxConfig: KernelConfig = {

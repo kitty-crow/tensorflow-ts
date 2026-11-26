@@ -17,6 +17,11 @@
 
 import {selectActivationSource} from './activation_source';
 import {packedConvColumnSource} from './packed_conv_column';
+import {resizeAxisRatio} from './resize_geometry';
+import {ResizeBilinearProgram} from './resize_bilinear_gpu';
+import {ResizeBilinearPackedProgram} from './resize_bilinear_packed_gpu';
+import {ResizeNearestNeighborProgram} from './resize_nearest_neighbor_gpu';
+import {ResizeNearestNeighborPackedProgram} from './resize_nearest_neighbor_packed_gpu';
 import {avgPool, avgPoolConfig} from './kernels/AvgPool';
 import {maxPool, maxPoolConfig} from './kernels/MaxPool';
 import {batchNorm, batchNormConfig} from './kernels/BatchNorm';
@@ -125,5 +130,30 @@ describe('WebGL kernel registration contracts', () => {
     expect(batchNormConfig.kernelFunc).toBe(batchNorm);
     expect(reluConfig.backendName).toBe('webgl');
     expect(reluConfig.kernelFunc).toBe(relu);
+  });
+});
+
+describe('WebGL forward resize geometry', () => {
+  it('retains singleton, aligned and unaligned axis ratios', () => {
+    expect(resizeAxisRatio(7, 1, true)).toBe(7);
+    expect(resizeAxisRatio(7, 4, true)).toBe(2);
+    expect(resizeAxisRatio(7, 4, false)).toBe(1.75);
+  });
+
+  it('emits matching geometry for packed and unpacked interpolation programs', () => {
+    const shape: [number, number, number, number] = [1, 7, 4, 3];
+    const bilinear = new ResizeBilinearProgram(shape, 4, 1, true, false);
+    const packedBilinear = new ResizeBilinearPackedProgram(shape, 4, 1, true, false);
+    const nearest = new ResizeNearestNeighborProgram(shape, 4, 1, true, false);
+    const packedNearest = new ResizeNearestNeighborPackedProgram(shape, 4, 1, true, false);
+    [bilinear, packedBilinear, nearest, packedNearest].forEach(program => {
+      expect(program.outputShape).toEqual([1, 4, 1, 3]);
+      expect(program.userCode).toMatch(
+          /effectiveInputOverOutputRatioRC = vec[23]\(\s*2,\s*4(?:,\s*4)?\);/);
+    });
+    expect(bilinear.userCode).toContain('sourceFloorRC');
+    expect(nearest.userCode).toContain('sourceNearestRC');
+    expect(packedBilinear.packedOutput).toBe(true);
+    expect(packedNearest.packedOutput).toBe(true);
   });
 });

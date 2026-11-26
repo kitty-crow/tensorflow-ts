@@ -17,6 +17,11 @@
 
 import {requireComplexTensorInfos, requireTensorDataValues} from './tensor_data_values';
 import {MathBackendCPU} from './backend_cpu';
+import {argMin} from './kernels/ArgMin';
+import {argMax} from './kernels/ArgMax';
+import {complex} from './kernels/Complex';
+import {fft} from './kernels/FFT';
+import {ifft} from './kernels/IFFT';
 import {avgPool} from './kernels/AvgPool';
 import {maxPool} from './kernels/MaxPool';
 import {avgPool3D} from './kernels/AvgPool3D';
@@ -101,5 +106,54 @@ describe('shared CPU pooling dispatch', () => {
     backend.disposeData(x.dataId);
     backend.disposeData(avg.dataId);
     backend.disposeData(max.dataId);
+  });
+});
+
+describe('shared CPU extremum index and Fourier dispatch', () => {
+  it('retains first ties, NaN behaviour and non-innermost axis reduction', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([3, 2], 'float32',
+        new Float32Array([2, NaN, 2, 1, 0, 4]));
+    const args = {inputs: {x}, backend, attrs: {axis: 0}};
+    const min = argMin(args);
+    const max = argMax(args);
+    expect(min.shape).toEqual([2]);
+    expect(max.dtype).toBe('int32');
+    expect(backend.readSync(min.dataId)).toEqual(new Int32Array([2, 0]));
+    expect(backend.readSync(max.dataId)).toEqual(new Int32Array([0, 0]));
+    expect(backend.refCount(x.dataId)).toBe(1);
+    backend.disposeData(min.dataId);
+    backend.disposeData(max.dataId);
+    backend.disposeData(x.dataId);
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('restores batched shape and distinguishes forward from inverse FFT', () => {
+    const backend = new MathBackendCPU();
+    const shape = [2, 1, 2];
+    const real = backend.makeTensorInfo(shape, 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const imag = backend.makeTensorInfo(shape, 'float32',
+        new Float32Array(4));
+    const input = complex({inputs: {real, imag}, backend});
+    const forward = fft({inputs: {input}, backend});
+    const inverse = ifft({inputs: {input: forward}, backend});
+    expect(forward.shape).toEqual(shape);
+    expect(inverse.shape).toEqual(shape);
+    const expectedForward = [3, 0, -1, 0, 7, 0, -1, 0];
+    const expectedInverse = [1, 0, 2, 0, 3, 0, 4, 0];
+    const forwardValues = backend.readSync(forward.dataId);
+    const inverseValues = backend.readSync(inverse.dataId);
+    expect(forwardValues.length).toBe(expectedForward.length);
+    expect(inverseValues.length).toBe(expectedInverse.length);
+    expectedForward.forEach((value, index) => {
+      expect(Number(forwardValues[index])).toBeCloseTo(value, 5);
+    });
+    expectedInverse.forEach((value, index) => {
+      expect(Number(inverseValues[index])).toBeCloseTo(value, 5);
+    });
+    expect(backend.refCount(input.dataId)).toBe(1);
+    [inverse, forward, input, real, imag].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
   });
 });

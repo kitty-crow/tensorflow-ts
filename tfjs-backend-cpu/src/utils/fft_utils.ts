@@ -25,6 +25,7 @@ import {identity} from '../kernels/Identity';
 import {imag} from '../kernels/Imag';
 import {multiply} from '../kernels/Multiply';
 import {real} from '../kernels/Real';
+import {reshape} from '../kernels/Reshape';
 import {realDivConfig} from '../kernels/RealDiv';
 import {slice} from '../kernels/Slice';
 import {sub} from '../kernels/Sub';
@@ -337,4 +338,30 @@ function fourierTransformByMatmul(
     backend_util.assignToTypedArray(ret, real, imag, r);
   }
   return ret;
+}
+
+/** Runs the transform over the last dimension and restores the original shape. */
+export function fftAlongLastAxis(
+    input: TensorInfo, inverse: boolean, backend: MathBackendCPU): TensorInfo {
+  const inputSize = util.sizeFromShape(input.shape);
+
+  // Collapse all outer dimensions to a single batch dimension.
+  const innerDimensionSize = input.shape[input.shape.length - 1];
+  const batch = inputSize / innerDimensionSize;
+
+  const input2D = reshape({
+    inputs: {x: input},
+    backend,
+    attrs: {shape: [batch, innerDimensionSize]}
+  });
+
+  const result = fftBatch(input2D, inverse, backend);
+
+  const resultReshaped =
+      reshape({inputs: {x: result}, backend, attrs: {shape: input.shape}});
+
+  backend.disposeIntermediateTensorInfo(input2D);
+  backend.disposeIntermediateTensorInfo(result);
+
+  return resultReshaped;
 }

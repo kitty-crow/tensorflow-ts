@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
+import {resizeAxisRatio} from './resize_geometry';
 
 export class ResizeBilinearPackedProgram implements GPGPUProgram {
   variableNames = ['A'];
@@ -30,15 +31,8 @@ export class ResizeBilinearPackedProgram implements GPGPUProgram {
     const [batch, oldHeight, oldWidth, depth] = inputShape;
     this.outputShape = [batch, newHeight, newWidth, depth];
 
-    const effectiveInSize: [number, number] = [
-      (alignCorners && newHeight > 1) ? oldHeight - 1 : oldHeight,
-      (alignCorners && newWidth > 1) ? oldWidth - 1 : oldWidth
-    ];
-
-    const effectiveOutSize: [number, number] = [
-      (alignCorners && newHeight > 1) ? newHeight - 1 : newHeight,
-      (alignCorners && newWidth > 1) ? newWidth - 1 : newWidth
-    ];
+    const heightRatio = resizeAxisRatio(oldHeight, newHeight, alignCorners);
+    const widthRatio = resizeAxisRatio(oldWidth, newWidth, alignCorners);
 
     let sourceFracIndexRC: string;
     if (halfPixelCenters) {
@@ -50,9 +44,9 @@ export class ResizeBilinearPackedProgram implements GPGPUProgram {
 
     this.userCode = `
       const vec3 effectiveInputOverOutputRatioRC = vec3(
-          ${effectiveInSize[0] / effectiveOutSize[0]},
-          ${effectiveInSize[1] / effectiveOutSize[1]},
-          ${effectiveInSize[1] / effectiveOutSize[1]});
+          ${heightRatio},
+          ${widthRatio},
+          ${widthRatio});
       const vec3 inputShapeRC = vec3(${oldHeight}.0, ${oldWidth}.0,
                                      ${oldWidth}.0);
 
