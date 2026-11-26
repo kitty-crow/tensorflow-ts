@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, LessEqual, LessEqualInputs} from '@tensorflow/tfjs';
+import {KernelConfig, LessEqual, LessEqualInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const lessEqualConfig: KernelConfig = {
   kernelName: LessEqual,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as LessEqualInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput(LessEqual, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      LessEqual, args.inputs as LessEqualInputs, 'upcast')
 };

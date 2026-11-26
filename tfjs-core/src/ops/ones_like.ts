@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {OnesLike, OnesLikeInputs} from '../kernel_names';
+import {OnesLike} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Creates a `tf.Tensor` with all elements set to 1 with the same shape as the
@@ -36,10 +34,7 @@ import {op} from './operation';
  * @doc {heading: 'Tensors', subheading: 'Creation'}
  */
 function onesLike_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'onesLike');
-
-  const inputs = {x: $x} satisfies OnesLikeInputs;
-  return ENGINE.runKernel(OnesLike, inputs);
+  return runUnaryKernel(x, 'onesLike', OnesLike);
 }
 
 export const onesLike = /* @__PURE__ */ op({onesLike_});

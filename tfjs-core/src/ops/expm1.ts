@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Expm1, Expm1Inputs} from '../kernel_names';
+import {Expm1} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes exponential of the input `tf.Tensor` minus one element-wise.
@@ -37,9 +35,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function expm1_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'expm1');
-
-  const inputs = {x: $x} satisfies Expm1Inputs;
-  return ENGINE.runKernel(Expm1, inputs);
+  return runUnaryKernel(x, 'expm1', Expm1);
 }
 export const expm1 = /* @__PURE__ */ op({expm1_});

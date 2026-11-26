@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, Equal, EqualInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Equal, EqualInputs, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const equalConfig: KernelConfig = {
   kernelName: Equal,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as EqualInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput(Equal, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      Equal, args.inputs as EqualInputs, 'upcast')
 };

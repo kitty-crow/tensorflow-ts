@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Ceil, CeilInputs} from '../kernel_names';
+import {Ceil} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes ceiling of input `tf.Tensor` element-wise: `ceil(x)`
@@ -36,9 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function ceil_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'ceil', 'float32');
-
-  const inputs = {x: $x} satisfies CeilInputs;
-  return ENGINE.runKernel(Ceil, inputs);
+  return runUnaryKernel(x, 'ceil', Ceil, 'float32');
 }
 export const ceil = /* @__PURE__ */ op({ceil_});

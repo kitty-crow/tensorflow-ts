@@ -14,13 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {ENGINE} from '../engine';
-import {Floor, FloorInputs} from '../kernel_names';
+import {Floor} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes floor of input `tf.Tensor` element-wise: `floor(x)`.
@@ -35,9 +33,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function floor_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'floor', 'float32');
-
-  const inputs = {x: $x} satisfies FloorInputs;
-  return ENGINE.runKernel(Floor, inputs);
+  return runUnaryKernel(x, 'floor', Floor, 'float32');
 }
 export const floor = /* @__PURE__ */ op({floor_});

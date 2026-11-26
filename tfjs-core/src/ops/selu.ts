@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Selu, SeluInputs} from '../kernel_names';
+import {Selu} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes scaled exponential linear element-wise.
@@ -38,11 +36,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function selu_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'selu');
-
-  const inputs = {x: $x} satisfies SeluInputs;
-
-  return ENGINE.runKernel(Selu, inputs);
+  return runUnaryKernel(x, 'selu', Selu);
 }
 
 export const selu = /* @__PURE__ */ op({selu_});

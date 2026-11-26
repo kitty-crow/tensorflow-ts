@@ -15,12 +15,10 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Imag, ImagInputs} from '../kernel_names';
+import {Imag} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 /**
  * Returns the imaginary part of a complex (or real) tensor.
  *
@@ -36,10 +34,7 @@ import {op} from './operation';
  * @doc {heading: 'Tensors', subheading: 'Creation'}
  */
 function imag_<T extends Tensor>(input: T|TensorLike): T {
-  const $input = convertToTensor(input, 'input', 'imag');
-
-  const inputs = {input: $input} satisfies ImagInputs;
-  return ENGINE.runKernel(Imag, inputs);
+  return runUnaryKernel(input, 'imag', Imag, 'numeric', 'input');
 }
 
 export const imag = /* @__PURE__ */ op({imag_});

@@ -16,16 +16,11 @@
  */
 
 import {KernelConfig, Mod, ModInputs} from '@tensorflow/tfjs';
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const modConfig: KernelConfig = {
   kernelName: Mod,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as ModInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr('T', a.dtype)];
-    return backend.executeSingleOutput('FloorMod', opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      'FloorMod', args.inputs as ModInputs, 'left')
 };

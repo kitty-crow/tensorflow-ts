@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {ZerosLike, ZerosLikeInputs} from '../kernel_names';
+import {ZerosLike} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Creates a `tf.Tensor` with all elements set to 0 with the same shape as the
@@ -37,8 +35,6 @@ import {op} from './operation';
  * @doc {heading: 'Tensors', subheading: 'Creation'}
  */
 function zerosLike_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'zerosLike');
-  const inputs = {x: $x} satisfies ZerosLikeInputs;
-  return ENGINE.runKernel(ZerosLike, inputs);
+  return runUnaryKernel(x, 'zerosLike', ZerosLike);
 }
 export const zerosLike = /* @__PURE__ */ op({zerosLike_});

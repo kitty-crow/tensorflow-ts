@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {IsInf, IsInfInputs} from '../kernel_names';
+import {IsInf} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Returns which elements of x are Infinity or -Infinity.
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function isInf_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'isInf');
-
-  const inputs = {x: $x} satisfies IsInfInputs;
-
-  return ENGINE.runKernel(IsInf, inputs);
+  return runUnaryKernel(x, 'isInf', IsInf);
 }
 export const isInf = /* @__PURE__ */ op({isInf_});

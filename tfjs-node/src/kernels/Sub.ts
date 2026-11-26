@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, Sub, SubInputs} from '@tensorflow/tfjs';
+import {KernelConfig, Sub, SubInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const subConfig: KernelConfig = {
   kernelName: Sub,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as SubInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput(Sub, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      Sub, args.inputs as SubInputs, 'upcast')
 };

@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Asinh, AsinhInputs} from '../kernel_names';
+import {Asinh} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes inverse hyperbolic sin of the input `tf.Tensor` element-wise:
@@ -37,10 +35,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function asinh_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'asinh');
-
-  const inputs = {x: $x} satisfies AsinhInputs;
-
-  return ENGINE.runKernel(Asinh, inputs);
+  return runUnaryKernel(x, 'asinh', Asinh);
 }
 export const asinh = /* @__PURE__ */ op({asinh_});

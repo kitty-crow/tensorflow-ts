@@ -19,6 +19,10 @@ import * as tf from '@tensorflow/tfjs';
 // tslint:disable-next-line: no-imports-from-dist
 import {TestKernelBackend} from '@tensorflow/tfjs-core/dist/jasmine_util';
 
+import {addConfig} from './kernels/Add';
+import {atan2Config} from './kernels/Atan2';
+import {modConfig} from './kernels/Mod';
+import {multiplyConfig} from './kernels/Multiply';
 import {createTensorsTypeOpAttr, ensureTensorflowBackend, getTFDType, nodeBackend, NodeJSKernelBackend} from './nodejs_kernel_backend';
 
 describe('delayed upload', () => {
@@ -142,5 +146,47 @@ describe('Returns TFEOpAttr for a Tensor or list of Tensors', () => {
   it('handles list of null', () => {
     const inputs = [null, null] as tf.Tensor[];
     expect(() => createTensorsTypeOpAttr('T', inputs)).toThrowError();
+  });
+});
+
+describe('binary native kernel dispatch', () => {
+  it('preserves upcast, native operation names and operand order', () => {
+    const backend = nodeBackend();
+    const a = tf.scalar(2, 'int32');
+    const b = tf.scalar(3, 'float32');
+    const output = tf.scalar(5);
+    try {
+      const dispatch = spyOn(backend, 'executeSingleOutput').and.returnValue(output);
+      expect(addConfig.kernelFunc({backend, inputs: {a, b}})).toBe(output);
+      expect(dispatch).toHaveBeenCalledWith('Add',
+          [createTensorsTypeOpAttr('T', 'float32')], [a, b]);
+      expect(multiplyConfig.kernelFunc({backend, inputs: {a, b}})).toBe(output);
+      expect(dispatch).toHaveBeenCalledWith('Mul',
+          [createTensorsTypeOpAttr('T', 'float32')], [a, b]);
+    } finally {
+      a.dispose();
+      b.dispose();
+      output.dispose();
+    }
+  });
+
+  it('preserves left-operand dtype and native aliases', () => {
+    const backend = nodeBackend();
+    const a = tf.scalar(2, 'int32');
+    const b = tf.scalar(3, 'float32');
+    const output = tf.scalar(2);
+    try {
+      const dispatch = spyOn(backend, 'executeSingleOutput').and.returnValue(output);
+      expect(atan2Config.kernelFunc({backend, inputs: {a, b}})).toBe(output);
+      expect(dispatch).toHaveBeenCalledWith('Atan2',
+          [createTensorsTypeOpAttr('T', 'int32')], [a, b]);
+      expect(modConfig.kernelFunc({backend, inputs: {a, b}})).toBe(output);
+      expect(dispatch).toHaveBeenCalledWith('FloorMod',
+          [createTensorsTypeOpAttr('T', 'int32')], [a, b]);
+    } finally {
+      a.dispose();
+      b.dispose();
+      output.dispose();
+    }
   });
 });

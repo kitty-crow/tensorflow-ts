@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, Multiply, MultiplyInputs} from '@tensorflow/tfjs';
+import {KernelConfig, Multiply, MultiplyInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const multiplyConfig: KernelConfig = {
   kernelName: Multiply,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as MultiplyInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput('Mul', opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      'Mul', args.inputs as MultiplyInputs, 'upcast')
 };

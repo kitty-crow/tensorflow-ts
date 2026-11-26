@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Atanh, AtanhInputs} from '../kernel_names';
+import {Atanh} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes inverse hyperbolic tan of the input `tf.Tensor` element-wise:
@@ -37,10 +35,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function atanh_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'atanh');
-
-  const inputs = {x: $x} satisfies AtanhInputs;
-
-  return ENGINE.runKernel(Atanh, inputs);
+  return runUnaryKernel(x, 'atanh', Atanh);
 }
 export const atanh = /* @__PURE__ */ op({atanh_});

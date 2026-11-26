@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, Greater, GreaterInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Greater, GreaterInputs, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const greaterConfig: KernelConfig = {
   kernelName: Greater,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as GreaterInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput(Greater, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      Greater, args.inputs as GreaterInputs, 'upcast')
 };

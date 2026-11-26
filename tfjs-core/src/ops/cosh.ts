@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Cosh, CoshInputs} from '../kernel_names';
+import {Cosh} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes hyperbolic cos of the input `tf.Tensor` element-wise: `cosh(x)`
@@ -36,9 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function cosh_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'cosh', 'float32');
-  const inputs = {x: $x} satisfies CoshInputs;
-
-  return ENGINE.runKernel(Cosh, inputs);
+  return runUnaryKernel(x, 'cosh', Cosh, 'float32');
 }
 export const cosh = /* @__PURE__ */ op({cosh_});

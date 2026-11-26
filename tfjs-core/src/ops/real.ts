@@ -15,12 +15,10 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Real, RealInputs} from '../kernel_names';
+import {Real} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Returns the real part of a complex (or real) tensor.
@@ -38,10 +36,7 @@ import {op} from './operation';
  * @doc {heading: 'Tensors', subheading: 'Creation'}
  */
 function real_<T extends Tensor>(input: T|TensorLike): T {
-  const $input = convertToTensor(input, 'input', 'real');
-
-  const inputs = {input: $input} satisfies RealInputs;
-  return ENGINE.runKernel(Real, inputs);
+  return runUnaryKernel(input, 'real', Real, 'numeric', 'input');
 }
 
 export const real = /* @__PURE__ */ op({real_});

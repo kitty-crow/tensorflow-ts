@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Sqrt, SqrtInputs} from '../kernel_names';
+import {Sqrt} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes square root of the input `tf.Tensor` element-wise: `y = sqrt(x)`
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function sqrt_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'sqrt', 'float32');
-
-  const inputs = {x: $x} satisfies SqrtInputs;
-
-  return ENGINE.runKernel(Sqrt, inputs);
+  return runUnaryKernel(x, 'sqrt', Sqrt, 'float32');
 }
 export const sqrt = /* @__PURE__ */ op({sqrt_});

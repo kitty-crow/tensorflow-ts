@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Acosh, AcoshInputs} from '../kernel_names';
+import {Acosh} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes the inverse hyperbolic cos of the input `tf.Tensor` element-wise:
@@ -37,9 +35,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function acosh_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'acosh');
-  const inputs = {x: $x} satisfies AcoshInputs;
-
-  return ENGINE.runKernel(Acosh, inputs);
+  return runUnaryKernel(x, 'acosh', Acosh);
 }
 export const acosh = /* @__PURE__ */ op({acosh_});

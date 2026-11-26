@@ -17,16 +17,11 @@
 
 import {Atan2, Atan2Inputs, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const atan2Config: KernelConfig = {
   kernelName: Atan2,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as Atan2Inputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr('T', a.dtype)];
-    return backend.executeSingleOutput(Atan2, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      Atan2, args.inputs as Atan2Inputs, 'left')
 };

@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Elu, EluInputs} from '../kernel_names';
+import {Elu} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes exponential linear element-wise: `x > 0 ? x : (e ^ x) - 1`.
@@ -36,11 +34,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function elu_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'elu', 'float32');
-
-  const inputs = {x: $x} satisfies EluInputs;
-
-  return ENGINE.runKernel(Elu, inputs);
+  return runUnaryKernel(x, 'elu', Elu, 'float32');
 }
 
 export const elu = /* @__PURE__ */ op({elu_});

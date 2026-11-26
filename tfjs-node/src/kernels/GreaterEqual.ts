@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, GreaterEqual, GreaterEqualInputs, KernelConfig} from '@tensorflow/tfjs';
+import {GreaterEqual, GreaterEqualInputs, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const greaterEqualConfig: KernelConfig = {
   kernelName: GreaterEqual,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as GreaterEqualInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput(GreaterEqual, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      GreaterEqual, args.inputs as GreaterEqualInputs, 'upcast')
 };

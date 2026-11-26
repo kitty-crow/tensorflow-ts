@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Sin, SinInputs} from '../kernel_names';
+import {Sin} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes sin of the input Tensor element-wise: `sin(x)`
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function sin_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'sin', 'float32');
-
-  const inputs = {x: $x} satisfies SinInputs;
-
-  return ENGINE.runKernel(Sin, inputs);
+  return runUnaryKernel(x, 'sin', Sin, 'float32');
 }
 export const sin = /* @__PURE__ */ op({sin_});

@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Round, RoundInputs} from '../kernel_names';
+import {Round} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes round of input `tf.Tensor` element-wise: `round(x)`.
@@ -37,10 +35,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function round_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'round');
-  const inputs = {x: $x} satisfies RoundInputs;
-
-  return ENGINE.runKernel(Round, inputs);
+  return runUnaryKernel(x, 'round', Round);
 }
 
 export const round = /* @__PURE__ */ op({round_});

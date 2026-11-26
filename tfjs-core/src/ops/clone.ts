@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Identity, IdentityInputs} from '../kernel_names';
+import {Identity} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Creates a new tensor with the same values and shape as the specified
@@ -38,12 +36,9 @@ import {op} from './operation';
  * @doc {heading: 'Tensors', subheading: 'Creation'}
  */
 function clone_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'clone', 'string_or_numeric');
-  const inputs = {x: $x} satisfies IdentityInputs;
-
   // Note this op is called tf.identity in python. Hence the kernel name used
   // here.
-  return ENGINE.runKernel(Identity, inputs);
+  return runUnaryKernel(x, 'clone', Identity, 'string_or_numeric');
 }
 
 export const clone = /* @__PURE__ */ op({clone_});

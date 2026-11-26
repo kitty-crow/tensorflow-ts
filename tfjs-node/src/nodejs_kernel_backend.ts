@@ -178,6 +178,16 @@ export class NodeJSKernelBackend extends KernelBackend {
     return this.executeSingleOutput(name, opAttrs, [input]);
   }
 
+  /** Executes a binary native op with its declared operand dtype policy. */
+  executeBinaryInput(
+      name: string, {a, b}: {a: TensorInfo, b: TensorInfo},
+      dtypePolicy: 'left'|'upcast'): Tensor {
+    const dtype = dtypePolicy === 'upcast' ?
+        backend_util.upcastType(a.dtype, b.dtype) : a.dtype;
+    const opAttrs = [createTensorsTypeOpAttr('T', dtype)];
+    return this.executeSingleOutput(name, opAttrs, [a, b]);
+  }
+
   /**
    * Executes a TensorFlow Eager Op that provides one output Tensor.
    * @param name The name of the Op to execute.

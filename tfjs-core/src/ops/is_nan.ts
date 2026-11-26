@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {IsNan, IsNanInputs} from '../kernel_names';
+import {IsNan} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Returns which elements of x are NaN.
@@ -36,9 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function isNaN_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'isNaN');
-  const inputs = {x: $x} satisfies IsNanInputs;
-
-  return ENGINE.runKernel(IsNan, inputs);
+  return runUnaryKernel(x, 'isNaN', IsNan);
 }
 export const isNaN = /* @__PURE__ */ op({isNaN_});

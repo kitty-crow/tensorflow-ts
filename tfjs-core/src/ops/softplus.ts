@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Softplus, SoftplusInputs} from '../kernel_names';
+import {Softplus} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes softplus of the input `tf.Tensor` element-wise: `log(exp(x) + 1)`
@@ -36,9 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function softplus_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'softplus');
-
-  const inputs = {x: $x} satisfies SoftplusInputs;
-  return ENGINE.runKernel(Softplus, inputs);
+  return runUnaryKernel(x, 'softplus', Softplus);
 }
 export const softplus = /* @__PURE__ */ op({softplus_});

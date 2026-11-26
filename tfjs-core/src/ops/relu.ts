@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Relu, ReluInputs} from '../kernel_names';
+import {Relu} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes rectified linear element-wise: `max(x, 0)`.
@@ -37,11 +35,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function relu_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'relu');
-
-  const inputs = {x: $x} satisfies ReluInputs;
-
-  return ENGINE.runKernel(Relu, inputs);
+  return runUnaryKernel(x, 'relu', Relu);
 }
 
 export const relu = /* @__PURE__ */ op({relu_});

@@ -14,13 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {ENGINE} from '../engine';
-import {Acos, AcosInputs} from '../kernel_names';
+import {Acos} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes acos of the input `tf.Tensor` element-wise: `acos(x)`
@@ -34,9 +32,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function acos_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'acos');
-  const inputs = {x: $x} satisfies AcosInputs;
-
-  return ENGINE.runKernel(Acos, inputs);
+  return runUnaryKernel(x, 'acos', Acos);
 }
 export const acos = /* @__PURE__ */ op({acos_});

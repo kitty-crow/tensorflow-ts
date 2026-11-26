@@ -15,12 +15,10 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Diag, DiagInputs} from '../kernel_names';
+import {Diag} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Returns a diagonal tensor with given diagonal values.
@@ -46,11 +44,7 @@ import {op} from './operation';
  * @doc {heading: 'Tensors', subheading: 'Creation'}
  */
 function diag_(x: Tensor): Tensor {
-  const $x = convertToTensor(x, 'x', 'diag');
-
-  const inputs = {x: $x} satisfies DiagInputs;
-
-  return ENGINE.runKernel(Diag, inputs);
+  return runUnaryKernel(x, 'diag', Diag);
 }
 
 export const diag = /* @__PURE__ */ op({diag_});

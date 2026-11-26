@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {IsFinite, IsFiniteInputs} from '../kernel_names';
+import {IsFinite} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Returns which elements of x are finite.
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function isFinite_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'isFinite');
-
-  const inputs = {x: $x} satisfies IsFiniteInputs;
-
-  return ENGINE.runKernel(IsFinite, inputs);
+  return runUnaryKernel(x, 'isFinite', IsFinite);
 }
 export const isFinite = /* @__PURE__ */ op({isFinite_});

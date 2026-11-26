@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Relu6, Relu6Inputs} from '../kernel_names';
+import {Relu6} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes rectified linear 6 element-wise: `min(max(x, 0), 6)`.
@@ -37,11 +35,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function relu6_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'relu6');
-
-  const inputs = {x: $x} satisfies Relu6Inputs;
-
-  return ENGINE.runKernel(Relu6, inputs);
+  return runUnaryKernel(x, 'relu6', Relu6);
 }
 
 export const relu6 = /* @__PURE__ */ op({relu6_});

@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Asin, AsinInputs} from '../kernel_names';
+import {Asin} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes asin of the input `tf.Tensor` element-wise: `asin(x)`
@@ -35,9 +33,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function asin_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'asin');
-  const inputs = {x: $x} satisfies AsinInputs;
-
-  return ENGINE.runKernel(Asin, inputs);
+  return runUnaryKernel(x, 'asin', Asin);
 }
 export const asin = /* @__PURE__ */ op({asin_});

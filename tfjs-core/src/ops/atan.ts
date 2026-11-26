@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Atan, AtanInputs} from '../kernel_names';
+import {Atan} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes atan of the input `tf.Tensor` element-wise: `atan(x)`
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function atan_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'atan');
-
-  const inputs = {x: $x} satisfies AtanInputs;
-
-  return ENGINE.runKernel(Atan, inputs);
+  return runUnaryKernel(x, 'atan', Atan);
 }
 export const atan = /* @__PURE__ */ op({atan_});

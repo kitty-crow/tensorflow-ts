@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Neg, NegInputs} from '../kernel_names';
+import {Neg} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes `-1 * x` element-wise.
@@ -37,9 +35,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function neg_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'neg');
-
-  const inputs = {x: $x} satisfies NegInputs;
-  return ENGINE.runKernel(Neg, inputs);
+  return runUnaryKernel(x, 'neg', Neg);
 }
 export const neg = /* @__PURE__ */ op({neg_});

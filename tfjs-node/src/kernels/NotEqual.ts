@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, NotEqual, NotEqualInputs} from '@tensorflow/tfjs';
+import {KernelConfig, NotEqual, NotEqualInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const notEqualConfig: KernelConfig = {
   kernelName: NotEqual,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as NotEqualInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput(NotEqual, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      NotEqual, args.inputs as NotEqualInputs, 'upcast')
 };

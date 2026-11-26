@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Rsqrt, RsqrtInputs} from '../kernel_names';
+import {Rsqrt} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes reciprocal of square root of the input `tf.Tensor` element-wise:
@@ -37,10 +35,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function rsqrt_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'rsqrt', 'float32');
-
-  const inputs = {x: $x} satisfies RsqrtInputs;
-
-  return ENGINE.runKernel(Rsqrt, inputs);
+  return runUnaryKernel(x, 'rsqrt', Rsqrt, 'float32');
 }
 export const rsqrt = /* @__PURE__ */ op({rsqrt_});

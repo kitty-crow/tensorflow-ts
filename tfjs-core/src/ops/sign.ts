@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Sign, SignInputs} from '../kernel_names';
+import {Sign} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Returns an element-wise indication of the sign of a number.
@@ -36,8 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function sign_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'sign');
-  const inputs = {x: $x} satisfies SignInputs;
-  return ENGINE.runKernel(Sign, inputs);
+  return runUnaryKernel(x, 'sign', Sign);
 }
 export const sign = /* @__PURE__ */ op({sign_});

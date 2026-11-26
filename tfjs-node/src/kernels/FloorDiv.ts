@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, FloorDiv, FloorDivInputs, KernelConfig} from '@tensorflow/tfjs';
+import {FloorDiv, FloorDivInputs, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const floorDivConfig: KernelConfig = {
   kernelName: FloorDiv,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as FloorDivInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput(FloorDiv, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      FloorDiv, args.inputs as FloorDivInputs, 'upcast')
 };

@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Sigmoid, SigmoidInputs} from '../kernel_names';
+import {Sigmoid} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes sigmoid element-wise, `1 / (1 + exp(-x))`
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function sigmoid_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'sigmoid', 'float32');
-
-  const inputs = {x: $x} satisfies SigmoidInputs;
-
-  return ENGINE.runKernel(Sigmoid, inputs);
+  return runUnaryKernel(x, 'sigmoid', Sigmoid, 'float32');
 }
 export const sigmoid = /* @__PURE__ */ op({sigmoid_});

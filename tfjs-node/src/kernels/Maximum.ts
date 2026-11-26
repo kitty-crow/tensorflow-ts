@@ -15,19 +15,13 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, Maximum, MaximumInputs} from '@tensorflow/tfjs';
+import {KernelConfig, Maximum, MaximumInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
 export const maximumConfig: KernelConfig = {
   kernelName: Maximum,
   backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as MaximumInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr(
-        'T', backend_util.upcastType(a.dtype, b.dtype))];
-    return backend.executeSingleOutput(Maximum, opAttrs, [a, b]);
-  }
+  kernelFunc: (args) => (args.backend as NodeJSKernelBackend).executeBinaryInput(
+      Maximum, args.inputs as MaximumInputs, 'upcast')
 };

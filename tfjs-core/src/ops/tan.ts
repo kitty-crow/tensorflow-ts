@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Tan, TanInputs} from '../kernel_names';
+import {Tan} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes tan of the input `tf.Tensor` element-wise, `tan(x)`
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function tan_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'tan', 'float32');
-
-  const inputs = {x: $x} satisfies TanInputs;
-
-  return ENGINE.runKernel(Tan, inputs);
+  return runUnaryKernel(x, 'tan', Tan, 'float32');
 }
 export const tan = /* @__PURE__ */ op({tan_});

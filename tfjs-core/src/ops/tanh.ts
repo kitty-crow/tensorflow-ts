@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Tanh, TanhInputs} from '../kernel_names';
+import {Tanh} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes hyperbolic tangent of the input `tf.Tensor` element-wise: `tanh(x)`
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function tanh_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'tanh', 'float32');
-
-  const inputs = {x: $x} satisfies TanhInputs;
-
-  return ENGINE.runKernel(Tanh, inputs);
+  return runUnaryKernel(x, 'tanh', Tanh, 'float32');
 }
 export const tanh = /* @__PURE__ */ op({tanh_});

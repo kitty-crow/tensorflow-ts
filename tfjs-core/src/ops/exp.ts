@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Exp, ExpInputs} from '../kernel_names';
+import {Exp} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes exponential of the input `tf.Tensor` element-wise. `e ^ x`
@@ -36,9 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function exp_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'exp');
-
-  const inputs = {x: $x} satisfies ExpInputs;
-  return ENGINE.runKernel(Exp, inputs);
+  return runUnaryKernel(x, 'exp', Exp);
 }
 export const exp = /* @__PURE__ */ op({exp_});

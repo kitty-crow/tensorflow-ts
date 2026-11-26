@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Cos, CosInputs} from '../kernel_names';
+import {Cos} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes cos of the input `tf.Tensor` element-wise: `cos(x)`
@@ -36,10 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function cos_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'cos', 'float32');
-
-  const inputs = {x: $x} satisfies CosInputs;
-
-  return ENGINE.runKernel(Cos, inputs);
+  return runUnaryKernel(x, 'cos', Cos, 'float32');
 }
 export const cos = /* @__PURE__ */ op({cos_});

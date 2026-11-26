@@ -15,6 +15,10 @@
  * =============================================================================
  */
 import {ENGINE} from '../engine';
+import {Tensor} from '../tensor';
+import {NamedTensorMap} from '../tensor_types';
+import {convertToTensor} from '../tensor_util_env';
+import {DataType, TensorLike} from '../types';
 import {isPromise} from '../util';
 
 export const OP_SCOPE_SUFFIX = '__op';
@@ -63,4 +67,14 @@ export function op<T extends Function>(f: {[name: string]: T}): T {
 
   // tslint:disable-next-line:no-any
   return f2 as any as T;
+}
+
+/** Converts a unary operand before dispatching its specific kernel. */
+export function runUnaryKernel<T extends Tensor>(
+    x: T|TensorLike, operationName: string, kernelName: string,
+    dtype: DataType|'numeric'|'string_or_numeric' = 'numeric',
+    inputName: 'x'|'input' = 'x'): T {
+  const input = convertToTensor(x, inputName, operationName, dtype);
+  const inputs: NamedTensorMap = {[inputName]: input};
+  return ENGINE.runKernel<T>(kernelName, inputs);
 }

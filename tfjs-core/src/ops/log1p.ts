@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Log1p, Log1pInputs} from '../kernel_names';
+import {Log1p} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes natural logarithm of the input `tf.Tensor` plus one
@@ -37,9 +35,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function log1p_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'log1p');
-
-  const inputs = {x: $x} satisfies Log1pInputs;
-  return ENGINE.runKernel(Log1p, inputs);
+  return runUnaryKernel(x, 'log1p', Log1p);
 }
 export const log1p = /* @__PURE__ */ op({log1p_});

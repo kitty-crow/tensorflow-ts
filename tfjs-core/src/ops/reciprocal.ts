@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Reciprocal, ReciprocalInputs} from '../kernel_names';
+import {Reciprocal} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Computes reciprocal of x element-wise: `1 / x`
@@ -36,9 +34,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Basic math'}
  */
 function reciprocal_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'reciprocal');
-
-  const inputs = {x: $x} satisfies ReciprocalInputs;
-  return ENGINE.runKernel(Reciprocal, inputs);
+  return runUnaryKernel(x, 'reciprocal', Reciprocal);
 }
 export const reciprocal = /* @__PURE__ */ op({reciprocal_});
