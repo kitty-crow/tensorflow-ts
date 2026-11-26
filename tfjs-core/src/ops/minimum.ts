@@ -15,15 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Minimum, MinimumInputs} from '../kernel_names';
+import {Minimum} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {assertAndGetBroadcastShape} from './broadcast_util';
-import {cast} from './cast';
+import {runExtremaKernel} from './extrema_util';
 import {op} from './operation';
 
 /**
@@ -55,20 +51,7 @@ import {op} from './operation';
  */
 function minimum_<T extends Tensor>(
     a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'minimum');
-  let $b = convertToTensor(b, 'b', 'minimum');
-  [$a, $b] = makeTypesMatch($a, $b);
-
-  if ($a.dtype === 'bool') {
-    $a = cast($a, 'int32');
-    $b = cast($b, 'int32');
-  }
-
-  assertAndGetBroadcastShape($a.shape, $b.shape);
-
-  const inputs = {a: $a, b: $b} satisfies MinimumInputs;
-
-  return ENGINE.runKernel(Minimum, inputs);
+  return runExtremaKernel<T>(a, b, 'minimum', Minimum);
 }
 
 export const minimum = /* @__PURE__ */ op({minimum_});

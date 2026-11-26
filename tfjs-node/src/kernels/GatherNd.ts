@@ -17,7 +17,8 @@
 
 import {GatherNd, GatherNdInputs, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {indexedTensorAttrs} from './native_dispatch';
 
 export const gatherNdConfig: KernelConfig = {
   kernelName: GatherNd,
@@ -26,10 +27,7 @@ export const gatherNdConfig: KernelConfig = {
     const {params, indices} = args.inputs as GatherNdInputs;
     const backend = args.backend as NodeJSKernelBackend;
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('Tparams', params.dtype),
-      createTensorsTypeOpAttr('Tindices', 'int32')
-    ];
+    const opAttrs = indexedTensorAttrs('Tparams', params.dtype);
     return backend.executeSingleOutput(GatherNd, opAttrs, [params, indices]);
   }
 };

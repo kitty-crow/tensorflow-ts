@@ -15,7 +15,7 @@
 import {dispose, env, memory, ones, Tensor, tensor1d, tensor2d, tensor3d, zeros} from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
-import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose, requiredTestElement} from '../utils/test_utils';
 
 import {cachedRecipientCounts, execute, ExecutionProbe, FeedDict, getTopologicalSortAndRecipientCountsForOneFetch} from './executor';
 
@@ -235,9 +235,9 @@ describeMathCPUAndGPU('Executor', () => {
 
       const outputs = execute([z1, z2], feedDict) as Tensor[];
       expectTensorsClose(
-          outputs[0], tensor2d([10, 10, 10, 10, 10, 10, 10, 10], [2, 4]));
+          requiredTestElement(outputs, 0), tensor2d([10, 10, 10, 10, 10, 10, 10, 10], [2, 4]));
       expectTensorsClose(
-          outputs[1], tensor2d([10, 10, 10, 10, 10, 10], [2, 3]));
+          requiredTestElement(outputs, 1), tensor2d([10, 10, 10, 10, 10, 10], [2, 3]));
       expect(callCounter).toEqual(1);
     });
   });

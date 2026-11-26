@@ -83,8 +83,8 @@ describeWithFlags('AdagradOptimizer', ALL_ENVS, () => {
 
     const weights = await optimizer1.getWeights();
     expect(weights.length).toEqual(2);
-    expect(weights[0].name).toEqual('iter');
-    expect(weights[1].name).toEqual(`${x.name}/accumulator`);
+    expect(tf.test_util.requiredTestElement(weights, 0).name).toEqual('iter');
+    expect(tf.test_util.requiredTestElement(weights, 1).name).toEqual(`${x.name}/accumulator`);
 
     const optimizer2 = tf.train.adam(learningRate, initialAccumulatorValue);
     await optimizer2.setWeights(weights);

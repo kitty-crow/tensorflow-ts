@@ -70,8 +70,8 @@ describeWithFlags('SGDOptimizer', ALL_ENVS, () => {
     weights = await optimizer1.getWeights();
     expect(optimizer1.iterations).toEqual(1);
     expect(weights.length).toEqual(1);
-    expect(weights[0].name).toEqual('iter');
-    expectArraysClose(await weights[0].tensor.data(), 1);
+    expect(tf.test_util.requiredTestElement(weights, 0).name).toEqual('iter');
+    expectArraysClose(await tf.test_util.requiredTestElement(weights, 0).tensor.data(), 1);
 
     const optimizer2 = tf.train.sgd(learningRate);
     await optimizer2.setWeights(weights);

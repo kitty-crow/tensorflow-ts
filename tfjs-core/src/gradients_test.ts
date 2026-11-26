@@ -111,8 +111,8 @@ describeWithFlags('gradients', ALL_ENVS, () => {
     const inputs: Tensor[] = [tf.scalar(4), tf.scalar(5)];
     const dynamic: Tensor[] = differentiate(inputs);
     expect(dynamic.length).toBe(inputs.length);
-    expectArraysClose(await dynamic[0].data(), [5]);
-    expectArraysClose(await dynamic[1].data(), [4]);
+    expectArraysClose(await tf.test_util.requiredTestElement(dynamic, 0).data(), [5]);
+    expectArraysClose(await tf.test_util.requiredTestElement(dynamic, 1).data(), [4]);
   });
 
   it('preserves the input tuple length in valueAndGrads(f)', async () => {

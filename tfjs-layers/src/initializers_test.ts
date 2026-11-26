@@ -21,7 +21,7 @@ import {PyJsonDict} from './keras_format/types';
 import {deserialize} from './layers/serialization';
 import * as math_utils from './utils/math_utils';
 import {convertPythonicToTs} from './utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndWebGL2, expectNoLeakedTensors, expectTensorsClose, expectTensorsValuesInRange, requiredTestElement} from './utils/test_utils';
+import {describeMathCPU, describeMathCPUAndWebGL2, expectNoLeakedTensors, expectTensorsClose, expectTensorsValuesInRange, requiredTestElement, requiredTestEntry} from './utils/test_utils';
 
 describeMathCPU('Zeros initializer', () => {
   it('1D', () => {
@@ -561,9 +561,9 @@ describeMathCPU('VarianceScaling initializer', () => {
     it('Default argument values', () => {
       const init = getInitializer(initializer);
       const config = init.getConfig();
-      expect(config['scale']).toEqual(1);
-      expect(config['mode']).toEqual('fanIn');
-      expect(config['distribution']).toEqual('normal');
+      expect(requiredTestEntry(config, 'scale')).toEqual(1);
+      expect(requiredTestEntry(config, 'mode')).toEqual('fanIn');
+      expect(requiredTestEntry(config, 'distribution')).toEqual('normal');
       expect(config['seed']).toEqual(undefined);
     });
   });
@@ -575,7 +575,7 @@ describeMathCPU('VarianceScaling initializer', () => {
       baseConfig.distribution = distribution;
       const newInit = new VarianceScaling(baseConfig);
       const newConfig = newInit.getConfig();
-      expect(newConfig['distribution']).toEqual(baseConfig['distribution']);
+      expect(requiredTestEntry(newConfig, 'distribution')).toEqual(requiredTestEntry(baseConfig, 'distribution'));
     });
 
     it(`${distribution} with configured seed`, () => {

@@ -91,7 +91,7 @@ describeWithFlags('AdadeltaOptimizer', ALL_ENVS, () => {
 
     const weights = await optimizer1.getWeights();
     expect(weights.length).toEqual(3);
-    expect(weights[0].name).toEqual('iter');
+    expect(tf.test_util.requiredTestElement(weights, 0).name).toEqual('iter');
 
     const optimizer2 = tf.train.adadelta(learningRate, rho);
     await optimizer2.setWeights(weights);

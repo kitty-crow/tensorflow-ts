@@ -620,7 +620,7 @@ describeMathCPUAndWebGL2('BatchNormalization Layers: Tensor', () => {
     const h = await model.fit(xs, ys, {epochs: 2});
     expect(historyMetricAt(h, 'loss', 0)).toBeCloseTo(13922.4492);
     expect(historyMetricAt(h, 'loss', 1)).toBeCloseTo(106532048, -3);
-    const weights = model.layers[1].getWeights();
+    const weights = requiredTestElement(model.layers, 1).getWeights();
     expect(weights.length).toEqual(4);
     expectTensorsClose(
         requiredTestElement(weights, 0), tensor1d([7661.0874, 7661.0874, 7661.0874, 7661.0874]),
@@ -708,7 +708,7 @@ describeMathCPUAndGPU('LayerNormalization Layer: Symbolic', () => {
     const model = await tfl.models.modelFromJSON(JSON.parse(modelJSONString));
     const ys = model.predict(zeros([3, 5])) as Tensor;
     expect(ys.shape).toEqual([3, 1]);
-    expect(model.layers[1].getWeights().length).toEqual(4);
+    expect(requiredTestElement(model.layers, 1).getWeights().length).toEqual(4);
   });
 });
 

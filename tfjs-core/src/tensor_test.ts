@@ -2196,7 +2196,7 @@ describeWithFlags('tensor.data', ALL_ENVS, () => {
       a.data().then(vals => {
         // The tidy above should not dispose the scalar since there is
         // a pending data read.
-        expectNumbersClose(vals[0], 5);
+        expectNumbersClose(tf.test_util.requiredTestElement(vals, 0), 5);
       });
     });
 
@@ -2214,11 +2214,11 @@ describeWithFlags('tensor.data', ALL_ENVS, () => {
       const a = tf.scalar(5);
       a.square();  // Uploads it on GPU.
       a.data().then(vals => {
-        expectNumbersClose(vals[0], 5);
+        expectNumbersClose(tf.test_util.requiredTestElement(vals, 0), 5);
       });
       a.data()
           .then(vals => {
-            expectNumbersClose(vals[0], 5);
+            expectNumbersClose(tf.test_util.requiredTestElement(vals, 0), 5);
           })
           .then(done);
     });

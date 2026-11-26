@@ -47,7 +47,7 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(weightsNamesToFetch.length);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [1, 2, 3]);
     expect(weight0.shape).toEqual([3]);
     expect(weight0.dtype).toEqual('float32');
@@ -71,7 +71,7 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(1);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [1, 2]);
     expect(weight0.shape).toEqual([2]);
     expect(weight0.dtype).toEqual('float32');
@@ -95,7 +95,7 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(1);
 
-    const weight1 = weights['weight1'];
+    const weight1 = tf.test_util.requiredTestEntry(weights, 'weight1');
     expectArraysClose(await weight1.data(), [3, 4, 5]);
     expect(weight1.shape).toEqual([3]);
     expect(weight1.dtype).toEqual('float32');
@@ -120,12 +120,12 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(2);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [1, 2]);
     expect(weight0.shape).toEqual([2]);
     expect(weight0.dtype).toEqual('float32');
 
-    const weight1 = weights['weight1'];
+    const weight1 = tf.test_util.requiredTestEntry(weights, 'weight1');
     expectArraysClose(await weight1.data(), [3, 4, 5]);
     expect(weight1.shape).toEqual([3]);
     expect(weight1.dtype).toEqual('float32');
@@ -159,17 +159,17 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(3);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [1, 2]);
     expect(weight0.shape).toEqual([2]);
     expect(weight0.dtype).toEqual('int32');
 
-    const weight1 = weights['weight1'];
+    const weight1 = tf.test_util.requiredTestEntry(weights, 'weight1');
     expectArraysClose(await weight1.data(), [1]);
     expect(weight1.shape).toEqual([]);
     expect(weight1.dtype).toEqual('bool');
 
-    const weight2 = weights['weight2'];
+    const weight2 = tf.test_util.requiredTestEntry(weights, 'weight2');
     expectArraysClose(await weight2.data(), [3, 4, 5]);
     expect(weight2.shape).toEqual([3]);
     expect(weight2.dtype).toEqual('float32');
@@ -197,7 +197,7 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(1);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(
         await weight0.data(), [1, 2, 3, 4, 5, 1.1, 2.2, 10, 20, 30]);
     expect(weight0.shape).toEqual([5, 2]);
@@ -237,12 +237,12 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(2);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [1, 2, 3, 4, 5, 10, 20]);
     expect(weight0.shape).toEqual([7, 1]);
     expect(weight0.dtype).toEqual('int32');
 
-    const weight1 = weights['weight1'];
+    const weight1 = tf.test_util.requiredTestEntry(weights, 'weight1');
     expectArraysClose(await weight1.data(), [3.0, 4.0, 5.0, 10, 20, 30]);
     expect(weight1.shape).toEqual([3, 2]);
     expect(weight1.dtype).toEqual('float32');
@@ -279,12 +279,12 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(2);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [1, 2]);
     expect(weight0.shape).toEqual([2]);
     expect(weight0.dtype).toEqual('float32');
 
-    const weight1 = weights['weight1'];
+    const weight1 = tf.test_util.requiredTestEntry(weights, 'weight1');
     expectArraysClose(await weight1.data(), [3, 4, 5]);
     expect(weight1.shape).toEqual([3]);
     expect(weight1.dtype).toEqual('float32');
@@ -321,12 +321,12 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(2);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [1, 2]);
     expect(weight0.shape).toEqual([2]);
     expect(weight0.dtype).toEqual('float32');
 
-    const weight2 = weights['weight2'];
+    const weight2 = tf.test_util.requiredTestEntry(weights, 'weight2');
     expectArraysClose(await weight2.data(), [6, 7, 8]);
     expect(weight2.shape).toEqual([3, 1]);
     expect(weight2.dtype).toEqual('float32');
@@ -363,22 +363,22 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(4);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [1, 2]);
     expect(weight0.shape).toEqual([2]);
     expect(weight0.dtype).toEqual('float32');
 
-    const weight1 = weights['weight1'];
+    const weight1 = tf.test_util.requiredTestEntry(weights, 'weight1');
     expectArraysClose(await weight1.data(), [3, 4, 5]);
     expect(weight1.shape).toEqual([3]);
     expect(weight1.dtype).toEqual('float32');
 
-    const weight2 = weights['weight2'];
+    const weight2 = tf.test_util.requiredTestEntry(weights, 'weight2');
     expectArraysClose(await weight2.data(), [6, 7, 8]);
     expect(weight2.shape).toEqual([3, 1]);
     expect(weight2.dtype).toEqual('float32');
 
-    const weight3 = weights['weight3'];
+    const weight3 = tf.test_util.requiredTestEntry(weights, 'weight3');
     expectArraysClose(await weight3.data(), [9]);
     expect(weight3.shape).toEqual([]);
     expect(weight3.dtype).toEqual('float32');
@@ -470,12 +470,12 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(weightsNamesToFetch.length);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [-1, 3.8, 24.5]);
     expect(weight0.shape).toEqual([3]);
     expect(weight0.dtype).toEqual('float32');
 
-    const weight1 = weights['weight1'];
+    const weight1 = tf.test_util.requiredTestEntry(weights, 'weight1');
     expectArraysEqual(await weight1.data(), [-1, 4, 25]);
     expect(weight1.shape).toEqual([3]);
     expect(weight1.dtype).toEqual('int32');
@@ -530,12 +530,12 @@ describeWithFlags('loadWeights', BROWSER_ENVS, () => {
     const weightNames = Object.keys(weights);
     expect(weightNames.length).toEqual(2);
 
-    const weight0 = weights['weight0'];
+    const weight0 = tf.test_util.requiredTestEntry(weights, 'weight0');
     expectArraysClose(await weight0.data(), [-1, 3.8, 24.5]);
     expect(weight0.shape).toEqual([3]);
     expect(weight0.dtype).toEqual('float32');
 
-    const weight2 = weights['weight2'];
+    const weight2 = tf.test_util.requiredTestEntry(weights, 'weight2');
     expectArraysClose(await weight2.data(), [6, 7, 8]);
     expect(weight2.shape).toEqual([3, 1]);
     expect(weight2.dtype).toEqual('float32');

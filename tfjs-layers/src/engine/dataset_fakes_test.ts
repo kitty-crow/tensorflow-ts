@@ -10,7 +10,7 @@
 
 import {NamedTensorMap, Tensor} from '@tensorflow/tfjs-core';
 
-import {describeMathCPUAndGPU} from '../utils/test_utils';
+import {describeMathCPUAndGPU, requiredTestEntry} from '../utils/test_utils';
 
 import {FakeNumericDataset} from './dataset_fakes';
 
@@ -68,8 +68,8 @@ describeMathCPUAndGPU('FakeNumericDataset', () => {
       for (let i = 0; i < 5; ++i) {
         const result = await iterator.next();
         const xs = result.value.xs as NamedTensorMap;
-        expect(xs['input1'].shape).toEqual([8, 3, 4]);
-        expect(xs['input2'].shape).toEqual([8, 2, 3]);
+        expect(requiredTestEntry(xs, 'input1').shape).toEqual([8, 3, 4]);
+        expect(requiredTestEntry(xs, 'input2').shape).toEqual([8, 2, 3]);
         expect((result.value.ys as Tensor).shape).toEqual([8, 2]);
         expect(result.done).toEqual(false);
       }

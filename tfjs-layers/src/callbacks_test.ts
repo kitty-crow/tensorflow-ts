@@ -11,7 +11,7 @@
 import {tensor2d} from '@tensorflow/tfjs-core';
 
 import * as tfl from './index';
-import {describeMathCPUAndGPU, historyMetric} from './utils/test_utils';
+import {describeMathCPUAndGPU, historyMetric, requiredTestElement} from './utils/test_utils';
 
 describe('EarlyStopping', () => {
   function createDummyModel(): tfl.LayersModel {
@@ -212,8 +212,8 @@ describe('EarlyStopping', () => {
     expect(model.stopTraining).toBeUndefined();
 
     expect(warnMessages.length).toEqual(2);
-    expect(warnMessages[0]).toMatch(/val_loss is not available/);
-    expect(warnMessages[1]).toMatch(/val_loss is not available/);
+    expect(requiredTestElement(warnMessages, 0)).toMatch(/val_loss is not available/);
+    expect(requiredTestElement(warnMessages, 1)).toMatch(/val_loss is not available/);
   });
 });
 

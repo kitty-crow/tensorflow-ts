@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {ENGINE} from '../engine';
-import {Add, All, Any, Asinh, Ceil, Equal, Greater, Identity, Imag, LogicalNot, Multiply, Real, Relu, Sub} from '../kernel_names';
+import {Add, All, Any, Asinh, Ceil, Equal, Greater, Identity, Imag, LogicalNot, Maximum, Minimum, Multiply, Real, Relu, Sub} from '../kernel_names';
 import {Tensor} from '../tensor';
 import {Rank} from '../types';
 
@@ -29,6 +29,8 @@ import {equal} from './equal';
 import {greater} from './greater';
 import {imag} from './imag';
 import {logicalNot} from './logical_not';
+import {maximum} from './maximum';
+import {minimum} from './minimum';
 import {mul} from './mul';
 import {real} from './real';
 import {relu} from './relu';
@@ -106,5 +108,16 @@ describe('unary operation dispatch contracts', () => {
     expect(ENGINE.runKernel).toHaveBeenCalledWith(Any, {x: bool}, {axis: [0], keepDims: false});
     expect(logicalNot(bool)).toBe(float);
     expect(ENGINE.runKernel).toHaveBeenCalledWith(LogicalNot, {x: bool});
+  });
+
+  it('keeps extrema identities and rejects invalid broadcast shapes', () => {
+    expect(maximum(float, float)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(Maximum, {a: float, b: float});
+    expect(minimum(float, float)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(Minimum, {a: float, b: float});
+    const left = new Tensor<Rank.R1>([2], 'float32', {}, 7);
+    const right = new Tensor<Rank.R1>([3], 'float32', {}, 8);
+    expect(() => maximum(left, right)).toThrowError();
+    expect(() => minimum(left, right)).toThrowError();
   });
 });

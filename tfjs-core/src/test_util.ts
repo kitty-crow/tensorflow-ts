@@ -45,6 +45,18 @@ export function requiredTestValue<T>(value: T|undefined, name: string): T {
   return value;
 }
 
+/** Reads a named test fixture entry; a missing key fails at its origin. */
+export function requiredTestEntry<T>(values: {[key: string]: T}, key: string): T {
+  if (values == null) {
+    throw new Error('Expected a named test fixture.');
+  }
+  const value = values[key];
+  if (typeof value === 'undefined') {
+    throw new Error(`Missing required test entry: ${key}.`);
+  }
+  return value;
+}
+
 const TEST_EPSILON_FLOAT32 = 1e-3;
 export const TEST_EPSILON_FLOAT16 = 1e-1;
 

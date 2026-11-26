@@ -28,7 +28,7 @@ import {cosConfig} from './kernels/Cos';
 import {FFTConfig} from './kernels/FFT';
 import {IFFTConfig} from './kernels/IFFT';
 import {sinConfig} from './kernels/Sin';
-import {executeWithInt32Vector, localResponseAttrs, pool2DAttrs, pool3DAttrs} from './kernels/native_dispatch';
+import {executeWithInt32Vector, indexedTensorAttrs, localResponseAttrs, pool2DAttrs, pool3DAttrs} from './kernels/native_dispatch';
 import {addConfig} from './kernels/Add';
 import {atan2Config} from './kernels/Atan2';
 import {modConfig} from './kernels/Mod';
@@ -342,5 +342,18 @@ describe('native reduction, pooling and resize contracts', () => {
       images.dispose();
       result.dispose();
     }
+  });
+});
+
+describe('native indexed tensor attributes', () => {
+  it('preserves gather and scatter value attribute names and index dtype', () => {
+    expect(indexedTensorAttrs('Tparams', 'float32')).toEqual([
+      createTensorsTypeOpAttr('Tparams', 'float32'),
+      createTensorsTypeOpAttr('Tindices', 'int32')
+    ]);
+    expect(indexedTensorAttrs('T', 'bool')).toEqual([
+      createTensorsTypeOpAttr('T', 'bool'),
+      createTensorsTypeOpAttr('Tindices', 'int32')
+    ]);
   });
 });

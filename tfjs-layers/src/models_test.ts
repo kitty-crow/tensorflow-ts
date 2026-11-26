@@ -1167,13 +1167,13 @@ describeMathCPU('loadLayersModel from URL', () => {
 
        // Verify that the headers and credentials are sent via
        // `fetch` properly.
-       expect(requestHeaders[0]).toEqual(jasmine.objectContaining({
+       expect(requiredTestElement(requestHeaders, 0)).toEqual(jasmine.objectContaining({
          'header_key_1': 'header_value_1'
        }));
-       expect(requestHeaders[1]).toEqual(jasmine.objectContaining({
+       expect(requiredTestElement(requestHeaders, 1)).toEqual(jasmine.objectContaining({
          'header_key_1': 'header_value_1'
        }));
-       expect(requestHeaders[2]).toEqual(jasmine.objectContaining({
+       expect(requiredTestElement(requestHeaders, 2)).toEqual(jasmine.objectContaining({
          'header_key_1': 'header_value_1'
        }));
        expect(requestCredentials).toEqual(['include', 'include', 'include']);

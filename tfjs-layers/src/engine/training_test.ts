@@ -1274,14 +1274,14 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
           },
           onEpochEnd: async (epoch: number, logs?: Logs) => {
             epochEndEpochs.push(epoch);
-            epochEndLosses.push(logs['loss']);
+            epochEndLosses.push(test_util.requiredTestEntry(logs, 'loss'));
           },
           onBatchBegin: async (batch: number, logs?: Logs) => {
             batchBeginBatches.push(batch);
           },
           onBatchEnd: async (batch: number, logs?: Logs) => {
             batchEndBatches.push(batch);
-            batchEndLosses.push(logs['loss']);
+            batchEndLosses.push(test_util.requiredTestEntry(logs, 'loss'));
           }
         };
         const customCallback = isArgs ? customCallbackArgs :
@@ -2895,7 +2895,7 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
   it('Functional model: single output', () => {
     const [model, layers] = createFunctionalModel();
     const inputs = [zeros([1, 2, 3]), zeros([1, 3, 4])];
-    const outputs = model.execute(inputs, layers['reshape1'].name) as Tensor;
+    const outputs = model.execute(inputs, test_util.requiredTestEntry(layers, 'reshape1').name) as Tensor;
     expectTensorsClose(outputs, zeros([1, 3, 2]));
   });
 
@@ -2903,7 +2903,7 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
     const [model, layers] = createFunctionalModel();
     const inputs = [zeros([1, 2, 3]), zeros([1, 3, 4])];
     const outputs = model.execute(inputs, [
-      layers['reshape1'].name, layers['concat'].name, layers['input2'].name
+      test_util.requiredTestEntry(layers, 'reshape1').name, test_util.requiredTestEntry(layers, 'concat').name, test_util.requiredTestEntry(layers, 'input2').name
     ]) as Tensor[];
     expectTensorsClose(requiredTestElement(outputs, 0), zeros([1, 3, 2]));
     expectTensorsClose(requiredTestElement(outputs, 1), zeros([1, 3, 6]));
@@ -2918,7 +2918,7 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
     inputs[inputName1] = zeros([1, 2, 3]);
     inputs[inputName2] = zeros([1, 3, 4]);
     const outputs = model.execute(inputs, [
-      layers['reshape1'].name, layers['concat'].name, layers['input2'].name
+      test_util.requiredTestEntry(layers, 'reshape1').name, test_util.requiredTestEntry(layers, 'concat').name, test_util.requiredTestEntry(layers, 'input2').name
     ]) as Tensor[];
     expectTensorsClose(requiredTestElement(outputs, 0), zeros([1, 3, 2]));
     expectTensorsClose(requiredTestElement(outputs, 1), zeros([1, 3, 6]));
@@ -2930,14 +2930,14 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
     const inputName2 = requiredTestElement(model.inputs, 1).name;
     const inputs: NamedTensorMap = {};
     inputs[inputName2] = zeros([1, 3, 4]);
-    expect(() => model.execute(inputs, layers['reshape1'].name))
+    expect(() => model.execute(inputs, test_util.requiredTestEntry(layers, 'reshape1').name))
         .toThrowError(/No value is provided for .* input/);
   });
 
   it('Functional model: Incorrect number of inputs throws Error', () => {
     const [model, layers] = createFunctionalModel();
     const inputs = [zeros([1, 2, 3])];
-    expect(() => model.execute(inputs, layers['reshape1'].name))
+    expect(() => model.execute(inputs, test_util.requiredTestEntry(layers, 'reshape1').name))
         .toThrowError(/The number of inputs provided \(1\) does not match .*2/);
   });
 
@@ -2945,11 +2945,11 @@ describeMathCPUAndGPU('LayersModel.execute', () => {
     const [model, layers] = createFunctionalModel();
     const inputs = [zeros([1, 2, 3]), zeros([1, 3, 4])];
     const nonexistentTensorName =
-        layers['reshape1'].name + Math.random().toFixed(4);
+        test_util.requiredTestEntry(layers, 'reshape1').name + Math.random().toFixed(4);
     expect(() => model.execute(inputs, nonexistentTensorName))
         .toThrowError(/Cannot find SymbolicTensors for output name/);
     expect(() => model.execute(inputs, [
-      layers['reshape1'].name, nonexistentTensorName
+      test_util.requiredTestEntry(layers, 'reshape1').name, nonexistentTensorName
     ])).toThrowError(/Cannot find SymbolicTensors for output name/);
   });
 

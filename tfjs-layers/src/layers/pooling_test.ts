@@ -19,7 +19,7 @@ import {SymbolicTensor} from '../engine/topology';
 import * as tfl from '../index';
 import {DataFormat, PaddingMode, PoolMode} from '../keras_format/common';
 import {convOutputLength} from '../utils/conv_utils';
-import {describeMathCPUAndGPU, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPUAndGPU, expectTensorsClose, requiredTestEntry, requiredTestElement} from '../utils/test_utils';
 
 import {pool2d, pool3d} from './pooling';
 
@@ -409,9 +409,9 @@ describeMathCPUAndGPU('Pooling Layers 1D: Tensor', () => {
     expectTensorsClose(ys, [1, 1, 1, 1, 1, 1]);
     expect(ys.shape).toEqual([1, 2, 3]);
 
-    const config = model.layers[0].getConfig();
-    expect(config['poolSize']).toEqual([2]);
-    expect(config['strides']).toEqual([2]);
+    const config = requiredTestElement(model.layers, 0).getConfig();
+    expect(requiredTestEntry(config, 'poolSize')).toEqual([2]);
+    expect(requiredTestEntry(config, 'strides')).toEqual([2]);
   });
 });
 
@@ -610,9 +610,9 @@ describeMathCPUAndGPU('Pooling Layers 2D: Tensor', () => {
     const ys = model.predict(xs) as Tensor;
     expectTensorsClose(ys, tfc.ones([1, 2, 2, 3]));
     expect(ys.shape).toEqual([1, 2, 2, 3]);
-    const config = model.layers[0].getConfig();
-    expect(config['poolSize']).toEqual([2, 2]);
-    expect(config['strides']).toEqual([2, 2]);
+    const config = requiredTestElement(model.layers, 0).getConfig();
+    expect(requiredTestEntry(config, 'poolSize')).toEqual([2, 2]);
+    expect(requiredTestEntry(config, 'strides')).toEqual([2, 2]);
   });
 });
 

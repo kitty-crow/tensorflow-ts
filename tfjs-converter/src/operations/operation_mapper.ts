@@ -75,7 +75,7 @@ export class OperationMapper {
   transformGraph(
       graph: tensorflow.IGraphDef,
       signature: tensorflow.ISignatureDef = {}): Graph {
-    const tfNodes = graph.node;
+    const tfNodes = graph.node ?? null;
     if (tfNodes == null) {
       throw new Error('Graph definition is missing its node list.');
     }
@@ -116,7 +116,7 @@ export class OperationMapper {
     } else {
       Object.keys(outputNodeNameToKey).forEach(name => {
         const [nodeName, ] = getNodeNameAndIndex(name);
-        const node = nodes[nodeName];
+        const node = nodes[nodeName] ?? null;
         if (node != null) {
           node.signatureKey = outputNodeNameToKey[name];
           outputs.push(node);
@@ -127,7 +127,7 @@ export class OperationMapper {
     if (Object.keys(inputNodeNameToKey).length > 0) {
       Object.keys(inputNodeNameToKey).forEach(name => {
         const [nodeName, ] = getNodeNameAndIndex(name);
-        const node = nodes[nodeName];
+        const node = nodes[nodeName] ?? null;
         if (node) {
           node.signatureKey = inputNodeNameToKey[name];
           inputs.push(node);
@@ -140,7 +140,7 @@ export class OperationMapper {
     const functions: {[key: string]: Graph} = {};
     if (graph.library != null && graph.library.function != null) {
       for (const func of graph.library.function) {
-        const name = func.signature?.name;
+        const name = func.signature?.name ?? null;
         if (name == null) {
           throw new Error('Graph function is missing its signature name.');
         }
@@ -163,7 +163,7 @@ export class OperationMapper {
     for (const node of Object.values(nodes)) {
       node.inputNames.forEach((name, index) => {
         const [nodeName, , outputName] = getNodeNameAndIndex(name);
-        const inputNode = nodes[nodeName];
+        const inputNode = nodes[nodeName] ?? null;
         if (inputNode == null) {
           throw new Error(`Missing input node "${nodeName}" for "${node.name}".`);
         }
@@ -191,14 +191,15 @@ export class OperationMapper {
   }
 
   private mapNode(node: tensorflow.INodeDef): Node {
-    const {name, op} = node;
+    const name = node.name ?? null;
+    const op = node.op ?? null;
     if (name == null || op == null) {
       throw new Error('A graph node requires both a name and an operation.');
     }
     // Unsupported ops will cause an error at run-time (not parse time), since
     // they may not be used by the actual execution subgraph.
     const mapper: OpMapper =
-        getRegisteredOp(op) || this.opMappers[op] || {tfOpName: op};
+        getRegisteredOp(op) || (this.opMappers[op] ?? null) || {tfOpName: op};
     if (node.attr == null) {
       node.attr = {};
     }
@@ -356,7 +357,7 @@ export class OperationMapper {
 
   // map the TFunctionDef to TFJS graph object
   private mapFunction(functionDef: tensorflow.IFunctionDef): Graph {
-    const tfNodes = functionDef.nodeDef;
+    const tfNodes = functionDef.nodeDef ?? null;
     const placeholders: Node[] = [];
     const weights: Node[] = [];
     let nodes: {[key: string]: Node} = {};
@@ -396,7 +397,7 @@ export class OperationMapper {
 
     functionDef.signature.outputArg.forEach(output => {
       const [nodeName, index] = getNodeNameAndIndex(returnNodeMap[output.name]);
-      const node = nodes[nodeName];
+      const node = nodes[nodeName] ?? null;
       if (node != null) {
         node.defaultOutput = index;
         outputs.push(node);
@@ -460,7 +461,7 @@ export function parseStringParam(s: []|string, keepCase: boolean): string {
 export function getStringParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string, def: string,
     keepCase = false): string {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param != null) {
     return parseStringParam(param.s, keepCase);
   }
@@ -470,7 +471,7 @@ export function getStringParam(
 export function getBoolParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: boolean): boolean {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   return param ? param.b : def;
 }
 
@@ -519,7 +520,7 @@ export function parseDtypeParam(value: string|tensorflow.DataType): DataType {
 export function getFuncParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: string): string {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param && param.func) {
     return param.func.name;
   }
@@ -529,7 +530,7 @@ export function getFuncParam(
 export function getDtypeParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: DataType): DataType {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param && param.type) {
     return parseDtypeParam(param.type);
   }
@@ -539,7 +540,7 @@ export function getDtypeParam(
 export function getDtypeArrayParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: DataType[]): DataType[] {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param && param.list && param.list.type) {
     return param.list.type.map(v => parseDtypeParam(v));
   }
@@ -562,7 +563,7 @@ export function parseTensorShapeParam(shape: tensorflow.ITensorShape): number[]|
 export function getTensorShapeParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def?: number[]): number[]|undefined {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param && param.shape) {
     return parseTensorShapeParam(param.shape);
   }
@@ -572,7 +573,7 @@ export function getTensorShapeParam(
 export function getNumericArrayParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: number[]): number[] {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param) {
     return ((param.list.f && param.list.f.length ? param.list.f :
                                                    param.list.i) ||
@@ -585,7 +586,7 @@ export function getNumericArrayParam(
 export function getStringArrayParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string, def: string[],
     keepCase = false): string[] {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param && param.list && param.list.s) {
     return param.list.s.map((v) => {
       return parseStringParam(v, keepCase);
@@ -597,7 +598,7 @@ export function getStringArrayParam(
 export function getTensorShapeArrayParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: number[][]): number[][] {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param && param.list && param.list.shape) {
     return param.list.shape.map((v) => {
       return parseTensorShapeParam(v);
@@ -609,7 +610,7 @@ export function getTensorShapeArrayParam(
 export function getBoolArrayParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: boolean[]): boolean[] {
-  const param = attrs[name];
+  const param = attrs[name] ?? null;
   if (param && param.list && param.list.b) {
     return param.list.b;
   }

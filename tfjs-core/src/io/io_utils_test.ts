@@ -518,14 +518,14 @@ describeWithFlags('decodeWeights', {}, () => {
         const specs = dataAndSpecs.specs;
         const res = await decode(data, specs);
         expect(Object.keys(res).length).toEqual(8);
-        expectArraysEqual(await res['x1'].data(), await tensors['x1'].data());
-        expectArraysEqual(await res['x2'].data(), await tensors['x2'].data());
-        expectArraysEqual(await res['x3'].data(), await tensors['x3'].data());
-        expectArraysEqual(await res['x4'].data(), await tensors['x4'].data());
-        expectArraysEqual(await res['x5'].data(), await tensors['x5'].data());
-        expectArraysEqual(await res['x6'].data(), await tensors['x6'].data());
-        expectArraysEqual(await res['y1'].data(), await tensors['y1'].data());
-        expectArraysEqual(await res['y2'].data(), await tensors['y2'].data());
+        expectArraysEqual(await tf.test_util.requiredTestEntry(res, 'x1').data(), await tf.test_util.requiredTestEntry(tensors, 'x1').data());
+        expectArraysEqual(await tf.test_util.requiredTestEntry(res, 'x2').data(), await tf.test_util.requiredTestEntry(tensors, 'x2').data());
+        expectArraysEqual(await tf.test_util.requiredTestEntry(res, 'x3').data(), await tf.test_util.requiredTestEntry(tensors, 'x3').data());
+        expectArraysEqual(await tf.test_util.requiredTestEntry(res, 'x4').data(), await tf.test_util.requiredTestEntry(tensors, 'x4').data());
+        expectArraysEqual(await tf.test_util.requiredTestEntry(res, 'x5').data(), await tf.test_util.requiredTestEntry(tensors, 'x5').data());
+        expectArraysEqual(await tf.test_util.requiredTestEntry(res, 'x6').data(), await tf.test_util.requiredTestEntry(tensors, 'x6').data());
+        expectArraysEqual(await tf.test_util.requiredTestEntry(res, 'y1').data(), await tf.test_util.requiredTestEntry(tensors, 'y1').data());
+        expectArraysEqual(await tf.test_util.requiredTestEntry(res, 'y2').data(), await tf.test_util.requiredTestEntry(tensors, 'y2').data());
       });
 
       it('Unsupported dtype raises Error', async () => {

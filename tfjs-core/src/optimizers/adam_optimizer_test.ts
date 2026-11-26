@@ -97,9 +97,9 @@ describeWithFlags('AdamOptimizer', ALL_ENVS, () => {
 
     const weights = await optimizer1.getWeights();
     expect(weights.length).toEqual(3);
-    expect(weights[0].name).toEqual('iter');
-    expect(weights[1].name).toEqual(`${x.name}/m`);
-    expect(weights[2].name).toEqual(`${x.name}/v`);
+    expect(tf.test_util.requiredTestElement(weights, 0).name).toEqual('iter');
+    expect(tf.test_util.requiredTestElement(weights, 1).name).toEqual(`${x.name}/m`);
+    expect(tf.test_util.requiredTestElement(weights, 2).name).toEqual(`${x.name}/v`);
 
     const optimizer2 = tf.train.adam(learningRate, beta1, beta2);
     await optimizer2.setWeights(weights);

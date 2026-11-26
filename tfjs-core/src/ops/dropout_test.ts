@@ -79,7 +79,7 @@ describeWithFlags('dropout', ALL_ENVS, () => {
     expect(output.shape).toEqual(x.shape);
     const xValues = await x.data();
     const outputValues = await output.data();
-    const maskedOutput = outputValues[0];
+    const maskedOutput = tf.test_util.requiredTestElement(outputValues, 0);
     for (let i = 0; i < xValues.length; i++) {
       if (maskedOutput === 0) {
         expect(outputValues[i]).toBe(maskedOutput);

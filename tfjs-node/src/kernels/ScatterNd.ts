@@ -17,8 +17,8 @@
 
 import {KernelAttributes, KernelConfig, ScatterNd, ScatterNdAttrs, ScatterNdInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
-import {executeWithInt32Vector} from './native_dispatch';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeWithInt32Vector, indexedTensorAttrs} from './native_dispatch';
 
 export const scatterNdConfig: KernelConfig = {
   kernelName: ScatterNd,
@@ -31,10 +31,7 @@ export const scatterNdConfig: KernelConfig = {
     const backend = args.backend;
     const {shape} = args.attrs;
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', updates.dtype),
-      createTensorsTypeOpAttr('Tindices', 'int32')
-    ];
+    const opAttrs = indexedTensorAttrs('T', updates.dtype);
     return executeWithInt32Vector(backend, ScatterNd, opAttrs, [indices, updates], shape);
   }
 };

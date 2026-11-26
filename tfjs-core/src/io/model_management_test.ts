@@ -115,13 +115,13 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
           tf.io.listModels()
               .then(out => {
                 expect(Object.keys(out).length).toEqual(1);
-                expect(out[url].modelTopologyType)
+                expect(tf.test_util.requiredTestEntry(out, url).modelTopologyType)
                     .toEqual(saveResult.modelArtifactsInfo.modelTopologyType);
-                expect(out[url].modelTopologyBytes)
+                expect(tf.test_util.requiredTestEntry(out, url).modelTopologyBytes)
                     .toEqual(saveResult.modelArtifactsInfo.modelTopologyBytes);
-                expect(out[url].weightSpecsBytes)
+                expect(tf.test_util.requiredTestEntry(out, url).weightSpecsBytes)
                     .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-                expect(out[url].weightDataBytes)
+                expect(tf.test_util.requiredTestEntry(out, url).weightDataBytes)
                     .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
                 done();
               })
@@ -149,28 +149,28 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
                 tf.io.listModels()
                     .then(out => {
                       expect(Object.keys(out).length).toEqual(2);
-                      expect(out[url1].modelTopologyType)
+                      expect(tf.test_util.requiredTestEntry(out, url1).modelTopologyType)
                           .toEqual(
                               saveResult1.modelArtifactsInfo.modelTopologyType);
-                      expect(out[url1].modelTopologyBytes)
+                      expect(tf.test_util.requiredTestEntry(out, url1).modelTopologyBytes)
                           .toEqual(saveResult1.modelArtifactsInfo
                                        .modelTopologyBytes);
-                      expect(out[url1].weightSpecsBytes)
+                      expect(tf.test_util.requiredTestEntry(out, url1).weightSpecsBytes)
                           .toEqual(
                               saveResult1.modelArtifactsInfo.weightSpecsBytes);
-                      expect(out[url1].weightDataBytes)
+                      expect(tf.test_util.requiredTestEntry(out, url1).weightDataBytes)
                           .toEqual(
                               saveResult1.modelArtifactsInfo.weightDataBytes);
-                      expect(out[url2].modelTopologyType)
+                      expect(tf.test_util.requiredTestEntry(out, url2).modelTopologyType)
                           .toEqual(
                               saveResult2.modelArtifactsInfo.modelTopologyType);
-                      expect(out[url2].modelTopologyBytes)
+                      expect(tf.test_util.requiredTestEntry(out, url2).modelTopologyBytes)
                           .toEqual(saveResult2.modelArtifactsInfo
                                        .modelTopologyBytes);
-                      expect(out[url2].weightSpecsBytes)
+                      expect(tf.test_util.requiredTestEntry(out, url2).weightSpecsBytes)
                           .toEqual(
                               saveResult2.modelArtifactsInfo.weightSpecsBytes);
-                      expect(out[url2].weightDataBytes)
+                      expect(tf.test_util.requiredTestEntry(out, url2).weightDataBytes)
                           .toEqual(
                               saveResult2.modelArtifactsInfo.weightDataBytes);
                       done();
@@ -244,23 +244,23 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
               .then(modelInfo => {
                 tf.io.listModels().then(out => {
                   expect(Object.keys(out).length).toEqual(2);
-                  expect(out[url1].modelTopologyType)
+                  expect(tf.test_util.requiredTestEntry(out, url1).modelTopologyType)
                       .toEqual(saveResult.modelArtifactsInfo.modelTopologyType);
-                  expect(out[url1].modelTopologyBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url1).modelTopologyBytes)
                       .toEqual(
                           saveResult.modelArtifactsInfo.modelTopologyBytes);
-                  expect(out[url1].weightSpecsBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url1).weightSpecsBytes)
                       .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-                  expect(out[url1].weightDataBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url1).weightDataBytes)
                       .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
-                  expect(out[url2].modelTopologyType)
+                  expect(tf.test_util.requiredTestEntry(out, url2).modelTopologyType)
                       .toEqual(saveResult.modelArtifactsInfo.modelTopologyType);
-                  expect(out[url2].modelTopologyBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url2).modelTopologyBytes)
                       .toEqual(
                           saveResult.modelArtifactsInfo.modelTopologyBytes);
-                  expect(out[url2].weightSpecsBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url2).weightSpecsBytes)
                       .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-                  expect(out[url2].weightDataBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url2).weightDataBytes)
                       .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
 
                   // Load the copy and verify the content.
@@ -298,14 +298,14 @@ describeWithFlags('ModelManagement', CHROME_ENVS, () => {
               .then(modelInfo => {
                 tf.io.listModels().then(out => {
                   expect(Object.keys(out)).toEqual([url2]);
-                  expect(out[url2].modelTopologyType)
+                  expect(tf.test_util.requiredTestEntry(out, url2).modelTopologyType)
                       .toEqual(saveResult.modelArtifactsInfo.modelTopologyType);
-                  expect(out[url2].modelTopologyBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url2).modelTopologyBytes)
                       .toEqual(
                           saveResult.modelArtifactsInfo.modelTopologyBytes);
-                  expect(out[url2].weightSpecsBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url2).weightSpecsBytes)
                       .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-                  expect(out[url2].weightDataBytes)
+                  expect(tf.test_util.requiredTestEntry(out, url2).weightDataBytes)
                       .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
 
                   // Load the copy and verify the content.

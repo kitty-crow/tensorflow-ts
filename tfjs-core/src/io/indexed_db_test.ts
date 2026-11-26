@@ -213,13 +213,13 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
        // After successful saving, there should be one model.
        const models = await new BrowserIndexedDBManager().listModels();
        expect(Object.keys(models).length).toEqual(1);
-       expect(models['baz/QuxModel'].modelTopologyType)
+       expect(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').modelTopologyType)
            .toEqual(saveResult.modelArtifactsInfo.modelTopologyType);
-       expect(models['baz/QuxModel'].modelTopologyBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').modelTopologyBytes)
            .toEqual(saveResult.modelArtifactsInfo.modelTopologyBytes);
-       expect(models['baz/QuxModel'].weightSpecsBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').weightSpecsBytes)
            .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-       expect(models['baz/QuxModel'].weightDataBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').weightDataBytes)
            .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
      }));
 
@@ -235,21 +235,21 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
        // After successful saving, there should be two models.
        const models = await new BrowserIndexedDBManager().listModels();
        expect(Object.keys(models).length).toEqual(2);
-       expect(models['QuxModel'].modelTopologyType)
+       expect(tf.test_util.requiredTestEntry(models, 'QuxModel').modelTopologyType)
            .toEqual(saveResult1.modelArtifactsInfo.modelTopologyType);
-       expect(models['QuxModel'].modelTopologyBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'QuxModel').modelTopologyBytes)
            .toEqual(saveResult1.modelArtifactsInfo.modelTopologyBytes);
-       expect(models['QuxModel'].weightSpecsBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'QuxModel').weightSpecsBytes)
            .toEqual(saveResult1.modelArtifactsInfo.weightSpecsBytes);
-       expect(models['QuxModel'].weightDataBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'QuxModel').weightDataBytes)
            .toEqual(saveResult1.modelArtifactsInfo.weightDataBytes);
-       expect(models['repeat/QuxModel'].modelTopologyType)
+       expect(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').modelTopologyType)
            .toEqual(saveResult2.modelArtifactsInfo.modelTopologyType);
-       expect(models['repeat/QuxModel'].modelTopologyBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').modelTopologyBytes)
            .toEqual(saveResult2.modelArtifactsInfo.modelTopologyBytes);
-       expect(models['repeat/QuxModel'].weightSpecsBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').weightSpecsBytes)
            .toEqual(saveResult2.modelArtifactsInfo.weightSpecsBytes);
-       expect(models['repeat/QuxModel'].weightDataBytes)
+       expect(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').weightDataBytes)
            .toEqual(saveResult2.modelArtifactsInfo.weightDataBytes);
      }));
 

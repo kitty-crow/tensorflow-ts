@@ -341,13 +341,13 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
        }
 
        expect(Object.keys(out).length).toEqual(1);
-       expect(out['baz/QuxModel'].modelTopologyType)
+       expect(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').modelTopologyType)
            .toEqual(saveResult.modelArtifactsInfo.modelTopologyType);
-       expect(out['baz/QuxModel'].modelTopologyBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').modelTopologyBytes)
            .toEqual(saveResult.modelArtifactsInfo.modelTopologyBytes);
-       expect(out['baz/QuxModel'].weightSpecsBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').weightSpecsBytes)
            .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-       expect(out['baz/QuxModel'].weightDataBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').weightDataBytes)
            .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
      }));
 
@@ -367,21 +367,21 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
          console.log(JSON.stringify(out, null, 2));
        }
        expect(Object.keys(out).length).toEqual(2);
-       expect(out['QuxModel'].modelTopologyType)
+       expect(tf.test_util.requiredTestEntry(out, 'QuxModel').modelTopologyType)
            .toEqual(saveResult1.modelArtifactsInfo.modelTopologyType);
-       expect(out['QuxModel'].modelTopologyBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'QuxModel').modelTopologyBytes)
            .toEqual(saveResult1.modelArtifactsInfo.modelTopologyBytes);
-       expect(out['QuxModel'].weightSpecsBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'QuxModel').weightSpecsBytes)
            .toEqual(saveResult1.modelArtifactsInfo.weightSpecsBytes);
-       expect(out['QuxModel'].weightDataBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'QuxModel').weightDataBytes)
            .toEqual(saveResult1.modelArtifactsInfo.weightDataBytes);
-       expect(out['repeat/QuxModel'].modelTopologyType)
+       expect(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').modelTopologyType)
            .toEqual(saveResult2.modelArtifactsInfo.modelTopologyType);
-       expect(out['repeat/QuxModel'].modelTopologyBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').modelTopologyBytes)
            .toEqual(saveResult2.modelArtifactsInfo.modelTopologyBytes);
-       expect(out['repeat/QuxModel'].weightSpecsBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').weightSpecsBytes)
            .toEqual(saveResult2.modelArtifactsInfo.weightSpecsBytes);
-       expect(out['repeat/QuxModel'].weightDataBytes)
+       expect(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').weightDataBytes)
            .toEqual(saveResult2.modelArtifactsInfo.weightDataBytes);
      }));
 

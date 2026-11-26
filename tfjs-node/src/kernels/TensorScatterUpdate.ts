@@ -17,7 +17,8 @@
 
 import {KernelAttributes, KernelConfig, TensorScatterUpdate, TensorScatterUpdateAttrs, TensorScatterUpdateInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {indexedTensorAttrs} from './native_dispatch';
 
 export const tensorScatterUpdateConfig: KernelConfig = {
   kernelName: TensorScatterUpdate,
@@ -30,10 +31,7 @@ export const tensorScatterUpdateConfig: KernelConfig = {
     const backend = args.backend;
     const {} = args.attrs;
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', updates.dtype),
-      createTensorsTypeOpAttr('Tindices', 'int32')
-    ];
+    const opAttrs = indexedTensorAttrs('T', updates.dtype);
     const ret = backend.executeSingleOutput(
         TensorScatterUpdate, opAttrs, [tensor, indices, updates]);
 

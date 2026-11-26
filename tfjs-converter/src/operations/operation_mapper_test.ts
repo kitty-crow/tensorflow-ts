@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {test_util} from '@tensorflow/tfjs-core';
+
 import * as tensorflow from '../data/compiled_api';
 
 import * as arithmetic from './op_list/arithmetic';
@@ -38,7 +40,7 @@ import * as spectral from './op_list/spectral';
 import * as string from './op_list/string';
 import * as transformation from './op_list/transformation';
 import {OperationMapper} from './operation_mapper';
-import {Graph} from './types';
+import {Graph, Node} from './types';
 
 const ops = [
   arithmetic, basicMath, control, convolution, creation, dynamic, evaluation,
@@ -47,6 +49,19 @@ const ops = [
 ];
 const mapper: OperationMapper = OperationMapper.Instance;
 let convertedGraph: Graph;
+
+function nodeByName(name: string): Node {
+  return test_util.requiredTestEntry(convertedGraph.nodes, name);
+}
+
+function functionByName(name: string): Graph {
+  const functions = convertedGraph.functions;
+  if (functions == null) {
+    throw new Error('Expected converted graph functions.');
+  }
+  return test_util.requiredTestEntry(functions, name);
+}
+
 
 const SIMPLE_MODEL: tensorflow.IGraphDef = {
   node: [
@@ -281,7 +296,7 @@ describe('completeness check', () => {
         };
         convertedGraph = mapper.transformGraph(graph);
         expect(Object.keys(convertedGraph.nodes)).toEqual([tfOp.tfOpName]);
-        const node = convertedGraph.nodes[tfOp.tfOpName];
+        const node = nodeByName(tfOp.tfOpName);
         expect(node.op).toEqual(tfOp.tfOpName);
         expect(node.category).withContext(`Op: ${node.op}, category`)
           .toEqual(tfOp.category);
@@ -294,8 +309,8 @@ describe('completeness check', () => {
     const graph = {node: [{name, op: 'StringSplit', attr: {}}]};
     convertedGraph = mapper.transformGraph(graph);
     expect(Object.keys(convertedGraph.nodes)).toEqual([name]);
-    expect(convertedGraph.nodes[name].op).toEqual(op);
-    expect(convertedGraph.nodes[name].outputs).toEqual([
+    expect(nodeByName(name).op).toEqual(op);
+    expect(nodeByName(name).outputs).toEqual([
       'indices', 'values', 'shape'
     ]);
   });
@@ -344,7 +359,7 @@ describe('operationMapper without signature', () => {
         ]);
       });
       it('should find the graph input nodes', () => {
-        expect(convertedGraph.functions['__inference_while_cond_10_49_frozen']
+        expect(functionByName('__inference_while_cond_10_49_frozen')
                    .inputs.map(node => node.name))
             .toEqual([
               'while_loop_counter', 'while_maximum_iterations', 'placeholder',
@@ -353,20 +368,19 @@ describe('operationMapper without signature', () => {
       });
 
       it('should find the graph output nodes', () => {
-        expect(convertedGraph.functions['__inference_while_cond_10_49_frozen']
+        expect(functionByName('__inference_while_cond_10_49_frozen')
                    .outputs.map(node => node.name))
             .toEqual(['Less']);
       });
 
       it('should find the graph weight nodes', () => {
-        expect(convertedGraph.functions['__inference_while_cond_10_49_frozen']
+        expect(functionByName('__inference_while_cond_10_49_frozen')
                    .weights.map(node => node.name))
             .toEqual([]);
       });
 
       it('should convert nodes', () => {
-        expect(Object.keys(convertedGraph
-                               .functions['__inference_while_cond_10_49_frozen']
+        expect(Object.keys(functionByName('__inference_while_cond_10_49_frozen')
                                .nodes))
             .toEqual([
               'Less', 'while_loop_counter', 'while_maximum_iterations',
@@ -374,7 +388,7 @@ describe('operationMapper without signature', () => {
             ]);
       });
       it('should convert signature', () => {
-        expect(convertedGraph.functions['__inference_while_cond_10_49_frozen']
+        expect(functionByName('__inference_while_cond_10_49_frozen')
                    .signature)
             .toEqual({
               methodName: '__inference_while_cond_10_49_frozen',
@@ -403,66 +417,66 @@ describe('operationMapper without signature', () => {
     });
     describe('node level', () => {
       it('should find the input nodes', () => {
-        expect(convertedGraph.nodes['Fill'].inputs.map(node => node.name))
+        expect(nodeByName('Fill').inputs.map(node => node.name))
             .toEqual(['Shape', 'Value']);
       });
       it('should find the children nodes', () => {
-        expect(convertedGraph.nodes['image_placeholder'].children.map(
+        expect(nodeByName('image_placeholder').children.map(
                    node => node.name))
             .toEqual(['Conv2D', 'Split', 'LogicalNot', 'FusedBatchNorm']);
       });
 
       it('should map the input params', () => {
         expect(
-            convertedGraph.nodes['Fill'].inputParams['shape'].inputIndexStart)
+            test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'shape').inputIndexStart)
             .toEqual(0);
         expect(
-            convertedGraph.nodes['Fill'].inputParams['value'].inputIndexStart)
+            test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'value').inputIndexStart)
             .toEqual(1);
       });
 
       it('should map the attribute params', () => {
         expect(
-            convertedGraph.nodes['Conv2D'].attrParams['strides'].value)
+            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'strides').value)
             .toEqual([1, 2, 2, 1]);
         expect(
-            convertedGraph.nodes['Conv2D'].attrParams['pad'].value)
+            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'pad').value)
             .toEqual('same');
         expect(
-            convertedGraph.nodes['Conv2D'].attrParams['useCudnnOnGpu'].value)
+            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'useCudnnOnGpu').value)
             .toEqual(true);
         expect(
-            convertedGraph.nodes['Split'].attrParams['numOrSizeSplits'].value)
+            test_util.requiredTestEntry(nodeByName('Split').attrParams, 'numOrSizeSplits').value)
             .toEqual(3);
         expect(
-            convertedGraph.nodes['FusedBatchNorm'].attrParams['epsilon'].value)
+            test_util.requiredTestEntry(nodeByName('FusedBatchNorm').attrParams, 'epsilon').value)
             .toEqual(0.0001);
         expect(
-            convertedGraph.nodes['Squeeze2'].attrParams['axis'].value)
+            test_util.requiredTestEntry(nodeByName('Squeeze2').attrParams, 'axis').value)
             .toEqual([]);
       });
 
       it('should map the placeholder attribute params', () => {
         expect(
-            convertedGraph.nodes['image_placeholder'].attrParams['shape'].value)
+            test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'shape').value)
             .toEqual([3, 3, 3, 1]);
         expect(
-            convertedGraph.nodes['image_placeholder'].attrParams['dtype'].value)
+            test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'dtype').value)
             .toEqual('float32');
       });
       it('should map params with deprecated name', () => {
         expect(
-            convertedGraph.nodes['Squeeze'].attrParams['axis'].value)
+            test_util.requiredTestEntry(nodeByName('Squeeze').attrParams, 'axis').value)
             .toEqual([1, 2]);
       });
       it('should map params with int64 dtype', () => {
         expect(
-            convertedGraph.nodes['Cast'].attrParams['dtype'].value)
+            test_util.requiredTestEntry(nodeByName('Cast').attrParams, 'dtype').value)
             .toEqual('int32');
       });
       it('should map params with complex64 dtype', () => {
         expect(
-            convertedGraph.nodes['Cast4'].attrParams['dtype'].value)
+            test_util.requiredTestEntry(nodeByName('Cast4').attrParams, 'dtype').value)
             .toEqual('complex64');
       });
     });
@@ -511,76 +525,76 @@ describe('operationMapper with signature', () => {
 
     describe('node level', () => {
       it('should find the input nodes', () => {
-        expect(convertedGraph.nodes['Fill'].inputs.map(node => node.name))
+        expect(nodeByName('Fill').inputs.map(node => node.name))
             .toEqual(['Shape', 'Value']);
       });
       it('should find the children nodes', () => {
-        expect(convertedGraph.nodes['image_placeholder'].children.map(
+        expect(nodeByName('image_placeholder').children.map(
                    node => node.name))
             .toEqual(['Conv2D', 'Split', 'LogicalNot', 'FusedBatchNorm']);
       });
 
       it('should map the input params', () => {
         expect(
-            convertedGraph.nodes['Fill'].inputParams['shape'].inputIndexStart)
+            test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'shape').inputIndexStart)
             .toEqual(0);
         expect(
-            convertedGraph.nodes['Fill'].inputParams['value'].inputIndexStart)
+            test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'value').inputIndexStart)
             .toEqual(1);
       });
 
       it('should map the attribute params', () => {
         expect(
-            convertedGraph.nodes['Conv2D'].attrParams['strides'].value)
+            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'strides').value)
             .toEqual([1, 2, 2, 1]);
         expect(
-            convertedGraph.nodes['Conv2D'].attrParams['pad'].value)
+            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'pad').value)
             .toEqual('same');
         expect(
-            convertedGraph.nodes['Conv2D'].attrParams['useCudnnOnGpu'].value)
+            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'useCudnnOnGpu').value)
             .toEqual(true);
         expect(
-            convertedGraph.nodes['Split'].attrParams['numOrSizeSplits'].value)
+            test_util.requiredTestEntry(nodeByName('Split').attrParams, 'numOrSizeSplits').value)
             .toEqual(3);
         expect(
-            convertedGraph.nodes['FusedBatchNorm'].attrParams['epsilon'].value)
+            test_util.requiredTestEntry(nodeByName('FusedBatchNorm').attrParams, 'epsilon').value)
             .toEqual(0.0001);
         expect(
-            convertedGraph.nodes['Squeeze2'].attrParams['axis'].value)
+            test_util.requiredTestEntry(nodeByName('Squeeze2').attrParams, 'axis').value)
             .toEqual([]);
       });
 
       it('should map the placeholder attribute params', () => {
         expect(
-            convertedGraph.nodes['image_placeholder'].attrParams['shape'].value)
+            test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'shape').value)
             .toEqual([3, 3, 3, 1]);
         expect(
-            convertedGraph.nodes['image_placeholder'].attrParams['dtype'].value)
+            test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'dtype').value)
             .toEqual('float32');
       });
       it('should map params with deprecated name', () => {
         expect(
-            convertedGraph.nodes['Squeeze'].attrParams['axis'].value)
+            test_util.requiredTestEntry(nodeByName('Squeeze').attrParams, 'axis').value)
             .toEqual([1, 2]);
       });
       it('should map params with int64 dtype', () => {
         expect(
-            convertedGraph.nodes['Cast'].attrParams['dtype'].value)
+            test_util.requiredTestEntry(nodeByName('Cast').attrParams, 'dtype').value)
             .toEqual('int32');
       });
       it('should map params with uint8 dtype', () => {
         expect(
-            convertedGraph.nodes['Cast2'].attrParams['dtype'].value)
+            test_util.requiredTestEntry(nodeByName('Cast2').attrParams, 'dtype').value)
             .toEqual('int32');
       });
       it('should map params with half dtype', () => {
         expect(
-            convertedGraph.nodes['Cast3'].attrParams['dtype'].value)
+            test_util.requiredTestEntry(nodeByName('Cast3').attrParams, 'dtype').value)
             .toEqual('float32');
       });
       it('should map params with complex64 dtype', () => {
         expect(
-            convertedGraph.nodes['Cast4'].attrParams['dtype'].value)
+            test_util.requiredTestEntry(nodeByName('Cast4').attrParams, 'dtype').value)
             .toEqual('complex64');
       });
     });

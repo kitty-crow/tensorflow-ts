@@ -63,12 +63,12 @@ describeWithFlags('square', ALL_ENVS, () => {
       const r = tf.square(a);
       expect(r.dtype).toEqual('int32');
       const data = await r.data();
-      expectNumbersClose(data[0], 4);
-      expectNumbersClose(data[1], 16);
+      expectNumbersClose(tf.test_util.requiredTestElement(data, 0), 4);
+      expectNumbersClose(tf.test_util.requiredTestElement(data, 1), 16);
       // Epsilon must be larger here for webgl1
       // TODO: Use expectArraysClose when it supports epsilons scaled by the
       // numbers being compared.
-      expectNumbersClose(data[2], 1_600_000_000, 1_000 /* epsilon */);
+      expectNumbersClose(tf.test_util.requiredTestElement(data, 2), 1_600_000_000, 1_000 /* epsilon */);
     }
   });
 

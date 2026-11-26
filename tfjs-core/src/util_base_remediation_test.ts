@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {requiredTestEntry} from './test_util';
 import {assertArrayLength, inferFromImplicitShape, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
 
 describe('shape utility regression coverage', () => {
@@ -71,5 +72,19 @@ describe('bitonic TopK size', () => {
   it('retains the shared power-of-two rounding contract', () => {
     expect([0, 1, 2, 3, 8, 9, 1025].map(roundUpToPow2))
         .toEqual([1, 1, 2, 4, 8, 16, 2048]);
+  });
+});
+
+describe('required named test fixture', () => {
+  it('preserves present values including falsy and null values', () => {
+    const values = {zero: 0, empty: '', flag: false, absent: null};
+    expect(requiredTestEntry(values, 'zero')).toBe(0);
+    expect(requiredTestEntry(values, 'empty')).toBe('');
+    expect(requiredTestEntry(values, 'flag')).toBe(false);
+    expect(requiredTestEntry(values, 'absent')).toBeNull();
+  });
+  it('fails at the missing key instead of passing an absent value', () => {
+    expect(() => requiredTestEntry({present: 1}, 'missing'))
+        .toThrowError('Missing required test entry: missing.');
   });
 });

@@ -35,8 +35,8 @@ describe('BaseLogger Callback', () => {
     await baseLogger.onBatchEnd(2, {batch: 2, size: 5, loss: 7});
     const epochLog: UnresolvedLogs = {val_loss: 3};
     await baseLogger.onEpochEnd(0, epochLog);
-    expect(epochLog['val_loss'] as number).toEqual(3);
-    expect(epochLog['loss'] as number)
+    expect(fixtureTestUtil.requiredTestEntry(epochLog, 'val_loss') as number).toEqual(3);
+    expect(fixtureTestUtil.requiredTestEntry(epochLog, 'loss') as number)
         .toBeCloseTo((10 * 5 + 10 * 6 + 5 * 7) / (10 + 10 + 5));
   });
   it('Forgets old epochs', async () => {
@@ -60,8 +60,8 @@ describe('BaseLogger Callback', () => {
     await baseLogger.onBatchEnd(2, {batch: 2, size: 5, loss: 7});
     const epochLog: UnresolvedLogs = {val_loss: 3};
     await baseLogger.onEpochEnd(numOldEpochs, epochLog);
-    expect(epochLog['val_loss'] as number).toEqual(3);
-    expect(epochLog['loss'] as number)
+    expect(fixtureTestUtil.requiredTestEntry(epochLog, 'val_loss') as number).toEqual(3);
+    expect(fixtureTestUtil.requiredTestEntry(epochLog, 'loss') as number)
         .toBeCloseTo((10 * 5 + 10 * 6 + 5 * 7) / (10 + 10 + 5));
   });
 });
@@ -132,10 +132,10 @@ describeMathCPUAndGPU('resolveScalarsInLogs', () => {
       'd': scalar(-4),
     };
     await resolveScalarsInLogs(logs);
-    expect(logs['a']).toEqual(1);
-    expect(logs['b']).toEqual(2);
-    expect(logs['c']).toEqual(-3);
-    expect(logs['d']).toEqual(-4);
+    expect(fixtureTestUtil.requiredTestEntry(logs, 'a')).toEqual(1);
+    expect(fixtureTestUtil.requiredTestEntry(logs, 'b')).toEqual(2);
+    expect(fixtureTestUtil.requiredTestEntry(logs, 'c')).toEqual(-3);
+    expect(fixtureTestUtil.requiredTestEntry(logs, 'd')).toEqual(-4);
   });
 
   it('Resolve null works fine', async () => {
@@ -153,19 +153,14 @@ describeMathCPUAndGPU('resolveScalarsInLogs', () => {
 
 describeMathCPUAndGPU('disposeTensorsInLogs', () => {
   it('Resolve mixed numbers and scalars', () => {
-    const logs: UnresolvedLogs = {
-      'a': 1,
-      'b': scalar(2),
-      'c': -3,
-      'd': scalar(-4),
-    };
+    const b = scalar(2);
+    const d = scalar(-4);
+    const logs: UnresolvedLogs = {'a': 1, 'b': b, 'c': -3, 'd': d};
     disposeTensorsInLogs(logs);
-    expect(logs['a']).toEqual(1);
-    // tslint:disable-next-line:no-any
-    expect((logs['b'] as any).isDisposed).toEqual(true);
-    expect(logs['c']).toEqual(-3);
-    // tslint:disable-next-line:no-any
-    expect((logs['d'] as any).isDisposed).toEqual(true);
+    expect(fixtureTestUtil.requiredTestEntry(logs, 'a')).toEqual(1);
+    expect(b.isDisposed).toEqual(true);
+    expect(fixtureTestUtil.requiredTestEntry(logs, 'c')).toEqual(-3);
+    expect(d.isDisposed).toEqual(true);
   });
 });
 

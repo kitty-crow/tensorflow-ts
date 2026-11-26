@@ -211,3 +211,11 @@ export function createResizeKernelConfig(
     }
   };
 }
+
+/** Gather and scatter native ops use int32 indices with a named value dtype. */
+export function indexedTensorAttrs(valueAttr: 'T'|'Tparams', dtype: DataType): TFEOpAttr[] {
+  return [
+    createTensorsTypeOpAttr(valueAttr, dtype),
+    createTensorsTypeOpAttr('Tindices', 'int32')
+  ];
+}

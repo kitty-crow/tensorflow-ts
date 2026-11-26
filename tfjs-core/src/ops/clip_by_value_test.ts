@@ -137,8 +137,8 @@ describeWithFlags('clipByValue', ALL_ENVS, () => {
     const min = tf.backend().epsilon();
     const max = 0.5;
     const res = await tf.clipByValue([0, 1], min, max).data();
-    expect(res[0]).toBeGreaterThan(0);
-    expect(res[1]).toBeCloseTo(max);
+    expect(tf.test_util.requiredTestElement(res, 0)).toBeGreaterThan(0);
+    expect(tf.test_util.requiredTestElement(res, 1)).toBeCloseTo(max);
   });
 
   it('clip min = max', async () => {

@@ -11,7 +11,7 @@
 import {ones} from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
-import {describeMathCPU} from '../utils/test_utils';
+import {describeMathCPU, requiredTestElement} from '../utils/test_utils';
 
 import {Input} from './input_layer';
 import {LayerArgs} from './topology';
@@ -54,7 +54,7 @@ describeMathCPU('InputLayer', () => {
     });
 
     describe('creates an inbound Node', () => {
-      const inboundNode = inputLayer.inboundNodes[0];
+      const inboundNode = requiredTestElement(inputLayer.inboundNodes, 0);
       it('with no inboundLayers, nodeIndices, or tensorIndices', () => {
         expect(inboundNode.inboundLayers.length).toEqual(0);
         expect(inboundNode.nodeIndices.length).toEqual(0);
@@ -72,7 +72,7 @@ describeMathCPU('InputLayer', () => {
       });
 
       describe('with a SymbolicTensor', () => {
-        const symbolicTensor = inboundNode.inputTensors[0];
+        const symbolicTensor = requiredTestElement(inboundNode.inputTensors, 0);
 
         it('that is defined.', () => {
           expect(symbolicTensor instanceof tfl.SymbolicTensor).toBe(true);
@@ -112,7 +112,7 @@ describeMathCPU('InputLayer', () => {
   it('allow `null` in shape', () => {
     const inputShape = [null, 2];
     const inputs = tfl.layers.inputLayer({inputShape});
-    expect(inputs.inputSpec[0].shape).toEqual([null].concat(inputShape));
+    expect(requiredTestElement(inputs.inputSpec, 0).shape).toEqual([null].concat(inputShape));
   });
 
   it('throws an exception if both inputShape and batchInputShape ' +
