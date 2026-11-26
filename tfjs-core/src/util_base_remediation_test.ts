@@ -77,7 +77,9 @@ describe('bitonic TopK size', () => {
 
 describe('required named test fixture', () => {
   it('preserves present values including falsy and null values', () => {
-    const values = {zero: 0, empty: '', flag: false, absent: null};
+    const values: {[key: string]: number|string|boolean|null} = {
+      zero: 0, empty: '', flag: false, absent: null
+    };
     expect(requiredTestEntry(values, 'zero')).toBe(0);
     expect(requiredTestEntry(values, 'empty')).toBe('');
     expect(requiredTestEntry(values, 'flag')).toBe(false);
@@ -86,5 +88,10 @@ describe('required named test fixture', () => {
   it('fails at the missing key instead of passing an absent value', () => {
     expect(() => requiredTestEntry({present: 1}, 'missing'))
         .toThrowError('Missing required test entry: missing.');
+  });
+  it('rejects an explicitly undefined fixture entry', () => {
+    const values: {[key: string]: number|undefined} = {present: undefined};
+    expect(() => requiredTestEntry(values, 'present'))
+        .toThrowError('Missing required test entry: present.');
   });
 });
