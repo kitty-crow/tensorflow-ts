@@ -15,13 +15,15 @@
  * =============================================================================
  */
 
-import {Fill, FillAttrs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {Fill, FillAttrs, KernelConfig, TensorInfo, util} from '@tensorflow/tfjs-core';
 
-import {MathBackendWebGL} from '../backend_webgl';
+import {AttributeOnlyKernelArgs, RegistryAttributeOnlyKernelArgs} from '../kernel_utils/attribute_only_kernel';
 import {FillProgram} from '../fill_gpu';
 
-export function fill(args: {backend: MathBackendWebGL, attrs: KernelAttributes<FillAttrs>}):
-    TensorInfo {
+export function fill(args: RegistryAttributeOnlyKernelArgs<FillAttrs>):
+    TensorInfo;
+export function fill(args: AttributeOnlyKernelArgs<FillAttrs>): TensorInfo;
+export function fill(args: AttributeOnlyKernelArgs<FillAttrs>): TensorInfo {
   const {backend, attrs} = args;
   const {shape, value} = attrs;
   let {dtype} = attrs;

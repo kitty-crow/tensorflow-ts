@@ -15,13 +15,17 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, LinSpace, LinSpaceAttrs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, LinSpace, LinSpaceAttrs, TensorInfo} from '@tensorflow/tfjs-core';
 
-import {MathBackendWebGL} from '../backend_webgl';
+import {AttributeOnlyKernelArgs, RegistryAttributeOnlyKernelArgs} from '../kernel_utils/attribute_only_kernel';
 import {linSpaceImplCPU} from '../kernel_utils/shared';
 
-export function linSpace(
-    args: {backend: MathBackendWebGL, attrs: KernelAttributes<LinSpaceAttrs>}): TensorInfo {
+export function linSpace(args: RegistryAttributeOnlyKernelArgs<LinSpaceAttrs>):
+    TensorInfo;
+export function linSpace(args: AttributeOnlyKernelArgs<LinSpaceAttrs>):
+    TensorInfo;
+export function linSpace(args: AttributeOnlyKernelArgs<LinSpaceAttrs>):
+    TensorInfo {
   const {backend, attrs} = args;
   const {start, stop, num} = attrs;
 

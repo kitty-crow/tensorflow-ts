@@ -21,6 +21,9 @@ import {avgPool, avgPoolConfig} from './kernels/AvgPool';
 import {maxPool, maxPoolConfig} from './kernels/MaxPool';
 import {batchNorm, batchNormConfig} from './kernels/BatchNorm';
 import {relu, reluConfig} from './kernels/Relu';
+import {fill, fillConfig} from './kernels/Fill';
+import {linSpace, linSpaceConfig} from './kernels/LinSpace';
+import {range, rangeConfig} from './kernels/Range';
 import {resizeBilinearGrad, resizeBilinearGradConfig} from './kernels/ResizeBilinearGrad';
 import {resizeNearestNeighborGrad, resizeNearestNeighborGradConfig} from './kernels/ResizeNearestNeighborGrad';
 
@@ -102,6 +105,18 @@ describe('WebGL kernel registration contracts', () => {
     expect(resizeNearestNeighborGradConfig.kernelName).toBe('ResizeNearestNeighborGrad');
     expect(resizeBilinearGradConfig.kernelFunc).toBe(resizeBilinearGrad);
     expect(resizeNearestNeighborGradConfig.kernelFunc).toBe(resizeNearestNeighborGrad);
+  });
+
+  it('registers attribute-only creation kernels without wrappers', () => {
+    expect(fillConfig.kernelName).toBe('Fill');
+    expect(fillConfig.backendName).toBe('webgl');
+    expect(fillConfig.kernelFunc).toBe(fill);
+    expect(linSpaceConfig.kernelName).toBe('LinSpace');
+    expect(linSpaceConfig.backendName).toBe('webgl');
+    expect(linSpaceConfig.kernelFunc).toBe(linSpace);
+    expect(rangeConfig.kernelName).toBe('Range');
+    expect(rangeConfig.backendName).toBe('webgl');
+    expect(rangeConfig.kernelFunc).toBe(range);
   });
 
   it('registers named-input and factory kernels without a wrapper', () => {
