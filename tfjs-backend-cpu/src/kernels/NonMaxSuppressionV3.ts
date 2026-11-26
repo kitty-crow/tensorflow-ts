@@ -15,12 +15,12 @@
  * =============================================================================
  */
 
-import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 const nonMaxSuppressionV3Impl = kernel_impls.nonMaxSuppressionV3Impl;
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {makeSelectedIndices, readNonMaxSuppressionInputs} from './non_max_suppression_util';
 
 export function nonMaxSuppressionV3(args: {
   inputs: NonMaxSuppressionV3Inputs,
@@ -31,16 +31,13 @@ export function nonMaxSuppressionV3(args: {
   const {boxes, scores} = inputs;
   const {maxOutputSize, iouThreshold, scoreThreshold} = attrs;
 
-  assertNotComplex(boxes, 'NonMaxSuppression');
-
-  const boxesVals = backend.requireValues(boxes.dataId) as TypedArray;
-  const scoresVals = backend.requireValues(scores.dataId) as TypedArray;
+  const [boxesVals, scoresVals] = readNonMaxSuppressionInputs(
+      boxes, scores, backend, 'NonMaxSuppression');
 
   const {selectedIndices} = nonMaxSuppressionV3Impl(
       boxesVals, scoresVals, maxOutputSize, iouThreshold, scoreThreshold);
 
-  return backend.makeTensorInfo(
-      [selectedIndices.length], 'int32', new Int32Array(selectedIndices));
+  return makeSelectedIndices(backend, selectedIndices);
 }
 
 export const nonMaxSuppressionV3Config: KernelConfig = {

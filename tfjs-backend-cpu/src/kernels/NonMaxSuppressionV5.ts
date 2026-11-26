@@ -15,11 +15,11 @@
  * =============================================================================
  */
 
-import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 const nonMaxSuppressionV5Impl = kernel_impls.nonMaxSuppressionV5Impl;
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {makeSelectedIndices, readNonMaxSuppressionInputs} from './non_max_suppression_util';
 
 export function nonMaxSuppressionV5(args: {
   inputs: NonMaxSuppressionV5Inputs,
@@ -30,23 +30,15 @@ export function nonMaxSuppressionV5(args: {
   const {boxes, scores} = inputs;
   const {maxOutputSize, iouThreshold, scoreThreshold, softNmsSigma} = attrs;
 
-  assertNotComplex(boxes, 'NonMaxSuppressionWithScore');
-
-  const boxesVals = backend.requireValues(boxes.dataId) as TypedArray;
-  const scoresVals = backend.requireValues(scores.dataId) as TypedArray;
-
-  const maxOutputSizeVal = maxOutputSize;
-  const iouThresholdVal = iouThreshold;
-  const scoreThresholdVal = scoreThreshold;
-  const softNmsSigmaVal = softNmsSigma;
+  const [boxesVals, scoresVals] = readNonMaxSuppressionInputs(
+      boxes, scores, backend, 'NonMaxSuppressionWithScore');
 
   const {selectedIndices, selectedScores} = nonMaxSuppressionV5Impl(
-      boxesVals, scoresVals, maxOutputSizeVal, iouThresholdVal,
-      scoreThresholdVal, softNmsSigmaVal);
+      boxesVals, scoresVals, maxOutputSize, iouThreshold,
+      scoreThreshold, softNmsSigma);
 
   return [
-    backend.makeTensorInfo(
-        [selectedIndices.length], 'int32', new Int32Array(selectedIndices)),
+    makeSelectedIndices(backend, selectedIndices),
     backend.makeTensorInfo(
         [selectedScores.length], 'float32', new Float32Array(selectedScores))
   ];

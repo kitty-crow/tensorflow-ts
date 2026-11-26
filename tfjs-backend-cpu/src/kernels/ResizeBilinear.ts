@@ -19,6 +19,7 @@ import {KernelConfig, KernelAttributes, ResizeBilinear, ResizeBilinearAttrs, Res
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
+import {resizeAxisScale} from './resize_geometry';
 
 export function resizeBilinear(args: {
   inputs: ResizeBilinearInputs,
@@ -39,18 +40,9 @@ export function resizeBilinear(args: {
   const result = new Float32Array(
       util.sizeFromShape([batch, newHeight, newWidth, numChannels]));
 
-  const effectiveInputSize: [number, number] = [
-    (alignCorners && newHeight > 1) ? oldHeight - 1 : oldHeight,
-    (alignCorners && newWidth > 1) ? oldWidth - 1 : oldWidth
-  ];
-
-  const effectiveOutputSize: [number, number] = [
-    (alignCorners && newHeight > 1) ? newHeight - 1 : newHeight,
-    (alignCorners && newWidth > 1) ? newWidth - 1 : newWidth
-  ];
   let outputIdx = 0;
-  const effectiveRowSizeRatio = effectiveInputSize[0] / effectiveOutputSize[0];
-  const effectiveColSizeRatio = effectiveInputSize[1] / effectiveOutputSize[1];
+  const effectiveRowSizeRatio = resizeAxisScale(oldHeight, newHeight, alignCorners);
+  const effectiveColSizeRatio = resizeAxisScale(oldWidth, newWidth, alignCorners);
   for (let b = 0; b < batch; b++) {
     for (let r = 0; r < newHeight; r++) {
       let sourceFracRow: number;

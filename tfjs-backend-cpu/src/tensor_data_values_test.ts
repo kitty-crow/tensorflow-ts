@@ -26,6 +26,13 @@ import {avgPool} from './kernels/AvgPool';
 import {maxPool} from './kernels/MaxPool';
 import {avgPool3D} from './kernels/AvgPool3D';
 import {maxPool3D} from './kernels/MaxPool3D';
+import {resizeBilinear} from './kernels/ResizeBilinear';
+import {resizeNearestNeighbor} from './kernels/ResizeNearestNeighbor';
+import {resizeBilinearGrad} from './kernels/ResizeBilinearGrad';
+import {resizeNearestNeighborGrad} from './kernels/ResizeNearestNeighborGrad';
+import {nonMaxSuppressionV3} from './kernels/NonMaxSuppressionV3';
+import {nonMaxSuppressionV4} from './kernels/NonMaxSuppressionV4';
+import {nonMaxSuppressionV5} from './kernels/NonMaxSuppressionV5';
 
 describe('CPU tensor storage payload', () => {
   it('preserves the numeric array identity, including zero and NaN', () => {
@@ -154,6 +161,88 @@ describe('shared CPU extremum index and Fourier dispatch', () => {
     });
     expect(backend.refCount(input.dataId)).toBe(1);
     [inverse, forward, input, real, imag].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('shared CPU resize geometry', () => {
+  it('preserves distinct aligned interpolation and gradient accumulation', () => {
+    const backend = new MathBackendCPU();
+    const images = backend.makeTensorInfo([1, 2, 2, 1], 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const dy = backend.makeTensorInfo([1, 3, 3, 1], 'float32',
+        new Float32Array(9).fill(1));
+    const size: [number, number] = [3, 3];
+    const attrs = {size, alignCorners: true, halfPixelCenters: false};
+    const args = {inputs: {images}, backend, attrs};
+    const bilinear = resizeBilinear(args);
+    const nearest = resizeNearestNeighbor(args);
+    const gradArgs = {inputs: {images, dy}, backend, attrs};
+    const bilinearGrad = resizeBilinearGrad(gradArgs);
+    const nearestGrad = resizeNearestNeighborGrad(gradArgs);
+    expect(bilinear.shape).toEqual([1, 3, 3, 1]);
+    expect(nearest.shape).toEqual(bilinear.shape);
+    expect(backend.readSync(bilinear.dataId)).toEqual(
+        new Float32Array([1, 1.5, 2, 2, 2.5, 3, 3, 3.5, 4]));
+    expect(backend.readSync(nearest.dataId)).toEqual(
+        new Float32Array([1, 2, 2, 3, 4, 4, 3, 4, 4]));
+    expect(backend.readSync(bilinearGrad.dataId)).toEqual(
+        new Float32Array([2.25, 2.25, 2.25, 2.25]));
+    expect(backend.readSync(nearestGrad.dataId)).toEqual(
+        new Float32Array([1, 2, 2, 4]));
+    [images, dy, bilinear, nearest, bilinearGrad, nearestGrad]
+        .forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('preserves singleton output geometry and half-pixel differences', () => {
+    const backend = new MathBackendCPU();
+    const images = backend.makeTensorInfo([1, 2, 2, 1], 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const size: [number, number] = [1, 1];
+    const args = {inputs: {images}, backend,
+      attrs: {size, alignCorners: false, halfPixelCenters: true}};
+    const bilinear = resizeBilinear(args);
+    const nearest = resizeNearestNeighbor(args);
+    const aligned = resizeBilinear({...args,
+      attrs: {size, alignCorners: true, halfPixelCenters: false}});
+    expect(backend.readSync(bilinear.dataId)).toEqual(new Float32Array([2.5]));
+    expect(backend.readSync(nearest.dataId)).toEqual(new Float32Array([4]));
+    expect(backend.readSync(aligned.dataId)).toEqual(new Float32Array([1]));
+    [images, bilinear, nearest, aligned].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('shared CPU non-maximum suppression preparation', () => {
+  it('preserves indices, padded count, scores and input ownership', () => {
+    const backend = new MathBackendCPU();
+    const boxes = backend.makeTensorInfo([3, 4], 'float32',
+        new Float32Array([0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3]));
+    const scores = backend.makeTensorInfo([3], 'float32',
+        new Float32Array([0.9, 0.8, 0.7]));
+    const attrs = {maxOutputSize: 3, iouThreshold: 0.5, scoreThreshold: 0};
+    const args = {inputs: {boxes, scores}, backend, attrs};
+    const indices = nonMaxSuppressionV3(args);
+    const [padded, count] = nonMaxSuppressionV4({...args,
+      attrs: {...attrs, padToMaxOutputSize: true}});
+    const [scored, selectedScores] = nonMaxSuppressionV5({...args,
+      attrs: {...attrs, softNmsSigma: 0}});
+    expect(indices.dtype).toBe('int32');
+    expect(indices.shape).toEqual([2]);
+    expect(padded.shape).toEqual([3]);
+    expect(count.shape).toEqual([]);
+    expect(selectedScores.dtype).toBe('float32');
+    expect(backend.readSync(indices.dataId)).toEqual(new Int32Array([0, 2]));
+    expect(backend.readSync(padded.dataId)).toEqual(new Int32Array([0, 2, 0]));
+    expect(backend.readSync(count.dataId)).toEqual(new Int32Array([2]));
+    expect(backend.readSync(scored.dataId)).toEqual(new Int32Array([0, 2]));
+    expect(backend.readSync(selectedScores.dataId)).toEqual(
+        new Float32Array([0.9, 0.7]));
+    expect(backend.refCount(boxes.dataId)).toBe(1);
+    expect(backend.refCount(scores.dataId)).toBe(1);
+    [boxes, scores, indices, padded, count, scored, selectedScores]
+        .forEach(t => backend.disposeData(t.dataId));
     expect(backend.numDataIds()).toBe(0);
   });
 });

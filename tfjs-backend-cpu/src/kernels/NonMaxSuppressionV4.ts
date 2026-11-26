@@ -15,11 +15,11 @@
  * =============================================================================
  */
 
-import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 const nonMaxSuppressionV4Impl = kernel_impls.nonMaxSuppressionV4Impl;
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {makeSelectedIndices, readNonMaxSuppressionInputs} from './non_max_suppression_util';
 
 export function nonMaxSuppressionV4(args: {
   inputs: NonMaxSuppressionV4Inputs,
@@ -31,18 +31,15 @@ export function nonMaxSuppressionV4(args: {
   const {maxOutputSize, iouThreshold, scoreThreshold, padToMaxOutputSize} =
       attrs;
 
-  assertNotComplex(boxes, 'NonMaxSuppressionPadded');
-
-  const boxesVals = backend.requireValues(boxes.dataId) as TypedArray;
-  const scoresVals = backend.requireValues(scores.dataId) as TypedArray;
+  const [boxesVals, scoresVals] = readNonMaxSuppressionInputs(
+      boxes, scores, backend, 'NonMaxSuppressionPadded');
 
   const {selectedIndices, validOutputs} = nonMaxSuppressionV4Impl(
       boxesVals, scoresVals, maxOutputSize, iouThreshold, scoreThreshold,
       padToMaxOutputSize);
 
   return [
-    backend.makeTensorInfo(
-        [selectedIndices.length], 'int32', new Int32Array(selectedIndices)),
+    makeSelectedIndices(backend, selectedIndices),
     backend.makeTensorInfo([], 'int32', new Int32Array([validOutputs]))
   ];
 }

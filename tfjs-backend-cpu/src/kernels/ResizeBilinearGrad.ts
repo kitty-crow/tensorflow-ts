@@ -19,6 +19,7 @@ import {KernelConfig, KernelAttributes, ResizeBilinearGrad, ResizeBilinearGradAt
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
+import {resizeAxisScale} from './resize_geometry';
 
 export function resizeBilinearGrad(args: {
   inputs: ResizeBilinearGradInputs,
@@ -43,18 +44,8 @@ export function resizeBilinearGrad(args: {
   // corresponding coefficient from dy to the gradient (with some
   // interpolation).
 
-  const effectiveXSize: [number, number] = [
-    (alignCorners && yHeight > 1) ? xHeight - 1 : xHeight,
-    (alignCorners && yWidth > 1) ? xWidth - 1 : xWidth
-  ];
-
-  const effectiveYSize: [number, number] = [
-    (alignCorners && yHeight > 1) ? yHeight - 1 : yHeight,
-    (alignCorners && yWidth > 1) ? yWidth - 1 : yWidth
-  ];
-
-  const heightScale = effectiveXSize[0] / effectiveYSize[0];
-  const widthScale = effectiveXSize[1] / effectiveYSize[1];
+  const heightScale = resizeAxisScale(xHeight, yHeight, alignCorners);
+  const widthScale = resizeAxisScale(xWidth, yWidth, alignCorners);
 
   // Reference implementation
   // tslint:disable-next-line:max-line-length

@@ -19,6 +19,7 @@ import {KernelConfig, KernelAttributes, ResizeNearestNeighborGrad, ResizeNearest
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
+import {nearestSourceIndex, resizeAxisScale} from './resize_geometry';
 
 export function resizeNearestNeighborGrad(args: {
   inputs: ResizeNearestNeighborGradInputs,
@@ -42,18 +43,8 @@ export function resizeNearestNeighborGrad(args: {
   // In the backwards pass, we want to find the pixels that were generated
   // for each pixel in the input image the forward pass
 
-  const effectiveXSize: [number, number] = [
-    (alignCorners && yHeight > 1) ? xHeight - 1 : xHeight,
-    (alignCorners && yWidth > 1) ? xWidth - 1 : xWidth
-  ];
-
-  const effectiveYSize: [number, number] = [
-    (alignCorners && yHeight > 1) ? yHeight - 1 : yHeight,
-    (alignCorners && yWidth > 1) ? yWidth - 1 : yWidth
-  ];
-
-  const heightScale = effectiveXSize[0] / effectiveYSize[0];
-  const widthScale = effectiveXSize[1] / effectiveYSize[1];
+  const heightScale = resizeAxisScale(xHeight, yHeight, alignCorners);
+  const widthScale = resizeAxisScale(xWidth, yWidth, alignCorners);
 
   const invHeightScale = 1 / heightScale;
   const invWidthScale = 1 / widthScale;
@@ -92,10 +83,7 @@ export function resizeNearestNeighborGrad(args: {
 
             const dyROffset = batchOffset + dyR * dyStrides[1];
             const sourceFracRow = dyR * heightScale;
-            const sourceNearestRow = Math.min(
-                xHeight - 1,
-                alignCorners ? Math.round(sourceFracRow) :
-                               Math.floor(sourceFracRow));
+            const sourceNearestRow = nearestSourceIndex(sourceFracRow, xHeight, alignCorners);
             if (r !== sourceNearestRow) {
               continue;
             }
@@ -108,10 +96,7 @@ export function resizeNearestNeighborGrad(args: {
 
               const dyCOffset = dyROffset + dyC * dyStrides[2];
               const sourceFracCol = dyC * widthScale;
-              const sourceNearestCol = Math.min(
-                  xWidth - 1,
-                  alignCorners ? Math.round(sourceFracCol) :
-                                 Math.floor(sourceFracCol));
+              const sourceNearestCol = nearestSourceIndex(sourceFracCol, xWidth, alignCorners);
 
               if (c === sourceNearestCol) {
                 accum += dyValues[dyCOffset + d];

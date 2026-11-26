@@ -19,6 +19,7 @@ import {KernelConfig, KernelAttributes, ResizeNearestNeighbor, ResizeNearestNeig
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
+import {nearestSourceIndex, resizeAxisScale} from './resize_geometry';
 
 export function resizeNearestNeighbor(args: {
   inputs: ResizeNearestNeighborInputs,
@@ -38,18 +39,8 @@ export function resizeNearestNeighbor(args: {
   const xValues = backend.requireValues(images.dataId) as TypedArray;
   const output = new Float32Array(batch * newHeight * newWidth * numChannels);
 
-  const effectiveInputSize: [number, number] = [
-    (alignCorners && newHeight > 1) ? oldHeight - 1 : oldHeight,
-    (alignCorners && newWidth > 1) ? oldWidth - 1 : oldWidth
-  ];
-
-  const effectiveOutputSize: [number, number] = [
-    (alignCorners && newHeight > 1) ? newHeight - 1 : newHeight,
-    (alignCorners && newWidth > 1) ? newWidth - 1 : newWidth
-  ];
-
-  const effectiveRowSizeRatio = effectiveInputSize[0] / effectiveOutputSize[0];
-  const effectiveColSizeRatio = effectiveInputSize[1] / effectiveOutputSize[1];
+  const effectiveRowSizeRatio = resizeAxisScale(oldHeight, newHeight, alignCorners);
+  const effectiveColSizeRatio = resizeAxisScale(oldWidth, newWidth, alignCorners);
 
   let outputOffset = 0;
   for (let b = 0; b < batch; b++) {
@@ -58,9 +49,7 @@ export function resizeNearestNeighbor(args: {
       const sourceFracRow = halfPixelCenters ?
           effectiveRowSizeRatio * (r + 0.5) :
           effectiveRowSizeRatio * r;
-      let sourceNearestRow = Math.min(
-          oldHeight - 1,
-          alignCorners ? Math.round(sourceFracRow) : Math.floor(sourceFracRow));
+      let sourceNearestRow = nearestSourceIndex(sourceFracRow, oldHeight, alignCorners);
       if (halfPixelCenters) {
         sourceNearestRow = Math.max(0, sourceNearestRow);
       }
@@ -69,10 +58,7 @@ export function resizeNearestNeighbor(args: {
         const sourceFracCol = halfPixelCenters ?
             effectiveColSizeRatio * (c + 0.5) :
             effectiveColSizeRatio * c;
-        let sourceNearestCol = Math.min(
-            oldWidth - 1,
-            alignCorners ? Math.round(sourceFracCol) :
-                           Math.floor(sourceFracCol));
+        let sourceNearestCol = nearestSourceIndex(sourceFracCol, oldWidth, alignCorners);
         if (halfPixelCenters) {
           sourceNearestCol = Math.max(0, sourceNearestCol);
         }
