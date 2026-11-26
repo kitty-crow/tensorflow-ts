@@ -25,11 +25,11 @@ import {pow} from '../ops/pow';
 import {reshape} from '../ops/reshape';
 import {scalar} from '../ops/scalar';
 import {sub} from '../ops/sub';
-import {sum} from '../ops/sum';
 import {where} from '../ops/where';
 import {zerosLike} from '../ops/zeros_like';
 import {Tensor} from '../tensor';
 import {assertArrayLength} from '../util_base';
+import {sumBroadcastGradient} from './broadcast_grad_util';
 
 export const powGradConfig: GradConfig = {
   kernelName: Pow,
@@ -45,22 +45,16 @@ export const powGradConfig: GradConfig = {
 
     const derBase = () => {
       const expFloat = cast(exp, 'float32');
-      let res = mul(dy, mul(expFloat, pow(base, sub(expFloat, scalar(1)))));
-      const reduceAxes = broadcast_util.getReductionAxes(base.shape, outShape);
-      if (reduceAxes.length > 0) {
-        res = sum(res, reduceAxes);
-      }
-      return reshape(res, base.shape);
+      const res = mul(dy, mul(expFloat, pow(base, sub(expFloat, scalar(1)))));
+      const reduced = sumBroadcastGradient(res, base.shape, outShape);
+      return reshape(reduced, base.shape);
     };
     const derExp = () => {
       const condition = greater(base, 0);
       const logBase = where(condition, log(base), zerosLike(base));
-      let res = mul(dy, mul(y, logBase));
-      const reduceAxes = broadcast_util.getReductionAxes(exp.shape, outShape);
-      if (reduceAxes.length > 0) {
-        res = sum(res, reduceAxes);
-      }
-      return reshape(res, exp.shape);
+      const res = mul(dy, mul(y, logBase));
+      const reduced = sumBroadcastGradient(res, exp.shape, outShape);
+      return reshape(reduced, exp.shape);
     };
     return {a: derBase, b: derExp};
   }

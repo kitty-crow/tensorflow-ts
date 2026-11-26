@@ -15,38 +15,21 @@
  * =============================================================================
  */
 
-import {backend_util, Dilation2DAttrs, Dilation2DBackpropFilter, Dilation2DBackpropFilterInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Dilation2DAttrs, Dilation2DBackpropFilter, Dilation2DBackpropFilterInputs, KernelAttributes, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {dilation2DAttrs} from './native_dispatch';
 
 export const dilation2dBackpropFilterConfig: KernelConfig = {
   kernelName: Dilation2DBackpropFilter,
   backendName: 'tensorflow',
-  kernelFunc: ({inputs, backend, attrs}) => {
-    const {x, filter, dy} = inputs as Dilation2DBackpropFilterInputs;
-    const {strides, pad, dilations} = attrs as unknown as Dilation2DAttrs;
-    const {dilationHeight, dilationWidth, padInfo, strideHeight, strideWidth} =
-        backend_util.computeDilation2DInfo(
-            x.shape as [number, number, number, number],
-            filter.shape as [number, number, number], strides, pad,
-            'NHWC' /* dataFormat */, dilations);
-    const $strides = [1, strideHeight, strideWidth, 1];
-    const $dilations = [1, dilationHeight, dilationWidth, 1];
-
-    const nodeBackend = backend as NodeJSKernelBackend;
-
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', x.dtype),
-      {name: 'strides', type: nodeBackend.binding.TF_ATTR_INT, value: $strides},
-      {name: 'rates', type: nodeBackend.binding.TF_ATTR_INT, value: $dilations},
-      {
-        name: 'padding',
-        type: nodeBackend.binding.TF_ATTR_STRING,
-        value: padInfo.type
-      }
-    ];
-
-    return nodeBackend.executeSingleOutput(
-        Dilation2DBackpropFilter, opAttrs, [x, filter, dy]);
+  kernelFunc: (args: {
+    inputs: Dilation2DBackpropFilterInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<Dilation2DAttrs>
+  }) => {
+    const {x, filter, dy} = args.inputs;
+    const {backend} = args;
+    const opAttrs = dilation2DAttrs(backend, x, filter, args.attrs);
+    return backend.executeSingleOutput(Dilation2DBackpropFilter, opAttrs, [x, filter, dy]);
   }
 };

@@ -17,8 +17,8 @@
 
 import {KernelAttributes, KernelConfig, Reshape, ReshapeAttrs, ReshapeInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
-import {executeWithInt32Vector} from './native_dispatch';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeTypedInt32Vector} from './native_dispatch';
 
 export const reshapeConfig: KernelConfig = {
   kernelName: Reshape,
@@ -32,10 +32,6 @@ export const reshapeConfig: KernelConfig = {
     const {shape} = args.attrs;
 
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', x.dtype),
-      createTensorsTypeOpAttr('Tshape', 'int32')
-    ];
-    return executeWithInt32Vector(backend, Reshape, opAttrs, [x], shape);
+    return executeTypedInt32Vector(backend, Reshape, x, 'Tshape', shape);
   }
 };

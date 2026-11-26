@@ -15,37 +15,21 @@
  * =============================================================================
  */
 
-import {backend_util, Dilation2D, Dilation2DAttrs, Dilation2DInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Dilation2DAttrs, Dilation2D, Dilation2DInputs, KernelAttributes, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {dilation2DAttrs} from './native_dispatch';
 
 export const dilation2dConfig: KernelConfig = {
   kernelName: Dilation2D,
   backendName: 'tensorflow',
-  kernelFunc: ({inputs, backend, attrs}) => {
-    const {x, filter} = inputs as Dilation2DInputs;
-    const {strides, pad, dilations} = attrs as unknown as Dilation2DAttrs;
-    const {dilationHeight, dilationWidth, padInfo, strideHeight, strideWidth} =
-        backend_util.computeDilation2DInfo(
-            x.shape as [number, number, number, number],
-            filter.shape as [number, number, number], strides, pad,
-            'NHWC' /* dataFormat */, dilations);
-    const $strides = [1, strideHeight, strideWidth, 1];
-    const $dilations = [1, dilationHeight, dilationWidth, 1];
-
-    const nodeBackend = backend as NodeJSKernelBackend;
-
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', x.dtype),
-      {name: 'strides', type: nodeBackend.binding.TF_ATTR_INT, value: $strides},
-      {name: 'rates', type: nodeBackend.binding.TF_ATTR_INT, value: $dilations},
-      {
-        name: 'padding',
-        type: nodeBackend.binding.TF_ATTR_STRING,
-        value: padInfo.type
-      }
-    ];
-
-    return nodeBackend.executeSingleOutput(Dilation2D, opAttrs, [x, filter]);
+  kernelFunc: (args: {
+    inputs: Dilation2DInputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<Dilation2DAttrs>
+  }) => {
+    const {x, filter} = args.inputs;
+    const {backend} = args;
+    const opAttrs = dilation2DAttrs(backend, x, filter, args.attrs);
+    return backend.executeSingleOutput(Dilation2D, opAttrs, [x, filter]);
   }
 };

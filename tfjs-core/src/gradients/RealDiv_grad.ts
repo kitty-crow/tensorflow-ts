@@ -22,11 +22,10 @@ import {cast} from '../ops/cast';
 import {div} from '../ops/div';
 import {mul} from '../ops/mul';
 import {neg} from '../ops/neg';
-import {reshape} from '../ops/reshape';
 import {square} from '../ops/square';
-import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
 import {assertArrayLength} from '../util_base';
+import {reduceBroadcastGradient} from './broadcast_grad_util';
 
 export const divGradConfig: GradConfig = {
   kernelName: RealDiv,
@@ -38,18 +37,11 @@ export const divGradConfig: GradConfig = {
         broadcast_util.assertAndGetBroadcastShape(a.shape, b.shape);
     const derA = () => {
       const res = div(dy, cast(b, 'float32'));
-      const reduceAxes = broadcast_util.getReductionAxes(a.shape, outShape);
-      if (reduceAxes.length > 0) {
-        return reshape(sum(res, reduceAxes), a.shape);
-      }
-      return res;
+      return reduceBroadcastGradient(res, a.shape, outShape);
     };
     const derB = () => {
       let res = mul(dy, cast(a, 'float32'));
-      const reduceAxes = broadcast_util.getReductionAxes(b.shape, outShape);
-      if (reduceAxes.length > 0) {
-        res = reshape(sum(res, reduceAxes), b.shape);
-      }
+      res = reduceBroadcastGradient(res, b.shape, outShape);
       const tmp = square(b);
       return neg(div(res, cast(tmp, 'float32')));
     };

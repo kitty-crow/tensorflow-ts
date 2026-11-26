@@ -16,7 +16,7 @@
  */
 
 import {ClipByValue, ClipByValueAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {greaterEqual} from '../ops/greater_equal';
 import {lessEqual} from '../ops/less_equal';
 import {logicalAnd} from '../ops/logical_and';
@@ -28,10 +28,10 @@ import {assertArrayLength} from '../util_base';
 export const clipByValueGradConfig: GradConfig = {
   kernelName: ClipByValue,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<ClipByValueAttrs>) => {
     assertArrayLength(saved, 1);
     const [x] = saved;
-    const {clipValueMin, clipValueMax} = attrs as unknown as ClipByValueAttrs;
+    const {clipValueMin, clipValueMax} = attrs;
     return {
       x: () => where(
           logicalAnd(greaterEqual(x, clipValueMin), lessEqual(x, clipValueMax)),

@@ -17,7 +17,8 @@
 
 import {KernelAttributes, KernelConfig, ResizeBilinearGrad, ResizeBilinearGradAttrs, ResizeBilinearGradInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {resizeGradientAttrs} from './native_dispatch';
 
 export const resizeBilinearGradConfig: KernelConfig = {
   kernelName: ResizeBilinearGrad,
@@ -30,13 +31,7 @@ export const resizeBilinearGradConfig: KernelConfig = {
     const backend = args.backend;
     const {alignCorners} = args.attrs;
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', images.dtype), {
-        name: 'align_corners',
-        type: backend.binding.TF_ATTR_BOOL,
-        value: alignCorners
-      }
-    ];
+    const opAttrs = resizeGradientAttrs(backend, images.dtype, alignCorners);
     return backend.executeSingleOutput(
         ResizeBilinearGrad, opAttrs, [dy, images]);
   }

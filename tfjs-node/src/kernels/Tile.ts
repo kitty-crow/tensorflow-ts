@@ -17,8 +17,8 @@
 
 import {KernelAttributes, KernelConfig, Tile, TileAttrs, TileInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
-import {executeWithInt32Vector} from './native_dispatch';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeTypedInt32Vector} from './native_dispatch';
 
 export const tileConfig: KernelConfig = {
   kernelName: Tile,
@@ -31,10 +31,6 @@ export const tileConfig: KernelConfig = {
     const backend = args.backend;
     const {reps} = args.attrs;
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', x.dtype),
-      createTensorsTypeOpAttr('Tmultiples', 'int32')
-    ];
-    return executeWithInt32Vector(backend, Tile, opAttrs, [x], reps);
+    return executeTypedInt32Vector(backend, Tile, x, 'Tmultiples', reps);
   }
 };

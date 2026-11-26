@@ -15,45 +15,31 @@
  * =============================================================================
  */
 
-import {KernelConfig, NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs, scalar, Tensor1D, Tensor2D} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {withNmsInputs} from './native_dispatch';
 
-// TODO(nsthorat, dsmilkov): Remove dependency on tensors, use dataId.
 export const nonMaxSuppressionV4Config: KernelConfig = {
   kernelName: NonMaxSuppressionV4,
   backendName: 'tensorflow',
-  kernelFunc: ({inputs, backend, attrs}) => {
-    const {boxes, scores} = inputs as NonMaxSuppressionV4Inputs;
-    const {maxOutputSize, iouThreshold, scoreThreshold, padToMaxOutputSize} =
-        attrs as unknown as NonMaxSuppressionV4Attrs;
-    const maxOutputSizeTensor = scalar(maxOutputSize, 'int32');
-    const iouThresholdTensor = scalar(iouThreshold, 'float32');
-    const scoreThresholdTensor = scalar(scoreThreshold, 'float32');
-
-    const nodeBackend = backend as NodeJSKernelBackend;
-
+  kernelFunc: (args: {
+    inputs: NonMaxSuppressionV4Inputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<NonMaxSuppressionV4Attrs>
+  }) => {
+    const {boxes, scores} = args.inputs;
+    const {backend} = args;
     const opAttrs = [
       createTensorsTypeOpAttr('T', boxes.dtype),
       createTensorsTypeOpAttr('T_threshold', 'float32'), {
         name: 'pad_to_max_output_size',
-        type: nodeBackend.binding.TF_ATTR_BOOL,
-        value: padToMaxOutputSize
+        type: backend.binding.TF_ATTR_BOOL,
+        value: args.attrs.padToMaxOutputSize
       }
     ];
-
-    const [selectedIndices, validOutputs] = nodeBackend.executeMultipleOutputs(
-        'NonMaxSuppressionV4', opAttrs,
-        [
-          boxes as Tensor2D, scores as Tensor1D, maxOutputSizeTensor,
-          iouThresholdTensor, scoreThresholdTensor
-        ],
-        2);
-
-    maxOutputSizeTensor.dispose();
-    iouThresholdTensor.dispose();
-    scoreThresholdTensor.dispose();
-
+    const [selectedIndices, validOutputs] = withNmsInputs(
+        boxes, scores, args.attrs, inputs =>
+            backend.executeMultipleOutputs(NonMaxSuppressionV4, opAttrs, inputs, 2));
     return [selectedIndices, validOutputs];
   }
 };

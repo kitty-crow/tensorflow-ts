@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {LRN, LRNAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {localResponseNormalizationBackprop} from '../ops/local_response_normalization_backprop';
 import {Tensor, Tensor4D} from '../tensor';
 
@@ -23,9 +23,9 @@ export const lrnGradConfig: GradConfig = {
   kernelName: LRN,
   inputsToSave: ['x'],
   outputsToSave: [true],
-  gradFunc: (dy: Tensor4D, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor4D, saved: Tensor[], attrs: KernelAttributes<LRNAttrs>) => {
     const [x, y] = saved as [Tensor4D, Tensor4D];
-    const {depthRadius, bias, alpha, beta} = attrs as unknown as LRNAttrs;
+    const {depthRadius, bias, alpha, beta} = attrs;
 
     return {
       x: () => localResponseNormalizationBackprop(

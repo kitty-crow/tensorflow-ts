@@ -18,9 +18,9 @@ import {Add} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
 import * as broadcast_util from '../ops/broadcast_util';
 import {reshape} from '../ops/reshape';
-import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
 import {assertArrayLength} from '../util_base';
+import {sumBroadcastGradient} from './broadcast_grad_util';
 
 export const addGradConfig: GradConfig = {
   kernelName: Add,
@@ -32,20 +32,14 @@ export const addGradConfig: GradConfig = {
         broadcast_util.assertAndGetBroadcastShape(a.shape, b.shape);
 
     const derA = () => {
-      let res = dy;
-      const reduceAxes = broadcast_util.getReductionAxes(a.shape, outShape);
-      if (reduceAxes.length > 0) {
-        res = sum(res, reduceAxes);
-      }
-      return reshape(res, a.shape);
+      const res = dy;
+      const reduced = sumBroadcastGradient(res, a.shape, outShape);
+      return reshape(reduced, a.shape);
     };
     const derB = () => {
-      let res = dy;
-      const reduceAxes = broadcast_util.getReductionAxes(b.shape, outShape);
-      if (reduceAxes.length > 0) {
-        res = sum(res, reduceAxes);
-      }
-      return reshape(res, b.shape);
+      const res = dy;
+      const reduced = sumBroadcastGradient(res, b.shape, outShape);
+      return reshape(reduced, b.shape);
     };
 
     return {a: derA, b: derB};

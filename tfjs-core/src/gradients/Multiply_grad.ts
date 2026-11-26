@@ -17,13 +17,12 @@
 
 import {Multiply} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
-import {assertAndGetBroadcastShape, getReductionAxes} from '../ops/broadcast_util';
+import {assertAndGetBroadcastShape} from '../ops/broadcast_util';
 import {cast} from '../ops/cast';
 import {mul} from '../ops/mul';
-import {reshape} from '../ops/reshape';
-import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
 import {assertArrayLength} from '../util_base';
+import {reduceBroadcastGradient} from './broadcast_grad_util';
 
 export const multiplyGradConfig: GradConfig = {
   kernelName: Multiply,
@@ -35,19 +34,11 @@ export const multiplyGradConfig: GradConfig = {
 
     const derA = () => {
       const res = mul(dy, cast(b, 'float32'));
-      const reduceAxes = getReductionAxes(a.shape, outShape);
-      if (reduceAxes.length > 0) {
-        return reshape(sum(res, reduceAxes), a.shape);
-      }
-      return res;
+      return reduceBroadcastGradient(res, a.shape, outShape);
     };
     const derB = () => {
       const res = mul(dy, cast(a, 'float32'));
-      const reduceAxes = getReductionAxes(b.shape, outShape);
-      if (reduceAxes.length > 0) {
-        return reshape(sum(res, reduceAxes), b.shape);
-      }
-      return res;
+      return reduceBroadcastGradient(res, b.shape, outShape);
     };
     return {a: derA, b: derB};
   }

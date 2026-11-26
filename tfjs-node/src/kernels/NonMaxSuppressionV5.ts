@@ -15,53 +15,26 @@
  * =============================================================================
  */
 
-import {KernelConfig, NamedAttrMap, NamedTensorInfoMap, scalar, Tensor1D, Tensor2D, TensorInfo} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {withNmsInputs} from './native_dispatch';
 
-interface NonMaxSuppressionWithScoreInputs extends NamedTensorInfoMap {
-  boxes: TensorInfo;
-  scores: TensorInfo;
-}
-
-interface NonMaxSuppressionWithScoreAttrs extends NamedAttrMap {
-  maxOutputSize: number;
-  iouThreshold: number;
-  scoreThreshold: number;
-  softNmsSigma: number;
-}
-
-// TODO(nsthorat, dsmilkov): Remove dependency on tensors, use dataId.
 export const nonMaxSuppressionV5Config: KernelConfig = {
-  kernelName: 'NonMaxSuppressionV5',
+  kernelName: NonMaxSuppressionV5,
   backendName: 'tensorflow',
-  kernelFunc: ({inputs, backend, attrs}) => {
-    const {boxes, scores} = inputs as NonMaxSuppressionWithScoreInputs;
-    const {maxOutputSize, iouThreshold, scoreThreshold, softNmsSigma} =
-        attrs as NonMaxSuppressionWithScoreAttrs;
-    const maxOutputSizeTensor = scalar(maxOutputSize, 'int32');
-    const iouThresholdTensor = scalar(iouThreshold);
-    const scoreThresholdTensor = scalar(scoreThreshold);
-    const softNmsSigmaTensor = scalar(softNmsSigma);
+  kernelFunc: (args: {
+    inputs: NonMaxSuppressionV5Inputs, backend: NodeJSKernelBackend,
+    attrs: KernelAttributes<NonMaxSuppressionV5Attrs>
+  }) => {
+    const {boxes, scores} = args.inputs;
+    const {backend} = args;
     const opAttrs = [createTensorsTypeOpAttr('T', boxes.dtype)];
-
-    const nodeBackend = backend as NodeJSKernelBackend;
-
-    const [selectedIndices, selectedScores, validOutputs] =
-        nodeBackend.executeMultipleOutputs(
-            'NonMaxSuppressionV5', opAttrs,
-            [
-              boxes as Tensor2D, scores as Tensor1D, maxOutputSizeTensor,
-              iouThresholdTensor, scoreThresholdTensor, softNmsSigmaTensor
-            ],
-            3);
-
-    maxOutputSizeTensor.dispose();
-    iouThresholdTensor.dispose();
-    scoreThresholdTensor.dispose();
-    softNmsSigmaTensor.dispose();
+    const [selectedIndices, selectedScores, validOutputs] = withNmsInputs(
+        boxes, scores, args.attrs, inputs =>
+            backend.executeMultipleOutputs(NonMaxSuppressionV5, opAttrs, inputs, 3),
+        [args.attrs.softNmsSigma]);
     validOutputs.dispose();
-
     return [selectedIndices, selectedScores];
   }
 };

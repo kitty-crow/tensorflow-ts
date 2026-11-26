@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {Conv2D, Conv2DAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {conv2DBackpropFilter} from '../ops/conv2d_backprop_filter';
 import {conv2DBackpropInput} from '../ops/conv2d_backprop_input';
 import * as conv_util from '../ops/conv_util';
@@ -25,10 +25,10 @@ import * as util from '../util';
 export const conv2DGradConfig: GradConfig = {
   kernelName: Conv2D,
   inputsToSave: ['x', 'filter'],
-  gradFunc: (dy: Tensor4D, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor4D, saved: Tensor[], attrs: KernelAttributes<Conv2DAttrs>) => {
     const [x4D, $filter] = saved as [Tensor4D, Tensor4D];
     const {dilations, strides, pad, dataFormat} =
-        attrs as unknown as Conv2DAttrs;
+        attrs;
 
     util.assert(
         conv_util.tupleValuesAreOne(dilations),

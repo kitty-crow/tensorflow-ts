@@ -16,14 +16,14 @@
  */
 
 import {SpaceToBatchND, SpaceToBatchNDAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {batchToSpaceND} from '../ops/batch_to_space_nd';
 import {Tensor} from '../tensor';
 
 export const spaceToBatchNDGradConfig: GradConfig = {
   kernelName: SpaceToBatchND,
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
-    const {blockShape, paddings} = attrs as unknown as SpaceToBatchNDAttrs;
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<SpaceToBatchNDAttrs>) => {
+    const {blockShape, paddings} = attrs;
     return {x: () => batchToSpaceND(dy, blockShape, paddings)};
   }
 };

@@ -16,7 +16,7 @@
  */
 
 import {Cumsum, CumsumAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {getAxesPermutation} from '../ops/axis_util';
 import {cumsum} from '../ops/cumsum';
 import {transpose} from '../ops/transpose';
@@ -26,11 +26,11 @@ import {assertArrayLength} from '../util_base';
 export const cumsumGradConfig: GradConfig = {
   kernelName: Cumsum,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<CumsumAttrs>) => {
     assertArrayLength(saved, 1);
     const [x] = saved;
     const {axis, exclusive, reverse}: CumsumAttrs =
-        attrs as unknown as CumsumAttrs;
+        attrs;
 
     return {
       x: () => {

@@ -16,15 +16,15 @@
  */
 
 import {Pack, PackAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {unstack} from '../ops/unstack';
 import {Tensor} from '../tensor';
 
 export const packGradConfig: GradConfig = {
   kernelName: Pack,
   saveAllInputs: true,
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
-    const {axis} = attrs as unknown as PackAttrs;
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<PackAttrs>) => {
+    const {axis} = attrs;
     const derTensors = unstack(dy, axis);
     return derTensors.map(t => () => t) as {};
   }

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, DataType, KernelAttributes, KernelConfig, ResizeBilinearAttrs, ResizeBilinearInputs, scalar, Tensor, TensorInfo, tensor1d, util} from '@tensorflow/tfjs';
+import {backend_util, DataType, Dilation2DAttrs, KernelAttributes, KernelConfig, ResizeBilinearAttrs, ResizeBilinearInputs, scalar, Tensor, TensorInfo, tensor1d, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 import {TFEOpAttr} from '../tfjs_binding';
@@ -217,5 +217,83 @@ export function indexedTensorAttrs(valueAttr: 'T'|'Tparams', dtype: DataType): T
   return [
     createTensorsTypeOpAttr(valueAttr, dtype),
     createTensorsTypeOpAttr('Tindices', 'int32')
+  ];
+}
+
+/** The NMS versions share the scalar operands, including their exact dtypes. */
+export function withNmsInputs<T>(
+    boxes: TensorInfo, scores: TensorInfo,
+    {maxOutputSize, iouThreshold, scoreThreshold}: {
+      maxOutputSize: number, iouThreshold: number, scoreThreshold: number
+    }, execute: (inputs: [TensorInfo, TensorInfo, ...Tensor[]]) => T,
+    extraThresholds: number[] = []): T {
+  const owned: Tensor[] = [];
+  try {
+    owned.push(scalar(maxOutputSize, 'int32'));
+    owned.push(scalar(iouThreshold, 'float32'));
+    owned.push(scalar(scoreThreshold, 'float32'));
+    for (const threshold of extraThresholds) {
+      owned.push(scalar(threshold, 'float32'));
+    }
+    return execute([boxes, scores, ...owned]);
+  } finally {
+    owned.forEach(tensor => tensor.dispose());
+  }
+}
+
+/** Dilation forward and both adjoints use the same NHWC native attributes. */
+export function dilation2DAttrs(
+    backend: NodeJSKernelBackend, x: TensorInfo, filter: TensorInfo,
+    {strides, pad, dilations}: Dilation2DAttrs): TFEOpAttr[] {
+  const {dilationHeight, dilationWidth, padInfo, strideHeight, strideWidth} =
+      backend_util.computeDilation2DInfo(
+          x.shape as [number, number, number, number],
+          filter.shape as [number, number, number], strides, pad, 'NHWC',
+          dilations);
+  return [
+    createTensorsTypeOpAttr('T', x.dtype),
+    {name: 'strides', type: backend.binding.TF_ATTR_INT,
+      value: [1, strideHeight, strideWidth, 1]},
+    {name: 'rates', type: backend.binding.TF_ATTR_INT,
+      value: [1, dilationHeight, dilationWidth, 1]},
+    {name: 'padding', type: backend.binding.TF_ATTR_STRING, value: padInfo.type}
+  ];
+}
+
+/** Conv3D and its adjoints agree on layout, stride, padding and dilation. */
+export function conv3DAttrs(
+    backend: NodeJSKernelBackend, dtype: DataType,
+    info: backend_util.Conv3DInfo): TFEOpAttr[] {
+  if (!backend.isGPUPackage && info.dilationDepth > 1) {
+    throw new Error('CPU Dilation depth must be 1');
+  }
+  return [
+    createTensorsTypeOpAttr('T', dtype),
+    {name: 'strides', type: backend.binding.TF_ATTR_INT,
+      value: [1, info.strideDepth, info.strideHeight, info.strideWidth, 1]},
+    {name: 'padding', type: backend.binding.TF_ATTR_STRING, value: info.padInfo.type},
+    {name: 'data_format', type: backend.binding.TF_ATTR_STRING,
+      value: info.dataFormat === 'channelsLast' ? 'NDHWC' : 'NCDHW'},
+    {name: 'dilations', type: backend.binding.TF_ATTR_INT,
+      value: [1, info.dilationDepth, info.dilationHeight, info.dilationWidth, 1]}
+  ];
+}
+
+/** Native shape/perm/multiples vectors all use int32; the attr name is distinct. */
+export function executeTypedInt32Vector(
+    backend: NodeJSKernelBackend, name: string, x: TensorInfo,
+    vectorAttr: 'Tshape'|'Tperm'|'Tmultiples', values: number[]): TensorInfo {
+  return executeWithInt32Vector(backend, name, [
+    createTensorsTypeOpAttr('T', x.dtype),
+    createTensorsTypeOpAttr(vectorAttr, 'int32')
+  ], [x], values);
+}
+
+/** Both resize adjoints use the same dtype and align-corners flag. */
+export function resizeGradientAttrs(
+    backend: NodeJSKernelBackend, dtype: DataType, alignCorners: boolean): TFEOpAttr[] {
+  return [
+    createTensorsTypeOpAttr('T', dtype),
+    {name: 'align_corners', type: backend.binding.TF_ATTR_BOOL, value: alignCorners}
   ];
 }

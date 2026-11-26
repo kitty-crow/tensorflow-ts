@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {LeakyRelu, LeakyReluAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {greater} from '../ops/greater';
 import {mul} from '../ops/mul';
 import {where} from '../ops/where';
@@ -25,10 +25,10 @@ import {assertArrayLength} from '../util_base';
 export const leakyReluGradConfig: GradConfig = {
   kernelName: LeakyRelu,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<LeakyReluAttrs>) => {
     assertArrayLength(saved, 1);
     const [x] = saved;
-    const {alpha} = attrs as unknown as LeakyReluAttrs;
+    const {alpha} = attrs;
     const mask = greater(x, 0);
 
     // Returns `gradients * (features > 0) + alpha * gradients * (features <=

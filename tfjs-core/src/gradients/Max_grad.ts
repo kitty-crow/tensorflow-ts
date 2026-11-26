@@ -16,7 +16,7 @@
  */
 
 import {Max, MaxAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {Tensor} from '../tensor';
 import * as util from '../util';
 
@@ -27,8 +27,8 @@ export const maxGradConfig: GradConfig = {
   kernelName: Max,
   inputsToSave: ['x'],
   outputsToSave: [true],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
-    const maxAttrs: MaxAttrs = attrs as unknown as MaxAttrs;
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<MaxAttrs>) => {
+    const maxAttrs: MaxAttrs = attrs;
     const {reductionIndices} = maxAttrs;
     assertArrayLength(saved, 2);
     const x = saved[0];

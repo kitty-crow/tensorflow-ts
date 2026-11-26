@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {DepthwiseConv2dNative, DepthwiseConv2dNativeAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import * as conv_util from '../ops/conv_util';
 import {depthwiseConv2dNativeBackpropFilter} from '../ops/depthwise_conv2d_native_backprop_filter';
 import {depthwiseConv2dNativeBackpropInput} from '../ops/depthwise_conv2d_native_backprop_input';
@@ -25,9 +25,9 @@ import * as util from '../util';
 export const depthwiseConv2dNativeGradConfig: GradConfig = {
   kernelName: DepthwiseConv2dNative,
   inputsToSave: ['x', 'filter'],
-  gradFunc: (dy: Tensor4D, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor4D, saved: Tensor[], attrs: KernelAttributes<DepthwiseConv2dNativeAttrs>) => {
     const {dilations, strides, pad, dimRoundingMode} =
-        attrs as unknown as DepthwiseConv2dNativeAttrs;
+        attrs;
     const $dilations = dilations == null ? [1, 1] as[number,number] : dilations;
 
     util.assert(

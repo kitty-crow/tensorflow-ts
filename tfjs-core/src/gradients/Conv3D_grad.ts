@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {Conv3D, Conv3DAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {conv3DBackpropFilter} from '../ops/conv3d_backprop_filter';
 import {conv3DBackpropInput} from '../ops/conv3d_backprop_input';
 import {tupleValuesAreOne} from '../ops/conv_util';
@@ -26,8 +26,8 @@ import {assertArrayLength} from '../util_base';
 export const conv3DGradConfig: GradConfig = {
   kernelName: Conv3D,
   inputsToSave: ['x', 'filter'],
-  gradFunc: (dy: Tensor5D, saved: Tensor[], attrs: NamedAttrMap) => {
-    const {dilations, strides, pad} = attrs as unknown as Conv3DAttrs;
+  gradFunc: (dy: Tensor5D, saved: Tensor[], attrs: KernelAttributes<Conv3DAttrs>) => {
+    const {dilations, strides, pad} = attrs;
     util.assert(
         tupleValuesAreOne(dilations),
         () =>

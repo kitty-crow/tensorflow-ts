@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {FusedBatchNorm, FusedBatchNormAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {add} from '../ops/add';
 import {getReductionAxes} from '../ops/broadcast_util';
 import {mul} from '../ops/mul';
@@ -33,8 +33,8 @@ export const fusedBatchNormGradConfig: GradConfig = {
   kernelName: FusedBatchNorm,
   inputsToSave: ['x', 'mean', 'variance', 'scale'],
   gradFunc: <R extends Rank>(
-      dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
-    const {varianceEpsilon} = attrs as unknown as FusedBatchNormAttrs;
+      dy: Tensor, saved: Tensor[], attrs: KernelAttributes<FusedBatchNormAttrs>) => {
+    const {varianceEpsilon} = attrs;
     assertArrayLength(saved, 4);
     const [x, mean, variance, scale] = saved;
 

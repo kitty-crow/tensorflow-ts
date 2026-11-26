@@ -17,7 +17,8 @@
 
 import {backend_util, Conv3DBackpropFilterV2, Conv3DBackpropFilterV2Attrs, Conv3DBackpropFilterV2Inputs, KernelAttributes, KernelConfig, tensor1d} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {conv3DAttrs} from './native_dispatch';
 
 export const conv3DBackpropFilterV2Config: KernelConfig = {
   kernelName: Conv3DBackpropFilterV2,
@@ -37,30 +38,7 @@ export const conv3DBackpropFilterV2Config: KernelConfig = {
         x.shape as [number, number, number, number, number], filterShape,
         strides, dilations, pad);
 
-    const $strides = [
-      1, convInfo.strideDepth, convInfo.strideHeight, convInfo.strideWidth, 1
-    ];
-    const padding = convInfo.padInfo.type;
-    const dataFormat =
-        convInfo.dataFormat === 'channelsLast' ? 'NDHWC' : 'NCDHW';
-
-    if (!backend.isGPUPackage && convInfo.dilationDepth > 1) {
-      throw new Error('CPU Dilation depth must be 1');
-    }
-    const $dilations = [
-      1, convInfo.dilationDepth, convInfo.dilationHeight,
-      convInfo.dilationWidth, 1
-    ];
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', x.dtype),
-      {name: 'strides', type: backend.binding.TF_ATTR_INT, value: $strides},
-      {name: 'padding', type: backend.binding.TF_ATTR_STRING, value: padding}, {
-        name: 'data_format',
-        type: backend.binding.TF_ATTR_STRING,
-        value: dataFormat
-      },
-      {name: 'dilations', type: backend.binding.TF_ATTR_INT, value: $dilations}
-    ];
+    const opAttrs = conv3DAttrs(backend, x.dtype, convInfo);
     const filterSizes = tensor1d(filterShape, 'int32');
     const res = backend.executeSingleOutput(
         Conv3DBackpropFilterV2, opAttrs, [x, filterSizes, dy]);

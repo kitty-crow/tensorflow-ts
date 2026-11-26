@@ -16,7 +16,7 @@
  */
 
 import {BatchMatMul, BatchMatMulAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {matMul} from '../ops/mat_mul';
 import {Tensor} from '../tensor';
 import {assertArrayLength} from '../util_base';
@@ -24,11 +24,11 @@ import {assertArrayLength} from '../util_base';
 export const batchMatMulGradConfig: GradConfig = {
   kernelName: BatchMatMul,
   inputsToSave: ['a', 'b'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<BatchMatMulAttrs>) => {
     assertArrayLength(saved, 2);
     const [a, b] = saved;
 
-    const {transposeA, transposeB} = attrs as unknown as BatchMatMulAttrs;
+    const {transposeA, transposeB} = attrs;
 
     if (!transposeA && !transposeB) {
       return {

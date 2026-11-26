@@ -16,7 +16,7 @@
  */
 
 import {Sum, SumAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {mul} from '../ops/mul';
 import {ones} from '../ops/ones';
 import {reshape} from '../ops/reshape';
@@ -27,11 +27,11 @@ import {assertArrayLength} from '../util_base';
 export const sumGradConfig: GradConfig = {
   kernelName: Sum,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<SumAttrs>) => {
     assertArrayLength(saved, 1);
     const [x] = saved;
     const expandedDyShape = x.shape.slice();
-    const {axis} = attrs as unknown as SumAttrs;
+    const {axis} = attrs;
 
     const axes = parseAxisParam(axis, x.shape);
     axes.forEach(axis => {

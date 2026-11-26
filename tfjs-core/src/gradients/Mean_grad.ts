@@ -16,7 +16,7 @@
  */
 
 import {Mean, MeanAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {computeOutAndReduceShapes} from '../ops/axis_util';
 import {div} from '../ops/div';
 import {mul} from '../ops/mul';
@@ -29,10 +29,10 @@ import {assertArrayLength} from '../util_base';
 export const meanGradConfig: GradConfig = {
   kernelName: Mean,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<MeanAttrs>) => {
     assertArrayLength(saved, 1);
     const [x] = saved;
-    const {axis} = attrs as unknown as MeanAttrs;
+    const {axis} = attrs;
     const axes = util.parseAxisParam(axis, x.shape);
     const shapes = computeOutAndReduceShapes(x.shape, axes);
     const reduceShape = shapes[1];

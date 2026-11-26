@@ -14,8 +14,10 @@
  * limitations under the License.
  * =============================================================================
  */
-import {ArgMax, ArgMin, Max, MaxAttrs} from './kernel_names';
-import {KernelAttributes, KernelConfig, KernelFunc} from './kernel_registry';
+import {ArgMax, ArgMin, Max, MaxAttrs, Reshape, Sum} from './kernel_names';
+import {ENGINE} from './engine';
+import {reduceBroadcastGradient, sumBroadcastGradient} from './gradients/broadcast_grad_util';
+import {GradConfig, KernelAttributes, KernelConfig, KernelFunc} from './kernel_registry';
 import {argMaxGradConfig} from './gradients/ArgMax_grad';
 import {argMinGradConfig} from './gradients/ArgMin_grad';
 import {getShapeForBatchMatMul} from './ops/conv_util';
@@ -99,6 +101,26 @@ describe('kernel signature and saved-tensor contracts', () => {
     expect(config.kernelFunc({inputs, backend, attrs})).toBe(input);
   });
 
+  it('retains typed gradient attributes at the registry boundary', () => {
+    interface GradientAttrs {
+      axis: number;
+      keepDims?: boolean;
+    }
+    const x = new Tensor<Rank.R1>([2], 'float32', {}, 14);
+    const attrs: KernelAttributes<GradientAttrs> = {axis: 0};
+    const config: GradConfig = {
+      kernelName: 'TypedGradientTest',
+      gradFunc: (dy: Tensor, saved: Tensor[], params: KernelAttributes<GradientAttrs>) => {
+        expect(params).toBe(attrs);
+        expect(params.axis).toBe(0);
+        expect('keepDims' in params).toBeFalse();
+        expect(saved).toEqual([x]);
+        return {x: () => dy};
+      }
+    };
+    expect(Object.keys(config.gradFunc(x, [x], attrs))).toEqual(['x']);
+  });
+
   it('rejects missing or surplus saved tensors before gradient dispatch', () => {
     const tensor = new Tensor<Rank.R1>([1], 'float32', {}, 0);
     expect(() => maximumGradConfig.gradFunc(tensor, [tensor], {}))
@@ -129,5 +151,31 @@ describe('shared backend and extrema contracts', () => {
     expect(argMinGradConfig.gradFunc).toBe(argMaxGradConfig.gradFunc);
     expect(() => argMinGradConfig.gradFunc(x, [], {})).toThrowError();
     expect(Object.keys(argMaxGradConfig.gradFunc(x, [x], {}))).toEqual(['x']);
+  });
+});
+
+describe('shared broadcast gradient reduction', () => {
+  it('retains identity without a broadcast reduction', () => {
+    const gradient = new Tensor<Rank.R1>([2], 'float32', {}, 10);
+    const dispatch = spyOn(ENGINE, 'runKernel');
+    expect(sumBroadcastGradient(gradient, [2], [2])).toBe(gradient);
+    expect(reduceBroadcastGradient(gradient, [2], [2])).toBe(gradient);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('sums broadcast axes and restores only the requested shape', () => {
+    const gradient = new Tensor<Rank.R2>([3, 2], 'float32', {}, 11);
+    const reduced = new Tensor<Rank.R1>([2], 'float32', {}, 12);
+    const restored = new Tensor<Rank.R2>([1, 2], 'float32', {}, 13);
+    spyOn(ENGINE, 'startScope');
+    spyOn(ENGINE, 'endScope');
+    const dispatch = spyOn(ENGINE, 'runKernel').and.returnValues(reduced, reduced, restored);
+    expect(sumBroadcastGradient(gradient, [1, 2], [3, 2])).toBe(reduced);
+    expect(reduceBroadcastGradient(gradient, [1, 2], [3, 2])).toBe(restored);
+    expect(dispatch.calls.allArgs()).toEqual([
+      [Sum, {x: gradient}, {axis: [0], keepDims: false}],
+      [Sum, {x: gradient}, {axis: [0], keepDims: false}],
+      [Reshape, {x: reduced}, {shape: [1, 2]}]
+    ]);
   });
 });

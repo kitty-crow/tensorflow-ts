@@ -16,7 +16,7 @@
  */
 
 import {Slice, SliceAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {pad} from '../ops/pad';
 import {parseSliceParams} from '../ops/slice_util';
 import {Tensor} from '../tensor';
@@ -25,10 +25,10 @@ import {assertArrayLength} from '../util_base';
 export const sliceGradConfig: GradConfig = {
   kernelName: Slice,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<SliceAttrs>) => {
     assertArrayLength(saved, 1);
     const [x] = saved;
-    const {begin, size} = attrs as unknown as SliceAttrs;
+    const {begin, size} = attrs;
 
     const inputShape = x.shape;
     const [begin_, size_] = parseSliceParams(x, begin, size);

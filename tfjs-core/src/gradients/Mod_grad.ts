@@ -17,15 +17,14 @@
 
 import {Mod} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
-import {assertAndGetBroadcastShape, getReductionAxes} from '../ops/broadcast_util';
+import {assertAndGetBroadcastShape} from '../ops/broadcast_util';
 import {div} from '../ops/div';
 import {floor} from '../ops/floor';
 import {mul} from '../ops/mul';
 import {neg} from '../ops/neg';
-import {reshape} from '../ops/reshape';
-import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
 import {assertArrayLength} from '../util_base';
+import {reduceBroadcastGradient} from './broadcast_grad_util';
 
 export const modGradConfig: GradConfig = {
   kernelName: Mod,
@@ -36,19 +35,11 @@ export const modGradConfig: GradConfig = {
     const outShape = assertAndGetBroadcastShape(a.shape, b.shape);
 
     const derA = () => {
-      const reduceAxes = getReductionAxes(a.shape, outShape);
-      if (reduceAxes.length > 0) {
-        return reshape(sum(dy, reduceAxes), a.shape);
-      }
-      return dy;
+      return reduceBroadcastGradient(dy, a.shape, outShape);
     };
     const derB = () => {
       const res = mul(dy, neg(floor(div(a, b))));
-      const reduceAxes = getReductionAxes(b.shape, outShape);
-      if (reduceAxes.length > 0) {
-        return reshape(sum(res, reduceAxes), b.shape);
-      }
-      return res;
+      return reduceBroadcastGradient(res, b.shape, outShape);
     };
     return {a: derA, b: derB};
   }

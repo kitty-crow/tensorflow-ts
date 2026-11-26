@@ -16,15 +16,15 @@
  */
 
 import {Transpose, TransposeAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import * as axis_util from '../ops/axis_util';
 import {transpose} from '../ops/transpose';
 import {Tensor} from '../tensor';
 
 export const transposeGradConfig: GradConfig = {
   kernelName: Transpose,
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
-    const transposeAttrs: TransposeAttrs = attrs as unknown as TransposeAttrs;
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<TransposeAttrs>) => {
+    const transposeAttrs: TransposeAttrs = attrs;
     const {perm} = transposeAttrs;
     const undoPerm = axis_util.getUndoAxesPermutation(perm);
     return {x: () => transpose(dy, undoPerm)};

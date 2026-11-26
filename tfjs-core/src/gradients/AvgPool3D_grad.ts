@@ -16,17 +16,17 @@
  */
 
 import {AvgPool3D, AvgPool3DAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {avgPool3dGrad} from '../ops/avg_pool_3d_grad';
 import {Tensor, Tensor5D} from '../tensor';
 
 export const avgPool3DGradConfig: GradConfig = {
   kernelName: AvgPool3D,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<AvgPool3DAttrs>) => {
     const [x] = saved as [Tensor5D];
     const {filterSize, strides, pad, dimRoundingMode} =
-        attrs as unknown as AvgPool3DAttrs;
+        attrs;
 
     return {
       x: () => avgPool3dGrad(

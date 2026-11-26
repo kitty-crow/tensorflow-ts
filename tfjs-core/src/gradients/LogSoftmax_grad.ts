@@ -16,7 +16,7 @@
  */
 
 import {LogSoftmax, LogSoftmaxAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {exp} from '../ops/exp';
 import {mul} from '../ops/mul';
 import {sub} from '../ops/sub';
@@ -28,10 +28,10 @@ export const logSoftmaxGradConfig: GradConfig = {
   kernelName: LogSoftmax,
   inputsToSave: [],
   outputsToSave: [true],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<LogSoftmaxAttrs>) => {
     assertArrayLength(saved, 1);
     const [value] = saved;
-    const {axis} = attrs as unknown as LogSoftmaxAttrs;
+    const {axis} = attrs;
     return {
       logits: () => {
         const keepDims = true;

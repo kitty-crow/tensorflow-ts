@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {Concat, ConcatAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {split} from '../ops/split';
 import {Tensor} from '../tensor';
 import {parseAxisParam} from '../util';
@@ -23,9 +23,9 @@ import {parseAxisParam} from '../util';
 export const concatGradConfig: GradConfig = {
   kernelName: Concat,
   saveAllInputs: true,
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<ConcatAttrs>) => {
     const shapes = saved.map(t => t.shape);
-    const {axis} = attrs as unknown as ConcatAttrs;
+    const {axis} = attrs;
     const $axis = parseAxisParam(axis, saved[0].shape)[0];
     const sizeSplits = shapes.map(s => s[$axis]);
     const derTensors = split(dy, sizeSplits, $axis);

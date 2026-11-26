@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs, scalar} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {withNmsInputs} from './native_dispatch';
 
 export const nonMaxSuppressionV3Config: KernelConfig = {
   kernelName: NonMaxSuppressionV3,
@@ -27,22 +28,9 @@ export const nonMaxSuppressionV3Config: KernelConfig = {
     attrs: KernelAttributes<NonMaxSuppressionV3Attrs>
   }) => {
     const {boxes, scores} = args.inputs;
-    const backend = args.backend;
-    const {maxOutputSize, iouThreshold, scoreThreshold} =
-        args.attrs;
-
+    const {backend} = args;
     const opAttrs = [createTensorsTypeOpAttr('T', boxes.dtype)];
-
-    const maxOutputSizeTensor = scalar(maxOutputSize, 'int32');
-    const iouThresholdTensor = scalar(iouThreshold);
-    const scoreThresholdTensor = scalar(scoreThreshold);
-    const res = backend.executeSingleOutput(NonMaxSuppressionV3, opAttrs, [
-      boxes, scores, maxOutputSizeTensor, iouThresholdTensor,
-      scoreThresholdTensor
-    ]);
-    maxOutputSizeTensor.dispose();
-    iouThresholdTensor.dispose();
-    scoreThresholdTensor.dispose();
-    return res;
+    return withNmsInputs(boxes, scores, args.attrs, inputs =>
+        backend.executeSingleOutput(NonMaxSuppressionV3, opAttrs, inputs));
   }
 };

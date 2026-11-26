@@ -16,15 +16,15 @@
  */
 
 import {BroadcastTo, BroadCastToAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
 
 export const broadcastToGradConfig: GradConfig = {
   kernelName: BroadcastTo,
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<BroadCastToAttrs>) => {
     const broadCastToAttrs: BroadCastToAttrs =
-        attrs as unknown as BroadCastToAttrs;
+        attrs;
 
     const inputShape = broadCastToAttrs.inputShape;
     const outputShape = broadCastToAttrs.shape;

@@ -16,7 +16,7 @@
  */
 
 import {MirrorPad, MirrorPadAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {slice} from '../ops/slice';
 import {Tensor} from '../tensor';
 import {assertArrayLength} from '../util_base';
@@ -24,12 +24,12 @@ import {assertArrayLength} from '../util_base';
 export const mirrorPadGradConfig: GradConfig = {
   kernelName: MirrorPad,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<MirrorPadAttrs>) => {
     // Pad introduces values around the original tensor, so the gradient
     // slices the original shape out of the gradient.
     assertArrayLength(saved, 1);
     const x = saved[0];
-    const {paddings} = attrs as unknown as MirrorPadAttrs;
+    const {paddings} = attrs;
     const begin = paddings.map(p => p[0]);
     return {x: () => slice(dy, begin, x.shape)};
   }

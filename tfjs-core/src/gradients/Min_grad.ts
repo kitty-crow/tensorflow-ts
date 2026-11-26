@@ -16,7 +16,7 @@
  */
 
 import {Min, MinAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {Tensor} from '../tensor';
 import * as util from '../util';
 
@@ -27,8 +27,8 @@ export const minGradConfig: GradConfig = {
   kernelName: Min,
   inputsToSave: ['x'],
   outputsToSave: [true],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
-    const minAttrs: MinAttrs = attrs as unknown as MinAttrs;
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<MinAttrs>) => {
+    const minAttrs: MinAttrs = attrs;
     const {axis} = minAttrs;
     assertArrayLength(saved, 2);
     const [x, y] = saved;

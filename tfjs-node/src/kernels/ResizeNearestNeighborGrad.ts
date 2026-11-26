@@ -17,8 +17,8 @@
 
 import {KernelAttributes, KernelConfig, ResizeNearestNeighborGrad, ResizeNearestNeighborGradAttrs, ResizeNearestNeighborGradInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
-import {executeWithInt32Vector} from './native_dispatch';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeWithInt32Vector, resizeGradientAttrs} from './native_dispatch';
 
 export const resizeNearestNeighborGradConfig: KernelConfig = {
   kernelName: ResizeNearestNeighborGrad,
@@ -32,13 +32,7 @@ export const resizeNearestNeighborGradConfig: KernelConfig = {
     const {alignCorners} =
         args.attrs;
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', images.dtype), {
-        name: 'align_corners',
-        type: backend.binding.TF_ATTR_BOOL,
-        value: alignCorners
-      }
-    ];
+    const opAttrs = resizeGradientAttrs(backend, images.dtype, alignCorners);
     const [, origHeight, origWidth, ] = images.shape;
     return executeWithInt32Vector(backend, ResizeNearestNeighborGrad, opAttrs, [dy], [origHeight, origWidth]);
   }

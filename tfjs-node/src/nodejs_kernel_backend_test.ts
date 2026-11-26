@@ -28,7 +28,7 @@ import {cosConfig} from './kernels/Cos';
 import {FFTConfig} from './kernels/FFT';
 import {IFFTConfig} from './kernels/IFFT';
 import {sinConfig} from './kernels/Sin';
-import {executeWithInt32Vector, indexedTensorAttrs, localResponseAttrs, pool2DAttrs, pool3DAttrs} from './kernels/native_dispatch';
+import {conv3DAttrs, dilation2DAttrs, executeWithInt32Vector, indexedTensorAttrs, localResponseAttrs, pool2DAttrs, pool3DAttrs, resizeGradientAttrs, withNmsInputs} from './kernels/native_dispatch';
 import {addConfig} from './kernels/Add';
 import {atan2Config} from './kernels/Atan2';
 import {modConfig} from './kernels/Mod';
@@ -355,5 +355,62 @@ describe('native indexed tensor attributes', () => {
       createTensorsTypeOpAttr('T', 'bool'),
       createTensorsTypeOpAttr('Tindices', 'int32')
     ]);
+  });
+});
+
+describe('native spatial and NMS contracts', () => {
+  it('preserves native spatial attribute names, types and values', () => {
+    const backend = nodeBackend();
+    const x: tf.TensorInfo = {shape: [1, 5, 5, 2], dtype: 'float32', dataId: {}};
+    const filter: tf.TensorInfo = {shape: [3, 3, 2], dtype: 'float32', dataId: {}};
+    const attrs = dilation2DAttrs(backend, x, filter,
+        {strides: [2, 1], pad: 'same', dilations: [1, 1]});
+    expect(attrs.map(a => a.name)).toEqual(['T', 'strides', 'rates', 'padding']);
+    expect(attrs.map(a => a.value)).toEqual([
+      backend.binding.TF_FLOAT, [1, 2, 1, 1], [1, 1, 1, 1], 'SAME'
+    ]);
+    const info = tf.backend_util.computeConv3DInfo(
+        [1, 3, 4, 5, 2], [1, 2, 3, 2, 4], [1, 2, 1], 1, 'valid');
+    const convAttrs = conv3DAttrs(backend, 'float32', info);
+    expect(convAttrs.map(a => a.name)).toEqual(
+        ['T', 'strides', 'padding', 'data_format', 'dilations']);
+    expect(convAttrs.map(a => a.value)).toEqual([
+      backend.binding.TF_FLOAT, [1, 1, 2, 1, 1], 'VALID', 'NDHWC', [1, 1, 1, 1, 1]
+    ]);
+    expect(resizeGradientAttrs(backend, 'float32', true)).toEqual([
+      createTensorsTypeOpAttr('T', 'float32'),
+      {name: 'align_corners', type: backend.binding.TF_ATTR_BOOL, value: true}
+    ]);
+  });
+
+  it('owns only NMS scalars and releases them even on native failure', () => {
+    const boxes = tf.tensor2d([[0, 0, 1, 1]]);
+    const scores = tf.tensor1d([0.5]);
+    const captured: tf.Tensor[] = [];
+    try {
+      const attrs = {maxOutputSize: 3, iouThreshold: 0.5, scoreThreshold: 0.25};
+      const result = withNmsInputs(boxes, scores, attrs, inputs => {
+        const [actualBoxes, actualScores, ...scalars] = inputs;
+        expect(actualBoxes).toBe(boxes);
+        expect(actualScores).toBe(scores);
+        captured.push(...scalars);
+        expect(scalars.map(t => t.dtype)).toEqual(['int32', 'float32', 'float32', 'float32']);
+        expect(scalars.map(t => Array.from(t.dataSync()))).toEqual([[3], [0.5], [0.25], [0.125]]);
+        return boxes;
+      }, [0.125]);
+      expect(result).toBe(boxes);
+      expect(captured.every(t => t.isDisposed)).toBeTrue();
+      expect(() => withNmsInputs(boxes, scores, attrs, inputs => {
+        const [, , ...scalars] = inputs;
+        captured.push(...scalars);
+        throw new Error('native NMS failure');
+      })).toThrowError('native NMS failure');
+      expect(captured.every(t => t.isDisposed)).toBeTrue();
+      expect(boxes.isDisposed).toBeFalse();
+      expect(scores.isDisposed).toBeFalse();
+    } finally {
+      boxes.dispose();
+      scores.dispose();
+    }
   });
 });

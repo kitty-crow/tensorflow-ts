@@ -15,14 +15,14 @@
  * =============================================================================
  */
 import {Unpack, UnpackAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {stack} from '../ops/stack';
 import {Tensor} from '../tensor';
 
 export const unpackGradConfig: GradConfig = {
   kernelName: Unpack,
-  gradFunc: (dy: Tensor[], saved: Tensor[], attrs: NamedAttrMap) => {
-    const unpackAttrs: UnpackAttrs = attrs as unknown as UnpackAttrs;
+  gradFunc: (dy: Tensor[], saved: Tensor[], attrs: KernelAttributes<UnpackAttrs>) => {
+    const unpackAttrs: UnpackAttrs = attrs;
     const {axis} = unpackAttrs;
     return {value: () => stack(dy, axis)};
   }

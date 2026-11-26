@@ -16,7 +16,7 @@
  */
 
 import {GatherV2, GatherV2Attrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {getUndoAxesPermutation} from '../ops/axis_util';
 import {reshape} from '../ops/reshape';
 import {stack} from '../ops/stack';
@@ -29,10 +29,10 @@ import {assertArrayLength} from '../util_base';
 export const gatherGradConfig: GradConfig = {
   kernelName: GatherV2,
   inputsToSave: ['x', 'indices'],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<GatherV2Attrs>) => {
     assertArrayLength(saved, 2);
     const [x, indices] = saved;
-    const {axis, batchDims} = attrs as unknown as GatherV2Attrs;
+    const {axis, batchDims} = attrs;
 
     const parsedAxis = parseAxisParam(axis, x.shape)[0];
 

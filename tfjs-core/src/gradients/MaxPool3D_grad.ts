@@ -16,7 +16,7 @@
  */
 
 import {MaxPool3D, MaxPool3DAttrs} from '../kernel_names';
-import {GradConfig, NamedAttrMap} from '../kernel_registry';
+import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {maxPool3dGrad} from '../ops/max_pool_3d_grad';
 import {Tensor, Tensor5D} from '../tensor';
 
@@ -24,10 +24,10 @@ export const maxPool3DGradConfig: GradConfig = {
   kernelName: MaxPool3D,
   inputsToSave: ['x'],
   outputsToSave: [true],
-  gradFunc: (dy: Tensor, saved: Tensor[], attrs: NamedAttrMap) => {
+  gradFunc: (dy: Tensor, saved: Tensor[], attrs: KernelAttributes<MaxPool3DAttrs>) => {
     const [x, y] = saved as [Tensor5D, Tensor5D];
     const {filterSize, strides, pad, dimRoundingMode} =
-        attrs as unknown as MaxPool3DAttrs;
+        attrs;
 
     return {
       x: () => maxPool3dGrad(
