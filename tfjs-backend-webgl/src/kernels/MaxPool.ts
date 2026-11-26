@@ -14,42 +14,22 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, KernelConfig, KernelFunc, MaxPool, MaxPoolAttrs, MaxPoolInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+
+import {MaxPool, MaxPoolAttrs, MaxPoolInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
-import {Pool2DProgram} from '../pool_gpu';
-import {assertNotComplex} from '../webgl_util';
-import {identity} from './Identity';
+import {dispatchPool2D} from './pool_dispatch';
 
 export function maxPool(args: {
   inputs: MaxPoolInputs,
   backend: MathBackendWebGL,
-  attrs: MaxPoolAttrs
+  attrs: KernelAttributes<MaxPoolAttrs>
 }): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  assertNotComplex(x, 'maxPool');
-  const {filterSize, strides, pad, dimRoundingMode} = attrs;
-  const dilations = 1;
-
-  util.assert(
-      backend_util.eitherStridesOrDilationsAreOne(strides, dilations),
-      () => 'Error in maxPool: Either strides or dilations must be 1. ' +
-          `Got strides ${strides} and dilations '${dilations}'`);
-
-  const convInfo = backend_util.computePool2DInfo(
-      x.shape as [number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode);
-  if (convInfo.filterWidth === 1 && convInfo.filterHeight === 1 &&
-      util.arraysEqual(convInfo.inShape, convInfo.outShape)) {
-    return identity({inputs: {x}, backend});
-  }
-  const maxPoolProgram = new Pool2DProgram(convInfo, 'max', false);
-  return backend.runWebGLProgram(maxPoolProgram, [x], x.dtype);
+  return dispatchPool2D(args, 'max');
 }
 
 export const maxPoolConfig: KernelConfig = {
   kernelName: MaxPool,
   backendName: 'webgl',
-  kernelFunc: maxPool as unknown as KernelFunc
+  kernelFunc: maxPool
 };

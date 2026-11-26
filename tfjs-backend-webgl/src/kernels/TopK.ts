@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {env, KernelConfig, KernelFunc, NumericDataType, TensorInfo, TopK, TopKAttrs, TopKInputs, TypedArray, util} from '@tensorflow/tfjs-core';
+import {env, KernelConfig, KernelAttributes, NumericDataType, TensorInfo, TopK, TopKAttrs, TopKInputs, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {topKImplCPU} from '../kernel_utils/shared';
@@ -35,7 +35,7 @@ function disposeIntermediateTensorInfoOrNull(
 // Based on Algorithm 2 of Bitonic Top K, ref:
 // https://anilshanbhag.in/static/papers/gputopk_sigmod18.pdf
 export function topK(
-    args: {inputs: TopKInputs, backend: MathBackendWebGL, attrs: TopKAttrs}):
+    args: {inputs: TopKInputs, backend: MathBackendWebGL, attrs: KernelAttributes<TopKAttrs>}):
     TensorInfo[] {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -181,5 +181,5 @@ export function topK(
 export const topKConfig: KernelConfig = {
   kernelName: TopK,
   backendName: 'webgl',
-  kernelFunc: topK as unknown as KernelFunc
+  kernelFunc: topK
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {DenseBincount, DenseBincountAttrs, DenseBincountInputs, KernelConfig, KernelFunc, Rank, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {DenseBincount, DenseBincountAttrs, DenseBincountInputs, KernelConfig, KernelAttributes, Rank, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {bincountImplCPU, bincountReduceImplCPU} from '../kernel_utils/shared';
@@ -23,7 +23,7 @@ import {bincountImplCPU, bincountReduceImplCPU} from '../kernel_utils/shared';
 export function denseBincount(args: {
   inputs: DenseBincountInputs,
   backend: MathBackendWebGL,
-  attrs: DenseBincountAttrs
+  attrs: KernelAttributes<DenseBincountAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, weights} = inputs;
@@ -55,5 +55,5 @@ export function denseBincount(args: {
 export const denseBincountConfig: KernelConfig = {
   kernelName: DenseBincount,
   backendName: 'webgl',
-  kernelFunc: denseBincount as unknown as KernelFunc
+  kernelFunc: denseBincount
 };

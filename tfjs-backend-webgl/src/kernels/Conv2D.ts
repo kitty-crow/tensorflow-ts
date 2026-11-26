@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, env, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, env, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {Conv2DProgram} from '../conv_gpu';
@@ -25,7 +25,7 @@ import {reshape} from './Reshape';
 
 export function conv2d(
     args:
-        {inputs: Conv2DInputs, attrs: Conv2DAttrs, backend: MathBackendWebGL}) {
+        {inputs: Conv2DInputs, attrs: KernelAttributes<Conv2DAttrs>, backend: MathBackendWebGL}) {
   const {inputs, backend, attrs} = args;
   const {x, filter} = inputs;
   const {strides, pad, dataFormat, dilations, dimRoundingMode} = attrs;
@@ -71,5 +71,5 @@ export function conv2d(
 export const conv2DConfig: KernelConfig = {
   kernelName: Conv2D,
   backendName: 'webgl',
-  kernelFunc: conv2d as unknown as KernelFunc,
+  kernelFunc: conv2d,
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, OneHot, OneHotAttrs, OneHotInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, OneHot, OneHotAttrs, OneHotInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {OneHotProgram} from '../onehot_gpu';
@@ -24,7 +24,7 @@ import {reshape} from './Reshape';
 export const oneHot = (args: {
   inputs: OneHotInputs,
   backend: MathBackendWebGL,
-  attrs: OneHotAttrs
+  attrs: KernelAttributes<OneHotAttrs>
 }): TensorInfo => {
   const {inputs, backend, attrs} = args;
   const {indices} = inputs;
@@ -46,5 +46,5 @@ export const oneHot = (args: {
 export const oneHotConfig: KernelConfig = {
   kernelName: OneHot,
   backendName: 'webgl',
-  kernelFunc: oneHot as unknown as KernelFunc
+  kernelFunc: oneHot
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, SparseSegmentMean, SparseSegmentMeanInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, SparseSegmentMean, SparseSegmentMeanInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {sparseSegmentReductionImplCPU} from '../kernel_utils/shared';
@@ -50,5 +50,5 @@ export function sparseSegmentMean(
 export const sparseSegmentMeanConfig: KernelConfig = {
   kernelName: SparseSegmentMean,
   backendName: 'webgl',
-  kernelFunc: sparseSegmentMean as unknown as KernelFunc,
+  kernelFunc: sparseSegmentMean,
 };

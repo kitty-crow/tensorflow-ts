@@ -14,30 +14,22 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, KernelConfig, KernelFunc, MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs, TensorInfo} from '@tensorflow/tfjs-core';
+
+import {MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
-import {Pool3DProgram} from '../pool_gpu';
+import {dispatchPool3D} from './pool_dispatch';
 
 export function maxPool3d(args: {
   inputs: MaxPool3DInputs,
   backend: MathBackendWebGL,
-  attrs: MaxPool3DAttrs
+  attrs: KernelAttributes<MaxPool3DAttrs>
 }): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {filterSize, strides, pad, dataFormat, dimRoundingMode} = attrs;
-  const dilations: [number, number, number] = [1, 1, 1];
-
-  const convInfo = backend_util.computePool3DInfo(
-      x.shape as [number, number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode, dataFormat);
-  const maxPoolProgram = new Pool3DProgram(convInfo, 'max', false);
-  return backend.runWebGLProgram(maxPoolProgram, [x], x.dtype);
+  return dispatchPool3D(args, 'max');
 }
 
 export const maxPool3DConfig: KernelConfig = {
   kernelName: MaxPool3D,
   backendName: 'webgl',
-  kernelFunc: maxPool3d as unknown as KernelFunc
+  kernelFunc: maxPool3d
 };

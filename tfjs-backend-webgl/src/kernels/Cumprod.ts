@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Cumprod, CumprodAttrs, CumprodInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {Cumprod, CumprodAttrs, CumprodInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {CumOpType} from '../cum_gpu';
@@ -24,7 +24,7 @@ import {cumImpl} from './Cum_impl';
 export function cumprod(args: {
   inputs: CumprodInputs,
   backend: MathBackendWebGL,
-  attrs: CumprodAttrs
+  attrs: KernelAttributes<CumprodAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -36,5 +36,5 @@ export function cumprod(args: {
 export const cumprodConfig: KernelConfig = {
   kernelName: Cumprod,
   backendName: 'webgl',
-  kernelFunc: cumprod as unknown as KernelFunc
+  kernelFunc: cumprod
 };

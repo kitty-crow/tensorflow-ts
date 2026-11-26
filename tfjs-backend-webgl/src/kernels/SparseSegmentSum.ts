@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, SparseSegmentSum, SparseSegmentSumInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, SparseSegmentSum, SparseSegmentSumInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {sparseSegmentReductionImplCPU} from '../kernel_utils/shared';
@@ -50,5 +50,5 @@ export function sparseSegmentSum(
 export const sparseSegmentSumConfig: KernelConfig = {
   kernelName: SparseSegmentSum,
   backendName: 'webgl',
-  kernelFunc: sparseSegmentSum as unknown as KernelFunc,
+  kernelFunc: sparseSegmentSum,
 };

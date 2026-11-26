@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {ExpandDims, ExpandDimsAttrs, ExpandDimsInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {ExpandDims, ExpandDimsAttrs, ExpandDimsInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {reshape} from './Reshape';
 
 export function expandDims(args: {
   inputs: ExpandDimsInputs,
-  attrs: ExpandDimsAttrs,
+  attrs: KernelAttributes<ExpandDimsAttrs>,
   backend: MathBackendWebGL
 }): TensorInfo {
   const {inputs, attrs, backend} = args;
@@ -48,5 +48,5 @@ export function expandDims(args: {
 export const expandDimsConfig: KernelConfig = {
   kernelName: ExpandDims,
   backendName: 'webgl',
-  kernelFunc: expandDims as unknown as KernelFunc,
+  kernelFunc: expandDims,
 };

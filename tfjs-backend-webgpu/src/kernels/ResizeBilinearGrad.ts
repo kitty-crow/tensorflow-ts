@@ -20,6 +20,8 @@ import {KernelConfig, KernelAttributes, ResizeBilinearGrad, ResizeBilinearGradAt
 import {WebGPUBackend} from '../backend_webgpu';
 import {ResizeBilinearBackpropProgram} from '../resize_bilinear_backprop_webgpu';
 
+import {resizeBackpropGeometry} from './resize_backprop_geometry';
+
 export function resizeBilinearGrad(args: {
   inputs: ResizeBilinearGradInputs,
   backend: WebGPUBackend,
@@ -29,30 +31,10 @@ export function resizeBilinearGrad(args: {
   const {images, dy} = inputs;
   const {alignCorners} = attrs;
 
-  const [, xHeight, xWidth, ] =
-      images.shape as [number, number, number, number];
-  const [, yHeight, yWidth] = dy.shape as [number, number, number, number];
-
-  const effectiveXSize: [number, number] = [
-    (alignCorners && yHeight > 1) ? xHeight - 1 : xHeight,
-    (alignCorners && yWidth > 1) ? xWidth - 1 : xWidth
-  ];
-
-  const effectiveYSize: [number, number] = [
-    (alignCorners && yHeight > 1) ? yHeight - 1 : yHeight,
-    (alignCorners && yWidth > 1) ? yWidth - 1 : yWidth
-  ];
-
-  const heightScale = effectiveXSize[0] / effectiveYSize[0];
-  const widthScale = effectiveXSize[1] / effectiveYSize[1];
-
-  const invHeightScale = 1 / heightScale;
-  const invWidthScale = 1 / widthScale;
-
-  // This defines the size of the window of values around a particular
-  // index in dy that we want to search for contributions to dx.
-  const winHeight = (Math.ceil(invHeightScale) * 2) + 2;
-  const winWidth = (Math.ceil(invWidthScale) * 2) + 2;
+  const {effectiveXSize, effectiveYSize, heightScale, widthScale,
+    invHeightScale, invWidthScale, winHeight, winWidth} = resizeBackpropGeometry(
+      images.shape as [number, number, number, number],
+      dy.shape as [number, number, number, number], alignCorners);
 
   const program = new ResizeBilinearBackpropProgram(
       images.shape as [number, number, number, number], alignCorners);

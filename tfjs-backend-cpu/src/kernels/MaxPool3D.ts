@@ -15,32 +15,17 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelAttributes, MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
-import {pool3d} from '../utils/pool_utils';
+import {dispatchPool3D} from './pool_dispatch';
 
 export function maxPool3D(args: {
   inputs: MaxPool3DInputs,
   backend: MathBackendCPU,
   attrs: KernelAttributes<MaxPool3DAttrs>
 }): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {filterSize, strides, pad, dimRoundingMode, dataFormat} = attrs;
-
-  assertNotComplex(x, 'maxPool3d');
-
-  const convInfo = backend_util.computePool3DInfo(
-      x.shape as [number, number, number, number, number], filterSize, strides,
-      1 /* dilations */, pad, dimRoundingMode, dataFormat);
-
-  const xValues = backend.requireValues(x.dataId) as TypedArray;
-  const outBuf = pool3d(
-      xValues, x.shape, x.dtype, util.computeStrides(x.shape), convInfo, 'max');
-
-  return backend.makeTensorInfo(outBuf.shape, 'float32', outBuf.values);
+  return dispatchPool3D(args, 'max');
 }
 
 export const maxPool3DConfig: KernelConfig = {

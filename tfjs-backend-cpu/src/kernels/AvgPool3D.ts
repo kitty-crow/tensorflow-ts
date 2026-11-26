@@ -15,32 +15,17 @@
  * =============================================================================
  */
 
-import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
-import {pool3d} from '../utils/pool_utils';
+import {dispatchPool3D} from './pool_dispatch';
 
 export function avgPool3D(args: {
   inputs: AvgPool3DInputs,
   backend: MathBackendCPU,
   attrs: KernelAttributes<AvgPool3DAttrs>
 }): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {filterSize, strides, pad, dimRoundingMode, dataFormat} = attrs;
-
-  assertNotComplex(x, 'avgPool3d');
-
-  const convInfo = backend_util.computePool3DInfo(
-      x.shape as [number, number, number, number, number], filterSize, strides,
-      1 /* dilations */, pad, dimRoundingMode, dataFormat);
-
-  const xValues = backend.requireValues(x.dataId) as TypedArray;
-  const outBuf = pool3d(
-      xValues, x.shape, x.dtype, util.computeStrides(x.shape), convInfo, 'avg');
-
-  return backend.makeTensorInfo(outBuf.shape, 'float32', outBuf.values);
+  return dispatchPool3D(args, 'avg');
 }
 
 export const avgPool3DConfig: KernelConfig = {

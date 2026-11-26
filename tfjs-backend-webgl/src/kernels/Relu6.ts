@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Relu6} from '@tensorflow/tfjs-core';
+import {KernelConfig, Relu6} from '@tensorflow/tfjs-core';
 import {unaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 import {CHECK_NAN_SNIPPET} from '../unaryop_gpu';
 
@@ -41,5 +41,5 @@ export const relu6 =
 export const relu6Config: KernelConfig = {
   kernelName: Relu6,
   backendName: 'webgl',
-  kernelFunc: relu6 as unknown as KernelFunc
+  kernelFunc: relu6
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, env, KernelConfig, KernelFunc, ScatterNd, ScatterNdAttrs, ScatterNdInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, env, KernelConfig, KernelAttributes, ScatterNd, ScatterNdAttrs, ScatterNdInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {ScatterProgram} from '../scatter_gpu';
@@ -25,7 +25,7 @@ import {reshape} from './Reshape';
 export function scatterNd(args: {
   inputs: ScatterNdInputs,
   backend: MathBackendWebGL,
-  attrs: ScatterNdAttrs
+  attrs: KernelAttributes<ScatterNdAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {indices, updates} = inputs;
@@ -73,5 +73,5 @@ export function scatterNd(args: {
 export const scatterNdConfig: KernelConfig = {
   kernelName: ScatterNd,
   backendName: 'webgl',
-  kernelFunc: scatterNd as unknown as KernelFunc
+  kernelFunc: scatterNd
 };

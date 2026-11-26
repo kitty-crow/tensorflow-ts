@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, SplitV, SplitVAttrs, SplitVInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, SplitV, SplitVAttrs, SplitVInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {slice} from './Slice';
 
 export function splitV(
     args:
-        {inputs: SplitVInputs, backend: MathBackendWebGL, attrs: SplitVAttrs}):
+        {inputs: SplitVInputs, backend: MathBackendWebGL, attrs: KernelAttributes<SplitVAttrs>}):
     TensorInfo[] {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -48,5 +48,5 @@ export function splitV(
 export const splitVConfig: KernelConfig = {
   kernelName: SplitV,
   backendName: 'webgl',
-  kernelFunc: splitV as unknown as KernelFunc
+  kernelFunc: splitV
 };

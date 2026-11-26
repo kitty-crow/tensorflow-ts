@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {env, KernelConfig, KernelFunc, Slice, slice_util, SliceAttrs, SliceInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {env, KernelConfig, KernelAttributes, Slice, slice_util, SliceAttrs, SliceInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {sliceImplCPU} from '../kernel_utils/shared';
@@ -52,7 +52,7 @@ function shallowSlice(
 }
 
 export function slice(
-    args: {inputs: SliceInputs, backend: MathBackendWebGL, attrs: SliceAttrs}):
+    args: {inputs: SliceInputs, backend: MathBackendWebGL, attrs: KernelAttributes<SliceAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -94,5 +94,5 @@ export function slice(
 export const sliceConfig: KernelConfig = {
   kernelName: Slice,
   backendName: 'webgl',
-  kernelFunc: slice as unknown as KernelFunc
+  kernelFunc: slice
 };

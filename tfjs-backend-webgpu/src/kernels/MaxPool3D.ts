@@ -14,48 +14,18 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, KernelConfig, KernelAttributes, MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs, TensorInfo} from '@tensorflow/tfjs-core';
+
+import {MaxPool3D, MaxPool3DAttrs, MaxPool3DInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
-import {Pool3DProgram} from '../pool_webgpu';
+import {dispatchPool3D} from './pool_dispatch';
 
 export function maxPool3d(args: {
   inputs: MaxPool3DInputs,
   backend: WebGPUBackend,
   attrs: KernelAttributes<MaxPool3DAttrs>
 }): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {filterSize, strides, pad, dataFormat, dimRoundingMode} = attrs;
-  const dilations: [number, number, number] = [1, 1, 1];
-
-  const convInfo = backend_util.computePool3DInfo(
-      x.shape as [number, number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode, dataFormat);
-  const maxPoolProgram = new Pool3DProgram(convInfo, 'max');
-  const dimensions = [
-    {
-      type: 'int32',
-      data: [convInfo.strideDepth, convInfo.strideHeight, convInfo.strideWidth]
-    },
-    {
-      type: 'int32',
-      data:
-          [convInfo.padInfo.front, convInfo.padInfo.top, convInfo.padInfo.left]
-    },
-    {
-      type: 'int32',
-      data: [convInfo.inDepth, convInfo.inHeight, convInfo.inWidth]
-    },
-    {
-      type: 'int32',
-      data: [
-        convInfo.effectiveFilterDepth, convInfo.effectiveFilterHeight,
-        convInfo.effectiveFilterWidth
-      ]
-    }
-  ];
-  return backend.runWebGPUProgram(maxPoolProgram, [x], x.dtype, dimensions);
+  return dispatchPool3D(args, 'max');
 }
 
 export const maxPool3DConfig: KernelConfig = {

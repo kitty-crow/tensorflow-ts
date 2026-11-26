@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Cumsum, CumsumAttrs, CumsumInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {Cumsum, CumsumAttrs, CumsumInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {CumOpType} from '../cum_gpu';
@@ -23,7 +23,7 @@ import {cumImpl} from './Cum_impl';
 
 export function cumsum(
     args:
-        {inputs: CumsumInputs, backend: MathBackendWebGL, attrs: CumsumAttrs}):
+        {inputs: CumsumInputs, backend: MathBackendWebGL, attrs: KernelAttributes<CumsumAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -34,5 +34,5 @@ export function cumsum(
 export const cumsumConfig: KernelConfig = {
   kernelName: Cumsum,
   backendName: 'webgl',
-  kernelFunc: cumsum as unknown as KernelFunc
+  kernelFunc: cumsum
 };

@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Step, StepAttrs, TensorInfo, UnaryInputs} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Step, StepAttrs, TensorInfo, UnaryInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {CHECK_NAN_SNIPPET, UnaryOpProgram} from '../unaryop_gpu';
 
 export function step(
     {inputs, attrs, backend}:
-        {inputs: UnaryInputs, attrs: StepAttrs, backend: MathBackendWebGL}):
+        {inputs: UnaryInputs, attrs: KernelAttributes<StepAttrs>, backend: MathBackendWebGL}):
     TensorInfo {
   const {x} = inputs;
   const opSnippet = CHECK_NAN_SNIPPET + `
@@ -37,5 +37,5 @@ export function step(
 export const stepConfig: KernelConfig = {
   kernelName: Step,
   backendName: 'webgl',
-  kernelFunc: step as unknown as KernelFunc,
+  kernelFunc: step,
 };

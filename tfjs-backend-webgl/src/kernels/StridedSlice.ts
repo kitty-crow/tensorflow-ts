@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {buffer, KernelConfig, KernelFunc, Rank, slice_util, StridedSlice, StridedSliceAttrs, StridedSliceInputs, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {buffer, KernelConfig, KernelAttributes, Rank, slice_util, StridedSlice, StridedSliceAttrs, StridedSliceInputs, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {stridedSliceImplCPU} from '../kernel_utils/shared';
@@ -27,7 +27,7 @@ import {slice} from './Slice';
 export function stridedSlice(args: {
   inputs: StridedSliceInputs,
   backend: MathBackendWebGL,
-  attrs: StridedSliceAttrs
+  attrs: KernelAttributes<StridedSliceAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -101,5 +101,5 @@ export function stridedSlice(args: {
 export const stridedSliceConfig: KernelConfig = {
   kernelName: StridedSlice,
   backendName: 'webgl',
-  kernelFunc: stridedSlice as unknown as KernelFunc
+  kernelFunc: stridedSlice
 };

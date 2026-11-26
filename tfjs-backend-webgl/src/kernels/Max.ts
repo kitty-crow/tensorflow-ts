@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelFunc, Max, MaxAttrs, MaxInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelAttributes, Max, MaxAttrs, MaxInputs, TensorInfo} from '@tensorflow/tfjs-core';
 import {backend_util, KernelConfig, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
@@ -25,7 +25,7 @@ import {maxImpl} from './Max_impl';
 import {transposeImpl, transposeImplCPU} from './Transpose_impl';
 
 export function max(
-    args: {inputs: MaxInputs, backend: MathBackendWebGL, attrs: MaxAttrs}):
+    args: {inputs: MaxInputs, backend: MathBackendWebGL, attrs: KernelAttributes<MaxAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -97,5 +97,5 @@ export function max(
 export const maxConfig: KernelConfig = {
   kernelName: Max,
   backendName: 'webgl',
-  kernelFunc: max as unknown as KernelFunc
+  kernelFunc: max
 };

@@ -16,6 +16,11 @@
  */
 
 import {requireComplexTensorInfos, requireTensorDataValues} from './tensor_data_values';
+import {MathBackendCPU} from './backend_cpu';
+import {avgPool} from './kernels/AvgPool';
+import {maxPool} from './kernels/MaxPool';
+import {avgPool3D} from './kernels/AvgPool3D';
+import {maxPool3D} from './kernels/MaxPool3D';
 
 describe('CPU tensor storage payload', () => {
   it('preserves the numeric array identity, including zero and NaN', () => {
@@ -51,5 +56,50 @@ describe('CPU complex tensor storage', () => {
   it('rejects missing component ownership', () => {
     expect(() => requireComplexTensorInfos({dtype: 'complex64', refCount: 1}))
         .toThrowError('CPU tensor data has no complex components.');
+  });
+});
+
+describe('shared CPU pooling dispatch', () => {
+  it('retains distinct 2D reductions and the unit-filter identity path', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([1, 2, 2, 1], 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const args = {inputs: {x}, backend, attrs: {
+      filterSize: 2, strides: 1, pad: 'valid' as const
+    }};
+    const avg = avgPool(args);
+    const max = maxPool(args);
+    const identity = maxPool({...args, attrs: {...args.attrs, filterSize: 1}});
+    expect(avg.shape).toEqual([1, 1, 1, 1]);
+    expect(max.shape).toEqual(avg.shape);
+    expect(avg.dtype).toBe('float32');
+    expect(max.dtype).toBe('float32');
+    expect(backend.readSync(avg.dataId)).toEqual(new Float32Array([2.5]));
+    expect(backend.readSync(max.dataId)).toEqual(new Float32Array([4]));
+    expect(identity.dataId).toBe(x.dataId);
+    expect(backend.refCount(x.dataId)).toBe(2);
+    backend.disposeData(identity.dataId);
+    backend.disposeData(x.dataId);
+    backend.disposeData(avg.dataId);
+    backend.disposeData(max.dataId);
+  });
+
+  it('keeps the independent 3D reduction and output shape', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([1, 2, 2, 2, 1], 'float32',
+        new Float32Array([1, 2, 3, 4, 5, 6, 7, 8]));
+    const args = {inputs: {x}, backend, attrs: {filterSize: 2, strides: 1,
+      pad: 'valid' as const, dataFormat: 'NDHWC' as const}};
+    const avg = avgPool3D(args);
+    const max = maxPool3D(args);
+    expect(avg.shape).toEqual([1, 1, 1, 1, 1]);
+    expect(max.shape).toEqual(avg.shape);
+    expect(avg.dtype).toBe('float32');
+    expect(max.dtype).toBe('float32');
+    expect(backend.readSync(avg.dataId)).toEqual(new Float32Array([4.5]));
+    expect(backend.readSync(max.dataId)).toEqual(new Float32Array([8]));
+    backend.disposeData(x.dataId);
+    backend.disposeData(avg.dataId);
+    backend.disposeData(max.dataId);
   });
 });

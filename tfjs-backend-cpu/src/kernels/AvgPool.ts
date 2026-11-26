@@ -14,44 +14,17 @@
  * limitations under the License.
  * =============================================================================
  */
-import {AvgPool, AvgPoolAttrs, AvgPoolInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+
+import {AvgPool, AvgPoolAttrs, AvgPoolInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
-import {pool} from '../utils/pool_utils';
-import {identity} from './Identity';
+import {dispatchPool2D} from './pool_dispatch';
 
 export function avgPool(
     args:
         {inputs: AvgPoolInputs, backend: MathBackendCPU, attrs: KernelAttributes<AvgPoolAttrs>}):
     TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  assertNotComplex(x, 'avgPool');
-  const {filterSize, strides, pad, dimRoundingMode} = attrs;
-  const dilations = 1;
-
-  util.assert(
-      backend_util.eitherStridesOrDilationsAreOne(strides, dilations),
-      () => 'Error in avgPool: Either strides or dilations must be 1. ' +
-          `Got strides ${strides} and dilations '${dilations}'`);
-
-  const convInfo = backend_util.computePool2DInfo(
-      x.shape as [number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode);
-  let res: TensorInfo;
-
-  if (convInfo.filterWidth === 1 && convInfo.filterHeight === 1 &&
-      util.arraysEqual(convInfo.inShape, convInfo.outShape)) {
-    res = identity({inputs: {x}, backend});
-  } else {
-    const xValues = backend.requireValues(x.dataId) as TypedArray;
-    const strides = util.computeStrides(x.shape);
-    const buffer = pool(xValues, x.shape, x.dtype, strides, convInfo, 'avg');
-    res = backend.makeTensorInfo(
-        convInfo.outShape, x.dtype, buffer.values as TypedArray);
-  }
-  return res;
+  return dispatchPool2D(args, 'avg');
 }
 
 export const avgPoolConfig: KernelConfig = {

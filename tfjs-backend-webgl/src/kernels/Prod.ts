@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Prod, ProdAttrs, ProdInputs, sumOutType, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Prod, ProdAttrs, ProdInputs, sumOutType, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {reduce} from '../kernel_utils/reduce';
@@ -25,7 +25,7 @@ import {reshape} from './Reshape';
 import {transpose} from './Transpose';
 
 export function prod(
-    args: {inputs: ProdInputs, backend: MathBackendWebGL, attrs: ProdAttrs}):
+    args: {inputs: ProdInputs, backend: MathBackendWebGL, attrs: KernelAttributes<ProdAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -80,5 +80,5 @@ export function prod(
 export const prodConfig: KernelConfig = {
   kernelName: Prod,
   backendName: 'webgl',
-  kernelFunc: prod as unknown as KernelFunc
+  kernelFunc: prod
 };

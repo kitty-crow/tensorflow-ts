@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, Min, MinAttrs, MinInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Min, MinAttrs, MinInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {reduce} from '../kernel_utils/reduce';
@@ -24,7 +24,7 @@ import {reshape} from './Reshape';
 import {transpose} from './Transpose';
 
 export function min(
-    args: {inputs: MinInputs, backend: MathBackendWebGL, attrs: MinAttrs}):
+    args: {inputs: MinInputs, backend: MathBackendWebGL, attrs: KernelAttributes<MinAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -70,5 +70,5 @@ export function min(
 export const minConfig: KernelConfig = {
   kernelName: Min,
   backendName: 'webgl',
-  kernelFunc: min as unknown as KernelFunc
+  kernelFunc: min
 };

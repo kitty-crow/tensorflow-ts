@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {EluGrad, EluGradInputs, env, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {EluGrad, EluGradInputs, env, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {BinaryOpProgram} from '../binaryop_gpu';
@@ -41,5 +41,5 @@ export const eluGrad =
 export const eluGradConfig: KernelConfig = {
   kernelName: EluGrad,
   backendName: 'webgl',
-  kernelFunc: eluGrad as unknown as KernelFunc
+  kernelFunc: eluGrad
 };

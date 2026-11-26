@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Sqrt} from '@tensorflow/tfjs-core';
+import {KernelConfig, Sqrt} from '@tensorflow/tfjs-core';
 
 import {unaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
 import {sqrtImplCPU} from '../kernel_utils/shared';
@@ -28,5 +28,5 @@ export const sqrt = unaryKernelFunc(
 export const sqrtConfig: KernelConfig = {
   kernelName: Sqrt,
   backendName: 'webgl',
-  kernelFunc: sqrt as unknown as KernelFunc
+  kernelFunc: sqrt
 };

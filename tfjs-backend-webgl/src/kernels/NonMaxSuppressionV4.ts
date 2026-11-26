@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, kernel_impls, KernelConfig, KernelFunc, NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV4, NonMaxSuppressionV4Attrs, NonMaxSuppressionV4Inputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 const nonMaxSuppressionV4Impl = kernel_impls.nonMaxSuppressionV4Impl;
 
 import {MathBackendWebGL} from '../backend_webgl';
@@ -23,7 +23,7 @@ import {MathBackendWebGL} from '../backend_webgl';
 export function nonMaxSuppressionV4(args: {
   inputs: NonMaxSuppressionV4Inputs,
   backend: MathBackendWebGL,
-  attrs: NonMaxSuppressionV4Attrs
+  attrs: KernelAttributes<NonMaxSuppressionV4Attrs>
 }): [TensorInfo, TensorInfo] {
   backend_util.warn(
       'tf.nonMaxSuppression() in webgl locks the UI thread. ' +
@@ -51,5 +51,5 @@ export function nonMaxSuppressionV4(args: {
 export const nonMaxSuppressionV4Config: KernelConfig = {
   kernelName: NonMaxSuppressionV4,
   backendName: 'webgl',
-  kernelFunc: nonMaxSuppressionV4 as unknown as KernelFunc
+  kernelFunc: nonMaxSuppressionV4
 };

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, TensorInfo, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 
@@ -24,7 +24,7 @@ import {slice} from './Slice';
 
 export function unpack(
     args:
-        {inputs: UnpackInputs, backend: MathBackendWebGL, attrs: UnpackAttrs}):
+        {inputs: UnpackInputs, backend: MathBackendWebGL, attrs: KernelAttributes<UnpackAttrs>}):
     TensorInfo[] {
   const {inputs, backend, attrs} = args;
   const {value} = inputs;
@@ -69,5 +69,5 @@ export function unpack(
 export const unpackConfig: KernelConfig = {
   kernelName: Unpack,
   backendName: 'webgl',
-  kernelFunc: unpack as unknown as KernelFunc
+  kernelFunc: unpack
 };

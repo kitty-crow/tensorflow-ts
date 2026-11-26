@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo, Unique, UniqueAttrs, UniqueInputs} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, TensorInfo, Unique, UniqueAttrs, UniqueInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {uniqueImplCPU} from '../kernel_utils/shared';
@@ -23,7 +23,7 @@ import {assertNotComplex} from '../webgl_util';
 
 export function unique(
     args:
-        {inputs: UniqueInputs, attrs: UniqueAttrs, backend: MathBackendWebGL}):
+        {inputs: UniqueInputs, attrs: KernelAttributes<UniqueAttrs>, backend: MathBackendWebGL}):
     TensorInfo[] {
   const {inputs, attrs, backend} = args;
   const {axis} = attrs;
@@ -46,5 +46,5 @@ export function unique(
 export const uniqueConfig: KernelConfig = {
   kernelName: Unique,
   backendName: 'webgl',
-  kernelFunc: unique as unknown as KernelFunc,
+  kernelFunc: unique,
 };

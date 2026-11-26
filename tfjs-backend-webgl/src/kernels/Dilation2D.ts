@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, Dilation2D, Dilation2DAttrs, Dilation2DInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, Dilation2D, Dilation2DAttrs, Dilation2DInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {Dilation2DProgram} from '../dilation_gpu';
@@ -23,7 +23,7 @@ import {reshape} from './Reshape';
 
 export function dilation2D(args: {
   inputs: Dilation2DInputs,
-  attrs: Dilation2DAttrs,
+  attrs: KernelAttributes<Dilation2DAttrs>,
   backend: MathBackendWebGL
 }) {
   const {inputs, backend, attrs} = args;
@@ -49,5 +49,5 @@ export function dilation2D(args: {
 export const dilation2DConfig: KernelConfig = {
   kernelName: Dilation2D,
   backendName: 'webgl',
-  kernelFunc: dilation2D as unknown as KernelFunc,
+  kernelFunc: dilation2D,
 };

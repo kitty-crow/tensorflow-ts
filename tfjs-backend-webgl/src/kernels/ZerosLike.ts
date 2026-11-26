@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo, ZerosLike, ZerosLikeInputs} from '@tensorflow/tfjs-core';
+import {KernelConfig, TensorInfo, ZerosLike, ZerosLikeInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 
@@ -58,5 +58,5 @@ export function zerosLike(
 export const zerosLikeConfig: KernelConfig = {
   kernelName: ZerosLike,
   backendName: 'webgl',
-  kernelFunc: zerosLike as unknown as KernelFunc
+  kernelFunc: zerosLike
 };

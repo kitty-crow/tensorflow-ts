@@ -21,6 +21,7 @@ import {OneHotProgram} from './onehot_webgpu';
 import {ReduceProgram} from './reduce_webgpu';
 import {ResizeBilinearProgram} from './resize_bilinear_webgpu';
 import {MergeProgram, SwapProgram} from './top_k_webgpu';
+import {resizeBackpropGeometry} from './kernels/resize_backprop_geometry';
 
 describe('flat WebGPU program dispatch', () => {
   it('retains shape identity and scalar and empty dispatches', () => {
@@ -111,5 +112,21 @@ describe('reduction dispatch selection', () => {
         .toContain('bestValue >= 1.0 && candidate >= 1.0');
     expect(new ReduceProgram(info, 'any', 256).getUserCode())
         .toContain('bestValue >= 1.0 || candidate >= 1.0');
+  });
+});
+
+describe('shared resize gradient geometry', () => {
+  it('preserves the ordinary scale and gradient search window', () => {
+    expect(resizeBackpropGeometry([1, 3, 5, 1], [1, 6, 10, 1], false))
+        .toEqual({effectiveXSize: [3, 5], effectiveYSize: [6, 10],
+          heightScale: 0.5, widthScale: 0.5, invHeightScale: 2,
+          invWidthScale: 2, winHeight: 6, winWidth: 6});
+  });
+
+  it('only subtracts endpoints when the corresponding output exceeds one', () => {
+    expect(resizeBackpropGeometry([1, 3, 5, 1], [1, 5, 1, 1], true))
+        .toEqual({effectiveXSize: [2, 5], effectiveYSize: [4, 1],
+          heightScale: 0.5, widthScale: 5, invHeightScale: 2,
+          invWidthScale: 0.2, winHeight: 6, winWidth: 4});
   });
 });

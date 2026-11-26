@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Pow} from '@tensorflow/tfjs-core';
+import {KernelConfig, Pow} from '@tensorflow/tfjs-core';
 
 import {CHECK_NAN_SNIPPET_PACKED} from '../binaryop_packed_gpu';
 import {binaryKernelFunc} from '../kernel_utils/kernel_funcs_utils';
@@ -58,5 +58,5 @@ export const pow =
 export const powConfig: KernelConfig = {
   kernelName: Pow,
   backendName: 'webgl',
-  kernelFunc: pow as unknown as KernelFunc
+  kernelFunc: pow
 };

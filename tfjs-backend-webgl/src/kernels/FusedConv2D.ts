@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, env, FusedConv2D, FusedConv2DAttrs, FusedConv2DInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, env, FusedConv2D, FusedConv2DAttrs, FusedConv2DInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {Conv2DProgram} from '../conv_gpu';
@@ -27,7 +27,7 @@ import {reshape} from './Reshape';
 
 export function fusedConv2d(args: {
   inputs: FusedConv2DInputs,
-  attrs: FusedConv2DAttrs,
+  attrs: KernelAttributes<FusedConv2DAttrs>,
   backend: MathBackendWebGL
 }) {
   const {inputs, backend, attrs} = args;
@@ -161,5 +161,5 @@ export function fusedConv2d(args: {
 export const fusedConv2DConfig: KernelConfig = {
   kernelName: FusedConv2D,
   backendName: 'webgl',
-  kernelFunc: fusedConv2d as unknown as KernelFunc,
+  kernelFunc: fusedConv2d,
 };

@@ -15,12 +15,12 @@
  * =============================================================================
  */
 
-import {Fill, FillAttrs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {Fill, FillAttrs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {FillProgram} from '../fill_gpu';
 
-export function fill(args: {backend: MathBackendWebGL, attrs: FillAttrs}):
+export function fill(args: {backend: MathBackendWebGL, attrs: KernelAttributes<FillAttrs>}):
     TensorInfo {
   const {backend, attrs} = args;
   const {shape, value} = attrs;
@@ -43,5 +43,5 @@ export function fill(args: {backend: MathBackendWebGL, attrs: FillAttrs}):
 export const fillConfig: KernelConfig = {
   kernelName: Fill,
   backendName: 'webgl',
-  kernelFunc: fill as unknown as KernelFunc
+  kernelFunc: fill
 };

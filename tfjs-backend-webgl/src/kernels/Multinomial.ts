@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Multinomial, MultinomialAttrs, MultinomialInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Multinomial, MultinomialAttrs, MultinomialInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {MultinomialProgram} from '../multinomial_gpu';
@@ -25,7 +25,7 @@ import {softmax} from './Softmax';
 export function multinomial(args: {
   inputs: MultinomialInputs,
   backend: MathBackendWebGL,
-  attrs: MultinomialAttrs
+  attrs: KernelAttributes<MultinomialAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {logits} = inputs;
@@ -49,5 +49,5 @@ export function multinomial(args: {
 export const multinomialConfig: KernelConfig = {
   kernelName: Multinomial,
   backendName: 'webgl',
-  kernelFunc: multinomial as unknown as KernelFunc
+  kernelFunc: multinomial
 };

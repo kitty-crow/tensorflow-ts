@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, StringSplit, StringSplitAttrs, StringSplitInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, StringSplit, StringSplitAttrs, StringSplitInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {stringSplitImplCPU} from '../kernel_utils/shared';
@@ -23,7 +23,7 @@ import {stringSplitImplCPU} from '../kernel_utils/shared';
 export function stringSplit(args: {
   inputs: StringSplitInputs,
   backend: MathBackendWebGL,
-  attrs: StringSplitAttrs
+  attrs: KernelAttributes<StringSplitAttrs>
 }): [TensorInfo, TensorInfo, TensorInfo] {
   const {inputs, backend, attrs} = args;
   const {skipEmpty} = attrs;
@@ -56,5 +56,5 @@ export function stringSplit(args: {
 export const stringSplitConfig: KernelConfig = {
   kernelName: StringSplit,
   backendName: 'webgl',
-  kernelFunc: stringSplit as unknown as KernelFunc,
+  kernelFunc: stringSplit,
 };

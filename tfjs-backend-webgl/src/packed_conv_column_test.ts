@@ -17,6 +17,12 @@
 
 import {selectActivationSource} from './activation_source';
 import {packedConvColumnSource} from './packed_conv_column';
+import {avgPool, avgPoolConfig} from './kernels/AvgPool';
+import {maxPool, maxPoolConfig} from './kernels/MaxPool';
+import {batchNorm, batchNormConfig} from './kernels/BatchNorm';
+import {relu, reluConfig} from './kernels/Relu';
+import {resizeBilinearGrad, resizeBilinearGradConfig} from './kernels/ResizeBilinearGrad';
+import {resizeNearestNeighborGrad, resizeNearestNeighborGradConfig} from './kernels/ResizeNearestNeighborGrad';
 
 describe('packed convolution sampling source', () => {
   it('does not emit a sample beyond the filter boundary', () => {
@@ -83,5 +89,26 @@ describe('ordered fused activation source', () => {
         .toBe('plain');
     expect(leaky).toHaveBeenCalledTimes(1);
     expect(plain).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('WebGL kernel registration contracts', () => {
+  it('retains the distinct pooling and resize registration entry points', () => {
+    expect(avgPoolConfig.kernelName).toBe('AvgPool');
+    expect(maxPoolConfig.kernelName).toBe('MaxPool');
+    expect(avgPoolConfig.kernelFunc).toBe(avgPool);
+    expect(maxPoolConfig.kernelFunc).toBe(maxPool);
+    expect(resizeBilinearGradConfig.kernelName).toBe('ResizeBilinearGrad');
+    expect(resizeNearestNeighborGradConfig.kernelName).toBe('ResizeNearestNeighborGrad');
+    expect(resizeBilinearGradConfig.kernelFunc).toBe(resizeBilinearGrad);
+    expect(resizeNearestNeighborGradConfig.kernelFunc).toBe(resizeNearestNeighborGrad);
+  });
+
+  it('registers named-input and factory kernels without a wrapper', () => {
+    expect(batchNormConfig.backendName).toBe('webgl');
+    expect(batchNormConfig.kernelName).toBe('FusedBatchNorm');
+    expect(batchNormConfig.kernelFunc).toBe(batchNorm);
+    expect(reluConfig.backendName).toBe('webgl');
+    expect(reluConfig.kernelFunc).toBe(relu);
   });
 });

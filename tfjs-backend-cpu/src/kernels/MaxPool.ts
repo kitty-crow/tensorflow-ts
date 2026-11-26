@@ -14,44 +14,17 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, KernelConfig, KernelAttributes, MaxPool, MaxPoolAttrs, MaxPoolInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+
+import {MaxPool, MaxPoolAttrs, MaxPoolInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
-import {pool} from '../utils/pool_utils';
-import {identity} from './Identity';
+import {dispatchPool2D} from './pool_dispatch';
 
 export function maxPool(
     args:
         {inputs: MaxPoolInputs, backend: MathBackendCPU, attrs: KernelAttributes<MaxPoolAttrs>}):
     TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  assertNotComplex(x, 'maxPool');
-  const {filterSize, strides, pad, dimRoundingMode} = attrs;
-  const dilations = 1;
-
-  util.assert(
-      backend_util.eitherStridesOrDilationsAreOne(strides, dilations),
-      () => 'Error in maxPool: Either strides or dilations must be 1. ' +
-          `Got strides ${strides} and dilations '${dilations}'`);
-
-  const convInfo = backend_util.computePool2DInfo(
-      x.shape as [number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode);
-  let res: TensorInfo;
-
-  if (convInfo.filterWidth === 1 && convInfo.filterHeight === 1 &&
-      util.arraysEqual(convInfo.inShape, convInfo.outShape)) {
-    res = identity({inputs: {x}, backend});
-  } else {
-    const xValues = backend.requireValues(x.dataId) as TypedArray;
-    const strides = util.computeStrides(x.shape);
-    const buffer = pool(xValues, x.shape, x.dtype, strides, convInfo, 'max');
-    res = backend.makeTensorInfo(
-        convInfo.outShape, x.dtype, buffer.values as TypedArray);
-  }
-  return res;
+  return dispatchPool2D(args, 'max');
 }
 
 export const maxPoolConfig: KernelConfig = {

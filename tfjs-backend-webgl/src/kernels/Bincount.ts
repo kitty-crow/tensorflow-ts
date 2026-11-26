@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Bincount, BincountAttrs, BincountInputs, KernelConfig, KernelFunc, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {Bincount, BincountAttrs, BincountInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {bincountImplCPU} from '../kernel_utils/shared';
@@ -23,7 +23,7 @@ import {bincountImplCPU} from '../kernel_utils/shared';
 export function bincount(args: {
   inputs: BincountInputs,
   backend: MathBackendWebGL,
-  attrs: BincountAttrs
+  attrs: KernelAttributes<BincountAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, weights} = inputs;
@@ -41,5 +41,5 @@ export function bincount(args: {
 export const bincountConfig: KernelConfig = {
   kernelName: Bincount,
   backendName: 'webgl',
-  kernelFunc: bincount as unknown as KernelFunc
+  kernelFunc: bincount
 };

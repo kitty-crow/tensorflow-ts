@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, KernelConfig, KernelFunc, MaxPoolGrad, MaxPoolGradAttrs, MaxPoolGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, MaxPoolGrad, MaxPoolGradAttrs, MaxPoolGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {MaxPool2DBackpropProgram} from '../max_pool_backprop_gpu';
@@ -24,7 +24,7 @@ import {assertNotComplex} from '../webgl_util';
 export function maxPoolGrad(args: {
   inputs: MaxPoolGradInputs,
   backend: MathBackendWebGL,
-  attrs: MaxPoolGradAttrs
+  attrs: KernelAttributes<MaxPoolGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input, output} = inputs;
@@ -51,5 +51,5 @@ export function maxPoolGrad(args: {
 export const maxPoolGradConfig: KernelConfig = {
   kernelName: MaxPoolGrad,
   backendName: 'webgl',
-  kernelFunc: maxPoolGrad as unknown as KernelFunc
+  kernelFunc: maxPoolGrad
 };

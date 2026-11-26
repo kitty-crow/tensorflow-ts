@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {ComplexAbs, ComplexAbsInputs, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {ComplexAbs, ComplexAbsInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {ComplexAbsProgram} from '../complex_abs_gpu';
@@ -52,5 +52,5 @@ export function complexAbs(
 export const complexAbsConfig: KernelConfig = {
   kernelName: ComplexAbs,
   backendName: 'webgl',
-  kernelFunc: complexAbs as unknown as KernelFunc
+  kernelFunc: complexAbs
 };

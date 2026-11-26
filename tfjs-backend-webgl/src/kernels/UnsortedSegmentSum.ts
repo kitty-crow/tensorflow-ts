@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, DataType, KernelConfig, KernelFunc, sumOutType, TensorInfo, UnsortedSegmentSum, UnsortedSegmentSumAttrs, UnsortedSegmentSumInputs, util} from '@tensorflow/tfjs-core';
+import {backend_util, DataType, KernelConfig, KernelAttributes, sumOutType, TensorInfo, UnsortedSegmentSum, UnsortedSegmentSumAttrs, UnsortedSegmentSumInputs, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {SegmentOpProgram} from '../segment_gpu';
@@ -28,7 +28,7 @@ import {transpose} from './Transpose';
 export function unsortedSegmentSum(args: {
   inputs: UnsortedSegmentSumInputs,
   backend: MathBackendWebGL,
-  attrs: UnsortedSegmentSumAttrs
+  attrs: KernelAttributes<UnsortedSegmentSumAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x, segmentIds} = inputs;
@@ -110,5 +110,5 @@ export function unsortedSegmentSum(args: {
 export const unsortedSegmentSumConfig: KernelConfig = {
   kernelName: UnsortedSegmentSum,
   backendName: 'webgl',
-  kernelFunc: unsortedSegmentSum as unknown as KernelFunc
+  kernelFunc: unsortedSegmentSum
 };

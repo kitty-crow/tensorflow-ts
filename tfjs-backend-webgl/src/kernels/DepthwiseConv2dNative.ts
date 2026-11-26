@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, DepthwiseConv2dNative, DepthwiseConv2dNativeAttrs, DepthwiseConv2dNativeInputs, env, KernelConfig, KernelFunc, util} from '@tensorflow/tfjs-core';
+import {backend_util, DepthwiseConv2dNative, DepthwiseConv2dNativeAttrs, DepthwiseConv2dNativeInputs, env, KernelConfig, KernelAttributes, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {DepthwiseConv2DProgram} from '../conv_gpu_depthwise';
@@ -23,7 +23,7 @@ import {DepthwiseConvPacked2DProgram} from '../conv_packed_gpu_depthwise';
 
 export function depthwiseConv2dNative(args: {
   inputs: DepthwiseConv2dNativeInputs,
-  attrs: DepthwiseConv2dNativeAttrs,
+  attrs: KernelAttributes<DepthwiseConv2dNativeAttrs>,
   backend: MathBackendWebGL
 }) {
   const {inputs, backend, attrs} = args;
@@ -64,5 +64,5 @@ export function depthwiseConv2dNative(args: {
 export const depthwiseConv2dNativeConfig: KernelConfig = {
   kernelName: DepthwiseConv2dNative,
   backendName: 'webgl',
-  kernelFunc: depthwiseConv2dNative as unknown as KernelFunc,
+  kernelFunc: depthwiseConv2dNative,
 };

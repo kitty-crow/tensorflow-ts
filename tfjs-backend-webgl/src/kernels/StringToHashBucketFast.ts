@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, StringToHashBucketFast, StringToHashBucketFastAttrs, StringToHashBucketFastInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, StringToHashBucketFast, StringToHashBucketFastAttrs, StringToHashBucketFastInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {stringToHashBucketFastImplCPU} from '../kernel_utils/shared';
@@ -23,7 +23,7 @@ import {stringToHashBucketFastImplCPU} from '../kernel_utils/shared';
 export function stringToHashBucketFast(args: {
   inputs: StringToHashBucketFastInputs,
   backend: MathBackendWebGL,
-  attrs: StringToHashBucketFastAttrs
+  attrs: KernelAttributes<StringToHashBucketFastAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {numBuckets} = attrs;
@@ -45,5 +45,5 @@ export function stringToHashBucketFast(args: {
 export const stringToHashBucketFastConfig: KernelConfig = {
   kernelName: StringToHashBucketFast,
   backendName: 'webgl',
-  kernelFunc: stringToHashBucketFast as unknown as KernelFunc,
+  kernelFunc: stringToHashBucketFast,
 };

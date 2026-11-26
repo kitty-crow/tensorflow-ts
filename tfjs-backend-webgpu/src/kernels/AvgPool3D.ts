@@ -14,48 +14,18 @@
  * limitations under the License.
  * =============================================================================
  */
-import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
+
+import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
-import {Pool3DProgram} from '../pool_webgpu';
+import {dispatchPool3D} from './pool_dispatch';
 
 export function avgPool3D(args: {
   inputs: AvgPool3DInputs,
   backend: WebGPUBackend,
   attrs: KernelAttributes<AvgPool3DAttrs>
 }): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {filterSize, strides, pad, dataFormat, dimRoundingMode} = attrs;
-  const dilations: [number, number, number] = [1, 1, 1];
-
-  const convInfo = backend_util.computePool3DInfo(
-      x.shape as [number, number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode, dataFormat);
-  const avgPoolProgram = new Pool3DProgram(convInfo, 'avg');
-  const dimensions = [
-    {
-      type: 'int32',
-      data: [convInfo.strideDepth, convInfo.strideHeight, convInfo.strideWidth]
-    },
-    {
-      type: 'int32',
-      data:
-          [convInfo.padInfo.front, convInfo.padInfo.top, convInfo.padInfo.left]
-    },
-    {
-      type: 'int32',
-      data: [convInfo.inDepth, convInfo.inHeight, convInfo.inWidth]
-    },
-    {
-      type: 'int32',
-      data: [
-        convInfo.effectiveFilterDepth, convInfo.effectiveFilterHeight,
-        convInfo.effectiveFilterWidth
-      ]
-    }
-  ];
-  return backend.runWebGPUProgram(avgPoolProgram, [x], x.dtype, dimensions);
+  return dispatchPool3D(args, 'avg');
 }
 
 export const avgPool3DConfig: KernelConfig = {

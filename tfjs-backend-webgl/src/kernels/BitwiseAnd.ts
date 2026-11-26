@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {BitwiseAnd, BitwiseAndInputs, env, KernelConfig, KernelFunc, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {BitwiseAnd, BitwiseAndInputs, env, KernelConfig, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 import {MathBackendWebGL} from '../backend_webgl';
 import {BinaryOpProgram} from '../binaryop_gpu';
 import {BinaryOpPackedProgram} from '../binaryop_packed_gpu';
@@ -69,5 +69,5 @@ export function bitwiseAnd(args: {
 export const bitwiseAndConfig: KernelConfig = {
   kernelName: BitwiseAnd,
   backendName: 'webgl',
-  kernelFunc: bitwiseAnd as unknown as KernelFunc
+  kernelFunc: bitwiseAnd
 };

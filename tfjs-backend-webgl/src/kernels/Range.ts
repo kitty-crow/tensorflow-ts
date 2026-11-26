@@ -15,13 +15,13 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Range, RangeAttrs, TensorInfo} from '@tensorflow/tfjs-core';
+import {KernelConfig, KernelAttributes, Range, RangeAttrs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {rangeImplCPU} from '../kernel_utils/shared';
 
 export const range =
-    (args: {backend: MathBackendWebGL, attrs: RangeAttrs}): TensorInfo => {
+    (args: {backend: MathBackendWebGL, attrs: KernelAttributes<RangeAttrs>}): TensorInfo => {
       const {backend, attrs} = args;
       const {start, stop, step, dtype} = attrs;
       const values = rangeImplCPU(start, stop, step, dtype);
@@ -31,5 +31,5 @@ export const range =
 export const rangeConfig: KernelConfig = {
   kernelName: Range,
   backendName: 'webgl',
-  kernelFunc: range as unknown as KernelFunc
+  kernelFunc: range
 };

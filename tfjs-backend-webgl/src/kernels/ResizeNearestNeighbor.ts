@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {env, KernelConfig, KernelFunc, ResizeNearestNeighbor, ResizeNearestNeighborAttrs, ResizeNearestNeighborInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {env, KernelConfig, KernelAttributes, ResizeNearestNeighbor, ResizeNearestNeighborAttrs, ResizeNearestNeighborInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {ResizeNearestNeighborProgram} from '../resize_nearest_neighbor_gpu';
@@ -24,7 +24,7 @@ import {ResizeNearestNeighborPackedProgram} from '../resize_nearest_neighbor_pac
 export function resizeNearestNeighbor(args: {
   inputs: ResizeNearestNeighborInputs,
   backend: MathBackendWebGL,
-  attrs: ResizeNearestNeighborAttrs
+  attrs: KernelAttributes<ResizeNearestNeighborAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {images} = inputs;
@@ -45,5 +45,5 @@ export function resizeNearestNeighbor(args: {
 export const resizeNearestNeighborConfig: KernelConfig = {
   kernelName: ResizeNearestNeighbor,
   backendName: 'webgl',
-  kernelFunc: resizeNearestNeighbor as unknown as KernelFunc
+  kernelFunc: resizeNearestNeighbor
 };

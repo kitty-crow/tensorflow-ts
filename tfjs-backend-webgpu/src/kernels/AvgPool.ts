@@ -14,23 +14,16 @@
  * limitations under the License.
  * =============================================================================
  */
-import {AvgPool, AvgPoolAttrs, AvgPoolInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
+
+import {AvgPool, AvgPoolAttrs, AvgPoolInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
-import {poolImpl} from './Pool_impl';
+import {dispatchPool2D} from './pool_dispatch';
 
 export function avgPool(
     args: {inputs: AvgPoolInputs, backend: WebGPUBackend, attrs: KernelAttributes<AvgPoolAttrs>}):
     TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {filterSize, strides, pad, dimRoundingMode} = attrs;
-  const dilations = 1;
-  const convInfo = backend_util.computePool2DInfo(
-      x.shape as [number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode);
-
-  return poolImpl(x, convInfo, 'avg', backend);
+  return dispatchPool2D(args, 'avg');
 }
 
 export const avgPoolConfig: KernelConfig = {

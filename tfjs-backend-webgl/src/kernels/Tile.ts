@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {buffer, KernelConfig, KernelFunc, TensorInfo, Tile, TileAttrs, TileInputs, TypedArray, util} from '@tensorflow/tfjs-core';
+import {buffer, KernelConfig, KernelAttributes, TensorInfo, Tile, TileAttrs, TileInputs, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {tileImplCPU} from '../kernel_utils/shared';
 import {TileProgram} from '../tile_gpu';
 
 export function tile(
-    params: {inputs: TileInputs, backend: MathBackendWebGL, attrs: TileAttrs}):
+    params: {inputs: TileInputs, backend: MathBackendWebGL, attrs: KernelAttributes<TileAttrs>}):
     TensorInfo {
   const {inputs, backend, attrs} = params;
   const {x} = inputs;
@@ -50,5 +50,5 @@ export function tile(
 export const tileConfig: KernelConfig = {
   kernelName: Tile,
   backendName: 'webgl',
-  kernelFunc: tile as unknown as KernelFunc,
+  kernelFunc: tile,
 };

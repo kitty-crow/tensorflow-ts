@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {ClipByValue, ClipByValueAttrs, ClipByValueInputs, env, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {ClipByValue, ClipByValueAttrs, ClipByValueInputs, env, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {ClipProgram} from '../clip_gpu';
@@ -24,7 +24,7 @@ import {ClipPackedProgram} from '../clip_packed_gpu';
 export function clipByValue(args: {
   inputs: ClipByValueInputs,
   backend: MathBackendWebGL,
-  attrs: ClipByValueAttrs
+  attrs: KernelAttributes<ClipByValueAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -43,5 +43,5 @@ export function clipByValue(args: {
 export const clipByValueConfig: KernelConfig = {
   kernelName: ClipByValue,
   backendName: 'webgl',
-  kernelFunc: clipByValue as unknown as KernelFunc
+  kernelFunc: clipByValue
 };

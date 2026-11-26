@@ -16,7 +16,7 @@
  * =============================================================================
  */
 
-import {env, FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {env, FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {BatchNormProgram} from '../batchnorm_gpu';
@@ -25,7 +25,7 @@ import {BatchNormPackedProgram} from '../batchnorm_packed_gpu';
 export const batchNorm: (params: {
   inputs: FusedBatchNormInputs,
   backend: MathBackendWebGL,
-  attrs: FusedBatchNormAttrs
+  attrs: KernelAttributes<FusedBatchNormAttrs>
 }) => TensorInfo = ({inputs, backend, attrs}) => {
   const {x, mean, variance, offset, scale} = inputs;
 
@@ -77,5 +77,5 @@ export const batchNorm: (params: {
 export const batchNormConfig: KernelConfig = {
   kernelName: FusedBatchNorm,
   backendName: 'webgl',
-  kernelFunc: batchNorm as unknown as KernelFunc,
+  kernelFunc: batchNorm,
 };

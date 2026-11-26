@@ -14,26 +14,18 @@
  * limitations under the License.
  * =============================================================================
  */
-import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
+
+import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
-import {Pool3DProgram} from '../pool_gpu';
+import {dispatchPool3D} from './pool_dispatch';
 
 export function avgPool3D(args: {
   inputs: AvgPool3DInputs,
   backend: MathBackendWebGL,
   attrs: KernelAttributes<AvgPool3DAttrs>
 }): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {filterSize, strides, pad, dimRoundingMode, dataFormat} = attrs;
-  const dilations: [number, number, number] = [1, 1, 1];
-
-  const convInfo = backend_util.computePool3DInfo(
-      x.shape as [number, number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode, dataFormat);
-  const avgPoolProgram = new Pool3DProgram(convInfo, 'avg', false);
-  return backend.runWebGLProgram(avgPoolProgram, [x], 'float32');
+  return dispatchPool3D(args, 'avg');
 }
 
 export const avgPool3DConfig: KernelConfig = {

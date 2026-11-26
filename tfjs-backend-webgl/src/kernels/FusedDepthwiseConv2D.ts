@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, env, FusedDepthwiseConv2D, FusedDepthwiseConv2DAttrs, FusedDepthwiseConv2DInputs, KernelConfig, KernelFunc, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, env, FusedDepthwiseConv2D, FusedDepthwiseConv2DAttrs, FusedDepthwiseConv2DInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {DepthwiseConv2DProgram} from '../conv_gpu_depthwise';
@@ -24,7 +24,7 @@ import {mapActivationToShaderProgram} from '../kernel_utils/kernel_funcs_utils';
 
 export function fusedDepthwiseConv2D(args: {
   inputs: FusedDepthwiseConv2DInputs,
-  attrs: FusedDepthwiseConv2DAttrs,
+  attrs: KernelAttributes<FusedDepthwiseConv2DAttrs>,
   backend: MathBackendWebGL
 }) {
   const {inputs, backend, attrs} = args;
@@ -103,5 +103,5 @@ export function fusedDepthwiseConv2D(args: {
 export const fusedDepthwiseConv2DConfig: KernelConfig = {
   kernelName: FusedDepthwiseConv2D,
   backendName: 'webgl',
-  kernelFunc: fusedDepthwiseConv2D as unknown as KernelFunc,
+  kernelFunc: fusedDepthwiseConv2D,
 };

@@ -14,38 +14,18 @@
  * limitations under the License.
  * =============================================================================
  */
-import {AvgPool, AvgPoolAttrs, AvgPoolInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
+
+import {AvgPool, AvgPoolAttrs, AvgPoolInputs, KernelAttributes, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
-import {Pool2DProgram} from '../pool_gpu';
-import {assertNotComplex} from '../webgl_util';
-import {identity} from './Identity';
+import {dispatchPool2D} from './pool_dispatch';
 
 export function avgPool(args: {
   inputs: AvgPoolInputs,
   backend: MathBackendWebGL,
   attrs: KernelAttributes<AvgPoolAttrs>
 }): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  assertNotComplex(x, 'avgPool');
-  const {filterSize, strides, pad, dimRoundingMode} = attrs;
-  const dilations = 1;
-
-  util.assert(
-      backend_util.eitherStridesOrDilationsAreOne(strides, dilations),
-      () => 'Error in avgPool: Either strides or dilations must be 1. ' +
-          `Got strides ${strides} and dilations '${dilations}'`);
-
-  const convInfo = backend_util.computePool2DInfo(
-      x.shape as [number, number, number, number], filterSize, strides,
-      dilations, pad, dimRoundingMode);
-  if (convInfo.filterWidth === 1 && convInfo.filterHeight === 1 &&
-      util.arraysEqual(convInfo.inShape, convInfo.outShape)) {
-    return identity({inputs: {x}, backend});
-  }
-  const avgPoolProgram = new Pool2DProgram(convInfo, 'avg', false);
-  return backend.runWebGLProgram(avgPoolProgram, [x], 'float32');
+  return dispatchPool2D(args, 'avg');
 }
 
 export const avgPoolConfig: KernelConfig = {

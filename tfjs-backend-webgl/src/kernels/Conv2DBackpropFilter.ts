@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {backend_util, Conv2DBackpropFilter, Conv2DBackpropFilterAttrs, Conv2DBackpropFilterInputs, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {backend_util, Conv2DBackpropFilter, Conv2DBackpropFilterAttrs, Conv2DBackpropFilterInputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {Conv2DDerFilterProgram} from '../conv_backprop_gpu';
 
 export function conv2DBackpropFilter(args: {
   inputs: Conv2DBackpropFilterInputs,
-  attrs: Conv2DBackpropFilterAttrs,
+  attrs: KernelAttributes<Conv2DBackpropFilterAttrs>,
   backend: MathBackendWebGL
 }) {
   const {inputs, backend, attrs} = args;
@@ -42,5 +42,5 @@ export function conv2DBackpropFilter(args: {
 export const conv2DBackpropFilterConfig: KernelConfig = {
   kernelName: Conv2DBackpropFilter,
   backendName: 'webgl',
-  kernelFunc: conv2DBackpropFilter as unknown as KernelFunc,
+  kernelFunc: conv2DBackpropFilter,
 };

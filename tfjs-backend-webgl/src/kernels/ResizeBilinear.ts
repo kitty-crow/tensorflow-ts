@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {env, KernelConfig, KernelFunc, ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {env, KernelConfig, KernelAttributes, ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {ResizeBilinearProgram} from '../resize_bilinear_gpu';
@@ -24,7 +24,7 @@ import {ResizeBilinearPackedProgram} from '../resize_bilinear_packed_gpu';
 export function resizeBilinear(args: {
   inputs: ResizeBilinearInputs,
   backend: MathBackendWebGL,
-  attrs: ResizeBilinearAttrs
+  attrs: KernelAttributes<ResizeBilinearAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {images} = inputs;
@@ -45,5 +45,5 @@ export function resizeBilinear(args: {
 export const resizeBilinearConfig: KernelConfig = {
   kernelName: ResizeBilinear,
   backendName: 'webgl',
-  kernelFunc: resizeBilinear as unknown as KernelFunc
+  kernelFunc: resizeBilinear
 };

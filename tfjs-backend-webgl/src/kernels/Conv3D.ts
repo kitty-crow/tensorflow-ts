@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {backend_util, Conv3D, Conv3DAttrs, Conv3DInputs, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {backend_util, Conv3D, Conv3DAttrs, Conv3DInputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {Conv3DProgram} from '../conv_gpu';
 
 export function conv3D(
     args:
-        {inputs: Conv3DInputs, attrs: Conv3DAttrs, backend: MathBackendWebGL}) {
+        {inputs: Conv3DInputs, attrs: KernelAttributes<Conv3DAttrs>, backend: MathBackendWebGL}) {
   const {inputs, backend, attrs} = args;
   const {x, filter} = inputs;
   const {strides, pad, dilations} = attrs;
@@ -39,5 +39,5 @@ export function conv3D(
 export const conv3DConfig: KernelConfig = {
   kernelName: Conv3D,
   backendName: 'webgl',
-  kernelFunc: conv3D as unknown as KernelFunc,
+  kernelFunc: conv3D,
 };

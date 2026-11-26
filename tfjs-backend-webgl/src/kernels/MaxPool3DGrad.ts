@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {backend_util, KernelConfig, KernelFunc, MaxPool3DGrad, MaxPool3DGradAttrs, MaxPool3DGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, MaxPool3DGrad, MaxPool3DGradAttrs, MaxPool3DGradInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {MaxPool3DBackpropProgram} from '../max_pool_backprop_gpu';
@@ -23,7 +23,7 @@ import {Pool3DProgram} from '../pool_gpu';
 export function maxPool3DGrad(args: {
   inputs: MaxPool3DGradInputs,
   backend: MathBackendWebGL,
-  attrs: MaxPool3DGradAttrs
+  attrs: KernelAttributes<MaxPool3DGradAttrs>
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {dy, input} = inputs;
@@ -49,5 +49,5 @@ export function maxPool3DGrad(args: {
 export const maxPool3DGradConfig: KernelConfig = {
   kernelName: MaxPool3DGrad,
   backendName: 'webgl',
-  kernelFunc: maxPool3DGrad as unknown as KernelFunc
+  kernelFunc: maxPool3DGrad
 };

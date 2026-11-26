@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {backend_util, Conv3DBackpropInputV2, Conv3DBackpropInputV2Attrs, Conv3DBackpropInputV2Inputs, KernelConfig, KernelFunc} from '@tensorflow/tfjs-core';
+import {backend_util, Conv3DBackpropInputV2, Conv3DBackpropInputV2Attrs, Conv3DBackpropInputV2Inputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {Conv3DDerInputProgram} from '../conv_backprop_gpu';
 
 export function conv3DBackpropInput(args: {
   inputs: Conv3DBackpropInputV2Inputs,
-  attrs: Conv3DBackpropInputV2Attrs,
+  attrs: KernelAttributes<Conv3DBackpropInputV2Attrs>,
   backend: MathBackendWebGL
 }) {
   const {inputs, backend, attrs} = args;
@@ -40,5 +40,5 @@ export function conv3DBackpropInput(args: {
 export const conv3DBackpropInputConfig: KernelConfig = {
   kernelName: Conv3DBackpropInputV2,
   backendName: 'webgl',
-  kernelFunc: conv3DBackpropInput as unknown as KernelFunc,
+  kernelFunc: conv3DBackpropInput,
 };

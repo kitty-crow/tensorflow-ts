@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {env, KernelConfig, KernelFunc, MirrorPad, MirrorPadAttrs, MirrorPadInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {env, KernelConfig, KernelAttributes, MirrorPad, MirrorPadAttrs, MirrorPadInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {MirrorPadProgram} from '../mirror_pad_gpu';
@@ -24,7 +24,7 @@ import {MirrorPadPackedProgram} from '../mirror_pad_packed_gpu';
 export const mirrorPadKernelFunc: (params: {
   inputs: MirrorPadInputs,
   backend: MathBackendWebGL,
-  attrs: MirrorPadAttrs
+  attrs: KernelAttributes<MirrorPadAttrs>
 }) => TensorInfo = ({inputs, backend, attrs}) => {
   const {x} = inputs;
   const {paddings, mode} = attrs;
@@ -41,5 +41,5 @@ export const mirrorPadKernelFunc: (params: {
 export const mirrorPadConfig: KernelConfig = {
   kernelName: MirrorPad,
   backendName: 'webgl',
-  kernelFunc: mirrorPadKernelFunc as unknown as KernelFunc,
+  kernelFunc: mirrorPadKernelFunc,
 };

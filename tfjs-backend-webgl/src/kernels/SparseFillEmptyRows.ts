@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, SparseFillEmptyRows, SparseFillEmptyRowsInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, SparseFillEmptyRows, SparseFillEmptyRowsInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {sparseFillEmptyRowsImplCPU} from '../kernel_utils/shared';
@@ -71,5 +71,5 @@ export function sparseFillEmptyRows(args: {
 export const sparseFillEmptyRowsConfig: KernelConfig = {
   kernelName: SparseFillEmptyRows,
   backendName: 'webgl',
-  kernelFunc: sparseFillEmptyRows as unknown as KernelFunc,
+  kernelFunc: sparseFillEmptyRows,
 };

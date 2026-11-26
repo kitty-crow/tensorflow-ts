@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelFunc, NamedAttrMap, StaticRegexReplace, StaticRegexReplaceAttrs, StaticRegexReplaceInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, NamedAttrMap, StaticRegexReplace, StaticRegexReplaceAttrs, StaticRegexReplaceInputs, TensorInfo} from '@tensorflow/tfjs-core';
 import {MathBackendWebGL} from '../backend_webgl';
 import {staticRegexReplaceImplCPU} from '../kernel_utils/shared';
 
 export function staticRegexReplace(args: {
   inputs: StaticRegexReplaceInputs,
   backend: MathBackendWebGL,
-  attrs: StaticRegexReplaceAttrs,
+  attrs: KernelAttributes<StaticRegexReplaceAttrs>,
 }): TensorInfo {
   const {inputs, backend, attrs} = args;
   const {x} = inputs;
@@ -43,5 +43,5 @@ export function staticRegexReplace(args: {
 export const staticRegexReplaceConfig: KernelConfig = {
   kernelName: StaticRegexReplace,
   backendName: 'webgl',
-  kernelFunc: staticRegexReplace as unknown as KernelFunc,
+  kernelFunc: staticRegexReplace,
 };
