@@ -260,17 +260,22 @@ describe('shared CPU 3D pooling gradient traversal', () => {
     const args = {inputs: {input, dy}, backend,
       attrs: {filterSize, strides: 1, pad: 'valid' as const}};
     const avg = avgPool3DGrad(args);
-    const max = maxPool3DGrad(args);
+    const output = maxPool3D({inputs: {x: input}, backend,
+      attrs: {...args.attrs, dataFormat: 'NDHWC'}});
+    expect(output.shape).toEqual(dy.shape);
+    expect(backend.readSync(output.dataId)).toEqual(new Float32Array([3, 3]));
+    const max = maxPool3DGrad({...args, inputs: {input, dy, output}});
     expect(avg.shape).toEqual(input.shape);
     expect(max.shape).toEqual(input.shape);
     expect(backend.readSync(avg.dataId)).toEqual(new Float32Array([1, 3, 2]));
     expect(backend.readSync(max.dataId)).toEqual(new Float32Array([0, 6, 0]));
     const nanDy = backend.makeTensorInfo(dy.shape, 'float32',
         new Float32Array([NaN, 4]));
-    const nanMax = maxPool3DGrad({...args, inputs: {input, dy: nanDy}});
+    const nanMax = maxPool3DGrad({...args, inputs: {input, dy: nanDy, output}});
     expect(backend.readSync(nanMax.dataId)).toEqual(
         new Float32Array([0, NaN, 0]));
-    [input, dy, avg, max, nanDy, nanMax]
+    expect(backend.refCount(output.dataId)).toBe(1);
+    [input, dy, output, avg, max, nanDy, nanMax]
         .forEach(t => backend.disposeData(t.dataId));
     expect(backend.numDataIds()).toBe(0);
   });
