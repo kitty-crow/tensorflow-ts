@@ -18,7 +18,7 @@
 import {KernelConfig, KernelAttributes, ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, imageDimensions, rankFourStrides} from '../cpu_util';
 import {resizeAxisScale} from './resize_geometry';
 
 export function resizeBilinear(args: {
@@ -32,10 +32,11 @@ export function resizeBilinear(args: {
 
   assertNotComplex(images, 'resizeBilinear');
 
-  const imagesStrides = util.computeStrides(images.shape);
+  const [imageBatchStride, imageRowStride, imageColStride] =
+      rankFourStrides(util.computeStrides(images.shape));
   const [newHeight, newWidth] = size;
 
-  const [batch, oldHeight, oldWidth, numChannels] = images.shape;
+  const [batch, oldHeight, oldWidth, numChannels] = imageDimensions(images.shape);
   const xValues = backend.requireValues(images.dataId) as TypedArray;
   const result = new Float32Array(
       util.sizeFromShape([batch, newHeight, newWidth, numChannels]));
@@ -56,9 +57,9 @@ export function resizeBilinear(args: {
       const rowFrac = sourceFracRow - sourceRowFloor;
       const sourceRowCeil = Math.min(oldHeight - 1, Math.ceil(sourceFracRow));
       const topRowOffset =
-          b * imagesStrides[0] + sourceRowFloor * imagesStrides[1];
+          b * imageBatchStride + sourceRowFloor * imageRowStride;
       const botRowOffset =
-          b * imagesStrides[0] + sourceRowCeil * imagesStrides[1];
+          b * imageBatchStride + sourceRowCeil * imageRowStride;
       for (let c = 0; c < newWidth; c++) {
         let sourceFracCol: number;
         if (halfPixelCenters) {
@@ -69,10 +70,10 @@ export function resizeBilinear(args: {
         const sourceColFloor = Math.max(0, Math.floor(sourceFracCol));
         const colFrac = sourceFracCol - sourceColFloor;
         const sourceColCeil = Math.min(oldWidth - 1, Math.ceil(sourceFracCol));
-        const topLeftOffest = topRowOffset + sourceColFloor * imagesStrides[2];
-        const botLeftOffset = botRowOffset + sourceColFloor * imagesStrides[2];
-        const topRightOffset = topRowOffset + sourceColCeil * imagesStrides[2];
-        const botRightOffest = botRowOffset + sourceColCeil * imagesStrides[2];
+        const topLeftOffest = topRowOffset + sourceColFloor * imageColStride;
+        const botLeftOffset = botRowOffset + sourceColFloor * imageColStride;
+        const topRightOffset = topRowOffset + sourceColCeil * imageColStride;
+        const botRightOffest = botRowOffset + sourceColCeil * imageColStride;
         for (let d = 0; d < numChannels; d++) {
           // Begin shader.
 

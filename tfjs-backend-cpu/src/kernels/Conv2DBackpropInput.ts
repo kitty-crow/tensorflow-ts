@@ -18,7 +18,7 @@
 import {backend_util, Conv2DBackpropInput, Conv2DBackpropInputAttrs, Conv2DBackpropInputInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, rankFourStrides, spatialStrides2D} from '../cpu_util';
 
 export function conv2DBackpropInput(args: {
   inputs: Conv2DBackpropInputInputs,
@@ -43,7 +43,7 @@ export function conv2DBackpropInput(args: {
   const dxValues = dx.values;
   const dyValues = backend.requireValues(dy.dataId) as TypedArray;
   const fltValues = backend.requireValues(filter.dataId) as TypedArray;
-  const [fltS0, fltS1, fltS2] = filterStrides;
+  const [fltS0, fltS1, fltS2] = rankFourStrides(filterStrides);
   const {
     batchSize,
     filterHeight,
@@ -62,14 +62,10 @@ export function conv2DBackpropInput(args: {
   const leftPad = filterWidth - 1 - convInfo.padInfo.left;
 
   const isChannelsLast = $dataFormat === 'channelsLast';
-  const xBatchStride = dx.strides[0];
-  const xRowStride = isChannelsLast ? dx.strides[1] : dx.strides[2];
-  const xColStride = isChannelsLast ? dx.strides[2] : 1;
-  const xChannelStride = isChannelsLast ? 1 : dx.strides[1];
-  const yBatchStride = dyStrides[0];
-  const yRowStride = isChannelsLast ? dyStrides[1] : dyStrides[2];
-  const yColStride = isChannelsLast ? dyStrides[2] : 1;
-  const yChannelStride = isChannelsLast ? 1 : dyStrides[1];
+  const [xBatchStride, xRowStride, xColStride, xChannelStride] =
+      spatialStrides2D(dx.strides, isChannelsLast);
+  const [yBatchStride, yRowStride, yColStride, yChannelStride] =
+      spatialStrides2D(dyStrides, isChannelsLast);
 
   for (let b = 0; b < batchSize; ++b) {
     for (let d1 = 0; d1 < inChannels; ++d1) {

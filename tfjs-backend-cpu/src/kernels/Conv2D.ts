@@ -18,7 +18,7 @@
 import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, rankFourStrides, spatialStrides2D} from '../cpu_util';
 
 export function conv2D(
     args: {inputs: Conv2DInputs, backend: MathBackendCPU, attrs: KernelAttributes<Conv2DAttrs>}):
@@ -48,14 +48,11 @@ export function conv2D(
   const xStrides = util.computeStrides(x.shape);
   const filterStrides = util.computeStrides(filter.shape);
 
-  const xBatchStride = xStrides[0];
-  const xRowStride = isChannelsLast ? xStrides[1] : xStrides[2];
-  const xColStride = isChannelsLast ? xStrides[2] : 1;
-  const xChannelStride = isChannelsLast ? 1 : xStrides[1];
-  const yBatchStride = y.strides[0];
-  const yRowStride = isChannelsLast ? y.strides[1] : y.strides[2];
-  const yColStride = isChannelsLast ? y.strides[2] : 1;
-  const yChannelStride = isChannelsLast ? 1 : y.strides[1];
+  const [xBatchStride, xRowStride, xColStride, xChannelStride] =
+      spatialStrides2D(xStrides, isChannelsLast);
+  const [yBatchStride, yRowStride, yColStride, yChannelStride] =
+      spatialStrides2D(y.strides, isChannelsLast);
+  const [filterRowStride, filterColStride] = rankFourStrides(filterStrides);
 
   const xVals = backend.requireValues(x.dataId) as TypedArray;
   const wVals = backend.requireValues(filter.dataId) as TypedArray;
@@ -72,7 +69,7 @@ export function conv2D(
         if (xR < 0 || xR >= convInfo.inHeight) {
           continue;
         }
-        const wOffset1 = wR * filterStrides[0];
+        const wOffset1 = wR * filterRowStride;
         const xOffset2 = xOffset1 + xR * xRowStride;
         for (let yC = 0; yC < convInfo.outWidth; ++yC) {
           const yOffset3 = yOffset2 + yC * yColStride;
@@ -82,7 +79,7 @@ export function conv2D(
             if (xC < 0 || xC >= convInfo.inWidth) {
               continue;
             }
-            const wOffset2 = wOffset1 + wC * filterStrides[1];
+            const wOffset2 = wOffset1 + wC * filterColStride;
             const xOffset3 = xOffset2 + xC * xColStride;
             let wOffset3 = wOffset2;
             for (let d1 = 0; d1 < convInfo.inChannels; ++d1) {

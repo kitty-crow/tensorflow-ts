@@ -18,7 +18,7 @@
 import {backend_util, Conv3DBackpropInputV2, Conv3DBackpropInputV2Attrs, Conv3DBackpropInputV2Inputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, rankFiveStrides} from '../cpu_util';
 
 export function conv3DBackpropInputV2(args: {
   inputs: Conv3DBackpropInputV2Inputs,
@@ -40,11 +40,11 @@ export function conv3DBackpropInputV2(args: {
 
   const dx = new TensorBuffer(convInfo.inShape, 'float32');
   const dxValues = dx.values;
-  const [dxS0, dxS1, dxS2, dxS3] = dx.strides;
+  const [dxS0, dxS1, dxS2, dxS3] = rankFiveStrides(dx.strides);
   const dyValues = backend.requireValues(dy.dataId) as TypedArray;
-  const [dyS0, dyS1, dyS2, dyS3] = dyStrides;
+  const [dyS0, dyS1, dyS2, dyS3] = rankFiveStrides(dyStrides);
   const fltValues = backend.requireValues(filter.dataId) as TypedArray;
-  const [fltS0, fltS1, fltS2, fltS3] = filterStrides;
+  const [fltS0, fltS1, fltS2, fltS3] = rankFiveStrides(filterStrides);
   const {
     batchSize,
     filterDepth,

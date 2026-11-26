@@ -18,7 +18,7 @@
 import {backend_util, Conv3DBackpropFilterV2, Conv3DBackpropFilterV2Attrs, Conv3DBackpropFilterV2Inputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, rankFiveStrides} from '../cpu_util';
 
 export function conv3DBackpropFilterV2(args: {
   inputs: Conv3DBackpropFilterV2Inputs,
@@ -47,11 +47,11 @@ export function conv3DBackpropFilterV2(args: {
 
   const dw = new TensorBuffer(convInfo.filterShape, 'float32');
   const dwValues = dw.values;
-  const [dwS0, dwS1, dwS2, dwS3] = dw.strides;
+  const [dwS0, dwS1, dwS2, dwS3] = rankFiveStrides(dw.strides);
   const dyValues = backend.requireValues(dy.dataId) as TypedArray;
-  const [dyS0, dyS1, dyS2, dyS3] = dyStrides;
+  const [dyS0, dyS1, dyS2, dyS3] = rankFiveStrides(dyStrides);
   const xValues = backend.requireValues(x.dataId) as TypedArray;
-  const [xS0, xS1, xS2, xS3] = xStrides;
+  const [xS0, xS1, xS2, xS3] = rankFiveStrides(xStrides);
 
   const frontPad = convInfo.padInfo.front;
   const leftPad = convInfo.padInfo.left;

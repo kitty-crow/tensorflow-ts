@@ -17,6 +17,15 @@
 
 import {requireComplexTensorInfos, requireTensorDataValues} from './tensor_data_values';
 import {MathBackendCPU} from './backend_cpu';
+import {imageDimensions, matrixBatchStrides, matrixDimensions, rankFiveStrides, spatialStrides2D} from './cpu_util';
+import {batchMatMul} from './kernels/BatchMatMul';
+import {conv2D} from './kernels/Conv2D';
+import {conv2DBackpropInput} from './kernels/Conv2DBackpropInput';
+import {conv3D} from './kernels/Conv3D';
+import {conv3DBackpropFilterV2} from './kernels/Conv3DBackpropFilterV2';
+import {conv3DBackpropInputV2} from './kernels/Conv3DBackpropInputV2';
+import {depthwiseConv2dNative} from './kernels/DepthwiseConv2dNative';
+import {depthwiseConv2dNativeBackpropInput} from './kernels/DepthwiseConv2dNativeBackpropInput';
 import {argMin} from './kernels/ArgMin';
 import {argMax} from './kernels/ArgMax';
 import {complex} from './kernels/Complex';
@@ -277,6 +286,141 @@ describe('shared CPU 3D pooling gradient traversal', () => {
     expect(backend.refCount(output.dataId)).toBe(1);
     [input, dy, output, avg, max, nanDy, nanMax]
         .forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('checked CPU matrix and convolution geometry', () => {
+  it('retains zero strides and dimensions and rejects missing coordinates', () => {
+    expect(matrixDimensions([4, 0, 3])).toEqual([0, 3]);
+    expect(matrixBatchStrides([0, 3])).toEqual([0, 3]);
+    expect(spatialStrides2D([0, 6, 2], true)).toEqual([0, 6, 2, 1]);
+    expect(spatialStrides2D([0, 6, 2], false)).toEqual([0, 2, 1, 6]);
+    expect(() => matrixDimensions([3])).toThrowError();
+    expect(() => matrixBatchStrides([3])).toThrowError();
+    expect(() => spatialStrides2D([3, 2], true)).toThrowError();
+  });
+
+  it('multiplies rectangular matrices with each transpose combination', () => {
+    const backend = new MathBackendCPU();
+    const a = backend.makeTensorInfo([2, 3], 'float32',
+        new Float32Array([1, 2, 3, 4, 5, 6]));
+    const b = backend.makeTensorInfo([3, 2], 'float32',
+        new Float32Array([7, 8, 9, 10, 11, 12]));
+    const at = backend.makeTensorInfo([3, 2], 'float32',
+        new Float32Array([1, 4, 2, 5, 3, 6]));
+    const bt = backend.makeTensorInfo([2, 3], 'float32',
+        new Float32Array([7, 9, 11, 8, 10, 12]));
+    for (const transposeA of [false, true]) {
+      for (const transposeB of [false, true]) {
+        const out = batchMatMul({backend, inputs: {
+          a: transposeA ? at : a, b: transposeB ? bt : b
+        }, attrs: {transposeA, transposeB}});
+        expect(out.shape).toEqual([2, 2]);
+        expect(backend.readSync(out.dataId)).toEqual(
+            new Float32Array([58, 64, 139, 154]));
+        backend.disposeData(out.dataId);
+      }
+    }
+    [a, b, at, bt].forEach(t => {
+      expect(backend.refCount(t.dataId)).toBe(1);
+      backend.disposeData(t.dataId);
+    });
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('preserves forward and input-gradient convolution in both layouts', () => {
+    const backend = new MathBackendCPU();
+    const inputShape: [number, number, number, number] = [1, 2, 2, 2];
+    const filter = backend.makeTensorInfo([1, 1, 2, 1], 'float32',
+        new Float32Array([2, 3]));
+    const layouts: Array<'NHWC'|'NCHW'> = ['NHWC', 'NCHW'];
+    for (const dataFormat of layouts) {
+      const channelsLast = dataFormat === 'NHWC';
+      const x = backend.makeTensorInfo(inputShape, 'float32', new Float32Array(
+          channelsLast ? [1, 10, 2, 20, 3, 30, 4, 40] :
+                         [1, 2, 3, 4, 10, 20, 30, 40]));
+      const dy = backend.makeTensorInfo(
+          channelsLast ? [1, 2, 2, 1] : [1, 1, 2, 2], 'float32',
+          new Float32Array([1, 2, 3, 4]));
+      const attrs = {strides: 1, pad: 'valid' as const, dataFormat};
+      const y = conv2D({inputs: {x, filter}, backend,
+        attrs: {...attrs, dilations: 1}});
+      const dx = conv2DBackpropInput({inputs: {dy, filter}, backend,
+        attrs: {...attrs, inputShape}});
+      expect(y.shape).toEqual(dy.shape);
+      expect(backend.readSync(y.dataId)).toEqual(
+          new Float32Array([32, 64, 96, 128]));
+      expect(dx.shape).toEqual(inputShape);
+      expect(backend.readSync(dx.dataId)).toEqual(new Float32Array(
+          channelsLast ? [2, 3, 4, 6, 6, 9, 8, 12] :
+                         [2, 4, 6, 8, 3, 6, 9, 12]));
+      [x, dy, y, dx].forEach(t => backend.disposeData(t.dataId));
+    }
+    expect(backend.refCount(filter.dataId)).toBe(1);
+    backend.disposeData(filter.dataId);
+    expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('checked CPU volumetric and depthwise geometry', () => {
+  it('retains volumetric and image dimensions including zero', () => {
+    expect(rankFiveStrides([0, 6, 3, 1])).toEqual([0, 6, 3, 1]);
+    expect(imageDimensions([2, 0, 3, 1])).toEqual([2, 0, 3, 1]);
+    expect(() => rankFiveStrides([6, 3, 1])).toThrowError();
+    expect(() => imageDimensions([2, 3, 1])).toThrowError();
+  });
+
+  it('preserves volumetric forward, input gradient and filter gradient', () => {
+    const backend = new MathBackendCPU();
+    const inputShape: [number, number, number, number, number] =
+        [1, 2, 1, 2, 1];
+    const filterShape: [number, number, number, number, number] =
+        [1, 1, 1, 1, 1];
+    const x = backend.makeTensorInfo(inputShape, 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const filter = backend.makeTensorInfo(filterShape, 'float32',
+        new Float32Array([2]));
+    const dy = backend.makeTensorInfo(inputShape, 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const attrs = {strides: 1, pad: 'valid' as const};
+    const y = conv3D({inputs: {x, filter}, backend,
+      attrs: {...attrs, dilations: 1, dataFormat: 'NDHWC'}});
+    const dx = conv3DBackpropInputV2({inputs: {dy, filter}, backend,
+      attrs: {...attrs, inputShape}});
+    const dw = conv3DBackpropFilterV2({inputs: {x, dy}, backend,
+      attrs: {...attrs, filterShape}});
+    expect(y.shape).toEqual(inputShape);
+    expect(dx.shape).toEqual(inputShape);
+    expect(dw.shape).toEqual(filterShape);
+    expect(backend.readSync(y.dataId)).toEqual(new Float32Array([2, 4, 6, 8]));
+    expect(backend.readSync(dx.dataId)).toEqual(new Float32Array([2, 4, 6, 8]));
+    expect(backend.readSync(dw.dataId)).toEqual(new Float32Array([30]));
+    [x, filter, dy, y, dx, dw].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('keeps separate depthwise channels and multipliers', () => {
+    const backend = new MathBackendCPU();
+    const inputShape: [number, number, number, number] = [1, 1, 2, 2];
+    const x = backend.makeTensorInfo(inputShape, 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const filter = backend.makeTensorInfo([1, 1, 2, 2], 'float32',
+        new Float32Array([2, 3, 4, 5]));
+    const dy = backend.makeTensorInfo([1, 1, 2, 4], 'float32',
+        new Float32Array([1, 2, 3, 4, 5, 6, 7, 8]));
+    const attrs = {strides: 1, dilations: 1, pad: 'valid' as const};
+    const y = depthwiseConv2dNative({inputs: {x, filter}, backend,
+      attrs: {...attrs, dataFormat: 'NHWC'}});
+    const dx = depthwiseConv2dNativeBackpropInput({inputs: {dy, filter},
+      backend, attrs: {...attrs, inputShape}});
+    expect(y.shape).toEqual(dy.shape);
+    expect(backend.readSync(y.dataId)).toEqual(
+        new Float32Array([2, 3, 8, 10, 6, 9, 16, 20]));
+    expect(dx.shape).toEqual(inputShape);
+    expect(backend.readSync(dx.dataId)).toEqual(
+        new Float32Array([8, 32, 28, 68]));
+    [x, filter, dy, y, dx].forEach(t => backend.disposeData(t.dataId));
     expect(backend.numDataIds()).toBe(0);
   });
 });

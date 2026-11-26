@@ -18,6 +18,7 @@ import {Constraint} from '../constraints';
 import {AttributeError, NotImplementedError, RuntimeError, ValueError} from '../errors';
 import {getInitializer, Initializer} from '../initializers';
 import {Shape} from '../keras_format/common';
+import {LayerMetadata} from '../keras_format/topology_config';
 import {Regularizer} from '../regularizers';
 import {Kwargs, RegularizerFn} from '../types';
 import * as generic_utils from '../utils/generic_utils';
@@ -344,7 +345,7 @@ export class Node {
 }
 
 /** Constructor arguments for Layer. */
-export declare interface LayerArgs {
+export declare interface LayerArgs extends LayerMetadata {
   /**
    * If defined, will be used to create an input layer to insert before this
    * layer. If both `inputShape` and `batchInputShape` are defined,
@@ -365,19 +366,6 @@ export declare interface LayerArgs {
    * ...inputShape]`
    */
   batchSize?: number;
-  /**
-   * The data-type for this layer. Defaults to 'float32'.
-   * This argument is only applicable to input layers (the first layer of a
-   * model).
-   */
-  dtype?: DataType;
-  /** Name for this layer. */
-  name?: string;
-  /**
-   * Whether the weights of this layer are updatable by `fit`.
-   * Defaults to true.
-   */
-  trainable?: boolean;
   /**
    * Initial weight values of the layer.
    */

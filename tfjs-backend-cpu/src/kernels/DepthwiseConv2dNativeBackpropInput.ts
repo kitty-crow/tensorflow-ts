@@ -18,7 +18,7 @@
 import {backend_util, DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, rankFourStrides} from '../cpu_util';
 
 export function depthwiseConv2dNativeBackpropInput(args: {
   inputs: DepthwiseConv2dNativeBackpropInputInputs,
@@ -40,11 +40,11 @@ export function depthwiseConv2dNativeBackpropInput(args: {
 
   const dx = new TensorBuffer(convInfo.inShape, 'float32');
   const dxValues = dx.values;
-  const [dxS0, dxS1, dxS2] = dx.strides;
+  const [dxS0, dxS1, dxS2] = rankFourStrides(dx.strides);
   const dyValues = backend.requireValues(dy.dataId) as TypedArray;
-  const [dyS0, dyS1, dyS2] = dyStrides;
+  const [dyS0, dyS1, dyS2] = rankFourStrides(dyStrides);
   const fltValues = backend.requireValues(filter.dataId) as TypedArray;
-  const [fltS0, fltS1, fltS2] = filterStrides;
+  const [fltS0, fltS1, fltS2] = rankFourStrides(filterStrides);
   const {
     batchSize,
     filterHeight,

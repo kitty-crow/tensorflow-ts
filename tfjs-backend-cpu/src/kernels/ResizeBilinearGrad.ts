@@ -18,7 +18,7 @@
 import {KernelConfig, KernelAttributes, ResizeBilinearGrad, ResizeBilinearGradAttrs, ResizeBilinearGradInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, imageDimensions, rankFourStrides} from '../cpu_util';
 import {resizeAxisScale} from './resize_geometry';
 
 export function resizeBilinearGrad(args: {
@@ -32,10 +32,11 @@ export function resizeBilinearGrad(args: {
 
   assertNotComplex([dy, images], 'resizeBilinearGrad');
 
-  const imagesStrides = util.computeStrides(images.shape);
+  const [imageBatchStride, imageRowStride, imageColStride] =
+      rankFourStrides(util.computeStrides(images.shape));
 
-  const [batch, xHeight, xWidth, depth] = images.shape;
-  const [, yHeight, yWidth] = dy.shape;
+  const [batch, xHeight, xWidth, depth] = imageDimensions(images.shape);
+  const [, yHeight, yWidth] = imageDimensions(dy.shape);
 
   const output = new Float32Array(batch * xHeight * xWidth * depth);
 
@@ -53,14 +54,14 @@ export function resizeBilinearGrad(args: {
   const dyValues = backend.requireValues(dy.dataId) as TypedArray;
   let offset = 0;
   for (let b = 0; b < batch; b++) {
-    const bOffset = b * imagesStrides[0];
+    const bOffset = b * imageBatchStride;
     for (let r = 0; r < yHeight; r++) {
       const dxR = r * heightScale;
       const topDxRIndex = Math.floor(dxR);
       const bottomDxRIndex = Math.min(Math.ceil(dxR), xHeight - 1);
 
-      const topDxROffset = bOffset + topDxRIndex * imagesStrides[1];
-      const bottomDxROffset = bOffset + bottomDxRIndex * imagesStrides[1];
+      const topDxROffset = bOffset + topDxRIndex * imageRowStride;
+      const bottomDxROffset = bOffset + bottomDxRIndex * imageRowStride;
 
       const dxRLerp = dxR - topDxRIndex;
       const inverseDxRLerp = 1.0 - dxRLerp;
@@ -71,13 +72,13 @@ export function resizeBilinearGrad(args: {
         const dxCLerp = dxC - leftDxCIndex;
         const inverseDxCLerp = 1.0 - dxCLerp;
 
-        const topLeftRCOffset = topDxROffset + leftDxCIndex * imagesStrides[2];
+        const topLeftRCOffset = topDxROffset + leftDxCIndex * imageColStride;
         const topRightRCOffset =
-            topDxROffset + rightDxCIndex * imagesStrides[2];
+            topDxROffset + rightDxCIndex * imageColStride;
         const bottomLeftRCOffset =
-            bottomDxROffset + leftDxCIndex * imagesStrides[2];
+            bottomDxROffset + leftDxCIndex * imageColStride;
         const bottomRightRCOffset =
-            bottomDxROffset + rightDxCIndex * imagesStrides[2];
+            bottomDxROffset + rightDxCIndex * imageColStride;
 
         const inverseDxRLerpTimesInverseDxCLerp =
             inverseDxRLerp * inverseDxCLerp;

@@ -18,7 +18,7 @@
 import {BatchMatMul, BatchMatMulAttrs, BatchMatMulInputs, broadcast_util, buffer, KernelConfig, KernelAttributes, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, matrixBatchStrides, matrixDimensions} from '../cpu_util';
 
 import {reshape} from './Reshape';
 
@@ -33,14 +33,14 @@ export function batchMatMul(args: {
 
   assertNotComplex([a, b], 'matMul');
 
-  const aRank = a.shape.length;
-  const bRank = b.shape.length;
+  const [aRows, aColumns] = matrixDimensions(a.shape);
+  const [bRows, bColumns] = matrixDimensions(b.shape);
 
-  const innerShapeA = transposeA ? a.shape[aRank - 2] : a.shape[aRank - 1];
-  const innerShapeB = transposeB ? b.shape[bRank - 1] : b.shape[bRank - 2];
+  const innerShapeA = transposeA ? aRows : aColumns;
+  const innerShapeB = transposeB ? bColumns : bRows;
 
-  const outerShapeA = transposeA ? a.shape[aRank - 1] : a.shape[aRank - 2];
-  const outerShapeB = transposeB ? b.shape[bRank - 2] : b.shape[bRank - 1];
+  const outerShapeA = transposeA ? aColumns : aRows;
+  const outerShapeB = transposeB ? bRows : bColumns;
 
   const outerDimsA = a.shape.slice(0, -2);
   const outerDimsB = b.shape.slice(0, -2);
@@ -68,9 +68,9 @@ export function batchMatMul(args: {
   const a3d = reshape({inputs: {x: a}, backend, attrs: {shape: a3dShape}});
   const b3d = reshape({inputs: {x: b}, backend, attrs: {shape: b3dShape}});
 
-  const sharedDim = transposeA ? a3d.shape[1] : a3d.shape[2];
-  const leftDim = transposeA ? a3d.shape[2] : a3d.shape[1];
-  const rightDim = transposeB ? b3d.shape[1] : b3d.shape[2];
+  const sharedDim = innerShapeA;
+  const leftDim = outerShapeA;
+  const rightDim = outerShapeB;
   const batchDim = Math.max(batchDimA, batchDimB);
 
   const a3dValues = backend.requireValues(a3d.dataId) as TypedArray;
@@ -79,12 +79,12 @@ export function batchMatMul(args: {
   const a3dStrides = util.computeStrides(a3d.shape);
   const b3dStrides = util.computeStrides(b3d.shape);
 
-  const [aBatch, aOuterStep, aInnerStep] = transposeA ?
-      [a3dStrides[0], 1, a3dStrides[1]] :
-      [a3dStrides[0], a3dStrides[1], 1];
-  const [bInnerStep, bOuterStep, bBatch] = transposeB ?
-      [1, b3dStrides[1], b3dStrides[0]] :
-      [b3dStrides[1], 1, b3dStrides[0]];
+  const [aBatch, aRowStride] = matrixBatchStrides(a3dStrides);
+  const [bBatch, bRowStride] = matrixBatchStrides(b3dStrides);
+  const aOuterStep = transposeA ? 1 : aRowStride;
+  const aInnerStep = transposeA ? aRowStride : 1;
+  const bInnerStep = transposeB ? 1 : bRowStride;
+  const bOuterStep = transposeB ? bRowStride : 1;
 
   const size = leftDim * rightDim;
   const result = buffer([batchDim, leftDim, rightDim], a3d.dtype);

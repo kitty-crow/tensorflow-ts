@@ -18,7 +18,7 @@
 import {KernelConfig, KernelAttributes, ResizeNearestNeighborGrad, ResizeNearestNeighborGradAttrs, ResizeNearestNeighborGradInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, imageDimensions, rankFourStrides} from '../cpu_util';
 import {nearestSourceIndex, resizeAxisScale} from './resize_geometry';
 
 export function resizeNearestNeighborGrad(args: {
@@ -32,10 +32,12 @@ export function resizeNearestNeighborGrad(args: {
 
   assertNotComplex([dy, images], 'resizeNearestNeighborGrad');
 
-  const imagesStrides = util.computeStrides(images.shape);
-  const dyStrides = util.computeStrides(dy.shape);
-  const [batch, xHeight, xWidth, depth] = images.shape;
-  const [, yHeight, yWidth] = dy.shape;
+  const [imageBatchStride, imageRowStride, imageColStride] =
+      rankFourStrides(util.computeStrides(images.shape));
+  const [, dyRowStride, dyColStride] =
+      rankFourStrides(util.computeStrides(dy.shape));
+  const [batch, xHeight, xWidth, depth] = imageDimensions(images.shape);
+  const [, yHeight, yWidth] = imageDimensions(dy.shape);
 
   const output = new Float32Array(batch * xHeight * xWidth * depth);
   const dyValues = backend.requireValues(dy.dataId) as TypedArray;
@@ -56,15 +58,15 @@ export function resizeNearestNeighborGrad(args: {
 
   // Loop over the output space.
   for (let b = 0; b < batch; b++) {
-    const batchOffset = b * imagesStrides[0];
+    const batchOffset = b * imageBatchStride;
     for (let r = 0; r < xHeight; r++) {
-      const rowOffset = batchOffset + r * imagesStrides[1];
+      const rowOffset = batchOffset + r * imageRowStride;
 
       // Compute bounds for where in dy we will look
       const startRLerp = Math.floor(r * invHeightScale);
       const startDyR = Math.floor(startRLerp - (winHeight / 2));
       for (let c = 0; c < xWidth; c++) {
-        const colOffset = rowOffset + c * imagesStrides[2];
+        const colOffset = rowOffset + c * imageColStride;
 
         // Compute bounds for where in dy we will look
         const startCLerp = Math.floor(c * invWidthScale);
@@ -81,7 +83,7 @@ export function resizeNearestNeighborGrad(args: {
               continue;
             }
 
-            const dyROffset = batchOffset + dyR * dyStrides[1];
+            const dyROffset = batchOffset + dyR * dyRowStride;
             const sourceFracRow = dyR * heightScale;
             const sourceNearestRow = nearestSourceIndex(sourceFracRow, xHeight, alignCorners);
             if (r !== sourceNearestRow) {
@@ -94,7 +96,7 @@ export function resizeNearestNeighborGrad(args: {
                 continue;
               }
 
-              const dyCOffset = dyROffset + dyC * dyStrides[2];
+              const dyCOffset = dyROffset + dyC * dyColStride;
               const sourceFracCol = dyC * widthScale;
               const sourceNearestCol = nearestSourceIndex(sourceFracCol, xWidth, alignCorners);
 

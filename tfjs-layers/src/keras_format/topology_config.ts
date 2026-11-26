@@ -14,14 +14,28 @@ import {Shape} from './common';
 import {NodeConfig} from './node_config';
 import {BaseSerialization, PyJson, PyJsonDict} from './types';
 
+/** Metadata shared by runtime layer arguments and serialised layer configs. */
+export interface LayerMetadata {
+  /**
+   * The data-type for this layer. Defaults to 'float32'.
+   * This argument is only applicable to input layers (the first layer of a
+   * model).
+   */
+  dtype?: DataType;
+  /** Name for this layer. */
+  name?: string;
+  /**
+   * Whether the weights of this layer are updatable by `fit`.
+   * Defaults to true.
+   */
+  trainable?: boolean;
+}
+
 /** Constructor arguments for Layer. */
-export interface LayerConfig extends PyJsonDict {
+export interface LayerConfig extends PyJsonDict, LayerMetadata {
   input_shape?: Shape;
   batch_input_shape?: Shape;
   batch_size?: number;
-  dtype?: DataType;
-  name?: string;
-  trainable?: boolean;
   input_dtype?: DataType;
 }
 

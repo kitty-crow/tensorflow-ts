@@ -12,6 +12,9 @@ import {Tensor} from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-core/dist/public/chained_ops/register_all_chained_ops';
 import '../flags_layers';
 
+import {ReLULayerConfig} from '../keras_format/layers/advanced_activation_serialization';
+import {LayerMetadata} from '../keras_format/topology_config';
+import {ReLU} from '../layers/advanced_activations';
 import {standardizeArgs} from '../layers/recurrent';
 import {collectMetrics, standardizeInputData} from './training';
 import {disposeNewTensors, ensureTensorsRank2OrHigher} from './training_tensors';
@@ -78,5 +81,31 @@ describe('recurrent argument parsing regression coverage', () => {
     expect(standardizeArgs(input, state, constant).initialState).toEqual([state]);
     expect(() => standardizeArgs([input], state, null)).toThrowError(/neither initialState or constants/);
     expect(() => standardizeArgs([], null, null)).toThrowError(/requires its input tensor/);
+  });
+});
+
+describe('shared layer metadata contract', () => {
+  it('preserves runtime and Keras configuration fields and casing', () => {
+    const metadata: LayerMetadata = {
+      dtype: 'int32', name: 'metadata_regression', trainable: false
+    };
+    const serialised: ReLULayerConfig = {
+      ...metadata, input_shape: [2], max_value: 6
+    };
+    const layer = new ReLU({...metadata, inputShape: [2], maxValue: 6});
+    expect(layer.name).toBe(serialised.name);
+    expect(layer.dtype).toBe(serialised.dtype);
+    expect(layer.trainable).toBe(serialised.trainable);
+    expect(layer.batchInputShape).toEqual([null, 2]);
+    expect(layer.maxValue).toBe(serialised.max_value);
+    const config = layer.getConfig();
+    expect(config.name === serialised.name).toBe(true);
+    expect(config.dtype === serialised.dtype).toBe(true);
+    expect(config.trainable === serialised.trainable).toBe(true);
+    expect(config.maxValue === serialised.max_value).toBe(true);
+    const omitted: LayerMetadata = {};
+    const defaultLayer = new ReLU({...omitted, inputShape: [2]});
+    expect(defaultLayer.dtype).toBe('float32');
+    expect(defaultLayer.trainable).toBe(true);
   });
 });

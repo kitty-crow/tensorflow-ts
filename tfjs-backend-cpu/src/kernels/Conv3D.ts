@@ -18,7 +18,7 @@
 import {backend_util, Conv3D, Conv3DAttrs, Conv3DInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, rankFiveStrides} from '../cpu_util';
 
 export function conv3D(
     args: {inputs: Conv3DInputs, backend: MathBackendCPU, attrs: KernelAttributes<Conv3DAttrs>}):
@@ -54,31 +54,35 @@ export function conv3D(
 
   const xStrides = util.computeStrides(x.shape);
   const filterStrides = util.computeStrides(filter.shape);
+  const [xBatchStride, xDepthStride, xRowStride] = rankFiveStrides(xStrides);
+  const [yBatchStride, yDepthStride, yRowStride] = rankFiveStrides(y.strides);
+  const [filterDepthStride, filterRowStride, filterColStride] =
+      rankFiveStrides(filterStrides);
 
   for (let b = 0; b < convInfo.batchSize; ++b) {
-    const xOffset1 = b * xStrides[0];
-    const yOffset1 = b * y.strides[0];
+    const xOffset1 = b * xBatchStride;
+    const yOffset1 = b * yBatchStride;
     for (let yF = 0; yF < convInfo.outDepth; ++yF) {
-      const yOffset2 = yOffset1 + yF * y.strides[1];
+      const yOffset2 = yOffset1 + yF * yDepthStride;
       const xFCorner = yF * convInfo.strideDepth - padFront;
       for (let wF = 0; wF < filterDepth; ++wF) {
         const xF = xFCorner + wF * dilationDepth;
         if (xF < 0 || xF >= convInfo.inDepth) {
           continue;
         }
-        const wOffset1 = wF * filterStrides[0];
-        const xOffset2 = xOffset1 + xF * xStrides[1];
+        const wOffset1 = wF * filterDepthStride;
+        const xOffset2 = xOffset1 + xF * xDepthStride;
 
         for (let yR = 0; yR < convInfo.outHeight; ++yR) {
-          const yOffset3 = yOffset2 + yR * y.strides[2];
+          const yOffset3 = yOffset2 + yR * yRowStride;
           const xRCorner = yR * convInfo.strideHeight - padTop;
           for (let wR = 0; wR < filterHeight; ++wR) {
             const xR = xRCorner + wR * dilationHeight;
             if (xR < 0 || xR >= convInfo.inHeight) {
               continue;
             }
-            const wOffset2 = wOffset1 + wR * filterStrides[1];
-            const xOffset3 = xOffset2 + xR * xStrides[2];
+            const wOffset2 = wOffset1 + wR * filterRowStride;
+            const xOffset3 = xOffset2 + xR * xRowStride;
             for (let yC = 0; yC < convInfo.outWidth; ++yC) {
               const yOffset4 = yOffset3 + yC * convInfo.outChannels;
               const xCCorner = yC * convInfo.strideWidth - padLeft;
@@ -87,7 +91,7 @@ export function conv3D(
                 if (xC < 0 || xC >= convInfo.inWidth) {
                   continue;
                 }
-                const wOffset3 = wOffset2 + wC * filterStrides[2];
+                const wOffset3 = wOffset2 + wC * filterColStride;
                 const xOffset4 = xOffset3 + xC * convInfo.inChannels;
                 let wOffset4 = wOffset3;
                 for (let d1 = 0; d1 < convInfo.inChannels; ++d1) {
