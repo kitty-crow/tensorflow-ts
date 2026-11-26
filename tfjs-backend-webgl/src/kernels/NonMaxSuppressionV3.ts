@@ -15,32 +15,28 @@
  * =============================================================================
  */
 
-import {backend_util, kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs, TypedArray} from '@tensorflow/tfjs-core';
+import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV3, NonMaxSuppressionV3Attrs, NonMaxSuppressionV3Inputs} from '@tensorflow/tfjs-core';
 
 const nonMaxSuppressionV3Impl = kernel_impls.nonMaxSuppressionV3Impl;
 import {MathBackendWebGL} from '../backend_webgl';
+import {makeSelectedIndices, readNonMaxSuppressionInputs} from './non_max_suppression_util';
 
 export function nonMaxSuppressionV3(args: {
   inputs: NonMaxSuppressionV3Inputs,
   backend: MathBackendWebGL,
   attrs: KernelAttributes<NonMaxSuppressionV3Attrs>
 }) {
-  backend_util.warn(
-      'tf.nonMaxSuppression() in webgl locks the UI thread. ' +
-      'Call tf.nonMaxSuppressionAsync() instead');
-
   const {inputs, backend, attrs} = args;
   const {boxes, scores} = inputs;
   const {maxOutputSize, iouThreshold, scoreThreshold} = attrs;
 
-  const boxesVals = backend.readSync(boxes.dataId) as TypedArray;
-  const scoresVals = backend.readSync(scores.dataId) as TypedArray;
+  const [boxesVals, scoresVals] =
+      readNonMaxSuppressionInputs(boxes, scores, backend);
 
   const {selectedIndices} = nonMaxSuppressionV3Impl(
       boxesVals, scoresVals, maxOutputSize, iouThreshold, scoreThreshold);
 
-  return backend.makeTensorInfo(
-      [selectedIndices.length], 'int32', new Int32Array(selectedIndices));
+  return makeSelectedIndices(backend, selectedIndices);
 }
 
 export const nonMaxSuppressionV3Config: KernelConfig = {

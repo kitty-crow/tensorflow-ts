@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {TensorInfo} from '@tensorflow/tfjs-core';
+import {makeSelectedIndices, readNonMaxSuppressionInputs} from './kernels/non_max_suppression_util';
 import {ClipVec4Program} from './clip_vec4_webgpu';
 import {FillProgram} from './fill_webgpu';
 import {OneHotProgram} from './onehot_webgpu';
@@ -128,5 +130,37 @@ describe('shared resize gradient geometry', () => {
         .toEqual({effectiveXSize: [2, 5], effectiveYSize: [4, 1],
           heightScale: 0.5, widthScale: 5, invHeightScale: 2,
           invWidthScale: 0.2, winHeight: 6, winWidth: 4});
+  });
+});
+
+describe('WebGPU NMS synchronous preparation', () => {
+  it('warns once and retains empty numeric input and output arrays', () => {
+    const boxes: TensorInfo = {dataId: {}, shape: [0, 4], dtype: 'float32'};
+    const scores: TensorInfo = {dataId: {}, shape: [0], dtype: 'float32'};
+    const emptyBoxes = new Float32Array(0);
+    const emptyScores = new Float32Array(0);
+    const warn = spyOn(console, 'warn');
+    const reads: TensorInfo['dataId'][] = [];
+    const [boxData, scoreData] = readNonMaxSuppressionInputs(boxes, scores, {
+      readSync(dataId) {
+        reads.push(dataId);
+        return dataId === boxes.dataId ? emptyBoxes : emptyScores;
+      }
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+        'tf.nonMaxSuppression() in webgpu locks the UI thread. ' +
+        'Call tf.nonMaxSuppressionAsync() instead');
+    expect(reads).toEqual([boxes.dataId, scores.dataId]);
+    expect(boxData).toBe(emptyBoxes);
+    expect(scoreData).toBe(emptyScores);
+    const output = makeSelectedIndices({
+      makeTensorInfo(shape, dtype, data) {
+        expect(data).toEqual(new Int32Array(0));
+        return {dataId: {}, shape, dtype};
+      }
+    }, []);
+    expect(output.shape).toEqual([0]);
+    expect(output.dtype).toBe('int32');
   });
 });

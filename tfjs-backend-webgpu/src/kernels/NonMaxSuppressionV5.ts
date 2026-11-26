@@ -17,7 +17,7 @@
 import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
-import type {TypedArray} from '@tensorflow/tfjs-core';
+import {makeSelectedIndices, readNonMaxSuppressionInputs} from './non_max_suppression_util';
 export type {TypedArray} from '@tensorflow/tfjs-core';
 
 export function nonMaxSuppressionV5(args: {
@@ -25,30 +25,20 @@ export function nonMaxSuppressionV5(args: {
   backend: WebGPUBackend,
   attrs: KernelAttributes<NonMaxSuppressionV5Attrs>
 }): [TensorInfo, TensorInfo] {
-  console.warn(
-      'tf.nonMaxSuppression() in webgpu locks the UI thread. ' +
-      'Call tf.nonMaxSuppressionAsync() instead');
-
   const {inputs, backend, attrs} = args;
   const {boxes, scores} = inputs;
   const {maxOutputSize, iouThreshold, scoreThreshold, softNmsSigma} = attrs;
 
-  const boxesVals = backend.readSync(boxes.dataId) as TypedArray;
-  const scoresVals = backend.readSync(scores.dataId) as TypedArray;
-
-  const maxOutputSizeVal = maxOutputSize;
-  const iouThresholdVal = iouThreshold;
-  const scoreThresholdVal = scoreThreshold;
-  const softNmsSigmaVal = softNmsSigma;
+  const [boxesVals, scoresVals] =
+      readNonMaxSuppressionInputs(boxes, scores, backend);
 
   const {selectedIndices, selectedScores} =
       kernel_impls.nonMaxSuppressionV5Impl(
-          boxesVals, scoresVals, maxOutputSizeVal, iouThresholdVal,
-          scoreThresholdVal, softNmsSigmaVal);
+          boxesVals, scoresVals, maxOutputSize, iouThreshold,
+          scoreThreshold, softNmsSigma);
 
   return [
-    backend.makeTensorInfo(
-        [selectedIndices.length], 'int32', new Int32Array(selectedIndices)),
+    makeSelectedIndices(backend, selectedIndices),
     backend.makeTensorInfo(
         [selectedScores.length], 'float32', new Float32Array(selectedScores))
   ];

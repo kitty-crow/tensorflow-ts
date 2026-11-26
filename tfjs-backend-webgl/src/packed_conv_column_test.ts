@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {TensorInfo} from '@tensorflow/tfjs-core';
+import {makeSelectedIndices, readNonMaxSuppressionInputs} from './kernels/non_max_suppression_util';
 import {selectActivationSource} from './activation_source';
 import {packedConvColumnSource} from './packed_conv_column';
 import {resizeAxisRatio} from './resize_geometry';
@@ -155,5 +157,32 @@ describe('WebGL forward resize geometry', () => {
     expect(nearest.userCode).toContain('sourceNearestRC');
     expect(packedBilinear.packedOutput).toBe(true);
     expect(packedNearest.packedOutput).toBe(true);
+  });
+});
+
+describe('WebGL NMS readback and output contract', () => {
+  it('reads boxes before scores and retains the selected index vector', () => {
+    const boxes: TensorInfo = {dataId: {}, shape: [1, 4], dtype: 'float32'};
+    const scores: TensorInfo = {dataId: {}, shape: [1], dtype: 'float32'};
+    const boxesVals = new Float32Array([0, 0, 1, 1]);
+    const scoresVals = new Float32Array([0.9]);
+    const reads: TensorInfo['dataId'][] = [];
+    const values = readNonMaxSuppressionInputs(boxes, scores, {
+      readSync(dataId) {
+        reads.push(dataId);
+        return dataId === boxes.dataId ? boxesVals : scoresVals;
+      }
+    });
+    expect(reads).toEqual([boxes.dataId, scores.dataId]);
+    expect(values[0]).toBe(boxesVals);
+    expect(values[1]).toBe(scoresVals);
+    const result = makeSelectedIndices({
+      makeTensorInfo(shape, dtype, data) {
+        expect(data).toEqual(new Int32Array([2, 0]));
+        return {dataId: {}, shape, dtype};
+      }
+    }, [2, 0]);
+    expect(result.shape).toEqual([2]);
+    expect(result.dtype).toBe('int32');
   });
 });

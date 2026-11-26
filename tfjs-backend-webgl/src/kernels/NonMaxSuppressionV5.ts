@@ -15,39 +15,30 @@
  * =============================================================================
  */
 
-import {backend_util, kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {kernel_impls, KernelConfig, KernelAttributes, NonMaxSuppressionV5, NonMaxSuppressionV5Attrs, NonMaxSuppressionV5Inputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 const nonMaxSuppressionV5Impl = kernel_impls.nonMaxSuppressionV5Impl;
 import {MathBackendWebGL} from '../backend_webgl';
+import {makeSelectedIndices, readNonMaxSuppressionInputs} from './non_max_suppression_util';
 
 export function nonMaxSuppressionV5(args: {
   inputs: NonMaxSuppressionV5Inputs,
   backend: MathBackendWebGL,
   attrs: KernelAttributes<NonMaxSuppressionV5Attrs>
 }): [TensorInfo, TensorInfo] {
-  backend_util.warn(
-      'tf.nonMaxSuppression() in webgl locks the UI thread. ' +
-      'Call tf.nonMaxSuppressionAsync() instead');
-
   const {inputs, backend, attrs} = args;
   const {boxes, scores} = inputs;
   const {maxOutputSize, iouThreshold, scoreThreshold, softNmsSigma} = attrs;
 
-  const boxesVals = backend.readSync(boxes.dataId) as TypedArray;
-  const scoresVals = backend.readSync(scores.dataId) as TypedArray;
-
-  const maxOutputSizeVal = maxOutputSize;
-  const iouThresholdVal = iouThreshold;
-  const scoreThresholdVal = scoreThreshold;
-  const softNmsSigmaVal = softNmsSigma;
+  const [boxesVals, scoresVals] =
+      readNonMaxSuppressionInputs(boxes, scores, backend);
 
   const {selectedIndices, selectedScores} = nonMaxSuppressionV5Impl(
-      boxesVals, scoresVals, maxOutputSizeVal, iouThresholdVal,
-      scoreThresholdVal, softNmsSigmaVal);
+      boxesVals, scoresVals, maxOutputSize, iouThreshold,
+      scoreThreshold, softNmsSigma);
 
   return [
-    backend.makeTensorInfo(
-        [selectedIndices.length], 'int32', new Int32Array(selectedIndices)),
+    makeSelectedIndices(backend, selectedIndices),
     backend.makeTensorInfo(
         [selectedScores.length], 'float32', new Float32Array(selectedScores))
   ];

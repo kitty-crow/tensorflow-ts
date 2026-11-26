@@ -26,6 +26,8 @@ import {avgPool} from './kernels/AvgPool';
 import {maxPool} from './kernels/MaxPool';
 import {avgPool3D} from './kernels/AvgPool3D';
 import {maxPool3D} from './kernels/MaxPool3D';
+import {avgPool3DGrad} from './kernels/AvgPool3DGrad';
+import {maxPool3DGrad} from './kernels/MaxPool3DGrad';
 import {resizeBilinear} from './kernels/ResizeBilinear';
 import {resizeNearestNeighbor} from './kernels/ResizeNearestNeighbor';
 import {resizeBilinearGrad} from './kernels/ResizeBilinearGrad';
@@ -242,6 +244,33 @@ describe('shared CPU non-maximum suppression preparation', () => {
     expect(backend.refCount(boxes.dataId)).toBe(1);
     expect(backend.refCount(scores.dataId)).toBe(1);
     [boxes, scores, indices, padded, count, scored, selectedScores]
+        .forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('shared CPU 3D pooling gradient traversal', () => {
+  it('accumulates overlapping average and maximum windows differently', () => {
+    const backend = new MathBackendCPU();
+    const input = backend.makeTensorInfo([1, 1, 1, 3, 1], 'float32',
+        new Float32Array([1, 3, 2]));
+    const dy = backend.makeTensorInfo([1, 1, 1, 2, 1], 'float32',
+        new Float32Array([2, 4]));
+    const filterSize: [number, number, number] = [1, 1, 2];
+    const args = {inputs: {input, dy}, backend,
+      attrs: {filterSize, strides: 1, pad: 'valid' as const}};
+    const avg = avgPool3DGrad(args);
+    const max = maxPool3DGrad(args);
+    expect(avg.shape).toEqual(input.shape);
+    expect(max.shape).toEqual(input.shape);
+    expect(backend.readSync(avg.dataId)).toEqual(new Float32Array([1, 3, 2]));
+    expect(backend.readSync(max.dataId)).toEqual(new Float32Array([0, 6, 0]));
+    const nanDy = backend.makeTensorInfo(dy.shape, 'float32',
+        new Float32Array([NaN, 4]));
+    const nanMax = maxPool3DGrad({...args, inputs: {input, dy: nanDy}});
+    expect(backend.readSync(nanMax.dataId)).toEqual(
+        new Float32Array([0, NaN, 0]));
+    [input, dy, avg, max, nanDy, nanMax]
         .forEach(t => backend.disposeData(t.dataId));
     expect(backend.numDataIds()).toBe(0);
   });
