@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, Reverse, ReverseAttrs, ReverseInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Reverse, ReverseAttrs, ReverseInputs, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeWithInt32Vector} from './native_dispatch';
 
 export const reverseConfig: KernelConfig = {
   kernelName: Reverse,
@@ -36,10 +37,6 @@ export const reverseConfig: KernelConfig = {
     ];
 
     const axes = util.parseAxisParam(dims, x.shape);
-    const axisTensor = tensor1d(axes, 'int32');
-    const res =
-        backend.executeSingleOutput('ReverseV2', opAttrs, [x, axisTensor]);
-    axisTensor.dispose();
-    return res;
+    return executeWithInt32Vector(backend, 'ReverseV2', opAttrs, [x], axes);
   }
 };

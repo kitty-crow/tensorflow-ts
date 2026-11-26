@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Any, AnyAttrs, AnyInputs} from '../kernel_names';
+import {Any} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runBooleanReduction} from './operation';
 
 /**
  * Computes the logical or of elements across dimensions of a `tf.Tensor`.
@@ -54,14 +52,7 @@ import {op} from './operation';
  */
 function any_<T extends Tensor>(
     x: Tensor|TensorLike, axis: number|number[] = null, keepDims = false): T {
-  const $x = convertToTensor(x, 'x', 'any', 'bool');
-
-  const inputs = {x: $x} satisfies AnyInputs;
-  const attrs = {axis, keepDims} satisfies AnyAttrs;
-
-  return ENGINE.runKernel(
-      Any, inputs,
-      attrs);
+  return runBooleanReduction<T>(x, axis, keepDims, 'any', Any);
 }
 
 // tslint:disable-next-line:variable-name

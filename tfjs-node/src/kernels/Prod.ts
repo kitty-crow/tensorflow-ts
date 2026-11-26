@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, Prod, ProdAttrs, ProdInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Prod, ProdAttrs, ProdInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeNumericReduction} from './native_dispatch';
 
 export const prodConfig: KernelConfig = {
   kernelName: Prod,
@@ -29,15 +30,6 @@ export const prodConfig: KernelConfig = {
     const {x} = args.inputs;
     const backend = args.backend;
     const {axis, keepDims} = args.attrs;
-    const axes = util.parseAxisParam(axis, x.shape);
-    const axesTensor = tensor1d(axes, 'int32');
-    const opAttrs = [
-      {name: 'keep_dims', type: backend.binding.TF_ATTR_BOOL, value: keepDims},
-      createTensorsTypeOpAttr('T', x.dtype),
-      createTensorsTypeOpAttr('Tidx', 'int32')
-    ];
-    const res = backend.executeSingleOutput(Prod, opAttrs, [x, axesTensor]);
-    axesTensor.dispose();
-    return res;
+    return executeNumericReduction(backend, Prod, x, axis, keepDims);
   }
 };

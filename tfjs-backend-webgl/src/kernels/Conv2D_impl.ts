@@ -29,40 +29,6 @@ import {batchMatMulImpl, MATMUL_SHARED_DIM_THRESHOLD} from './BatchMatMul_impl';
 import {identity} from './Identity';
 import {reshape} from './Reshape';
 
-// Both conv2dByMatMul and conv2dWithIm2Row fuse height and width into one
-// dimension to compute batchMatMul, so bias and activation weights are also
-// supposed to fuse the two dimensions into one.
-//
-// This function computes the target shape for fusing height and width
-// dimensions. Returning null means the shape is already compatible.
-//
-// Even though the bias is not supposed to be a 3-D or a 4-D (including
-// batch) tensor and PReLU activiation weights is not supposed to be a 4-D
-// tensor, we still need to support them, because we haven't disabled
-// them for NHWC format.
-// https://github.com/tensorflow/tfjs/blob/b53bd47e880367ae57493f0ea628abaf08db2d5d/tfjs-core/src/ops/fused/conv2d.ts#L181-L196
-function getShapeForBatchMatMul(
-    shape: number[], isChannelsLast: boolean): number[] {
-  const length = shape.length;
-  if (length >= 3) {
-    return isChannelsLast ?
-        [
-          ...shape.slice(0, -3) /* batch */,
-          shape[length - 3] * shape[length - 2] /* height * width */,
-          shape[length - 1] /* channel */
-        ] :
-        [
-          ...shape.slice(0, -3) /* batch */, shape[length - 3] /* channel */,
-          shape[length - 2] * shape[length - 1] /* height * width */
-        ];
-  }
-  if (!isChannelsLast && length === 1 && shape[0] > 1) {
-    return [shape[0], 1];
-  } else {
-    return null;
-  }
-}
-
 // For 1x1 kernels that iterate through every point in the input, convolution
 // can be expressed as matrix multiplication (without need for memory
 // remapping).
@@ -92,7 +58,7 @@ export function conv2dByMatMul({
 
   if (preluActivationWeights != null) {
     const targetShape =
-        getShapeForBatchMatMul(preluActivationWeights.shape, isChannelsLast);
+        backend_util.getShapeForBatchMatMul(preluActivationWeights.shape, isChannelsLast);
     if (targetShape != null) {
       preluActivationWeights = reshape({
         inputs: {x: preluActivationWeights},
@@ -104,7 +70,7 @@ export function conv2dByMatMul({
   }
 
   if (bias != null) {
-    const targetShape = getShapeForBatchMatMul(bias.shape, isChannelsLast);
+    const targetShape = backend_util.getShapeForBatchMatMul(bias.shape, isChannelsLast);
     if (targetShape != null) {
       bias = reshape({inputs: {x: bias}, backend, attrs: {shape: targetShape}});
       intermediates.push(bias);
@@ -267,7 +233,7 @@ export function conv2dWithIm2Row({
 
   if (preluActivationWeights != null) {
     const targetShape =
-        getShapeForBatchMatMul(preluActivationWeights.shape, isChannelsLast);
+        backend_util.getShapeForBatchMatMul(preluActivationWeights.shape, isChannelsLast);
     if (targetShape != null) {
       preluActivationWeights = reshape({
         inputs: {x: preluActivationWeights},
@@ -279,7 +245,7 @@ export function conv2dWithIm2Row({
   }
 
   if (bias != null) {
-    const targetShape = getShapeForBatchMatMul(bias.shape, isChannelsLast);
+    const targetShape = backend_util.getShapeForBatchMatMul(bias.shape, isChannelsLast);
     if (targetShape != null) {
       bias = reshape({inputs: {x: bias}, backend, attrs: {shape: targetShape}});
       intermediates.push(bias);

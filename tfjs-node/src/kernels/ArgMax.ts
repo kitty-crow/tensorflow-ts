@@ -15,38 +15,8 @@
  * =============================================================================
  */
 
-import {ArgMax, ArgMaxAttrs, ArgMaxInputs, KernelConfig, KernelAttributes, scalar, Tensor} from '@tensorflow/tfjs';
+import {ArgMax, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createArgExtremaConfig} from './native_dispatch';
 
-export const argMaxConfig: KernelConfig = {
-  kernelName: ArgMax,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: ArgMaxInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<ArgMaxAttrs>
-  }) => {
-    const {x} = args.inputs;
-    const backend = args.backend;
-    const {axis} = args.attrs;
-
-    const toDispose: Tensor[] = [];
-    let xInput = x;
-    if (x.dtype === 'bool') {
-      xInput = (x as Tensor).toInt();
-      toDispose.push(xInput as Tensor);
-    }
-    const axisScalar = scalar(axis, 'int32');
-    toDispose.push(axisScalar);
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', xInput.dtype),
-      createTensorsTypeOpAttr('Tidx', 'int32'),
-      createTensorsTypeOpAttr('output_type', 'int32')
-    ];
-
-    const res =
-        backend.executeSingleOutput(ArgMax, opAttrs, [xInput, axisScalar]);
-    toDispose.forEach(t => t.dispose());
-    return res;
-  }
-};
+export const argMaxConfig: KernelConfig = createArgExtremaConfig(ArgMax);

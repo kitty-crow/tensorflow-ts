@@ -32,14 +32,6 @@ function disposeIntermediateTensorInfoOrNull(
   }
 }
 
-function roundUpToPow2(num: number) {
-  let pow2 = 1;
-  while (pow2 < num) {
-    pow2 *= 2;
-  }
-  return pow2;
-}
-
 // Based on Algorithm 2 of Bitonic Top K, ref:
 // https://anilshanbhag.in/static/papers/gputopk_sigmod18.pdf
 export function topK(
@@ -84,8 +76,8 @@ export function topK(
   const batch = xSize / lastDim;
   const x2D = reshape({inputs: {x}, attrs: {shape: [batch, lastDim]}, backend});
 
-  const kPow2 = roundUpToPow2(k);
-  const lastDimPow2 = roundUpToPow2(lastDim);
+  const kPow2 = util.roundUpToPow2(k);
+  const lastDimPow2 = util.roundUpToPow2(lastDim);
 
   // Only the indices containing the top K are kept at every step to reduce
   // number of outputs in the GPU algorithms, so once the final set of indices

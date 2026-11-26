@@ -15,29 +15,8 @@
  * =============================================================================
  */
 
-import {Any, AnyAttrs, AnyInputs, KernelConfig, KernelAttributes, tensor1d, util} from '@tensorflow/tfjs';
+import {Any, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createBooleanReductionConfig} from './native_dispatch';
 
-export const anyConfig: KernelConfig = {
-  kernelName: Any,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: AnyInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<AnyAttrs>
-  }) => {
-    const {x} = args.inputs;
-    const backend = args.backend;
-    const {axis, keepDims} = args.attrs;
-
-    const origAxes = util.parseAxisParam(axis, x.shape);
-    const opAttrs = [
-      {name: 'keep_dims', type: backend.binding.TF_ATTR_BOOL, value: keepDims},
-      createTensorsTypeOpAttr('Tidx', 'int32')
-    ];
-    const axesTensor = tensor1d(origAxes, 'int32');
-    const res = backend.executeSingleOutput(Any, opAttrs, [x, axesTensor]);
-    axesTensor.dispose();
-    return res;
-  }
-};
+export const anyConfig: KernelConfig = createBooleanReductionConfig(Any);

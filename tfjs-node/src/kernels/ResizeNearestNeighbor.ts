@@ -15,40 +15,8 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, ResizeNearestNeighbor, ResizeNearestNeighborAttrs, ResizeNearestNeighborInputs, tensor1d} from '@tensorflow/tfjs';
+import {ResizeNearestNeighbor, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createResizeKernelConfig} from './native_dispatch';
 
-export const resizeNearestNeighborConfig: KernelConfig = {
-  kernelName: ResizeNearestNeighbor,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: ResizeNearestNeighborInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<ResizeNearestNeighborAttrs>
-  }) => {
-    const {images} = args.inputs;
-    const backend = args.backend;
-    const {alignCorners, halfPixelCenters, size} =
-        args.attrs;
-
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', images.dtype),
-      {
-        name: 'align_corners',
-        type: backend.binding.TF_ATTR_BOOL,
-        value: alignCorners
-      },
-      {
-        name: 'half_pixel_centers',
-        type: backend.binding.TF_ATTR_BOOL,
-        value: halfPixelCenters
-      },
-    ];
-    const [newHeight, newWidth] = size;
-    const sizeTensor = tensor1d([newHeight, newWidth], 'int32');
-    const res = backend.executeSingleOutput(
-        ResizeNearestNeighbor, opAttrs, [images, sizeTensor]);
-    sizeTensor.dispose();
-    return res;
-  }
-};
+export const resizeNearestNeighborConfig: KernelConfig = createResizeKernelConfig(ResizeNearestNeighbor);

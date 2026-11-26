@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {IsInf, IsInfInputs, KernelConfig} from '@tensorflow/tfjs';
+import {IsInf, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const isInfConfig: KernelConfig = {
-  kernelName: IsInf,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as IsInfInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(IsInf, x);
-  }
-};
+export const isInfConfig: KernelConfig = createUnaryKernelConfig(IsInf);

@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Relu, ReluInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Relu} from '@tensorflow/tfjs';
 
-export const reluConfig: KernelConfig = {
-  kernelName: Relu,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as ReluInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Relu, x);
-  }
-};
+export const reluConfig: KernelConfig = createUnaryKernelConfig(Relu);

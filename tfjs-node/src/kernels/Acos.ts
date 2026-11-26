@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {Acos, AcosInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Acos, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const acosConfig: KernelConfig = {
-  kernelName: Acos,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as AcosInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(Acos, x);
-  }
-};
+export const acosConfig: KernelConfig = createUnaryKernelConfig(Acos);

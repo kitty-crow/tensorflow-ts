@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Round, RoundInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Round} from '@tensorflow/tfjs';
 
-export const roundConfig: KernelConfig = {
-  kernelName: Round,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as RoundInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Round, x);
-  }
-};
+export const roundConfig: KernelConfig = createUnaryKernelConfig(Round);

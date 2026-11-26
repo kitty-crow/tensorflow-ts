@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Selu, SeluInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Selu} from '@tensorflow/tfjs';
 
-export const seluConfig: KernelConfig = {
-  kernelName: Selu,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SeluInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Selu, x);
-  }
-};
+export const seluConfig: KernelConfig = createUnaryKernelConfig(Selu);

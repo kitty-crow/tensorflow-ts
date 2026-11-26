@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {Cos, CosInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Cos, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const cosConfig: KernelConfig = {
-  kernelName: Cos,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as CosInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(Cos, x);
-  }
-};
+export const cosConfig: KernelConfig = createUnaryKernelConfig(Cos);

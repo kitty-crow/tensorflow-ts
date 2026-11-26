@@ -17,7 +17,8 @@
 
 import {KernelAttributes, KernelConfig, LRN, LRNAttrs, LRNInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {localResponseAttrs} from './native_dispatch';
 
 // tslint:disable-next-line: variable-name
 export const LRNConfig: KernelConfig = {
@@ -31,17 +32,7 @@ export const LRNConfig: KernelConfig = {
     const backend = args.backend;
     const {depthRadius, bias, alpha, beta} = args.attrs;
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', x.dtype),
-      {
-        name: 'depth_radius',
-        type: backend.binding.TF_ATTR_INT,
-        value: depthRadius
-      },
-      {name: 'bias', type: backend.binding.TF_ATTR_FLOAT, value: bias},
-      {name: 'alpha', type: backend.binding.TF_ATTR_FLOAT, value: alpha},
-      {name: 'beta', type: backend.binding.TF_ATTR_FLOAT, value: beta},
-    ];
+    const opAttrs = localResponseAttrs(backend, x.dtype, {depthRadius, bias, alpha, beta});
     return backend.executeSingleOutput(LRN, opAttrs, [x]);
   }
 };

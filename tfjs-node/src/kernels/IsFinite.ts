@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {IsFinite, IsFiniteInputs, KernelConfig} from '@tensorflow/tfjs';
+import {IsFinite, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const isFiniteConfig: KernelConfig = {
-  kernelName: IsFinite,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as IsFiniteInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(IsFinite, x);
-  }
-};
+export const isFiniteConfig: KernelConfig = createUnaryKernelConfig(IsFinite);

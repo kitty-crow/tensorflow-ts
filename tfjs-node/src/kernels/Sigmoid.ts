@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Sigmoid, SigmoidInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Sigmoid} from '@tensorflow/tfjs';
 
-export const sigmoidConfig: KernelConfig = {
-  kernelName: Sigmoid,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SigmoidInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Sigmoid, x);
-  }
-};
+export const sigmoidConfig: KernelConfig = createUnaryKernelConfig(Sigmoid);

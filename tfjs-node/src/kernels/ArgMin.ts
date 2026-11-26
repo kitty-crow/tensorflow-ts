@@ -15,38 +15,8 @@
  * =============================================================================
  */
 
-import {ArgMin, ArgMinAttrs, ArgMinInputs, KernelConfig, KernelAttributes, scalar, Tensor} from '@tensorflow/tfjs';
+import {ArgMin, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createArgExtremaConfig} from './native_dispatch';
 
-export const argMinConfig: KernelConfig = {
-  kernelName: ArgMin,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: ArgMinInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<ArgMinAttrs>
-  }) => {
-    const {x} = args.inputs;
-    const backend = args.backend;
-    const {axis} = args.attrs;
-
-    const toDispose: Tensor[] = [];
-    let xInput = x;
-    if (x.dtype === 'bool') {
-      xInput = (x as Tensor).toInt();
-      toDispose.push(xInput as Tensor);
-    }
-    const axisScalar = scalar(axis, 'int32');
-    toDispose.push(axisScalar);
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', xInput.dtype),
-      createTensorsTypeOpAttr('Tidx', 'int32'),
-      createTensorsTypeOpAttr('output_type', 'int32')
-    ];
-
-    const res =
-        backend.executeSingleOutput(ArgMin, opAttrs, [xInput, axisScalar]);
-    toDispose.forEach(t => t.dispose());
-    return res;
-  }
-};
+export const argMinConfig: KernelConfig = createArgExtremaConfig(ArgMin);

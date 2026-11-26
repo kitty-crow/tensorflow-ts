@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {IsNan, IsNanInputs, KernelConfig} from '@tensorflow/tfjs';
+import {IsNan, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const isNanConfig: KernelConfig = {
-  kernelName: IsNan,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as IsNanInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(IsNan, x);
-  }
-};
+export const isNanConfig: KernelConfig = createUnaryKernelConfig(IsNan);

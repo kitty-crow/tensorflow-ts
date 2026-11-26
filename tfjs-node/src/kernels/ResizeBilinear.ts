@@ -15,40 +15,8 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, ResizeBilinear, ResizeBilinearAttrs, ResizeBilinearInputs, tensor1d} from '@tensorflow/tfjs';
+import {ResizeBilinear, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createResizeKernelConfig} from './native_dispatch';
 
-export const resizeBilinearConfig: KernelConfig = {
-  kernelName: ResizeBilinear,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: ResizeBilinearInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<ResizeBilinearAttrs>
-  }) => {
-    const {images} = args.inputs;
-    const backend = args.backend;
-    const {alignCorners, halfPixelCenters, size} =
-        args.attrs;
-
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', images.dtype),
-      {
-        name: 'align_corners',
-        type: backend.binding.TF_ATTR_BOOL,
-        value: alignCorners
-      },
-      {
-        name: 'half_pixel_centers',
-        type: backend.binding.TF_ATTR_BOOL,
-        value: halfPixelCenters
-      },
-    ];
-    const [newHeight, newWidth] = size;
-    const sizeTensor = tensor1d([newHeight, newWidth], 'int32');
-    const ret = backend.executeSingleOutput(
-        ResizeBilinear, opAttrs, [images, sizeTensor]);
-    sizeTensor.dispose();
-    return ret;
-  }
-};
+export const resizeBilinearConfig: KernelConfig = createResizeKernelConfig(ResizeBilinear);

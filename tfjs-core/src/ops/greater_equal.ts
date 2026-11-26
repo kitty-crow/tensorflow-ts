@@ -14,15 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {ENGINE} from '../engine';
-import {GreaterEqual, GreaterEqualInputs} from '../kernel_names';
+import {GreaterEqual} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {assertAndGetBroadcastShape} from './broadcast_util';
-import {op} from './operation';
+import {op, runComparisonKernel} from './operation';
 
 /**
  * Returns the truth value of (a >= b) element-wise. Supports broadcasting.
@@ -41,15 +37,7 @@ import {op} from './operation';
  */
 function greaterEqual_<T extends Tensor>(
     a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'greaterEqual', 'string_or_numeric');
-  let $b = convertToTensor(b, 'b', 'greaterEqual', 'string_or_numeric');
-  [$a, $b] = makeTypesMatch($a, $b);
-
-  assertAndGetBroadcastShape($a.shape, $b.shape);
-
-  const inputs = {a: $a, b: $b} satisfies GreaterEqualInputs;
-
-  return ENGINE.runKernel(GreaterEqual, inputs);
+  return runComparisonKernel<T>(a, b, 'greaterEqual', GreaterEqual);
 }
 
 export const greaterEqual = /* @__PURE__ */ op({greaterEqual_});

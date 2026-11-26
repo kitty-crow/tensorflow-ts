@@ -17,7 +17,8 @@
 
 import {Abs, AbsInputs, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeComplexAbs} from './native_dispatch';
 
 export const absConfig: KernelConfig = {
   kernelName: Abs,
@@ -27,11 +28,7 @@ export const absConfig: KernelConfig = {
     const backend = args.backend as NodeJSKernelBackend;
 
     if (x.dtype === 'complex64') {
-      const opAttrs = [
-        createTensorsTypeOpAttr('T', x.dtype),
-        createTensorsTypeOpAttr('Tout', 'float32')
-      ];
-      return backend.executeSingleOutput('ComplexAbs', opAttrs, [x]);
+      return executeComplexAbs(backend, x);
     }
     return backend.executeSingleInput(Abs, x);
   }

@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Reciprocal, ReciprocalInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Reciprocal} from '@tensorflow/tfjs';
 
-export const reciprocalConfig: KernelConfig = {
-  kernelName: Reciprocal,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as ReciprocalInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Reciprocal, x);
-  }
-};
+export const reciprocalConfig: KernelConfig = createUnaryKernelConfig(Reciprocal);

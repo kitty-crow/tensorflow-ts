@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, tensor1d, Transpose, TransposeAttrs, TransposeInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Transpose, TransposeAttrs, TransposeInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeWithInt32Vector} from './native_dispatch';
 
 export const transposeConfig: KernelConfig = {
   kernelName: Transpose,
@@ -30,14 +31,10 @@ export const transposeConfig: KernelConfig = {
     const backend = args.backend;
     const {perm} = args.attrs;
 
-    const permTensor = tensor1d(perm, 'int32');
     const opAttrs = [
       createTensorsTypeOpAttr('T', x.dtype),
       createTensorsTypeOpAttr('Tperm', 'int32')
     ];
-    const res =
-        backend.executeSingleOutput(Transpose, opAttrs, [x, permTensor]);
-    permTensor.dispose();
-    return res;
+    return executeWithInt32Vector(backend, Transpose, opAttrs, [x], perm);
   }
 };

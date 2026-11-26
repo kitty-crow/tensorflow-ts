@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, Reshape, ReshapeAttrs, ReshapeInputs, tensor1d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Reshape, ReshapeAttrs, ReshapeInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeWithInt32Vector} from './native_dispatch';
 
 export const reshapeConfig: KernelConfig = {
   kernelName: Reshape,
@@ -30,14 +31,11 @@ export const reshapeConfig: KernelConfig = {
     const backend = args.backend;
     const {shape} = args.attrs;
 
-    const shapeTensor = tensor1d(shape, 'int32');
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', x.dtype),
-      createTensorsTypeOpAttr('Tshape', shapeTensor.dtype)
+      createTensorsTypeOpAttr('Tshape', 'int32')
     ];
-    const res = backend.executeSingleOutput(Reshape, opAttrs, [x, shapeTensor]);
-    shapeTensor.dispose();
-    return res;
+    return executeWithInt32Vector(backend, Reshape, opAttrs, [x], shape);
   }
 };

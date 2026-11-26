@@ -17,16 +17,10 @@
 
 import {ArgMin} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
-import {zerosLike} from '../ops/zeros_like';
-import {Tensor} from '../tensor';
-import {assertArrayLength} from '../util_base';
+import {argExtremaGradient} from './arg_extrema_grad';
 
 export const argMinGradConfig: GradConfig = {
   kernelName: ArgMin,
   inputsToSave: ['x'],
-  gradFunc: (dy: Tensor, saved: Tensor[]) => {
-    assertArrayLength(saved, 1);
-    const [x] = saved;
-    return {x: () => zerosLike(x)};
-  }
+  gradFunc: argExtremaGradient
 };

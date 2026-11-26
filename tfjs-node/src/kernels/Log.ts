@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Log, LogInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Log} from '@tensorflow/tfjs';
 
-export const logConfig: KernelConfig = {
-  kernelName: Log,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as LogInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Log, x);
-  }
-};
+export const logConfig: KernelConfig = createUnaryKernelConfig(Log);

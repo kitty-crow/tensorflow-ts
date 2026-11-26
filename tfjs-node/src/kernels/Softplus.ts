@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Softplus, SoftplusInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Softplus} from '@tensorflow/tfjs';
 
-export const softplusConfig: KernelConfig = {
-  kernelName: Softplus,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SoftplusInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Softplus, x);
-  }
-};
+export const softplusConfig: KernelConfig = createUnaryKernelConfig(Softplus);

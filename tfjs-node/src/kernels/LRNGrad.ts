@@ -17,7 +17,8 @@
 
 import {KernelAttributes, KernelConfig, LRNGrad, LRNGradAttrs, LRNGradInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {localResponseAttrs} from './native_dispatch';
 
 // tslint:disable-next-line: variable-name
 export const LRNGradConfig: KernelConfig = {
@@ -32,17 +33,7 @@ export const LRNGradConfig: KernelConfig = {
     const {depthRadius, bias, alpha, beta} =
         args.attrs;
 
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', dy.dtype),
-      {
-        name: 'depth_radius',
-        type: backend.binding.TF_ATTR_INT,
-        value: depthRadius
-      },
-      {name: 'bias', type: backend.binding.TF_ATTR_FLOAT, value: bias},
-      {name: 'alpha', type: backend.binding.TF_ATTR_FLOAT, value: alpha},
-      {name: 'beta', type: backend.binding.TF_ATTR_FLOAT, value: beta},
-    ];
+    const opAttrs = localResponseAttrs(backend, dy.dtype, {depthRadius, bias, alpha, beta});
     return backend.executeSingleOutput(LRNGrad, opAttrs, [dy, x, y]);
   }
 };

@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {Asin, AsinInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Asin, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const asinConfig: KernelConfig = {
-  kernelName: Asin,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as AsinInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(Asin, x);
-  }
-};
+export const asinConfig: KernelConfig = createUnaryKernelConfig(Asin);

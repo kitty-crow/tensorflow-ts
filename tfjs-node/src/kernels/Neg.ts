@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Neg, NegInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Neg} from '@tensorflow/tfjs';
 
-export const negConfig: KernelConfig = {
-  kernelName: Neg,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as NegInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Neg, x);
-  }
-};
+export const negConfig: KernelConfig = createUnaryKernelConfig(Neg);

@@ -686,3 +686,30 @@ export function checkPadOnDimRoundingMode(
     throw Error(`Error in ${opDesc}: Unknown padding parameter: ${pad}`);
   }
 }
+
+/**
+ * Fuses height and width for convolution expressed as batched matrix
+ * multiplication. A null result means the existing shape is compatible.
+ * Retains broadcast bias and activation-weight shapes for NHWC and NCHW.
+ */
+export function getShapeForBatchMatMul(
+    shape: number[], isChannelsLast: boolean): number[] {
+  const length = shape.length;
+  if (length >= 3) {
+    return isChannelsLast ?
+        [
+          ...shape.slice(0, -3) /* batch */,
+          shape[length - 3] * shape[length - 2] /* height * width */,
+          shape[length - 1] /* channel */
+        ] :
+        [
+          ...shape.slice(0, -3) /* batch */, shape[length - 3] /* channel */,
+          shape[length - 2] * shape[length - 1] /* height * width */
+        ];
+  }
+  if (!isChannelsLast && length === 1 && shape[0] > 1) {
+    return [shape[0], 1];
+  } else {
+    return null;
+  }
+}

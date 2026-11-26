@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Sign, SignInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Sign} from '@tensorflow/tfjs';
 
-export const signConfig: KernelConfig = {
-  kernelName: Sign,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SignInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Sign, x);
-  }
-};
+export const signConfig: KernelConfig = createUnaryKernelConfig(Sign);

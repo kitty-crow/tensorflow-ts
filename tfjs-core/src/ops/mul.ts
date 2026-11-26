@@ -15,14 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {Multiply, MultiplyInputs} from '../kernel_names';
+import {Multiply} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runMatchedBinaryKernel} from './operation';
 
 /**
  * Multiplies two `tf.Tensor`s element-wise, A * B. Supports broadcasting.
@@ -50,12 +47,6 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Arithmetic'}
  */
 function mul_<T extends Tensor>(a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'mul');
-  let $b = convertToTensor(b, 'b', 'mul');
-  [$a, $b] = makeTypesMatch($a, $b);
-
-  const inputs = {a: $a, b: $b} satisfies MultiplyInputs;
-
-  return ENGINE.runKernel(Multiply, inputs);
+  return runMatchedBinaryKernel<T>(a, b, 'mul', Multiply);
 }
 export const mul = /* @__PURE__ */ op({mul_});

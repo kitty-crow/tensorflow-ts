@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, ResizeNearestNeighborGrad, ResizeNearestNeighborGradAttrs, ResizeNearestNeighborGradInputs, tensor1d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, ResizeNearestNeighborGrad, ResizeNearestNeighborGradAttrs, ResizeNearestNeighborGradInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeWithInt32Vector} from './native_dispatch';
 
 export const resizeNearestNeighborGradConfig: KernelConfig = {
   kernelName: ResizeNearestNeighborGrad,
@@ -39,10 +40,6 @@ export const resizeNearestNeighborGradConfig: KernelConfig = {
       }
     ];
     const [, origHeight, origWidth, ] = images.shape;
-    const sizeTensor = tensor1d([origHeight, origWidth], 'int32');
-    const res = backend.executeSingleOutput(
-        ResizeNearestNeighborGrad, opAttrs, [dy, sizeTensor]);
-    sizeTensor.dispose();
-    return res;
+    return executeWithInt32Vector(backend, ResizeNearestNeighborGrad, opAttrs, [dy], [origHeight, origWidth]);
   }
 };

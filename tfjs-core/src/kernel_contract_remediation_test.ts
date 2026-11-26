@@ -14,8 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {Max, MaxAttrs} from './kernel_names';
+import {ArgMax, ArgMin, Max, MaxAttrs} from './kernel_names';
 import {KernelAttributes, KernelConfig, KernelFunc} from './kernel_registry';
+import {argMaxGradConfig} from './gradients/ArgMax_grad';
+import {argMinGradConfig} from './gradients/ArgMin_grad';
+import {getShapeForBatchMatMul} from './ops/conv_util';
 import {maximumGradConfig} from './gradients/Maximum_grad';
 import {Tensor} from './tensor';
 import {TensorInfo} from './tensor_info';
@@ -104,5 +107,27 @@ describe('kernel signature and saved-tensor contracts', () => {
         .toThrowError('Expected an array with exactly 2 elements.');
     const result = maximumGradConfig.gradFunc(tensor, [tensor, tensor], {});
     expect(Object.keys(result)).toEqual(['a', 'b']);
+  });
+});
+
+describe('shared backend and extrema contracts', () => {
+  it('fuses only spatial dimensions of convolution broadcast operands', () => {
+    expect(getShapeForBatchMatMul([2, 3, 4, 5], true)).toEqual([2, 12, 5]);
+    expect(getShapeForBatchMatMul([2, 5, 3, 4], false)).toEqual([2, 5, 12]);
+    expect(getShapeForBatchMatMul([5], false)).toEqual([5, 1]);
+    expect(getShapeForBatchMatMul([5], true)).toBeNull();
+    expect(getShapeForBatchMatMul([1], false)).toBeNull();
+    expect(getShapeForBatchMatMul([3, 4], false)).toBeNull();
+  });
+
+  it('preserves independent extrema registrations and saved-input checks', () => {
+    const x = new Tensor<Rank.R1>([2], 'float32', {}, 1);
+    expect(argMinGradConfig.kernelName).toBe(ArgMin);
+    expect(argMaxGradConfig.kernelName).toBe(ArgMax);
+    expect(argMinGradConfig.inputsToSave).toEqual(['x']);
+    expect(argMaxGradConfig.inputsToSave).toEqual(['x']);
+    expect(argMinGradConfig.gradFunc).toBe(argMaxGradConfig.gradFunc);
+    expect(() => argMinGradConfig.gradFunc(x, [], {})).toThrowError();
+    expect(Object.keys(argMaxGradConfig.gradFunc(x, [x], {}))).toEqual(['x']);
   });
 });

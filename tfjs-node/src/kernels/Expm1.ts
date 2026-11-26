@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {Expm1, Expm1Inputs, KernelConfig} from '@tensorflow/tfjs';
+import {Expm1, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const expm1Config: KernelConfig = {
-  kernelName: Expm1,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as Expm1Inputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(Expm1, x);
-  }
-};
+export const expm1Config: KernelConfig = createUnaryKernelConfig(Expm1);

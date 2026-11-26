@@ -840,3 +840,12 @@ export function isPromise(object: any): object is Promise<unknown> {
   //  comparing to a pre-patched Promise.
   return object && object.then && typeof object.then === 'function';
 }
+
+/** Rounds a non-negative size up to the power of two used by bitonic TopK. */
+export function roundUpToPow2(num: number): number {
+  let pow2 = 1;
+  while (pow2 < num) {
+    pow2 *= 2;
+  }
+  return pow2;
+}

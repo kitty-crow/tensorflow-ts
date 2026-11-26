@@ -15,13 +15,11 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {All, AllAttrs, AllInputs} from '../kernel_names';
+import {All} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runBooleanReduction} from './operation';
 
 /**
  * Computes the logical and of elements across dimensions of a `tf.Tensor`.
@@ -54,14 +52,7 @@ import {op} from './operation';
  */
 function all_<T extends Tensor>(
     x: Tensor|TensorLike, axis: number|number[] = null, keepDims = false): T {
-  const $x = convertToTensor(x, 'x', 'all', 'bool');
-
-  const inputs = {x: $x} satisfies AllInputs;
-  const attrs = {axis, keepDims} satisfies AllAttrs;
-
-  return ENGINE.runKernel(
-      All, inputs,
-      attrs);
+  return runBooleanReduction<T>(x, axis, keepDims, 'all', All);
 }
 
 export const all = /* @__PURE__ */ op({all_});

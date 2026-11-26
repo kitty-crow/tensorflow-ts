@@ -17,9 +17,12 @@
 import {ENGINE} from '../engine';
 import {Tensor} from '../tensor';
 import {NamedTensorMap} from '../tensor_types';
+import {makeTypesMatch} from '../tensor_util';
 import {convertToTensor} from '../tensor_util_env';
 import {DataType, TensorLike} from '../types';
 import {isPromise} from '../util';
+
+import {assertAndGetBroadcastShape} from './broadcast_util';
 
 export const OP_SCOPE_SUFFIX = '__op';
 
@@ -77,4 +80,39 @@ export function runUnaryKernel<T extends Tensor>(
   const input = convertToTensor(x, inputName, operationName, dtype);
   const inputs: NamedTensorMap = {[inputName]: input};
   return ENGINE.runKernel<T>(kernelName, inputs);
+}
+
+/** Applies the common operand conversion and dtype matching contract. */
+export function matchedBinaryInputs(
+    a: Tensor|TensorLike, b: Tensor|TensorLike, operationName: string,
+    dtype: 'numeric'|'string_or_numeric' = 'numeric'): {a: Tensor, b: Tensor} {
+  const left = convertToTensor(a, 'a', operationName, dtype);
+  const right = convertToTensor(b, 'b', operationName, dtype);
+  const [matchedA, matchedB] = makeTypesMatch(left, right);
+  return {a: matchedA, b: matchedB};
+}
+
+/** Dispatches a numeric binary operation after matching operand types. */
+export function runMatchedBinaryKernel<T extends Tensor>(
+    a: Tensor|TensorLike, b: Tensor|TensorLike, operationName: string,
+    kernelName: string): T {
+  return ENGINE.runKernel<T>(
+      kernelName, matchedBinaryInputs(a, b, operationName));
+}
+
+/** Comparisons accept strings and validate broadcast shapes before dispatch. */
+export function runComparisonKernel<T extends Tensor>(
+    a: Tensor|TensorLike, b: Tensor|TensorLike, operationName: string,
+    kernelName: string): T {
+  const inputs = matchedBinaryInputs(a, b, operationName, 'string_or_numeric');
+  assertAndGetBroadcastShape(inputs.a.shape, inputs.b.shape);
+  return ENGINE.runKernel<T>(kernelName, inputs);
+}
+
+/** Boolean reductions share input validation and axis/keepDims forwarding. */
+export function runBooleanReduction<T extends Tensor>(
+    x: Tensor|TensorLike, axis: number|number[], keepDims: boolean,
+    operationName: string, kernelName: string): T {
+  const input = convertToTensor(x, 'x', operationName, 'bool');
+  return ENGINE.runKernel<T>(kernelName, {x: input}, {axis, keepDims});
 }

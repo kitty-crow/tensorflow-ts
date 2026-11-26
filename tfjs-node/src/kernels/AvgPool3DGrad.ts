@@ -17,7 +17,8 @@
 
 import {AvgPool3DGrad, AvgPool3DGradAttrs, AvgPool3DGradInputs, backend_util, KernelConfig, KernelAttributes, tensor1d} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {pool3DAttrs} from './native_dispatch';
 
 export const avgPool3DGradConfig: KernelConfig = {
   kernelName: AvgPool3DGrad,
@@ -34,31 +35,7 @@ export const avgPool3DGradConfig: KernelConfig = {
     const convInfo = backend_util.computePool3DInfo(
         input.shape as [number, number, number, number, number], filterSize,
         strides, 1 /* dilations */, pad, dimRoundingMode);
-    if (convInfo.padInfo.type !== 'VALID' && convInfo.padInfo.type !== 'SAME') {
-      throw new Error(
-          `TF Backend supports only 'valid' and 'same' padding ` +
-          `while padding type was ${convInfo.padInfo.type}`);
-    }
-    const ksize = [
-      1, convInfo.filterDepth, convInfo.filterHeight, convInfo.filterWidth, 1
-    ];
-    const $strides = [
-      1, convInfo.strideDepth, convInfo.strideHeight, convInfo.strideWidth, 1
-    ];
-    const padding = convInfo.padInfo.type;
-    const dataFormat =
-        convInfo.dataFormat === 'channelsLast' ? 'NDHWC' : 'NCDHW';
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', input.dtype),
-      {name: 'ksize', type: backend.binding.TF_ATTR_INT, value: ksize},
-      {name: 'strides', type: backend.binding.TF_ATTR_INT, value: $strides},
-      {name: 'padding', type: backend.binding.TF_ATTR_STRING, value: padding},
-      {
-        name: 'data_format',
-        type: backend.binding.TF_ATTR_STRING,
-        value: dataFormat
-      },
-    ];
+    const opAttrs = pool3DAttrs(backend, input.dtype, convInfo, 'padding type');
     const origInputShape = tensor1d(input.shape, 'int32');
     const res = backend.executeSingleOutput(
         AvgPool3DGrad, opAttrs, [origInputShape, dy]);

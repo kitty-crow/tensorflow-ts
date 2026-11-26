@@ -14,15 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {ENGINE} from '../engine';
-import {NotEqual, NotEqualInputs} from '../kernel_names';
+import {NotEqual} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {assertAndGetBroadcastShape} from './broadcast_util';
-import {op} from './operation';
+import {op, runComparisonKernel} from './operation';
 
 /**
  * Returns the truth value of (a != b) element-wise. Supports broadcasting.
@@ -40,15 +36,7 @@ import {op} from './operation';
  */
 function notEqual_<T extends Tensor>(
     a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'notEqual', 'string_or_numeric');
-  let $b = convertToTensor(b, 'b', 'notEqual', 'string_or_numeric');
-  [$a, $b] = makeTypesMatch($a, $b);
-
-  assertAndGetBroadcastShape($a.shape, $b.shape);
-
-  const inputs = {a: $a, b: $b} satisfies NotEqualInputs;
-
-  return ENGINE.runKernel(NotEqual, inputs);
+  return runComparisonKernel<T>(a, b, 'notEqual', NotEqual);
 }
 
 export const notEqual = /* @__PURE__ */ op({notEqual_});

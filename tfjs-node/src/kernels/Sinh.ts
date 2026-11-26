@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Sinh, SinhInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Sinh} from '@tensorflow/tfjs';
 
-export const sinhConfig: KernelConfig = {
-  kernelName: Sinh,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SinhInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Sinh, x);
-  }
-};
+export const sinhConfig: KernelConfig = createUnaryKernelConfig(Sinh);

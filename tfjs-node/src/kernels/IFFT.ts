@@ -15,19 +15,9 @@
  * =============================================================================
  */
 
-import {IFFT, IFFTInputs, KernelConfig} from '@tensorflow/tfjs';
+import {IFFT, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createComplexTransformConfig} from './native_dispatch';
 
 // tslint:disable-next-line: variable-name
-export const IFFTConfig: KernelConfig = {
-  kernelName: IFFT,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {input} = args.inputs as IFFTInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    const opAttrs = [createTensorsTypeOpAttr('Tcomplex', input.dtype)];
-    return backend.executeSingleOutput(IFFT, opAttrs, [input]);
-  }
-};
+export const IFFTConfig: KernelConfig = createComplexTransformConfig(IFFT);

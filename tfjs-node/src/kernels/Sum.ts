@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, Sum, SumAttrs, SumInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Sum, SumAttrs, SumInputs} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeNumericReduction} from './native_dispatch';
 
 export const sumConfig: KernelConfig = {
   kernelName: Sum,
@@ -29,11 +30,6 @@ export const sumConfig: KernelConfig = {
     const {x} = args.inputs;
     const backend = args.backend;
     const {axis, keepDims} = args.attrs;
-    const axes = util.parseAxisParam(axis, x.shape);
-    const axisTensor = tensor1d(axes, 'int32');
-    const res = backend.executeSingleOutput(
-        Sum, backend.createReductionOpAttrs(x, keepDims), [x, axisTensor]);
-    axisTensor.dispose();
-    return res;
+    return executeNumericReduction(backend, Sum, x, axis, keepDims);
   }
 };

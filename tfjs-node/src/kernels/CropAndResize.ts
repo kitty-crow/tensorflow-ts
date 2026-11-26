@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {CropAndResize, CropAndResizeAttrs, CropAndResizeInputs, KernelAttributes, KernelConfig, tensor1d} from '@tensorflow/tfjs';
+import {CropAndResize, CropAndResizeAttrs, CropAndResizeInputs, KernelAttributes, KernelConfig} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeWithInt32Vector} from './native_dispatch';
 
 export const cropAndResizeConfig: KernelConfig = {
   kernelName: CropAndResize,
@@ -39,10 +40,6 @@ export const cropAndResizeConfig: KernelConfig = {
         value: extrapolationValue
       }
     ];
-    const cropSizeTensor = tensor1d(cropSize, 'int32');
-    const res = backend.executeSingleOutput(
-        CropAndResize, opAttrs, [image, boxes, boxInd, cropSizeTensor]);
-    cropSizeTensor.dispose();
-    return res;
+    return executeWithInt32Vector(backend, CropAndResize, opAttrs, [image, boxes, boxInd], cropSize);
   }
 };

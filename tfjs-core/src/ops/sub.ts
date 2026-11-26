@@ -14,14 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {ENGINE} from '../engine';
-import {Sub, SubInputs} from '../kernel_names';
+import {Sub} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runMatchedBinaryKernel} from './operation';
 
 /**
  * Subtracts two `tf.Tensor`s element-wise, A - B. Supports broadcasting.
@@ -47,13 +44,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Arithmetic'}
  */
 function sub_<T extends Tensor>(a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'sub');
-  let $b = convertToTensor(b, 'b', 'sub');
-  [$a, $b] = makeTypesMatch($a, $b);
-
-  const inputs = {a: $a, b: $b} satisfies SubInputs;
-
-  return ENGINE.runKernel(Sub, inputs);
+  return runMatchedBinaryKernel<T>(a, b, 'sub', Sub);
 }
 
 export const sub = /* @__PURE__ */ op({sub_});

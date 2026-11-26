@@ -14,15 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {ENGINE} from '../engine';
-import {LessEqual, LessEqualInputs} from '../kernel_names';
+import {LessEqual} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {assertAndGetBroadcastShape} from './broadcast_util';
-import {op} from './operation';
+import {op, runComparisonKernel} from './operation';
 
 /**
  * Returns the truth value of (a <= b) element-wise. Supports broadcasting.
@@ -41,15 +37,7 @@ import {op} from './operation';
  */
 function lessEqual_<T extends Tensor>(
     a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'lessEqual', 'string_or_numeric');
-  let $b = convertToTensor(b, 'b', 'lessEqual', 'string_or_numeric');
-  [$a, $b] = makeTypesMatch($a, $b);
-
-  assertAndGetBroadcastShape($a.shape, $b.shape);
-
-  const inputs = {a: $a, b: $b} satisfies LessEqualInputs;
-
-  return ENGINE.runKernel(LessEqual, inputs);
+  return runComparisonKernel<T>(a, b, 'lessEqual', LessEqual);
 }
 
 export const lessEqual = /* @__PURE__ */ op({lessEqual_});

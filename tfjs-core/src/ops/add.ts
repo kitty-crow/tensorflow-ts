@@ -14,14 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {ENGINE} from '../engine';
-import {Add, AddInputs} from '../kernel_names';
+import {Add} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {op, runMatchedBinaryKernel} from './operation';
 
 /**
  * Adds two `tf.Tensor`s element-wise, A + B. Supports broadcasting.
@@ -47,13 +44,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Arithmetic'}
  */
 function add_<T extends Tensor>(a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'add');
-  let $b = convertToTensor(b, 'b', 'add');
-  [$a, $b] = makeTypesMatch($a, $b);
-
-  const inputs = {a: $a, b: $b} satisfies AddInputs;
-
-  return ENGINE.runKernel(Add, inputs);
+  return runMatchedBinaryKernel<T>(a, b, 'add', Add);
 }
 
 export const add = /* @__PURE__ */ op({add_});

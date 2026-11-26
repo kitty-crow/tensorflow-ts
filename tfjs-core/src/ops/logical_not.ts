@@ -15,12 +15,10 @@
  * =============================================================================
  */
 
-import {ENGINE} from '../engine';
-import {LogicalNot, LogicalNotInputs} from '../kernel_names';
+import {LogicalNot} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
-import {op} from './operation';
+import {op, runUnaryKernel} from './operation';
 
 /**
  * Returns the truth value of `NOT x` element-wise.
@@ -36,9 +34,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Logical'}
  */
 function logicalNot_<T extends Tensor>(x: T|TensorLike): T {
-  const $x = convertToTensor(x, 'x', 'logicalNot', 'bool');
-  const inputs = {x: $x} satisfies LogicalNotInputs;
-  return ENGINE.runKernel(LogicalNot, inputs);
+  return runUnaryKernel<T>(x, 'logicalNot', LogicalNot, 'bool');
 }
 
 export const logicalNot = /* @__PURE__ */ op({logicalNot_});

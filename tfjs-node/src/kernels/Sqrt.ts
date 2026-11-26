@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Sqrt, SqrtInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Sqrt} from '@tensorflow/tfjs';
 
-export const sqrtConfig: KernelConfig = {
-  kernelName: Sqrt,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SqrtInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Sqrt, x);
-  }
-};
+export const sqrtConfig: KernelConfig = createUnaryKernelConfig(Sqrt);

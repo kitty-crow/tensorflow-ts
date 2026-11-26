@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, Min, MinAttrs, MinInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Min, MinAttrs, MinInputs} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeNumericReduction} from './native_dispatch';
 
 export const minConfig: KernelConfig = {
   kernelName: Min,
@@ -29,11 +30,6 @@ export const minConfig: KernelConfig = {
     const {x} = args.inputs;
     const backend = args.backend;
     const {axis, keepDims} = args.attrs;
-    const axes = util.parseAxisParam(axis, x.shape);
-    const axesTensor = tensor1d(axes, 'int32');
-    const res = backend.executeSingleOutput(
-        Min, backend.createReductionOpAttrs(x, keepDims), [x, axesTensor]);
-    axesTensor.dispose();
-    return res;
+    return executeNumericReduction(backend, Min, x, axis, keepDims);
   }
 };

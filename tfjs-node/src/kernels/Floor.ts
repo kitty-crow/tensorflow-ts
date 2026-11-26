@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {Floor, FloorInputs, KernelConfig} from '@tensorflow/tfjs';
+import {Floor, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const floorConfig: KernelConfig = {
-  kernelName: Floor,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as FloorInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(Floor, x);
-  }
-};
+export const floorConfig: KernelConfig = createUnaryKernelConfig(Floor);

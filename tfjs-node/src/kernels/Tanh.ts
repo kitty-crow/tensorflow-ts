@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Tanh, TanhInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Tanh} from '@tensorflow/tfjs';
 
-export const tanhConfig: KernelConfig = {
-  kernelName: Tanh,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as TanhInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Tanh, x);
-  }
-};
+export const tanhConfig: KernelConfig = createUnaryKernelConfig(Tanh);

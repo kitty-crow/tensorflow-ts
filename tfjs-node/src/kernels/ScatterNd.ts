@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, ScatterNd, ScatterNdAttrs, ScatterNdInputs, tensor1d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, ScatterNd, ScatterNdAttrs, ScatterNdInputs} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeWithInt32Vector} from './native_dispatch';
 
 export const scatterNdConfig: KernelConfig = {
   kernelName: ScatterNd,
@@ -34,12 +35,6 @@ export const scatterNdConfig: KernelConfig = {
       createTensorsTypeOpAttr('T', updates.dtype),
       createTensorsTypeOpAttr('Tindices', 'int32')
     ];
-    const shapeTensor = tensor1d(shape, 'int32');
-    const ret = backend.executeSingleOutput(
-        ScatterNd, opAttrs, [indices, updates, shapeTensor]);
-
-    shapeTensor.dispose();
-
-    return ret;
+    return executeWithInt32Vector(backend, ScatterNd, opAttrs, [indices, updates], shape);
   }
 };

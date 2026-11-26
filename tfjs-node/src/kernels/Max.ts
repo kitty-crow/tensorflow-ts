@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, Max, MaxAttrs, MaxInputs, tensor1d, util} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Max, MaxAttrs, MaxInputs} from '@tensorflow/tfjs';
 
 import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeNumericReduction} from './native_dispatch';
 
 export const maxConfig: KernelConfig = {
   kernelName: Max,
@@ -30,11 +31,6 @@ export const maxConfig: KernelConfig = {
     const backend = args.backend;
     const {reductionIndices, keepDims} = args.attrs;
 
-    const axes = util.parseAxisParam(reductionIndices, x.shape);
-    const axesTensor = tensor1d(axes, 'int32');
-    const res = backend.executeSingleOutput(
-        Max, backend.createReductionOpAttrs(x, keepDims), [x, axesTensor]);
-    axesTensor.dispose();
-    return res;
+    return executeNumericReduction(backend, Max, x, reductionIndices, keepDims);
   }
 };
