@@ -15,7 +15,8 @@
  * =============================================================================
  */
 
-import {TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, TensorInfo} from '@tensorflow/tfjs-core';
+import {pool2DBackpropUniforms, pool3DBackpropUniforms} from './kernels/pool_backprop_uniforms';
 import {makeSelectedIndices, readNonMaxSuppressionInputs} from './kernels/non_max_suppression_util';
 import {ClipVec4Program} from './clip_vec4_webgpu';
 import {FillProgram} from './fill_webgpu';
@@ -162,5 +163,44 @@ describe('WebGPU NMS synchronous preparation', () => {
     }, []);
     expect(output.shape).toEqual([0]);
     expect(output.dtype).toBe('int32');
+  });
+});
+
+describe('WebGPU pooling backprop uniform layout', () => {
+  it('retains 2D dilation and reversed padding in shader order', () => {
+    const info = backend_util.computePool2DInfo(
+        [1, 5, 6, 2], [3, 2], [2, 3], 1, 'valid');
+    expect(pool2DBackpropUniforms(info)).toEqual([
+      {type: 'int32', data: [2, 3]},
+      {type: 'int32', data: [2, 1]},
+      {type: 'int32', data: [1, 1]},
+      {type: 'int32', data: [3, 2]},
+      {type: 'int32', data: [2]},
+      {type: 'int32', data: [2]}
+    ]);
+  });
+
+  it('retains the distinct 3D uniform order and asymmetric padding', () => {
+    const info = backend_util.computePool3DInfo(
+        [1, 5, 6, 7, 2], [2, 3, 4], [2, 3, 2], 1, 'same');
+    expect(pool3DBackpropUniforms(info)).toEqual([
+      {type: 'int32', data: [2, 3, 2]},
+      {type: 'int32', data: [1, 2, 2]},
+      {type: 'int32', data: [2, 3, 4]},
+      {type: 'int32', data: [3]},
+      {type: 'int32', data: [2]},
+      {type: 'int32', data: [4]}
+    ]);
+  });
+
+  it('does not share mutable arrays between average and maximum dispatches', () => {
+    const info = backend_util.computePool3DInfo(
+        [1, 4, 4, 4, 1], 2, 1, 1, 'valid');
+    const average = pool3DBackpropUniforms(info);
+    average[0].data[0] = 99;
+    average.push({type: 'float32', data: [0.125]});
+    const maximum = pool3DBackpropUniforms(info);
+    expect(maximum.length).toBe(6);
+    expect(maximum[0]).toEqual({type: 'int32', data: [1, 1, 1]});
   });
 });

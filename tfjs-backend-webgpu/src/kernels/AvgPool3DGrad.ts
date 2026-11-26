@@ -19,6 +19,7 @@ import {AvgPool3DGrad, AvgPool3DGradAttrs, AvgPool3DGradInputs, backend_util, Ke
 
 import {AvgPool3DBackpropProgram} from '../avg_pool_backprop_webgpu';
 import {WebGPUBackend} from '../backend_webgpu';
+import {pool3DBackpropUniforms} from './pool_backprop_uniforms';
 
 export function avgPool3DGrad(args: {
   inputs: AvgPool3DGradInputs,
@@ -36,31 +37,8 @@ export function avgPool3DGrad(args: {
   const program = new AvgPool3DBackpropProgram(convInfo);
   const avgMultiplier =
       1 / (convInfo.filterDepth * convInfo.filterHeight * convInfo.filterWidth);
-  const uniformData = [
-    {
-      type: 'int32',
-      data: [convInfo.strideDepth, convInfo.strideHeight, convInfo.strideWidth]
-    },
-    {
-      type: 'int32',
-      data: [
-        convInfo.effectiveFilterDepth - 1 - convInfo.padInfo.front,
-        convInfo.effectiveFilterHeight - 1 - convInfo.padInfo.top,
-        convInfo.effectiveFilterWidth - 1 - convInfo.padInfo.left
-      ]
-    },
-    {
-      type: 'int32',
-      data: [
-        convInfo.effectiveFilterDepth, convInfo.effectiveFilterHeight,
-        convInfo.effectiveFilterWidth
-      ]
-    },
-    {type: 'int32', data: [convInfo.outDepth]},
-    {type: 'int32', data: [convInfo.outHeight]},
-    {type: 'int32', data: [convInfo.outWidth]},
-    {type: 'float32', data: [avgMultiplier]}
-  ];
+  const uniformData = pool3DBackpropUniforms(convInfo);
+  uniformData.push({type: 'float32', data: [avgMultiplier]});
   return backend.runWebGPUProgram(program, [dy], x.dtype, uniformData);
 }
 

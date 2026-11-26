@@ -21,6 +21,7 @@ import {WebGPUBackend} from '../backend_webgpu';
 import {MaxPool2DBackpropProgram} from '../max_pool_backprop_webgpu';
 import {Pool2DProgram} from '../pool_webgpu';
 import {assertNotComplex} from '../webgpu_util';
+import {pool2DBackpropUniforms} from './pool_backprop_uniforms';
 
 export function maxPoolGrad(args: {
   inputs: MaxPoolGradInputs,
@@ -51,21 +52,7 @@ export function maxPoolGrad(args: {
       maxPoolPositionsProgram, [x], 'int32', uniformData);
 
   const maxPoolBackpropProgram = new MaxPool2DBackpropProgram(convInfo);
-  uniformData = [
-    {type: 'int32', data: [convInfo.strideHeight, convInfo.strideWidth]}, {
-      type: 'int32',
-      data: [
-        convInfo.effectiveFilterHeight - 1 - convInfo.padInfo.top,
-        convInfo.effectiveFilterWidth - 1 - convInfo.padInfo.left
-      ]
-    },
-    {type: 'int32', data: [convInfo.dilationHeight, convInfo.dilationWidth]}, {
-      type: 'int32',
-      data: [convInfo.effectiveFilterHeight, convInfo.effectiveFilterWidth]
-    },
-    {type: 'int32', data: [convInfo.outHeight]},
-    {type: 'int32', data: [convInfo.outWidth]}
-  ];
+  uniformData = pool2DBackpropUniforms(convInfo);
   const result = backend.runWebGPUProgram(
       maxPoolBackpropProgram, [dy, maxPoolPositions], x.dtype, uniformData);
   backend.disposeData(maxPoolPositions.dataId);

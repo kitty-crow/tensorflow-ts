@@ -20,6 +20,7 @@ import {backend_util, KernelConfig, KernelAttributes, MaxPool3DGrad, MaxPool3DGr
 import {WebGPUBackend} from '../backend_webgpu';
 import {MaxPool3DBackpropProgram} from '../max_pool_backprop_webgpu';
 import {Pool3DProgram} from '../pool_webgpu';
+import {pool3DBackpropUniforms} from './pool_backprop_uniforms';
 
 export function maxPool3DGrad(args: {
   inputs: MaxPool3DGradInputs,
@@ -64,30 +65,7 @@ export function maxPool3DGrad(args: {
       maxPool3dPositionsProgram, [x], 'int32', uniformData);
 
   const maxPool3dBackpropProgram = new MaxPool3DBackpropProgram(convInfo);
-  uniformData = [
-    {
-      type: 'int32',
-      data: [convInfo.strideDepth, convInfo.strideHeight, convInfo.strideWidth]
-    },
-    {
-      type: 'int32',
-      data: [
-        convInfo.effectiveFilterDepth - 1 - convInfo.padInfo.front,
-        convInfo.effectiveFilterHeight - 1 - convInfo.padInfo.top,
-        convInfo.effectiveFilterWidth - 1 - convInfo.padInfo.left
-      ]
-    },
-    {
-      type: 'int32',
-      data: [
-        convInfo.effectiveFilterDepth, convInfo.effectiveFilterHeight,
-        convInfo.effectiveFilterWidth
-      ]
-    },
-    {type: 'int32', data: [convInfo.outDepth]},
-    {type: 'int32', data: [convInfo.outHeight]},
-    {type: 'int32', data: [convInfo.outWidth]}
-  ];
+  uniformData = pool3DBackpropUniforms(convInfo);
   const result = backend.runWebGPUProgram(
       maxPool3dBackpropProgram, [dy, maxPool3dPositions], x.dtype, uniformData);
   backend.disposeData(maxPool3dPositions.dataId);
