@@ -111,7 +111,22 @@ describe('converter indexed metadata contracts', () => {
       attrParams: {pad: {value: 'explicit', type: 'string'},
         explicitPaddings: {value: [0, 0, 1, 2, 3, 4, 0, 0], type: 'number[]'}}};
     const context = new ExecutionContext({}, {}, {});
-    expect(getPadding(node, {}, context)).toEqual([[0, 0], [1, 2], [3, 4], [0, 0]]);
+    const padding = getPadding(node, {}, context);
+    if (!Array.isArray(padding)) {
+      throw new Error('Expected explicit padding pairs.');
+    }
+    const pairs: number[][] = [];
+    for (const pair of padding) {
+      if (!Array.isArray(pair) || pair.length !== 2) {
+        throw new Error('Expected a pair of explicit padding values.');
+      }
+      const [before, after] = pair;
+      if (typeof before !== 'number' || typeof after !== 'number') {
+        throw new Error('Expected numeric explicit padding values.');
+      }
+      pairs.push([before, after]);
+    }
+    expect(pairs).toEqual([[0, 0], [1, 2], [3, 4], [0, 0]]);
     node.attrParams.explicitPaddings = {value: [0, 0], type: 'number[]'};
     expect(() => getPadding(node, {}, context)).toThrowError(/explicit padding/);
   });
