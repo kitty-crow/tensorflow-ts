@@ -90,13 +90,24 @@ export function unpackShape(shape: readonly number[], axis: number):
 }
 
 /** Read the spatial result of a kernel invoked with an inserted batch axis. */
-export function unbatchedShape(shape: readonly number[], rank: 4|5): number[] {
+export function unbatchedShape(shape: readonly number[], rank: 4):
+    [number, number, number];
+export function unbatchedShape(shape: readonly number[], rank: 5):
+    [number, number, number, number];
+export function unbatchedShape(shape: readonly number[], rank: 4|5):
+    [number, number, number]|[number, number, number, number];
+export function unbatchedShape(shape: readonly number[], rank: 4|5):
+    [number, number, number]|[number, number, number, number] {
   if (shape.length !== rank) {
     throw new Error(`Expected a rank-${rank} batched kernel result.`);
   }
-  const spatial: number[] = [];
-  for (let i = 1; i < rank; i++) {
-    spatial.push(requiredDimension(shape, i));
+  // Preserve reshape's fixed-length contract while checking each spatial axis.
+  const spatial: [number, number, number] = [
+    requiredDimension(shape, 1), requiredDimension(shape, 2),
+    requiredDimension(shape, 3)
+  ];
+  if (rank === 4) {
+    return spatial;
   }
-  return spatial;
+  return [...spatial, requiredDimension(shape, 4)];
 }

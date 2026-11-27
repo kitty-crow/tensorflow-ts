@@ -254,13 +254,25 @@ describe('inserted batch-axis kernel result geometry', () => {
   it('retains zero dimensions and does not mutate either spatial rank', () => {
     const image = [1, 0, 3, 4];
     const volume = [1, 2, 0, 4, 5];
-    expect(unbatchedShape(image, 4)).toEqual([0, 3, 4]);
-    expect(unbatchedShape(volume, 5)).toEqual([2, 0, 4, 5]);
+    const imageShape: [number, number, number] = unbatchedShape(image, 4);
+    const volumeShape: [number, number, number, number] =
+        unbatchedShape(volume, 5);
+    expect(imageShape).toEqual([0, 3, 4]);
+    expect(volumeShape).toEqual([2, 0, 4, 5]);
     expect(image).toEqual([1, 0, 3, 4]);
     expect(volume).toEqual([1, 2, 0, 4, 5]);
   });
   it('rejects an unexpected kernel result rank', () => {
     expect(() => unbatchedShape([1, 2, 3], 4)).toThrowError();
     expect(() => unbatchedShape([1, 2, 3, 4, 5], 4)).toThrowError();
+    expect(() => unbatchedShape([1, 2, 3, 4], 5)).toThrowError();
+  });
+  it('rejects missing required spatial entries at either rank', () => {
+    const image = [1, 2, 3, 4];
+    delete image[2];
+    const volume = [1, 2, 3, 4, 5];
+    delete volume[4];
+    expect(() => unbatchedShape(image, 4)).toThrowError(/Missing dimension at index 2/);
+    expect(() => unbatchedShape(volume, 5)).toThrowError(/Missing dimension at index 4/);
   });
 });
