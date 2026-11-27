@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {AddN, AddNInputs, buffer, KernelConfig, KernelFunc, Tensor, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {AddN, backend_util, AddNInputs, buffer, KernelConfig, KernelFunc, Tensor, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -29,12 +29,13 @@ export function addN(args: {inputs: AddNInputs, backend: MathBackendCPU}):
 
   const vals =
       tensors.map(t => backend.requireValues(t.dataId) as TypedArray);
-  const outBuf = buffer(tensors[0].shape, tensors[0].dtype as 'float32');
+  const first = backend_util.requiredKernelEntry(tensors, 0);
+  const outBuf = buffer(first.shape, first.dtype as 'float32');
   const outVals = outBuf.values;
-  for (let i = 0; i < tensors.length; i++) {
-    const currVals = vals[i];
+  for (const currVals of vals) {
     for (let j = 0; j < outVals.length; j++) {
-      outVals[j] += currVals[j];
+      outVals[j] = backend_util.requiredKernelEntry(outVals, j) +
+          backend_util.requiredKernelEntry(currVals, j);
     }
   }
 

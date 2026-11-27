@@ -46,10 +46,7 @@ export const meanConfig: KernelConfig = {
         const xTexData = webglBackend.texData.get(meanInput.dataId);
         const values = xTexData.values as TypedArray;
 
-        const newShape: number[] = new Array(xRank);
-        for (let i = 0; i < newShape.length; i++) {
-          newShape[i] = x.shape[permutedAxes[i]];
-        }
+        const newShape = backend_util.permutedShape(x.shape, permutedAxes);
         const meanInputValues =
             transposeImplCPU(values, x.shape, x.dtype, permutedAxes, newShape);
 

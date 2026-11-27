@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, Multinomial, MultinomialAttrs, MultinomialInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Multinomial, MultinomialAttrs, MultinomialInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 import * as seedrandom from 'seedrandom';
 
 import {MathBackendCPU} from '../backend_cpu';
@@ -38,8 +38,8 @@ export function multinomial(args: {
       logits :
       softmax({inputs: {logits}, backend, attrs: {dim: -1}});
 
-  const batchSize = probabilities.shape[0];
-  const numEvents = probabilities.shape[1];
+  const batchSize = backend_util.requiredDimension(probabilities.shape, 0);
+  const numEvents = backend_util.requiredDimension(probabilities.shape, 1);
   const probVals = backend.requireValues(probabilities.dataId) as TypedArray;
   const resShape = [batchSize, numSamples];
   const resVals =
@@ -50,9 +50,12 @@ export function multinomial(args: {
     // The cdf won't include the last event. It will be implicit if no other
     // event happened.
     const cdf = new Float32Array(numEvents - 1);
-    cdf[0] = probVals[offset];
+    if (cdf.length > 0) {
+      cdf[0] = util.requiredNumericEntry(probVals, offset);
+    }
     for (let event = 1; event < cdf.length; ++event) {
-      cdf[event] = cdf[event - 1] + probVals[offset + event];
+      cdf[event] = util.requiredNumericEntry(cdf, event - 1) +
+          util.requiredNumericEntry(probVals, offset + event);
     }
 
     const random = seedrandom.alea(seed.toString());
@@ -64,7 +67,7 @@ export function multinomial(args: {
       resVals[outOffset + sampleId] = cdf.length;
 
       for (let event = 0; event < cdf.length; event++) {
-        if (r < cdf[event]) {
+        if (r < util.requiredNumericEntry(cdf, event)) {
           resVals[outOffset + sampleId] = event;
           break;
         }

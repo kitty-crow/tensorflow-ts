@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, TensorInfo, Transpose, TransposeAttrs, TransposeInputs, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, TensorInfo, Transpose, TransposeAttrs, TransposeInputs, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 
@@ -32,12 +32,8 @@ export function transpose(args: {
   const {perm} = attrs;
   const webglBackend = backend;
 
-  const xRank = x.shape.length;
 
-  const newShape: number[] = new Array(xRank);
-  for (let i = 0; i < newShape.length; i++) {
-    newShape[i] = x.shape[perm[i]];
-  }
+  const newShape = backend_util.permutedShape(x.shape, perm);
 
   let out: TensorInfo;
   if (webglBackend.shouldExecuteOnCPU([x])) {

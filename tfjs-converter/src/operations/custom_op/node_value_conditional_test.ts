@@ -18,6 +18,7 @@
 import * as tensorflow from '../../data/compiled_api';
 import {ExecutionContext} from '../../executor/execution_context';
 import {Graph, Node} from '../types';
+import {getExecutionSubgraph, getNodesInTopologicalOrder, getNodeLiveUntilMap} from '../../executor/model_analysis';
 import {GraphExecutor} from '../../executor/graph_executor';
 
 import {NodeValueImpl} from './node_value_impl';
@@ -72,5 +73,23 @@ describe('graph executor map contracts', () => {
     executor.weightMap = {};
     expect(executor.weightIds).toEqual([]);
     expect(() => executor.dispose()).not.toThrow();
+  });
+});
+
+describe('graph analysis traversal and lifetime contracts', () => {
+  it('retains dependency order and releases both nodes at the last consumer', () => {
+    const input: Node = {name: 'first', op: 'Placeholder', category: 'graph',
+      inputNames: [], inputs: [], inputParams: {}, attrParams: {}, children: []};
+    const output: Node = {...input, name: 'second', op: 'Identity',
+      inputNames: ['first'], inputs: [input], children: []};
+    input.children.push(output);
+    const graph: Graph = {nodes: {first: input, second: output},
+      placeholders: [], inputs: [], outputs: [output], weights: [input]};
+    const info = getExecutionSubgraph({}, [output], {}, [input]);
+    expect(info.missingInputs).toEqual([]);
+    const ordered = getNodesInTopologicalOrder(graph, info);
+    expect(ordered.map(node => node.name)).toEqual(['first', 'second']);
+    const release = getNodeLiveUntilMap(ordered);
+    expect(release.get('second')).toEqual([input, output]);
   });
 });

@@ -28,17 +28,19 @@ export function splitV(
   const {x} = inputs;
   const {numOrSizeSplits, axis} = attrs;
 
-  const $axis = util.parseAxisParam(axis, x.shape)[0];
+  const $axis = backend_util.requiredDimension(util.parseAxisParam(axis, x.shape), 0);
   const splitSizes = backend_util.prepareSplitSize(x, numOrSizeSplits, $axis);
 
-  const begin = new Array(x.shape.length).fill(0);
+  const begin = new Array<number>(x.shape.length).fill(0);
   const size = x.shape.slice();
+  let offset = 0;
   return splitSizes.map(s => {
+    begin[$axis] = offset;
     const sliceSize = [...size];
     sliceSize[$axis] = s;
     const sliceT =
         slice({inputs: {x}, backend, attrs: {begin, size: sliceSize}});
-    begin[$axis] += s;
+    offset += s;
     return sliceT;
   });
 }

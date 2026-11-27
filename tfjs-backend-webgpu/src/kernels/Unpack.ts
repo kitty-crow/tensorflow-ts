@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, TensorInfo, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, TensorInfo, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
@@ -37,21 +37,14 @@ export function unpack(
   const x = value;
   const xRank = x.shape.length;
 
-  const num = value.shape[axis];
-  const outShape: number[] = new Array(xRank - 1);
-  let outIndex = 0;
-  for (let i = 0; i < xRank; i++) {
-    if (i !== axis) {
-      outShape[outIndex++] = x.shape[i];
-    }
-  }
+  const {num, outShape} = backend_util.unpackShape(value.shape, axis);
 
   const toDispose: TensorInfo[] = [];
 
-  const begin = new Array(xRank).fill(0);
+  const begin = new Array<number>(xRank).fill(0);
   const size = x.shape.slice();
   size[axis] = 1;
-  const res: TensorInfo[] = new Array(num);
+  const res: TensorInfo[] = new Array<TensorInfo>(num);
   for (let i = 0; i < res.length; i++) {
     begin[axis] = i;
     const sliced = slice({inputs: {x}, backend, attrs: {begin, size}});

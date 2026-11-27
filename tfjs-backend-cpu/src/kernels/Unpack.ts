@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelFunc, TensorInfo, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {reshape} from './Reshape';
@@ -34,19 +34,12 @@ export function unpack(
 
   const valueRank = value.shape.length;
 
-  const num = value.shape[axis];
-  const outShape: number[] = new Array(valueRank - 1);
-  let outIndex = 0;
-  for (let i = 0; i < valueRank; i++) {
-    if (i !== axis) {
-      outShape[outIndex++] = value.shape[i];
-    }
-  }
+  const {num, outShape} = backend_util.unpackShape(value.shape, axis);
 
-  const begin = new Array(valueRank).fill(0);
+  const begin = new Array<number>(valueRank).fill(0);
   const size = value.shape.slice();
   size[axis] = 1;
-  const res = new Array(num);
+  const res = new Array<TensorInfo>(num);
   for (let i = 0; i < res.length; i++) {
     begin[axis] = i;
     const tempRes = slice({inputs: {x: value}, backend, attrs: {begin, size}});

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, LRNGrad, LRNGradAttrs, LRNGradInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, LRNGrad, LRNGradAttrs, LRNGradInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -32,7 +32,7 @@ export function lRNGrad(
 
   const dySize = util.sizeFromShape(dy.shape);
 
-  const channels = dy.shape[3];
+  const channels = backend_util.requiredDimension(dy.shape, 3);
   const dyValues = backend.requireValues(dy.dataId) as TypedArray;
   const xValues = backend.requireValues(x.dataId) as TypedArray;
   const yValues = backend.requireValues(y.dataId) as TypedArray;
@@ -48,17 +48,17 @@ export function lRNGrad(
 
     let norm = 0;
     for (let k = depthBegin; k < depthEnd; k++) {
-      norm += Math.pow(xValues[k], 2);
+      norm += Math.pow(util.requiredNumericEntry(xValues, k), 2);
     }
     norm = alpha * norm + bias;
 
     for (let k = depthBegin; k < depthEnd; k++) {
-      let dyi = -2 * alpha * beta * xValues[k] * yValues[offset] / norm;
+      let dyi = -2 * alpha * beta * util.requiredNumericEntry(xValues, k) * util.requiredNumericEntry(yValues, offset) / norm;
       if (offset === k) {
         dyi += Math.pow(norm, -beta);
       }
-      dyi *= dyValues[offset];
-      result[k] += dyi;
+      dyi *= util.requiredNumericEntry(dyValues, offset);
+      result[k] = util.requiredNumericEntry(result, k) + dyi;
     }
   }
 

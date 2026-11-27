@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {DataType, NumericDataType, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, DataType, NumericDataType, TypedArray} from '@tensorflow/tfjs-core';
 import {util} from '@tensorflow/tfjs-core';
 
 export function transposeImpl(
@@ -33,13 +33,10 @@ export function transposeImpl(
     const loc = util.indexToLoc(i, xRank, xStrides);
 
     // Permute location.
-    const newLoc: number[] = new Array(loc.length);
-    for (let i = 0; i < newLoc.length; i++) {
-      newLoc[i] = loc[perm[i]];
-    }
+    const newLoc = backend_util.permutedShape(loc, perm);
 
     const newIndex = util.locToIndex(newLoc, xRank, newStrides);
-    result[newIndex] = xVals[i];
+    result[newIndex] = util.requiredNumericEntry(xVals, i);
   }
   return result;
 }

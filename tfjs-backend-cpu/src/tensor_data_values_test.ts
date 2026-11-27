@@ -16,6 +16,11 @@
  */
 
 import {requireComplexTensorInfos, requireTensorDataValues} from './tensor_data_values';
+import {transpose} from './kernels/Transpose';
+import {unpack} from './kernels/Unpack';
+import {splitV} from './kernels/SplitV';
+import {leakyRelu} from './kernels/LeakyRelu';
+import {multinomial} from './kernels/Multinomial';
 import {MathBackendCPU} from './backend_cpu';
 import {cumsum} from './kernels/Cumsum';
 import {cumprod} from './kernels/Cumprod';
@@ -575,5 +580,44 @@ describe('checked CPU cumulative and image geometry', () => {
     expect(result.shape).toEqual([2, 3]);
     expect(backend.readSync(result.dataId)).toEqual(new Float32Array([0, 3, 4, 2, 5, 6]));
     [a, b, empty, result].forEach(t => backend.disposeData(t.dataId));
+  });
+});
+
+describe('checked CPU kernel reads', () => {
+  it('transposes, splits and unpacks zero-valued entries in order', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2, 3], 'float32',
+        new Float32Array([0, 1, 2, 3, 4, 5]));
+    const transposed = transpose({inputs: {x}, backend, attrs: {perm: [1, 0]}});
+    expect(transposed.shape).toEqual([3, 2]);
+    expect(backend.readSync(transposed.dataId)).toEqual(new Float32Array([0, 3, 1, 4, 2, 5]));
+    const splits = splitV({inputs: {x}, backend, attrs: {axis: 1, numOrSizeSplits: [1, 2]}});
+    expect(splits.map(t => t.shape)).toEqual([[2, 1], [2, 2]]);
+    expect(splits.map(t => backend.readSync(t.dataId))).toEqual([
+      new Float32Array([0, 3]), new Float32Array([1, 2, 4, 5])]);
+    const slices = unpack({inputs: {value: x}, backend, attrs: {axis: -1}});
+    expect(slices.map(t => backend.readSync(t.dataId))).toEqual([
+      new Float32Array([0, 3]), new Float32Array([1, 4]), new Float32Array([2, 5])]);
+    [x, transposed, ...splits, ...slices].forEach(t => backend.disposeData(t.dataId));
+  });
+
+  it('preserves zero, negative and NaN activation values', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([4], 'float32', new Float32Array([0, -2, NaN, 3]));
+    const result = leakyRelu({inputs: {x}, backend, attrs: {alpha: 0.5}});
+    expect(backend.readSync(result.dataId)).toEqual(new Float32Array([0, -1, NaN, 3]));
+    backend.disposeData(x.dataId);
+    backend.disposeData(result.dataId);
+  });
+
+  it('samples the only available event without a CDF entry', () => {
+    const backend = new MathBackendCPU();
+    const logits = backend.makeTensorInfo([2, 1], 'float32', new Float32Array([1, 1]));
+    const result = multinomial({inputs: {logits}, backend,
+      attrs: {numSamples: 3, seed: 42, normalized: true}});
+    expect(result.shape).toEqual([2, 3]);
+    expect(backend.readSync(result.dataId)).toEqual(new Int32Array(6));
+    backend.disposeData(logits.dataId);
+    backend.disposeData(result.dataId);
   });
 });

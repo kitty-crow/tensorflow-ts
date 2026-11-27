@@ -42,19 +42,19 @@ export function einsum(
   let numDimsRemaining = allDims.length;
   const tensorsToDispose: TensorInfo[] = [];
   for (let i = 0; i < nSteps; ++i) {
-    for (const idTerm of steps[i]) {
+    for (const idTerm of backend_util.requiredKernelEntry(steps, i)) {
       const {permutationIndices: perm, expandDims: dimsToExpand} =
-          backend_util.getEinsumPermutation(numDimsRemaining, idDims[idTerm]);
+          backend_util.getEinsumPermutation(numDimsRemaining, backend_util.requiredKernelEntry(idDims, idTerm));
       let x: TensorInfo;
       if (backend_util.isIdentityPermutation(perm)) {
-        x = tensors[idTerm];
+        x = backend_util.requiredKernelEntry(tensors, idTerm);
       } else {
-        x = transpose({inputs: {x: tensors[idTerm]}, backend, attrs: {perm}});
+        x = transpose({inputs: {x: backend_util.requiredKernelEntry(tensors, idTerm)}, backend, attrs: {perm}});
         tensorsToDispose.push(x);
       }
       const targetShape: number[] = x.shape.slice();
-      for (let k = 0; k < dimsToExpand.length; ++k) {
-        targetShape.splice(dimsToExpand[k], 0, 1);
+      for (const dim of dimsToExpand) {
+        targetShape.splice(dim, 0, 1);
       }
 
       if (!util.arraysEqual(x.shape, targetShape)) {
@@ -71,12 +71,13 @@ export function einsum(
     }
     if (!(i < nSteps - 1)) continue;
     {
-      if (path[i] >= 0) {
+      const axis = backend_util.requiredDimension(path, i);
+      if (axis >= 0) {
         out = sum({
           inputs: {x: out},
           backend,
           attrs: {
-            axis: path[i] - (allDims.length - numDimsRemaining),
+            axis: axis - (allDims.length - numDimsRemaining),
             keepDims: false
           }
         });

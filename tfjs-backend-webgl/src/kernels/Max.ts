@@ -45,10 +45,7 @@ export function max(
       const xTexData = backend.texData.get(maxInput.dataId);
       const values = xTexData.values as TypedArray;
 
-      const newShape: number[] = new Array(xRank);
-      for (let i = 0; i < newShape.length; i++) {
-        newShape[i] = x.shape[permutedAxes[i]];
-      }
+      const newShape = backend_util.permutedShape(x.shape, permutedAxes);
       const maxInputValues =
           transposeImplCPU(values, x.shape, x.dtype, permutedAxes, newShape);
 
@@ -72,7 +69,7 @@ export function max(
     outShape = backend_util.expandShapeToKeepDim(maxOutShape, origAxes);
   }
 
-  let out;
+  let out: TensorInfo;
   if (shouldExecuteOnCPU) {
     const xTexData = backend.texData.get(maxInput.dataId);
     const values = xTexData.values as TypedArray;

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {AddN, AddNInputs, env, KernelConfig, KernelFunc, TensorInfo, upcastType} from '@tensorflow/tfjs-core';
+import {AddN, backend_util, AddNInputs, env, KernelConfig, KernelFunc, TensorInfo, upcastType} from '@tensorflow/tfjs-core';
 
 import {AddNProgram} from '../addn_gpu';
 import {AddNPackedProgram} from '../addn_packed_gpu';
@@ -27,8 +27,9 @@ export function addN(args: {inputs: AddNInputs, backend: MathBackendWebGL}):
   const {inputs, backend} = args;
 
   const tensors = inputs;
+  const first = backend_util.requiredKernelEntry(tensors, 0);
   if (tensors.length === 1) {
-    return identity({inputs: {x: tensors[0]}, backend});
+    return identity({inputs: {x: first}, backend});
   }
 
   // Limit the number of uploaded textures for optimization.
@@ -45,8 +46,8 @@ export function addN(args: {inputs: AddNInputs, backend: MathBackendWebGL}):
   // We can make sure shapes are identical in op level.
   const usePackedOp = env().getBool('WEBGL_PACK');
   const program = usePackedOp ?
-      new AddNPackedProgram(tensors[0].shape, shapes) :
-      new AddNProgram(tensors[0].shape, shapes);
+      new AddNPackedProgram(first.shape, shapes) :
+      new AddNProgram(first.shape, shapes);
   return backend.runWebGLProgram(program, tensors, dtype);
 }
 

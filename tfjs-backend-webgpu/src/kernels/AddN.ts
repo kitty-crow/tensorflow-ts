@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {AddN, AddNInputs, KernelConfig, KernelFunc, TensorInfo, upcastType} from '@tensorflow/tfjs-core';
+import {AddN, backend_util, AddNInputs, KernelConfig, KernelFunc, TensorInfo, upcastType} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
@@ -27,8 +27,9 @@ export function addN(args: {inputs: AddNInputs, backend: WebGPUBackend}):
   const {inputs, backend} = args;
 
   const tensors = inputs;
+  const first = backend_util.requiredKernelEntry(tensors, 0);
   if (tensors.length === 1) {
-    return identity({inputs: {x: tensors[0]}, backend});
+    return identity({inputs: {x: first}, backend});
   }
 
   const dtype =

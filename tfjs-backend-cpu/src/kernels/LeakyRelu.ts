@@ -36,7 +36,8 @@ export function leakyRelu(args: {
   const outVals = util.getTypedArrayFromDType('float32', xSize);
 
   for (let i = 0; i < xVals.length; i++) {
-    outVals[i] = xVals[i] < 0 ? alpha * xVals[i] : xVals[i];
+    const value = util.requiredNumericEntry(xVals, i);
+    outVals[i] = value < 0 ? alpha * value : value;
   }
 
   return backend.makeTensorInfo(x.shape, 'float32', outVals);

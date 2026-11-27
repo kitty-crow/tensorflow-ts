@@ -52,16 +52,16 @@ export function transform(args: {
   // Ref TF implementation:
   // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/image/image_ops.h
   for (let b = 0; b < batch; ++b) {
-    const transform = transforms.shape[0] === 1 ?
+    const transform = backend_util.requiredDimension(transforms.shape, 0) === 1 ?
         transformVals :
         transformVals.subarray(b * 8, b * 8 + 8);
 
     for (let outY = 0; outY < outHeight; ++outY) {
       for (let outX = 0; outX < outWidth; ++outX) {
         for (let channel = 0; channel < numChannels; ++channel) {
-          let val;
+          let val: number;
 
-          const projection = transform[6] * outX + transform[7] * outY + 1;
+          const projection = util.requiredNumericEntry(transform, 6) * outX + util.requiredNumericEntry(transform, 7) * outY + 1;
 
           if (projection === 0) {
             // Return the fill value for infinite coordinates,
@@ -70,10 +70,10 @@ export function transform(args: {
           }
 
           const inX =
-              (transform[0] * outX + transform[1] * outY + transform[2]) /
+              (util.requiredNumericEntry(transform, 0) * outX + util.requiredNumericEntry(transform, 1) * outY + util.requiredNumericEntry(transform, 2)) /
               projection;
           const inY =
-              (transform[3] * outX + transform[4] * outY + transform[5]) /
+              (util.requiredNumericEntry(transform, 3) * outX + util.requiredNumericEntry(transform, 4) * outY + util.requiredNumericEntry(transform, 5)) /
               projection;
 
           const x = mapCoord(inX, imageWidth, fillMode);
@@ -191,7 +191,7 @@ function readWithFillValue(
     y: number, x: number, channel: number, fillValue: number): number {
   const ind = batch * batchStride + y * rowStride + x * colStride + channel;
   if (0 <= y && y < imageHeight && 0 <= x && x < imageWidth) {
-    return imageVals[ind];
+    return util.requiredNumericEntry(imageVals, ind);
   } else {
     return fillValue;
   }

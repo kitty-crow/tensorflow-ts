@@ -27,7 +27,7 @@ import {calculateShapes} from './scatter_nd_util';
 import {collectGatherOpShapeInfo, computeOutShape} from './segment_util';
 import * as concat from './concat_util';
 import * as slice from './slice_util';
-import {depthToSpaceOutputShape, imageDimensions, matrixDimensions} from './shape_dimension';
+import {depthToSpaceOutputShape, imageDimensions, matrixDimensions, permutedShape, unpackShape, requiredKernelEntry} from './shape_dimension';
 
 describe('checked shape utility regressions', () => {
   it('interleaves coordinates including zero', () => {
@@ -201,5 +201,24 @@ describe('checked numeric kernel metadata', () => {
     const scores = new Float32Array([1, 1, 0.5]);
     expect(nonMaxSuppressionV3Impl(boxes, scores, 3, 0.5, 0).selectedIndices).toEqual([0, 2]);
     expect(nonMaxSuppressionV5Impl(boxes, scores, 3, 0.5, 0, 0).selectedIndices).toEqual([0, 2]);
+  });
+});
+
+describe('shared backend shape transformations', () => {
+  it('permutes zero and scalar shapes without mutating the input', () => {
+    const shape = [2, 0, 3];
+    expect(permutedShape(shape, [2, 0, 1])).toEqual([3, 2, 0]);
+    expect(permutedShape([], [])).toEqual([]);
+    expect(shape).toEqual([2, 0, 3]);
+    expect(() => permutedShape(shape, [0, 1])).toThrowError();
+    expect(() => permutedShape(shape, [0, 1, 3])).toThrowError();
+  });
+  it('retains a zero slice count and rejects an absent unpack axis', () => {
+    expect(unpackShape([2, 0, 3], 1)).toEqual({num: 0, outShape: [2, 3]});
+    expect(unpackShape([2], 0)).toEqual({num: 2, outShape: []});
+    expect(() => unpackShape([2], 1)).toThrowError();
+    expect(requiredKernelEntry([0, NaN], 0)).toBe(0);
+    expect(Number.isNaN(requiredKernelEntry([0, NaN], 1))).toBe(true);
+    expect(() => requiredKernelEntry([], 0)).toThrowError();
   });
 });

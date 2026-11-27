@@ -54,3 +54,37 @@ export function depthToSpaceOutputShape(
       [batch, height * blockSize, width * blockSize, outputDepth] :
       [batch, outputDepth, height * blockSize, width * blockSize];
 }
+
+/** Required kernel inputs and metadata must not silently become absent. */
+export function requiredKernelEntry<T>(values: ArrayLike<T>, index: number): T {
+  const value = values[index];
+  if (value == null) {
+    throw new Error(`Missing kernel entry at index ${index}.`);
+  }
+  return value;
+}
+
+/** Permute a dense shape without losing zero dimensions or accepting missing axes. */
+export function permutedShape(shape: readonly number[], permutation: readonly number[]): number[] {
+  if (shape.length !== permutation.length) {
+    throw new Error('Permutation length must match the shape rank.');
+  }
+  const result: number[] = [];
+  for (let i = 0; i < shape.length; i++) {
+    result.push(requiredDimension(shape, requiredDimension(permutation, i)));
+  }
+  return result;
+}
+
+/** Compute the output shape and number of slices for a normalized unpack axis. */
+export function unpackShape(shape: readonly number[], axis: number):
+    {num: number, outShape: number[]} {
+  const num = requiredDimension(shape, axis);
+  const outShape: number[] = [];
+  for (let i = 0; i < shape.length; i++) {
+    if (i !== axis) {
+      outShape.push(requiredDimension(shape, i));
+    }
+  }
+  return {num, outShape};
+}

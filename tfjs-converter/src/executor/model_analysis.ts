@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {NamedTensorMap} from '@tensorflow/tfjs-core';
+import {backend_util, NamedTensorMap} from '@tensorflow/tfjs-core';
 
 import {NamedTensorsMap} from '../data/types';
 import {parseNodeName} from '../operations/executors/utils';
@@ -26,6 +26,22 @@ function requiredMapValue<K, V>(map: ReadonlyMap<K, V>, key: K): V {
   const value = map.get(key);
   if (typeof value === 'undefined') {
     throw new Error(`Missing graph analysis entry: ${String(key)}.`);
+  }
+  return value;
+}
+
+function popRequired<T>(values: T[]): T {
+  const value = values.pop();
+  if (value == null) {
+    throw new Error('Unexpected empty graph traversal stack.');
+  }
+  return value;
+}
+
+function requiredGraphEntry<T>(entries: Record<string, T>, key: string): T {
+  const value = entries[key];
+  if (value == null) {
+    throw new Error(`Missing graph entry: ${key}.`);
   }
   return value;
 }
@@ -67,7 +83,7 @@ export function getExecutionSubgraph(
 
   const frontier = [...outputs];
   while (frontier.length > 0) {
-    const node = frontier.pop();
+    const node = popRequired(frontier);
     if ((isControlFlow(node) || isDynamicShape(node) || isHashTable(node)) && (dynamicNode == null)) {
         dynamicNode = node;
         syncInputs = dynamicNode.children.map(child => child.name)
@@ -112,7 +128,7 @@ export function getNodesInTopologicalOrder(
   const {usedNodes, inputs} = executionInfo;
   const inputNodes = Object.keys(inputs)
                          .map(name => parseNodeName(name)[0])
-                         .map(name => graph.nodes[name]);
+                         .map(name => requiredGraphEntry(graph.nodes, name));
   const initNodes = graph.initNodes || [];
 
   const isUsed = (node: Node|string) =>
@@ -153,10 +169,12 @@ export function getNodesInTopologicalOrder(
                        .map(([name]) => name);
   const orderedNodeNames = [...frontier];
   while (frontier.length > 0) {
-    const nodeName = frontier.pop();
+    const nodeName = popRequired(frontier);
     const node = requiredMapValue(nameToNode, nodeName);
     for (const child of node.children.filter(isUsed)) {
-      if (--inCounts[child.name] === 0) {
+      const remaining = requiredGraphEntry(inCounts, child.name) - 1;
+      inCounts[child.name] = remaining;
+      if (remaining === 0) {
         orderedNodeNames.push(child.name);
         frontier.push(child.name);
       }
@@ -198,7 +216,7 @@ function filterPredefinedReachableNodes(
   // Perform a DFS starting from the set of all predefined nodes
   // to find the set of all nodes reachable from the predefined nodes.
   while (stack.length > 0) {
-    const nodeName = stack.pop();
+    const nodeName = popRequired(stack);
     const node = requiredMapValue(nameToNode, nodeName);
     for (const child of node.children) {
       if (!nameToNode.has(child.name) ||
@@ -312,7 +330,7 @@ export function getNodeLiveUntilMap(orderedNodes: Node[]): Map<string, Node[]> {
   // It lives until at least `max(node's position, children's positions)`.
   const liveUntilOrders = orderedNodes.map((node, nodeOrder) => {
     return node.children.map(getSelfLifeSpan)
-        .reduce((a, b) => Math.max(a, b), selfLifespans[nodeOrder]);
+        .reduce((a, b) => Math.max(a, b), backend_util.requiredDimension(selfLifespans, nodeOrder));
   });
 
   // liveUntilMap:
@@ -321,12 +339,12 @@ export function getNodeLiveUntilMap(orderedNodes: Node[]): Map<string, Node[]> {
   //           after `x` is executed.
   const liveUntilMap = new Map<string, Node[]>();
   for (let nodeOrder = 0; nodeOrder < orderedNodes.length; ++nodeOrder) {
-    const liveUntilOrder = liveUntilOrders[nodeOrder];
+    const liveUntilOrder = backend_util.requiredDimension(liveUntilOrders, nodeOrder);
     if (liveUntilOrder === INF_LIFE) {
       continue;
     }
-    const node = orderedNodes[nodeOrder];
-    const liveUntilNode = orderedNodes[liveUntilOrder];
+    const node = backend_util.requiredKernelEntry(orderedNodes, nodeOrder);
+    const liveUntilNode = backend_util.requiredKernelEntry(orderedNodes, liveUntilOrder);
     if (!liveUntilMap.has(liveUntilNode.name)) {
       liveUntilMap.set(liveUntilNode.name, []);
     }

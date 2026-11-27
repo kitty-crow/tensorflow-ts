@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, Pack, PackAttrs, PackInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelFunc, Pack, PackAttrs, PackInputs, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {concat} from './Concat';
@@ -27,13 +27,14 @@ export function pack(
   const {inputs, backend, attrs} = args;
   const {axis} = attrs;
 
+  const first = backend_util.requiredKernelEntry(inputs, 0);
   if (inputs.length === 1) {
     return expandDims(
-        {inputs: {input: inputs[0]}, backend, attrs: {dim: axis}});
+        {inputs: {input: first}, backend, attrs: {dim: axis}});
   }
 
-  const shape = inputs[0].shape;
-  const dtype = inputs[0].dtype;
+  const shape = first.shape;
+  const dtype = first.dtype;
 
   inputs.forEach(t => {
     util.assertShapesMatch(

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, TensorInfo, Transpose, TransposeAttrs, TransposeInputs, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, TensorInfo, Transpose, TransposeAttrs, TransposeInputs, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
@@ -33,12 +33,8 @@ export function transpose(args: {
 
   assertNotComplex(x, 'transpose');
 
-  const xRank = x.shape.length;
 
-  const newShape: number[] = new Array(xRank);
-  for (let i = 0; i < newShape.length; i++) {
-    newShape[i] = x.shape[perm[i]];
-  }
+  const newShape = backend_util.permutedShape(x.shape, perm);
 
   const values = backend.requireValues(x.dataId) as TypedArray;
   const result = transposeImpl(values, x.shape, x.dtype, perm, newShape);

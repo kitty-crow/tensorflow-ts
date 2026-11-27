@@ -40,10 +40,7 @@ export function max(
   const permutedAxes = backend_util.getAxesPermutation(axes, xRank);
   let xVals = cpuBackend.requireValues(x.dataId) as TypedArray;
   if (permutedAxes != null) {
-    const newShape: number[] = new Array(xRank);
-    for (let i = 0; i < newShape.length; i++) {
-      newShape[i] = xShape[permutedAxes[i]];
-    }
+    const newShape = backend_util.permutedShape(xShape, permutedAxes);
 
     xVals = transposeImpl(xVals, xShape, x.dtype, permutedAxes, newShape);
     axes = backend_util.getInnerMostAxes(axes.length, xRank);
