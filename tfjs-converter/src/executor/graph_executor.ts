@@ -319,12 +319,8 @@ export class GraphExecutor implements FunctionExecutor {
 
   private getFrozenTensorIds(tensorMap: NamedTensorsMap): Set<number> {
     const ids: number[] = [];
-    for (const tensors of Object.values(tensorMap)) {
-      for (const tensor of tensors) {
-        ids.push(tensor.id);
-      }
-    }
-    return new Set(ids);
+    return new Set(ids.concat(...Object.values(tensorMap)
+        .map(tensors => tensors.map(tensor => tensor.id))));
   }
 
   private checkTensorForDisposal(
