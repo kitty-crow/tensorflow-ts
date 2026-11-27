@@ -143,7 +143,8 @@ function getWeightBytelength(spec: WeightsManifestEntry,
     }
     return byteLength;
   }
-  const dtype = 'quantization' in spec ? spec.quantization.dtype : spec.dtype;
+  const dtype = 'quantization' in spec ?
+      validateWeightQuantization(spec).dtype : spec.dtype;
   return size * DTYPE_VALUE_SIZE_MAP[dtype];
 }
 
@@ -162,34 +163,47 @@ async function getWeightBytelengthAsync(
     }
     return byteLength;
   }
-  const dtype = 'quantization' in spec ? spec.quantization.dtype : spec.dtype;
+  const dtype = 'quantization' in spec ?
+      validateWeightQuantization(spec).dtype : spec.dtype;
   return size * DTYPE_VALUE_SIZE_MAP[dtype];
 }
 
 
 /** Verify quantised metadata before reading weight bytes. */
-function validateWeightQuantization(spec: WeightsManifestEntry): void {
+type ValidWeightQuantization =
+    {dtype: 'uint8'|'uint16', min: number, scale: number}|
+    {dtype: 'float16'};
+
+function validateWeightQuantization(spec: WeightsManifestEntry):
+    ValidWeightQuantization {
   const quantization = spec.quantization;
-  const integerQuantization = quantization.dtype === 'uint8' ||
-      quantization.dtype === 'uint16';
+  if (quantization == null) {
+    throw new Error(`Weight ${spec.name} is missing quantization metadata.`);
+  }
+  const {dtype, min, scale} = quantization;
+  const integerQuantization = dtype === 'uint8' || dtype === 'uint16';
   if (integerQuantization &&
-      !('min' in quantization && 'scale' in quantization)) {
+      (typeof min !== 'number' || typeof scale !== 'number')) {
     throw new Error(
-        `Weight ${spec.name} with quantization ${quantization.dtype} ` +
+        `Weight ${spec.name} with quantization ${dtype} ` +
         `doesn't have corresponding metadata min and scale.`);
   }
-  if (quantization.dtype === 'float16' && spec.dtype !== 'float32') {
+  if (integerQuantization) {
+    return {dtype, min, scale};
+  }
+  if (dtype === 'float16' && spec.dtype !== 'float32') {
     throw new Error(
-        `Weight ${spec.name} is quantized with ${quantization.dtype} ` +
+        `Weight ${spec.name} is quantized with ${dtype} ` +
         `which only supports weights of type float32 not ${spec.dtype}.`);
   }
-  if (!integerQuantization && quantization.dtype !== 'float16') {
-    throw new Error(
-        `Weight ${spec.name} has unknown ` +
-        `quantization dtype ${quantization.dtype}. ` +
-        `Supported quantization dtypes are: ` +
-        `'uint8', 'uint16', and 'float16'.`);
+  if (dtype === 'float16') {
+    return {dtype};
   }
+  throw new Error(
+      `Weight ${spec.name} has unknown ` +
+      `quantization dtype ${dtype}. ` +
+      `Supported quantization dtypes are: ` +
+      `'uint8', 'uint16', and 'float16'.`);
 }
 
 function decodeWeight(
@@ -204,8 +218,7 @@ function decodeWeight(
   let offset = 0;
 
   if ('quantization' in spec) {
-    const quantization = spec.quantization;
-    validateWeightQuantization(spec);
+    const quantization = validateWeightQuantization(spec);
     const quantizationSizeFactor = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
     const quantizedArray = (quantization.dtype === 'uint8') ?
       new Uint8Array(byteBuffer) :
@@ -218,14 +231,10 @@ function decodeWeight(
             const v = requiredNumericEntry(quantizedArray, i);
             values[i] = v * quantization.scale + quantization.min;
           }
-        } else if (quantization.dtype === 'float16') {
+        } else {
           // TODO: This is inefficient. Make getFloat16Decoder efficient.
           const float16Decode = getFloat16Decoder();
           values = float16Decode(quantizedArray as Uint16Array);
-        } else {
-          throw new Error(
-            `Unsupported quantization type ${quantization.dtype} ` +
-            `for weight type float32.`);
         }
         break;
       }
@@ -371,33 +380,22 @@ export function concatenateTypedArrays(xs: TypedArray[]): ArrayBuffer {
 
   let totalByteLength = 0;
 
-  // `normalizedXs` is here for this reason: a `TypedArray`'s `buffer'
-  // can have a different byte length from that of the `TypedArray` itself,
-  // for example, when the `TypedArray` is created from an offset in an
-  // `ArrayBuffer`. `normliazedXs` holds `TypedArray`s whose `buffer`s match
-  // the `TypedArray` in byte length. If an element of `xs` does not show
-  // this property, a new `TypedArray` that satisfy this property will be
-  // constructed and pushed into `normalizedXs`.
-  const normalizedXs: TypedArray[] = [];
-  xs.forEach((x: TypedArray) => {
-    totalByteLength += x.byteLength;
-    // tslint:disable:no-any
-    normalizedXs.push(
-        x.byteLength === x.buffer.byteLength ? x :
-                                               new (x.constructor as any)(x));
-    if (!(x as any instanceof Float32Array || x as any instanceof Int32Array ||
-          x as any instanceof Uint8Array)) {
-      throw new Error(`Unsupported TypedArray subtype: ${x.constructor.name}`);
+  for (const x of xs) {
+    const constructor = x.constructor;
+    if (!(x instanceof Float32Array || x instanceof Int32Array ||
+          x instanceof Uint8Array)) {
+      throw new Error(`Unsupported TypedArray subtype: ${constructor.name}`);
     }
-    // tslint:enable:no-any
-  });
+    totalByteLength += x.byteLength;
+  }
 
+  // Copy only the bytes belonging to each view, not its entire backing buffer.
   const y = new Uint8Array(totalByteLength);
   let offset = 0;
-  normalizedXs.forEach((x: TypedArray) => {
-    y.set(new Uint8Array(x.buffer), offset);
+  for (const x of xs) {
+    y.set(new Uint8Array(x.buffer, x.byteOffset, x.byteLength), offset);
     offset += x.byteLength;
-  });
+  }
 
   return y.buffer;
 }

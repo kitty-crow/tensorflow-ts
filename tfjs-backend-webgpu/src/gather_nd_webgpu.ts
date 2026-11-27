@@ -30,7 +30,7 @@ export class GatherNDProgram extends FlatDispatchProgram implements WebGPUProgra
   }
 
   getUserCode(): string {
-    let strideString;
+    let strideString: string;
     if (this.sliceDim > 1) {
       strideString = 'uniforms.strides[j]';
     } else {

@@ -17,6 +17,8 @@
 
 import {shaderEntry, symbolicallyComputeStrides} from './shader_util';
 import {MatMulPackedProgram} from './matmul_packed_webgpu';
+import {MatMulSplitKProgram} from './matmul_splitK_webgpu';
+import {computeWorkgroupInfoForMatMul} from './webgpu_util';
 import {TileProgram} from './tile_webgpu';
 import {TransposeSharedProgram} from './transpose_shared_webgpu';
 import {TransposeProgram} from './transpose_webgpu';
@@ -270,5 +272,31 @@ describe('checked WebGPU permutation and tile metadata', () => {
     const program = new MatMulPackedProgram([1, 8, 4], [1, 8, 8]);
     expect(program.getShapeFit(0, 0, 0)).toEqual([true, true, true]);
     expect(program.getUserCode()).not.toContain('undefined');
+  });
+});
+
+describe('matmul dispatch branch regression', () => {
+  it('preserves independent workgroup and thread reductions', () => {
+    expect(computeWorkgroupInfoForMatMul(8, 16, 16, false)).toEqual({
+      workgroupSize: [4, 8, 1], elementsPerThread: [4, 1, 1]
+    });
+    expect(computeWorkgroupInfoForMatMul(8, 16, 16, true)).toEqual({
+      workgroupSize: [8, 8, 1], elementsPerThread: [4, 4, 1]
+    });
+    expect(computeWorkgroupInfoForMatMul(9, 16, 16, false)).toEqual({
+      workgroupSize: [4, 8, 1], elementsPerThread: [4, 4, 1]
+    });
+    expect(computeWorkgroupInfoForMatMul(8, 17, 16, false)).toEqual({
+      workgroupSize: [8, 8, 1], elementsPerThread: [4, 1, 1]
+    });
+  });
+
+  it('keeps vector and scalar split-K dispatch choices distinct', () => {
+    const scalar = new MatMulSplitKProgram([1, 3, 5], 7);
+    expect(scalar.outputComponent).toBe(1);
+    expect(scalar.elementsPerThread).toEqual([1, 1, 128]);
+    const vector = new MatMulSplitKProgram([1, 4, 8], 8);
+    expect(vector.outputComponent).toBe(4);
+    expect(vector.elementsPerThread).toEqual([4, 4, 128]);
   });
 });

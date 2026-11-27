@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Tensor2D, Tensor3D, Tensor4D, Tensor5D, Tensor6D} from '../../tensor';
+import {Tensor, Tensor2D, Tensor3D, Tensor4D, Tensor5D, Tensor6D} from '../../tensor';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import * as util from '../../util';
@@ -56,7 +56,7 @@ function rgbToGrayscale_<T extends Tensor2D|Tensor3D|Tensor4D|Tensor5D|
 
   const rgbWeights = tensor1d([0.2989, 0.5870, 0.1140]);
 
-  let grayFloat;
+  let grayFloat: Tensor;
   switch ($image.rank) {
     case 2:
       grayFloat = einsum('ij,j->i', fltImage, rgbWeights);

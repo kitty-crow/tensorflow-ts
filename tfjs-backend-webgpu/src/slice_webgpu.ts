@@ -47,7 +47,7 @@ export class SliceProgram implements WebGPUProgram {
   getUserCode(): string {
     const dtype = getCoordsDataType(this.rank);
     const sourceCoords = getCoords(this.rank);
-    let coordSum;
+    let coordSum: string[];
     if (this.start.length === 1) {
       coordSum = this.outputShape.map((_, i) => {
         return `sourceLoc = uniforms.start + coords;`;

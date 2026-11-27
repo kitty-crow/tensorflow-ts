@@ -21,7 +21,7 @@ import {assertArrayLength} from '../util_base';
 import {sequentialConvolutionTestInputs, requiredTestElement, requiredTestEntry} from '../test_util';
 
 import {prepareSplitSize} from './split_util';
-import {checkPadOnDimRoundingMode} from './conv_util';
+import {checkPadOnDimRoundingMode, reshapeForBatchMatMul} from './conv_util';
 
 describe('conditional branch regression coverage', () => {
   const input: TensorInfo = {dataId: {}, shape: [2, 6], dtype: 'float32'};
@@ -107,5 +107,29 @@ describe('tensor formatting storage contracts', () => {
         .toBe('Tensor\n    [1 + 2j, 3 + 4j]');
     expect(() => tensorToString(new Float32Array([1]), [1], 'complex64', false))
         .toThrowError(/Missing tensor format entry/);
+  });
+});
+
+describe('optional batched matmul operands', () => {
+  it('preserves unchanged operands and tracks acquired references', () => {
+    const intermediates: TensorInfo[] = [];
+    const reshapeInput = jasmine.createSpy('reshapeInput').and.callFake(
+        (input: TensorInfo, shape: number[]): TensorInfo => ({...input, shape}));
+    const unchanged: TensorInfo = {dataId: {}, shape: [3], dtype: 'float32'};
+    expect(reshapeForBatchMatMul(null, true, reshapeInput, intermediates))
+        .toBeNull();
+    expect(reshapeForBatchMatMul(unchanged, true, reshapeInput, intermediates))
+        .toBe(unchanged);
+    expect(reshapeInput).not.toHaveBeenCalled();
+    expect(intermediates.length).toBe(0);
+    const nchw = reshapeForBatchMatMul(
+        unchanged, false, reshapeInput, intermediates);
+    expect(nchw.shape).toEqual([3, 1]);
+    const input: TensorInfo = {dataId: {}, shape: [2, 3, 4], dtype: 'float32'};
+    const nhwc = reshapeForBatchMatMul(input, true, reshapeInput, intermediates);
+    expect(nhwc.shape).toEqual([6, 4]);
+    expect(nhwc.dataId).toBe(input.dataId);
+    expect(intermediates).toEqual([nchw, nhwc]);
+    expect(input.shape).toEqual([2, 3, 4]);
   });
 });

@@ -87,14 +87,12 @@ export function computeWorkgroupInfoForMatMul(
   const workgroupSize: [number, number, number] = [8, 8, 1];
   const elementsPerThread: [number, number, number] = [4, 4, 1];
 
-  if (!transposeA) {
-    if (dimAOuter <= 8) {
-      elementsPerThread[1] = 1;
-    }
+  if (!transposeA && dimAOuter <= 8) {
+    elementsPerThread[1] = 1;
+  }
 
-    if (dimInner <= 16 && dimBOuter <= 16) {
-      workgroupSize[0] = 4;
-    }
+  if (!transposeA && dimInner <= 16 && dimBOuter <= 16) {
+    workgroupSize[0] = 4;
   }
 
   return {workgroupSize, elementsPerThread};

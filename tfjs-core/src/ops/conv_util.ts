@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {TensorInfo} from '../tensor_info';
 import * as util from '../util';
 import {requiredDimension} from './shape_dimension';
 
@@ -713,4 +714,21 @@ export function getShapeForBatchMatMul(
   } else {
     return null;
   }
+}
+
+/** Reshape an optional batched matmul operand and track acquired references. */
+export function reshapeForBatchMatMul(
+    input: TensorInfo, isChannelsLast: boolean,
+    reshapeInput: (input: TensorInfo, shape: number[]) => TensorInfo,
+    intermediates: TensorInfo[]): TensorInfo {
+  if (input == null) {
+    return input;
+  }
+  const shape = getShapeForBatchMatMul(input.shape, isChannelsLast);
+  if (shape == null) {
+    return input;
+  }
+  const result = reshapeInput(input, shape);
+  intermediates.push(result);
+  return result;
 }

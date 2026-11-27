@@ -20,6 +20,7 @@ import './base_side_effects';
 
 import {flatten} from './util';
 import {env} from './environment';
+import {concatenateTypedArrays, decodeWeights} from './io/io_utils';
 import {requiredTestEntry, requiredTestValue} from './test_util';
 import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
 
@@ -165,5 +166,36 @@ describe('Registered platform typed utility contract', () => {
     expect(platform.decode(new Uint8Array(0), 'utf-8')).toBe('');
     expect(platform.isTypedArray(bytes)).toBe(true);
     expect(platform.isTypedArray([195, 169])).toBe(false);
+  });
+});
+
+describe('weight byte and metadata validation', () => {
+  it('copies exactly the bytes of mixed subviews including empty views', () => {
+    const bytes = new Uint8Array([9, 1, 2, 8]);
+    const ints = new Int32Array([7, 0x01020304, 9]);
+    const floats = new Float32Array([7, -0, 9]);
+    const output = concatenateTypedArrays([
+      bytes.subarray(1, 3), ints.subarray(1, 2),
+      floats.subarray(1, 2), bytes.subarray(0, 0)
+    ]);
+    const expected = [
+      1, 2, ...Array.from(new Uint8Array(ints.buffer, 4, 4)),
+      ...Array.from(new Uint8Array(floats.buffer, 4, 4))
+    ];
+    expect(Array.from(new Uint8Array(output))).toEqual(expected);
+    expect(Array.from(bytes)).toEqual([9, 1, 2, 8]);
+    expect(concatenateTypedArrays([]).byteLength).toBe(0);
+  });
+
+  it('rejects missing or undefined integer quantisation metadata', () => {
+    const bytes = new Uint8Array([1, 0]).buffer;
+    expect(() => decodeWeights(bytes, [{
+      name: 'missingMin', shape: [1], dtype: 'float32',
+      quantization: {dtype: 'uint8', scale: 0}
+    }])).toThrowError(/min and scale/);
+    expect(() => decodeWeights(bytes, [{
+      name: 'missingScale', shape: [1], dtype: 'int32',
+      quantization: {dtype: 'uint16', min: 0, scale: undefined}
+    }])).toThrowError(/min and scale/);
   });
 });

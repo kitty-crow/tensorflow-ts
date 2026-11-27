@@ -141,7 +141,7 @@ export class MathBackendWebGL extends KernelBackend {
       throw new Error('WebGL is not supported on this device');
     }
 
-    let newGPGPU;
+    let newGPGPU: GPGPUContext;
     if (gpuResource != null) {
       newGPGPU = gpuResource instanceof GPGPUContext ? gpuResource :
           new GPGPUContext(
@@ -763,7 +763,7 @@ export class MathBackendWebGL extends KernelBackend {
   makeTensorInfo(
       shape: number[], dtype: DataType,
       values?: BackendValues|string[]): TensorInfo {
-    let dataId;
+    let dataId: DataId;
     if (dtype === 'string' && values != null && values.length > 0 &&
         util.isString(values[0])) {
       const encodedValues =
@@ -835,7 +835,7 @@ export class MathBackendWebGL extends KernelBackend {
     }
     const shapeAs3D =
         webgl_util.getShapeAs3D(shape) as [number, number, number];
-    let program;
+    let program: GPGPUProgram;
     if (isPacked) {
       program = new DecodeMatrixPackedProgram(shapeAs3D);
     } else {
@@ -1099,7 +1099,7 @@ export class MathBackendWebGL extends KernelBackend {
     }
     const shapeAs3D = webgl_util.getShapeAs3D(shape);
 
-    let program;
+    let program: GPGPUProgram;
     let width = texShape[1], height = texShape[0];
     const isByteArray =
         values instanceof Uint8Array || values instanceof Uint8ClampedArray;

@@ -736,14 +736,13 @@ export class WebGPUBackend extends KernelBackend {
 
     const size = webgpu_util.GPUBytesPerElement(tensorData.dtype) *
         util.sizeFromShape(tensorData.shape);
-    let buffer;
     const usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC |
         GPUBufferUsage.COPY_DST;
     if (!tensorData.values) {
       tensorData.resource = this.bufferManager.acquireBuffer(size, usage);
       return;
     }
-    buffer = this.bufferManager.acquireBuffer(size, usage, true);
+    const buffer = this.bufferManager.acquireBuffer(size, usage, true);
     this.writeBufferValues(buffer, tensorData.values, tensorData.dtype, size);
     // Once uploaded, don't store the values on cpu.
     tensorData.values = null;

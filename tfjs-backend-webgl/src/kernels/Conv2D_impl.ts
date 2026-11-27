@@ -56,26 +56,12 @@ export function conv2dByMatMul({
   let out: TensorInfo;
   const intermediates: TensorInfo[] = [];
 
-  if (preluActivationWeights != null) {
-    const targetShape =
-        backend_util.getShapeForBatchMatMul(preluActivationWeights.shape, isChannelsLast);
-    if (targetShape != null) {
-      preluActivationWeights = reshape({
-        inputs: {x: preluActivationWeights},
-        backend,
-        attrs: {shape: targetShape}
-      });
-      intermediates.push(preluActivationWeights);
-    }
-  }
-
-  if (bias != null) {
-    const targetShape = backend_util.getShapeForBatchMatMul(bias.shape, isChannelsLast);
-    if (targetShape != null) {
-      bias = reshape({inputs: {x: bias}, backend, attrs: {shape: targetShape}});
-      intermediates.push(bias);
-    }
-  }
+  const reshapeInput = (input: TensorInfo, shape: number[]) =>
+      reshape({inputs: {x: input}, backend, attrs: {shape}});
+  preluActivationWeights = backend_util.reshapeForBatchMatMul(
+      preluActivationWeights, isChannelsLast, reshapeInput, intermediates);
+  bias = backend_util.reshapeForBatchMatMul(
+      bias, isChannelsLast, reshapeInput, intermediates);
 
   // TODO: Once reduction ops are packed, batchMatMul will always be packed
   // and we can remove this condition.
@@ -231,26 +217,12 @@ export function conv2dWithIm2Row({
 
   const intermediates: TensorInfo[] = [];
 
-  if (preluActivationWeights != null) {
-    const targetShape =
-        backend_util.getShapeForBatchMatMul(preluActivationWeights.shape, isChannelsLast);
-    if (targetShape != null) {
-      preluActivationWeights = reshape({
-        inputs: {x: preluActivationWeights},
-        backend,
-        attrs: {shape: targetShape}
-      });
-      intermediates.push(preluActivationWeights);
-    }
-  }
-
-  if (bias != null) {
-    const targetShape = backend_util.getShapeForBatchMatMul(bias.shape, isChannelsLast);
-    if (targetShape != null) {
-      bias = reshape({inputs: {x: bias}, backend, attrs: {shape: targetShape}});
-      intermediates.push(bias);
-    }
-  }
+  const reshapeInput = (input: TensorInfo, shape: number[]) =>
+      reshape({inputs: {x: input}, backend, attrs: {shape}});
+  preluActivationWeights = backend_util.reshapeForBatchMatMul(
+      preluActivationWeights, isChannelsLast, reshapeInput, intermediates);
+  bias = backend_util.reshapeForBatchMatMul(
+      bias, isChannelsLast, reshapeInput, intermediates);
 
   const w2Row = reshape({
     inputs: {x: filter},

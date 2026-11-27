@@ -151,7 +151,7 @@ export class WebcamIterator extends LazyIterator<Tensor3D> {
       return {value: null, done: true};
     }
 
-    let img;
+    let img: Tensor3D;
     try {
       img = browser.fromPixels(this.webcamVideoElement);
     } catch (e) {
@@ -187,8 +187,7 @@ export class WebcamIterator extends LazyIterator<Tensor3D> {
   cropAndResizeFrame(img: Tensor3D): Tensor3D {
     return tidy(() => {
       const expandedImage: Tensor4D = expandDims(cast(img, 'float32'), (0));
-      let resizedImage;
-      resizedImage = image.cropAndResize(
+      const resizedImage = image.cropAndResize(
           expandedImage, this.cropBox, this.cropBoxInd, this.cropSize,
           'bilinear');
       // Extract image from batch cropping.

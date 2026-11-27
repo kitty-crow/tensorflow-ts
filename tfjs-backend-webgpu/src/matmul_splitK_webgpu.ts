@@ -52,13 +52,11 @@ export class MatMulSplitKProgram implements WebGPUProgram {
         backend_util.requiredDimension(this.outputShape, 2) % 4 === 0;
     this.elementsPerThread = [4, 4, this.splitedDimInner];
     this.outputComponent = isVec4 ? 4 : 1;
-    if (!isVec4) {
-      if (backend_util.requiredDimension(this.outputShape, 1) < 16) {
-        this.elementsPerThread[1] = 1;
-      }
-      if (backend_util.requiredDimension(this.outputShape, 2) < 16) {
-        this.elementsPerThread[0] = 1;
-      }
+    if (!isVec4 && backend_util.requiredDimension(this.outputShape, 1) < 16) {
+      this.elementsPerThread[1] = 1;
+    }
+    if (!isVec4 && backend_util.requiredDimension(this.outputShape, 2) < 16) {
+      this.elementsPerThread[0] = 1;
     }
 
     this.dispatch = computeDispatch(

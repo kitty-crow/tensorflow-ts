@@ -33,8 +33,8 @@ export class SelectProgram extends FlatDispatchProgram implements WebGPUProgram 
 
   getUserCode(): string {
     // TODO(WGSL): below code can be merged with getUserCode.
-    let cCoords;
-    let abCoords;
+    let cCoords: string;
+    let abCoords: string;
     if (this.rank > 4) {
       throw Error(`Where for rank ${this.rank} is not yet supported`);
     }

@@ -36,9 +36,8 @@ export class DrawProgram extends FlatDispatchProgram implements WebGPUProgram {
   }
 
   getUserCode(): string {
-    let calculateResult;
     const value = this.type === 'float32' ? 'value' : 'value / 255.0';
-    calculateResult = `
+    const calculateResult = `
       if (uniforms.numChannels == 1) {
         rgba[0] = ${value};
         rgba[1] = ${value};

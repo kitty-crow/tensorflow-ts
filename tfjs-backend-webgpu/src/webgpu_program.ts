@@ -864,7 +864,7 @@ function insertAlignment(uniformShader: string) {
 
   // insert alignment when previous pattern is vec5 or vec6
   const preInsertRe = /vec(5|6)\s*,\s*(\w+)/g;
-  uniformShader = uniformShader.replace(preInsertRe, (_, p1, p2) => {
+  uniformShader = uniformShader.replace(preInsertRe, (_, p1: string, p2: string) => {
     return `vec${p1}, @align(16) ${p2}`;
   });
   return uniformShader;

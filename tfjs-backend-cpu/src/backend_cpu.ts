@@ -80,7 +80,7 @@ export class MathBackendCPU extends KernelBackend {
   makeTensorInfo(
       shape: number[], dtype: DataType,
       values?: backend_util.BackendValues|string[]): TensorInfo {
-    let outId;
+    let outId: DataId;
     if (dtype === 'string' && values != null && values.length > 0 &&
         util.isString(values[0])) {
       const encodedValues =
