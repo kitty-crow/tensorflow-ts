@@ -296,11 +296,15 @@ export declare interface BaseConvLayerArgs extends LayerArgs {
    * Specifying any stride value != 1 is incompatible with specifying any
    * `dilationRate` value != 1.
    */
+  // CG305: The layer supplies its default stride when not requested.
+  //@cg-expect-error
   strides?: number|number[];
 
   /**
    * Padding mode.
    */
+  // CG305: The layer supplies its default padding when not requested.
+  //@cg-expect-error
   padding?: PaddingMode;
 
   /**
@@ -315,6 +319,8 @@ export declare interface BaseConvLayerArgs extends LayerArgs {
    *
    * Defaults to `channels_last`.
    */
+  // CG305: The layer supplies its default channel ordering when not requested.
+  //@cg-expect-error
   dataFormat?: DataFormat;
 
   /**
@@ -324,6 +330,8 @@ export declare interface BaseConvLayerArgs extends LayerArgs {
    * Currently, specifying any `dilationRate` value != 1 is incompatible with
    * specifying any `strides` value != 1.
    */
+  // CG305: The convolution constructor defaults dilation to one.
+  //@cg-expect-error
   dilationRate?: number|[number]|[number, number]|[number, number, number];
 
   /**
@@ -331,46 +339,64 @@ export declare interface BaseConvLayerArgs extends LayerArgs {
    *
    * If you don't specify the activation, none is applied.
    */
+  // CG305: The constructor resolves the default activation when omitted.
+  //@cg-expect-error
   activation?: ActivationIdentifier;
 
   /**
    * Whether the layer uses a bias vector. Defaults to `true`.
    */
+  // CG305: The constructor defaults bias use when omitted.
+  //@cg-expect-error
   useBias?: boolean;
 
   /**
    * Initializer for the convolutional kernel weights matrix.
    */
+  // CG305: The constructor resolves kernelInitializer to its default if omitted.
+  //@cg-expect-error
   kernelInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the bias vector.
    */
+  // CG305: The constructor resolves biasInitializer to its default if omitted.
+  //@cg-expect-error
   biasInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Constraint for the convolutional kernel weights.
    */
+  // CG305: The constructor accepts no kernelConstraint; no constraint is required.
+  //@cg-expect-error
   kernelConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Constraint for the bias vector.
    */
+  // CG305: The constructor accepts no biasConstraint; no constraint is required.
+  //@cg-expect-error
   biasConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Regularizer function applied to the kernel weights matrix.
    */
+  // CG305: The constructor accepts no kernelRegularizer; no penalty is required.
+  //@cg-expect-error
   kernelRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the bias vector.
    */
+  // CG305: The constructor accepts no biasRegularizer; no penalty is required.
+  //@cg-expect-error
   biasRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the activation.
    */
+  // CG305: The constructor accepts no activityRegularizer; no penalty is required.
+  //@cg-expect-error
   activityRegularizer?: RegularizerIdentifier|Regularizer;
 }
 
@@ -1002,36 +1028,50 @@ export declare interface SeparableConvLayerArgs extends ConvLayerArgs {
    * The total number of depthwise convolution output channels will be equal
    * to `filtersIn * depthMultiplier`. Default: 1.
    */
+  // CG305: The separable convolution constructor defaults the depth multiplier to one.
+  //@cg-expect-error
   depthMultiplier?: number;
 
   /**
    * Initializer for the depthwise kernel matrix.
    */
+  // CG305: The constructor resolves depthwiseInitializer to its default if omitted.
+  //@cg-expect-error
   depthwiseInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the pointwise kernel matrix.
    */
+  // CG305: The constructor resolves pointwiseInitializer to its default if omitted.
+  //@cg-expect-error
   pointwiseInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Regularizer function applied to the depthwise kernel matrix.
    */
+  // CG305: The constructor accepts no depthwiseRegularizer; no penalty is required.
+  //@cg-expect-error
   depthwiseRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the pointwise kernel matrix.
    */
+  // CG305: The constructor accepts no pointwiseRegularizer; no penalty is required.
+  //@cg-expect-error
   pointwiseRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Constraint function applied to the depthwise kernel matrix.
    */
+  // CG305: The constructor accepts no depthwiseConstraint; no constraint is required.
+  //@cg-expect-error
   depthwiseConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Constraint function applied to the pointwise kernel matrix.
    */
+  // CG305: The constructor accepts no pointwiseConstraint; no constraint is required.
+  //@cg-expect-error
   pointwiseConstraint?: ConstraintIdentifier|Constraint;
 }
 
@@ -1260,6 +1300,8 @@ export declare interface Cropping2DLayerArgs extends LayerArgs {
    *
    * Defaults to `channels_last`.
    */
+  // CG305: The layer supplies its default channel ordering when not requested.
+  //@cg-expect-error
   dataFormat?: DataFormat;
 }
 
@@ -1343,6 +1385,8 @@ export declare interface UpSampling2DLayerArgs extends LayerArgs {
    *
    * Defaults to `[2, 2]`.
    */
+  // CG305: The upsampling constructor uses its default size when not requested.
+  //@cg-expect-error
   size?: number[];
   /**
    * Format of the data, which determines the ordering of the dimensions in
@@ -1356,11 +1400,15 @@ export declare interface UpSampling2DLayerArgs extends LayerArgs {
    *
    * Defaults to `"channelsLast"`.
    */
+  // CG305: The layer supplies its default channel ordering when not requested.
+  //@cg-expect-error
   dataFormat?: DataFormat;
   /**
    * The interpolation mechanism, one of `"nearest"` or `"bilinear"`, default
    * to `"nearest"`.
    */
+  // CG305: The upsampling constructor defaults to nearest interpolation.
+  //@cg-expect-error
   interpolation?: InterpolationFormat;
 }
 

@@ -278,23 +278,31 @@ export declare interface BaseRNNLayerArgs extends LayerArgs {
    * case the cells get stacked on after the other in the RNN, implementing an
    * efficient stacked RNN.
    */
+  // CG305: Concrete recurrent subclasses construct a cell; the base constructor validates when needed.
+  //@cg-expect-error
   cell?: RNNCell|RNNCell[];
 
   /**
    * Whether to return the last output in the output sequence, or the full
    * sequence.
    */
+  // CG305: The recurrent constructor defaults to final output only.
+  //@cg-expect-error
   returnSequences?: boolean;
 
   /**
    * Whether to return the last state in addition to the output.
    */
+  // CG305: The recurrent constructor defaults to no returned state.
+  //@cg-expect-error
   returnState?: boolean;
 
   /**
    * If `true`, process the input sequence backwards and return the reversed
    * sequence (default: `false`).
    */
+  // CG305: The recurrent constructor defaults to forward iteration.
+  //@cg-expect-error
   goBackwards?: boolean;
 
   /**
@@ -322,6 +330,8 @@ export declare interface BaseRNNLayerArgs extends LayerArgs {
    * To reset the state of your model, call `resetStates()` on either the
    * specific layer or on the entire model.
    */
+  // CG305: The recurrent constructor defaults to stateless operation.
+  //@cg-expect-error
   stateful?: boolean;
   // TODO(cais): Explore whether we can warn users when they fail to set
   //   `shuffle: false` when training a model consisting of stateful RNNs
@@ -336,6 +346,8 @@ export declare interface BaseRNNLayerArgs extends LayerArgs {
    *   normal TypeScript control flow. Hence this property is inapplicable and
    *   ignored in tfjs-layers.
    */
+  // CG305: The recurrent constructor defaults to non-unrolled operation.
+  //@cg-expect-error
   unroll?: boolean;
 
   /**
@@ -343,6 +355,8 @@ export declare interface BaseRNNLayerArgs extends LayerArgs {
    *   This option (or alternatively, the option `inputShape`) is required when
    *   this layer is used as the first layer in a model.
    */
+  // CG305: Input dimension can be supplied through a shape or inferred from the graph.
+  //@cg-expect-error
   inputDim?: number;
 
   /**
@@ -353,6 +367,8 @@ export declare interface BaseRNNLayerArgs extends LayerArgs {
    * your model, you would need to specify the input length at the level of the
    * first layer (e.g., via the `inputShape` option).
    */
+  // CG305: Sequence length can be supplied through a shape or inferred from the graph.
+  //@cg-expect-error
   inputLength?: number;
 }
 
@@ -903,75 +919,103 @@ export declare interface SimpleRNNCellLayerArgs extends LayerArgs {
    * Default: hyperbolic tangent ('tanh').
    * If you pass `null`,  'linear' activation will be applied.
    */
+  // CG305: The constructor resolves the default activation when omitted.
+  //@cg-expect-error
   activation?: ActivationIdentifier;
 
   /**
    * Whether the layer uses a bias vector.
    */
+  // CG305: The constructor defaults bias use when omitted.
+  //@cg-expect-error
   useBias?: boolean;
 
   /**
    * Initializer for the `kernel` weights matrix, used for the linear
    * transformation of the inputs.
    */
+  // CG305: The constructor resolves kernelInitializer to its default if omitted.
+  //@cg-expect-error
   kernelInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the `recurrentKernel` weights matrix, used for
    * linear transformation of the recurrent state.
    */
+  // CG305: The constructor resolves recurrentInitializer to its default if omitted.
+  //@cg-expect-error
   recurrentInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the bias vector.
    */
+  // CG305: The constructor resolves biasInitializer to its default if omitted.
+  //@cg-expect-error
   biasInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Regularizer function applied to the `kernel` weights matrix.
    */
+  // CG305: The constructor accepts no kernelRegularizer; no penalty is required.
+  //@cg-expect-error
   kernelRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the `recurrent_kernel` weights matrix.
    */
+  // CG305: The constructor accepts no recurrentRegularizer; no penalty is required.
+  //@cg-expect-error
   recurrentRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the bias vector.
    */
+  // CG305: The constructor accepts no biasRegularizer; no penalty is required.
+  //@cg-expect-error
   biasRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Constraint function applied to the `kernel` weights matrix.
    */
+  // CG305: The constructor accepts no kernelConstraint; no constraint is required.
+  //@cg-expect-error
   kernelConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Constraint function applied to the `recurrentKernel` weights matrix.
    */
+  // CG305: The constructor accepts no recurrentConstraint; no constraint is required.
+  //@cg-expect-error
   recurrentConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Constraint function applied to the bias vector.
    */
+  // CG305: The constructor accepts no biasConstraint; no constraint is required.
+  //@cg-expect-error
   biasConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Float number between 0 and 1. Fraction of the units to drop for the linear
    * transformation of the inputs.
    */
+  // CG305: The recurrent constructor defaults input dropout to zero.
+  //@cg-expect-error
   dropout?: number;
 
   /**
    * Float number between 0 and 1. Fraction of the units to drop for the linear
    * transformation of the recurrent state.
    */
+  // CG305: The recurrent constructor defaults recurrent dropout to zero.
+  //@cg-expect-error
   recurrentDropout?: number;
 
   /**
    * This is added for test DI purpose.
    */
+  // CG305: The cell supports its built-in dropout implementation without an override.
+  //@cg-expect-error
   dropoutFunc?: RnnDropoutFunction;
 }
 
@@ -1164,75 +1208,103 @@ export declare interface SimpleRNNLayerArgs extends BaseRNNLayerArgs {
    *
    * If you pass `null`, no activation will be applied.
    */
+  // CG305: The constructor resolves the default activation when omitted.
+  //@cg-expect-error
   activation?: ActivationIdentifier;
 
   /**
    * Whether the layer uses a bias vector.
    */
+  // CG305: The constructor defaults bias use when omitted.
+  //@cg-expect-error
   useBias?: boolean;
 
   /**
    * Initializer for the `kernel` weights matrix, used for the linear
    * transformation of the inputs.
    */
+  // CG305: The constructor resolves kernelInitializer to its default if omitted.
+  //@cg-expect-error
   kernelInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the `recurrentKernel` weights matrix, used for
    * linear transformation of the recurrent state.
    */
+  // CG305: The constructor resolves recurrentInitializer to its default if omitted.
+  //@cg-expect-error
   recurrentInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the bias vector.
    */
+  // CG305: The constructor resolves biasInitializer to its default if omitted.
+  //@cg-expect-error
   biasInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Regularizer function applied to the kernel weights matrix.
    */
+  // CG305: The constructor accepts no kernelRegularizer; no penalty is required.
+  //@cg-expect-error
   kernelRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the recurrentKernel weights matrix.
    */
+  // CG305: The constructor accepts no recurrentRegularizer; no penalty is required.
+  //@cg-expect-error
   recurrentRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the bias vector.
    */
+  // CG305: The constructor accepts no biasRegularizer; no penalty is required.
+  //@cg-expect-error
   biasRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Constraint function applied to the kernel weights matrix.
    */
+  // CG305: The constructor accepts no kernelConstraint; no constraint is required.
+  //@cg-expect-error
   kernelConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Constraint function applied to the recurrentKernel weights matrix.
    */
+  // CG305: The constructor accepts no recurrentConstraint; no constraint is required.
+  //@cg-expect-error
   recurrentConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Constraint function applied to the bias vector.
    */
+  // CG305: The constructor accepts no biasConstraint; no constraint is required.
+  //@cg-expect-error
   biasConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Number between 0 and 1. Fraction of the units to drop for the linear
    * transformation of the inputs.
    */
+  // CG305: The recurrent constructor defaults input dropout to zero.
+  //@cg-expect-error
   dropout?: number;
 
   /**
    * Number between 0 and 1. Fraction of the units to drop for the linear
    * transformation of the recurrent state.
    */
+  // CG305: The recurrent constructor defaults recurrent dropout to zero.
+  //@cg-expect-error
   recurrentDropout?: number;
 
   /**
    * This is added for test DI purpose.
    */
+  // CG305: The cell supports its built-in dropout implementation without an override.
+  //@cg-expect-error
   dropoutFunc?: RnnDropoutFunction;
 }
 
@@ -1291,6 +1363,8 @@ export declare interface GRUCellLayerArgs extends SimpleRNNCellLayerArgs {
    *
    * If `null`, no activation is applied.
    */
+  // CG305: The recurrent cell resolves the default gate activation.
+  //@cg-expect-error
   recurrentActivation?: ActivationIdentifier;
 
   /**
@@ -1306,6 +1380,8 @@ export declare interface GRUCellLayerArgs extends SimpleRNNCellLayerArgs {
    * Note: For superior performance, TensorFlow.js always uses implementation
    * 2, regardless of the actual value of this configuration field.
    */
+  // CG305: The recurrent implementation flag is optional in the public cell configuration.
+  //@cg-expect-error
   implementation?: number;
 
   /**
@@ -1313,6 +1389,8 @@ export declare interface GRUCellLayerArgs extends SimpleRNNCellLayerArgs {
    * multiplication). false = "before", true = "after" (only false is
    * supported).
    */
+  // CG305: GRU supports the default reset-before behaviour without an explicit flag.
+  //@cg-expect-error
   resetAfter?: boolean;
 }
 
@@ -1541,6 +1619,8 @@ export declare interface GRULayerArgs extends SimpleRNNLayerArgs {
    *
    * If `null`, no activation is applied.
    */
+  // CG305: The recurrent cell resolves the default gate activation.
+  //@cg-expect-error
   recurrentActivation?: ActivationIdentifier;
 
   /**
@@ -1556,6 +1636,8 @@ export declare interface GRULayerArgs extends SimpleRNNLayerArgs {
    * Note: For superior performance, TensorFlow.js always uses implementation
    * 2, regardless of the actual value of this configuration field.
    */
+  // CG305: The recurrent implementation flag is optional in the public cell configuration.
+  //@cg-expect-error
   implementation?: number;
 }
 
@@ -1613,6 +1695,8 @@ export declare interface LSTMCellLayerArgs extends SimpleRNNCellLayerArgs {
    *
    * If `null`, no activation is applied.
    */
+  // CG305: The recurrent cell resolves the default gate activation.
+  //@cg-expect-error
   recurrentActivation?: ActivationIdentifier;
 
   /**
@@ -1622,6 +1706,8 @@ export declare interface LSTMCellLayerArgs extends SimpleRNNCellLayerArgs {
    * [Jozefowicz et
    * al.](http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf)
    */
+  // CG305: The LSTM cell supports its default forget-bias setting.
+  //@cg-expect-error
   unitForgetBias?: boolean;
 
   /**
@@ -1637,6 +1723,8 @@ export declare interface LSTMCellLayerArgs extends SimpleRNNCellLayerArgs {
    * Note: For superior performance, TensorFlow.js always uses implementation
    * 2, regardless of the actual value of this configuration field.
    */
+  // CG305: The recurrent implementation flag is optional in the public cell configuration.
+  //@cg-expect-error
   implementation?: number;
 }
 
@@ -1874,6 +1962,8 @@ export declare interface LSTMLayerArgs extends SimpleRNNLayerArgs {
    *
    * If `null`, no activation is applied.
    */
+  // CG305: The recurrent cell resolves the default gate activation.
+  //@cg-expect-error
   recurrentActivation?: ActivationIdentifier;
 
   /**
@@ -1883,6 +1973,8 @@ export declare interface LSTMLayerArgs extends SimpleRNNLayerArgs {
    * [Jozefowicz et
    * al.](http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf)
    */
+  // CG305: The LSTM cell supports its default forget-bias setting.
+  //@cg-expect-error
   unitForgetBias?: boolean;
 
   /**
@@ -1896,6 +1988,8 @@ export declare interface LSTMLayerArgs extends SimpleRNNLayerArgs {
    * Note: For superior performance, TensorFlow.js always uses implementation
    * 2, regardless of the actual value of this config field.
    */
+  // CG305: The recurrent implementation flag is optional in the public cell configuration.
+  //@cg-expect-error
   implementation?: number;
 }
 

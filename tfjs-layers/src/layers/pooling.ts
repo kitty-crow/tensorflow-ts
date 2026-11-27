@@ -133,14 +133,20 @@ export declare interface Pooling1DLayerArgs extends LayerArgs {
   /**
    * Size of the window to pool over, should be an integer.
    */
+  // CG305: Pooling supplies a default window size.
+  //@cg-expect-error
   poolSize?: number|[number];
   /**
    * Period at which to sample the pooled values.
    *
    * If `null`, defaults to `poolSize`.
    */
+  // CG305: The layer supplies its default stride when not requested.
+  //@cg-expect-error
   strides?: number|[number];
   /** How to fill in data that's not an integer multiple of poolSize. */
+  // CG305: The layer supplies its default padding when not requested.
+  //@cg-expect-error
   padding?: PaddingMode;
 }
 
@@ -281,6 +287,8 @@ export declare interface Pooling2DLayerArgs extends LayerArgs {
    * If only one integer is specified, the same window length
    * will be used for both dimensions.
    */
+  // CG305: Pooling supplies a default window size.
+  //@cg-expect-error
   poolSize?: number|[number, number];
 
   /**
@@ -290,11 +298,17 @@ export declare interface Pooling2DLayerArgs extends LayerArgs {
    *
    * If `null`, defaults to `poolSize`.
    */
+  // CG305: The layer supplies its default stride when not requested.
+  //@cg-expect-error
   strides?: number|[number, number];
 
   /** The padding type to use for the pooling layer. */
+  // CG305: The layer supplies its default padding when not requested.
+  //@cg-expect-error
   padding?: PaddingMode;
   /** The data format to use for the pooling layer. */
+  // CG305: The layer supplies its default channel ordering when not requested.
+  //@cg-expect-error
   dataFormat?: DataFormat;
 }
 
@@ -427,6 +441,8 @@ export declare interface Pooling3DLayerArgs extends LayerArgs {
    * If only one integer is specified, the same window length
    * will be used for all dimensions.
    */
+  // CG305: Pooling supplies a default window size.
+  //@cg-expect-error
   poolSize?: number|[number, number, number];
 
   /**
@@ -436,11 +452,17 @@ export declare interface Pooling3DLayerArgs extends LayerArgs {
    *
    * If `null`, defaults to `poolSize`.
    */
+  // CG305: The layer supplies its default stride when not requested.
+  //@cg-expect-error
   strides?: number|[number, number, number];
 
   /** The padding type to use for the pooling layer. */
+  // CG305: The layer supplies its default padding when not requested.
+  //@cg-expect-error
   padding?: PaddingMode;
   /** The data format to use for the pooling layer. */
+  // CG305: The layer supplies its default channel ordering when not requested.
+  //@cg-expect-error
   dataFormat?: DataFormat;
 }
 
@@ -633,6 +655,8 @@ export declare interface GlobalPooling2DLayerArgs extends LayerArgs {
    * `CHANNEL_FIRST` corresponds to inputs with shape
    * `[batch, channels, height, width]`.
    */
+  // CG305: The layer supplies its default channel ordering when not requested.
+  //@cg-expect-error
   dataFormat?: DataFormat;
 }
 

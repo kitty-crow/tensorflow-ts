@@ -175,17 +175,23 @@ export declare interface BatchNormalizationLayerArgs extends LayerArgs {
    * For instance, after a `Conv2D` layer with `data_format="channels_first"`,
    * set `axis=1` in `batchNormalization`.
    */
+  // CG305: The normalization constructor supplies a default axis.
+  //@cg-expect-error
   axis?: number;
 
   /**
    * Momentum of the moving average. Defaults to 0.99.
    */
+  // CG305: Batch normalization defaults momentum to 0.99.
+  //@cg-expect-error
   momentum?: number;
 
   /**
    * Small float added to the variance to avoid dividing by zero. Defaults to
    * 1e-3.
    */
+  // CG305: Normalization defaults epsilon to 0.001.
+  //@cg-expect-error
   epsilon?: number;
 
   /**
@@ -193,6 +199,8 @@ export declare interface BatchNormalizationLayerArgs extends LayerArgs {
    * If `false`, `beta` is ignored.
    * Defaults to `true`.
    */
+  // CG305: Normalization defaults centering to true.
+  //@cg-expect-error
   center?: boolean;
 
   /**
@@ -202,50 +210,68 @@ export declare interface BatchNormalizationLayerArgs extends LayerArgs {
    * this can be disabled since the scaling will be done by the next layer.
    * Defaults to `true`.
    */
+  // CG305: The constructor supplies its documented default scale.
+  //@cg-expect-error
   scale?: boolean;
 
   /**
    * Initializer for the beta weight.
    *  Defaults to 'zeros'.
    */
+  // CG305: The constructor resolves betaInitializer to its default if omitted.
+  //@cg-expect-error
   betaInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the gamma weight.
    *  Defaults to `ones`.
    */
+  // CG305: The constructor resolves gammaInitializer to its default if omitted.
+  //@cg-expect-error
   gammaInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the moving mean.
    * Defaults to `zeros`
    */
+  // CG305: The constructor resolves movingMeanInitializer to its default if omitted.
+  //@cg-expect-error
   movingMeanInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the moving variance.
    *  Defaults to 'Ones'.
    */
+  // CG305: The constructor resolves movingVarianceInitializer to its default if omitted.
+  //@cg-expect-error
   movingVarianceInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Constraint for the beta weight.
    */
+  // CG305: The constructor accepts no betaConstraint; no constraint is required.
+  //@cg-expect-error
   betaConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Constraint for gamma weight.
    */
+  // CG305: The constructor accepts no gammaConstraint; no constraint is required.
+  //@cg-expect-error
   gammaConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Regularizer for the beta weight.
    */
+  // CG305: The constructor accepts no betaRegularizer; no penalty is required.
+  //@cg-expect-error
   betaRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer for the gamma weight.
    */
+  // CG305: The constructor accepts no gammaRegularizer; no penalty is required.
+  //@cg-expect-error
   gammaRegularizer?: RegularizerIdentifier|Regularizer;
 }
 
@@ -426,12 +452,16 @@ export interface LayerNormalizationLayerArgs extends LayerArgs {
    * The axis or axes that should be normalized (typically, the feature axis).
    * Defaults to -1 (the last axis).
    */
+  // CG305: The normalization constructor supplies a default axis.
+  //@cg-expect-error
   axis?: number|number[];
 
   /**
    * A small positive float added to variance to avoid division by zero.
    * Defaults to 1e-3.
    */
+  // CG305: Normalization defaults epsilon to 0.001.
+  //@cg-expect-error
   epsilon?: number;
 
   /**
@@ -439,6 +469,8 @@ export interface LayerNormalizationLayerArgs extends LayerArgs {
    * If `false`, `beta` is ignored.
    * Default: `true`.
    */
+  // CG305: Normalization defaults centering to true.
+  //@cg-expect-error
   center?: boolean;
 
   /**
@@ -448,24 +480,34 @@ export interface LayerNormalizationLayerArgs extends LayerArgs {
    * be done by the next layer.
    * Default: `true`.
    */
+  // CG305: The constructor supplies its documented default scale.
+  //@cg-expect-error
   scale?: boolean;
 
   /**
    * Initializer for the beta weight.
    * Default: `'zeros'`.
    */
+  // CG305: The constructor resolves betaInitializer to its default if omitted.
+  //@cg-expect-error
   betaInitializer?: InitializerIdentifier|Initializer;
 
   /**
    * Initializer for the gamma weight.
    * Default: `'ones'`.
    */
+  // CG305: The constructor resolves gammaInitializer to its default if omitted.
+  //@cg-expect-error
   gammaInitializer?: InitializerIdentifier|Initializer;
 
   /** Regularizer for the beta weight. */
+  // CG305: The constructor accepts no betaRegularizer; no penalty is required.
+  //@cg-expect-error
   betaRegularizer?: RegularizerIdentifier|Regularizer;
 
   /** Regularizer for the gamma weight. */
+  // CG305: The constructor accepts no gammaRegularizer; no penalty is required.
+  //@cg-expect-error
   gammaRegularizer?: RegularizerIdentifier|Regularizer;
 }
 

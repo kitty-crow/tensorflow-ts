@@ -42,9 +42,13 @@ export declare interface DropoutLayerArgs extends LayerArgs {
    * and you want the dropout mask to be the same for all timesteps, you can use
    * `noise_shape=(batch_size, 1, features)`.
    */
+  // CG305: Dropout uses its input shape when no custom mask shape is provided.
+  //@cg-expect-error
   noiseShape?: number[];
 
   /** An integer to use as random seed. */
+  // CG305: Random operations support automatically selected randomness without a caller seed.
+  //@cg-expect-error
   seed?: number;
 }
 
@@ -120,45 +124,65 @@ export declare interface DenseLayerArgs extends LayerArgs {
    *
    * If unspecified, no activation is applied.
    */
+  // CG305: The constructor resolves the default activation when omitted.
+  //@cg-expect-error
   activation?: ActivationIdentifier;
   /** Whether to apply a bias. */
+  // CG305: The constructor defaults bias use when omitted.
+  //@cg-expect-error
   useBias?: boolean;
   /**
    * Initializer for the dense kernel weights matrix.
    */
+  // CG305: The constructor resolves kernelInitializer to its default if omitted.
+  //@cg-expect-error
   kernelInitializer?: InitializerIdentifier|Initializer;
   /**
    * Initializer for the bias vector.
    */
+  // CG305: The constructor resolves biasInitializer to its default if omitted.
+  //@cg-expect-error
   biasInitializer?: InitializerIdentifier|Initializer;
   /**
    * If specified, defines inputShape as `[inputDim]`.
    */
+  // CG305: Input dimension can be supplied through a shape or inferred from the graph.
+  //@cg-expect-error
   inputDim?: number;
 
   /**
    * Constraint for the kernel weights.
    */
+  // CG305: The constructor accepts no kernelConstraint; no constraint is required.
+  //@cg-expect-error
   kernelConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Constraint for the bias vector.
    */
+  // CG305: The constructor accepts no biasConstraint; no constraint is required.
+  //@cg-expect-error
   biasConstraint?: ConstraintIdentifier|Constraint;
 
   /**
    * Regularizer function applied to the dense kernel weights matrix.
    */
+  // CG305: The constructor accepts no kernelRegularizer; no penalty is required.
+  //@cg-expect-error
   kernelRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the bias vector.
    */
+  // CG305: The constructor accepts no biasRegularizer; no penalty is required.
+  //@cg-expect-error
   biasRegularizer?: RegularizerIdentifier|Regularizer;
 
   /**
    * Regularizer function applied to the activation.
    */
+  // CG305: The constructor accepts no activityRegularizer; no penalty is required.
+  //@cg-expect-error
   activityRegularizer?: RegularizerIdentifier|Regularizer;
 }
 
@@ -167,6 +191,8 @@ export interface SpatialDropout1DLayerConfig extends LayerConfig {
   rate: number;
 
   /** An integer to use as random seed. */
+  // CG305: Random operations support automatically selected randomness without a caller seed.
+  //@cg-expect-error
   seed?: number;
 }
 
@@ -312,6 +338,8 @@ serialization.registerClass(Dense);
 
 export declare interface FlattenLayerArgs extends LayerArgs {
   /** Image data format: channelsLast (default) or channelsFirst. */
+  // CG305: The layer supplies its default channel ordering when not requested.
+  //@cg-expect-error
   dataFormat?: DataFormat;
 }
 
@@ -626,6 +654,8 @@ export declare interface MaskingArgs extends LayerArgs {
   /**
    * Masking Value. Defaults to `0.0`.
    */
+  // CG305: Masking defaults the masked value to zero.
+  //@cg-expect-error
   maskValue?: number;
 }
 

@@ -203,6 +203,8 @@ export interface IdentityArgs {
   /**
    * Multiplicative factor to apply to the identity matrix.
    */
+  // CG305: The initializer supplies its default gain.
+  //@cg-expect-error
   gain?: number;
 }
 
@@ -275,15 +277,23 @@ function computeFans(
 
 export interface VarianceScalingArgs {
   /** Scaling factor (positive float). */
+  // CG305: The constructor supplies its documented default scale.
+  //@cg-expect-error
   scale?: number;
 
   /** Fanning mode for inputs and outputs. */
+  // CG305: VarianceScaling supplies its default fan mode.
+  //@cg-expect-error
   mode?: FanMode;
 
   /** Probabilistic distribution of the values. */
+  // CG305: VarianceScaling supplies its default distribution.
+  //@cg-expect-error
   distribution?: Distribution;
 
   /** Random number generator seed. */
+  // CG305: Random operations support automatically selected randomness without a caller seed.
+  //@cg-expect-error
   seed?: number;
 }
 
@@ -359,6 +369,8 @@ serialization.registerClass(VarianceScaling);
 
 export interface SeedOnlyInitializerArgs {
   /** Random number generator seed. */
+  // CG305: Random operations support automatically selected randomness without a caller seed.
+  //@cg-expect-error
   seed?: number;
 }
 

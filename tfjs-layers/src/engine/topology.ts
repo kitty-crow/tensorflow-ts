@@ -34,16 +34,28 @@ export type Op = (x: LayerVariable) => LayerVariable;
  */
 export interface InputSpecArgs {
   /** Expected datatype of the input. */
+  // CG305: An input specification may constrain shape or rank without constraining dtype.
+  //@cg-expect-error
   dtype?: DataType;
   /** Expected shape of the input (may include null for unchecked axes). */
+  // CG305: An input specification may constrain rank without declaring a full shape.
+  //@cg-expect-error
   shape?: Shape;
   /** Expected rank of the input. */
+  // CG305: An input specification may use minimum or maximum rank instead of exact rank.
+  //@cg-expect-error
   ndim?: number;
   /** Maximum rank of the input. */
+  // CG305: An input specification need not set a maximum rank.
+  //@cg-expect-error
   maxNDim?: number;
   /** Minimum rank of the input. */
+  // CG305: An input specification need not set a minimum rank.
+  //@cg-expect-error
   minNDim?: number;
   /** Dictionary mapping integer axes to a specific dimension value. */
+  // CG305: An input specification need not constrain any specific axes.
+  //@cg-expect-error
   axes?: {[axis: number]: number};
 }
 
@@ -352,6 +364,8 @@ export declare interface LayerArgs extends LayerMetadata {
    * `batchInputShape` will be used. This argument is only applicable to input
    * layers (the first layer of a model).
    */
+  // CG305: A layer may infer input shape from the connected tensor.
+  //@cg-expect-error
   inputShape?: Shape;
   /**
    * If defined, will be used to create an input layer to insert before this
@@ -359,18 +373,26 @@ export declare interface LayerArgs extends LayerMetadata {
    * `batchInputShape` will be used. This argument is only applicable to input
    * layers (the first layer of a model).
    */
+  // CG305: A layer may infer batch input shape or receive inputShape instead.
+  //@cg-expect-error
   batchInputShape?: Shape;
   /**
    * If `inputShape` is specified and `batchInputShape` is *not* specified,
    * `batchSize` is used to construct the `batchInputShape`: `[batchSize,
    * ...inputShape]`
    */
+  // CG305: The batch dimension may remain unspecified.
+  //@cg-expect-error
   batchSize?: number;
   /**
    * Initial weight values of the layer.
    */
+  // CG305: Layers can initialize their own weights without supplied initial tensors.
+  //@cg-expect-error
   weights?: Tensor[];
   /** Legacy support. Do not use for new code. */
+  // CG305: The layer constructor falls back to its dtype or float32.
+  //@cg-expect-error
   inputDType?: DataType;
 }
 
