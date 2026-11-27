@@ -37,7 +37,7 @@ export function gatherV2(args: {
     // In debug mode, throw error when any index is out of bound.
     // Otherwise, just fill out of bounds with zeroes.
     const indicesVals = backend.readSync(indices.dataId) as TypedArray;
-    const axisDim = x.shape[parsedAxis];
+    const axisDim = util.requiredNumericEntry(x.shape, parsedAxis);
     for (let i = 0; i < indicesVals.length; ++i) {
       const index = util.requiredNumericEntry(indicesVals, i);
       util.assert(

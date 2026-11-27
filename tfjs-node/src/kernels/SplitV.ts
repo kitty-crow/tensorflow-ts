@@ -30,7 +30,7 @@ export const splitVConfig: KernelConfig = {
     const backend = args.backend;
     const {numOrSizeSplits, axis} = args.attrs;
 
-    const $axis = util.parseAxisParam(axis, x.shape)[0];
+    const $axis = util.requiredNumericEntry(util.parseAxisParam(axis, x.shape), 0);
     const splitSizes = backend_util.prepareSplitSize(x, numOrSizeSplits, $axis);
 
     const opAttrs = [

@@ -113,9 +113,9 @@ export function sparseFillEmptyRowsImpl(
     filledCount[row] = offset + 1;  // Increment the filled count for this row.
     for (let j = 0; j < rank; ++j) {
       // indices and outputIndices are 2d tensors with shape of [N, rank]
-      outputIndices[outputI * rank + j] = indices[i * rank + j];
+      outputIndices[outputI * rank + j] = requiredCpuEntry(indices, i * rank + j);
     }
-    outputValues[outputI] = values[i];
+    outputValues[outputI] = requiredCpuEntry(values, i);
     // We'll need this reverse index map to backprop correctly.
     reverseIndexMap[i] = outputI;
   }

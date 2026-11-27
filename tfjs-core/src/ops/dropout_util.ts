@@ -38,11 +38,9 @@ export function getNoiseShape(x: Tensor, noiseShape?: number[]): number[] {
   }
   const newDimension: number[] = [];
   for (let i = 0; i < x.shape.length; i++) {
-    if (noiseShape[i] == null && x.shape[i] != null) {
-      newDimension.push(x.shape[i]);
-    } else {
-      newDimension.push(noiseShape[i]);
-    }
+    const dimension = noiseShape[i];
+    newDimension.push(dimension == null ?
+        util.requiredNumericEntry(x.shape, i) : dimension);
   }
   return newDimension;
 }

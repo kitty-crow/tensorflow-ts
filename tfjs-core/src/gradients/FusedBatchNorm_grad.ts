@@ -27,7 +27,7 @@ import {sum} from '../ops/sum';
 import {tile} from '../ops/tile';
 import {Tensor} from '../tensor';
 import {Rank, ShapeMap} from '../types';
-import {assertArrayLength} from '../util_base';
+import {assertArrayLength, requiredNumericEntry} from '../util_base';
 
 export const fusedBatchNormGradConfig: GradConfig = {
   kernelName: FusedBatchNorm,
@@ -43,7 +43,7 @@ export const fusedBatchNormGradConfig: GradConfig = {
     const tileShape: number[] = [];
     if (mean.rank === 1) {
       for (let i = 0; i < x.shape.length - 1; ++i) {
-        tileShape.push(x.shape[i]);
+        tileShape.push(requiredNumericEntry(x.shape, i));
       }
       tileShape.push(1);
     }

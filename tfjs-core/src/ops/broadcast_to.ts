@@ -20,7 +20,7 @@ import {Tile, TileAttrs, TileInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
 import {convertToTensor} from '../tensor_util_env';
 import {Rank, ShapeMap, TensorLike} from '../types';
-import {assertNonNegativeIntegerDimensions} from '../util_base';
+import {assertNonNegativeIntegerDimensions, requiredNumericEntry} from '../util_base';
 
 import {clone} from './clone';
 import {op} from './operation';
@@ -63,11 +63,12 @@ function broadcastTo_<R extends Rank>(
   const inputShape = input.shape;
   const reps: number[] = Array.from(shape);
   for (let i = shape.length - 1; i >= 0; i--) {
-    if (inputShape[i] === shape[i]) {
+    const inputDimension = requiredNumericEntry(inputShape, i);
+    if (inputDimension === requiredNumericEntry(shape, i)) {
       reps[i] = 1;
       continue;
     }
-    if (input.shape[i] !== 1) {
+    if (inputDimension !== 1) {
       throw new Error(
           `broadcastTo(): [${xShape}] cannot be broadcast to [${shape}].`);
     }

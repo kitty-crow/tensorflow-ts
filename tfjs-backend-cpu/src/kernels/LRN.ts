@@ -29,7 +29,7 @@ export function lRN(
 
   assertNotComplex(x, 'LRN');
 
-  const channels = x.shape[3];
+  const channels = util.requiredNumericEntry(x.shape, 3);
   const maxD = channels - 1;
   const xValues = backend.requireValues(x.dataId) as TypedArray;
   const size = util.sizeFromShape(x.shape);
@@ -44,7 +44,7 @@ export function lRN(
 
     let sum = 0.0;
     for (; beginSumOffset <= endSumOffset; beginSumOffset++) {
-      const z = xValues[beginSumOffset];
+      const z = util.requiredNumericEntry(xValues, beginSumOffset);
       sum += z * z;
     }
     return sum;
@@ -52,7 +52,7 @@ export function lRN(
 
   for (let offset = 0; offset < size; offset++) {
     const sum = sumAcrossChannels(offset);
-    const val = xValues[offset] * Math.pow(bias + alpha * sum, -beta);
+    const val = util.requiredNumericEntry(xValues, offset) * Math.pow(bias + alpha * sum, -beta);
     result[offset] = val;
   }
 

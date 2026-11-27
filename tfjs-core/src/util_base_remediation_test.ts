@@ -22,7 +22,7 @@ import {flatten} from './util';
 import {env} from './environment';
 import {basename, concatenateTypedArrays, decodeWeights} from './io/io_utils';
 import {requiredTestEntry, requiredTestValue} from './test_util';
-import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
+import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, sizeFromShape, squeezeShape, sum, toNestedArray} from './util_base';
 
 describe('shape utility regression coverage', () => {
   it('infers a missing dimension without mutating the input', () => {
@@ -212,5 +212,22 @@ describe('weight framing and basename regressions', () => {
     expect(basename('/')).toBe('');
     expect(basename('')).toBe('');
     expect(basename('plain')).toBe('plain');
+  });
+});
+
+describe('required numeric reductions', () => {
+  it('retains zero, empty products and NaN values', () => {
+    expect(sum([0, -2, 2])).toBe(0);
+    expect(sum([])).toBe(0);
+    expect(sum([NaN])).toBeNaN();
+    expect(sizeFromShape([])).toBe(1);
+    expect(sizeFromShape([2, 0, 3])).toBe(0);
+    expect(sizeFromShape([2, 3, 4])).toBe(24);
+  });
+  it('rejects missing concrete coordinates', () => {
+    expect(() => sum(new Array<number>(1))).toThrowError();
+    expect(() => sizeFromShape(new Array<number>(1))).toThrowError();
+    expect(() => inferFromImplicitShape(new Array<number>(1), 1))
+        .toThrowError();
   });
 });

@@ -439,7 +439,7 @@ class RaggedTensorToTensorOp {
 
 function copyArray(dst: TypedArray, src: TypedArray, size: number) {
   for (let i = 0; i < size; i++) {
-    dst[i] = src[i];
+    dst[i] = requiredCpuEntry(src, i);
   }
 }
 

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {add, fill, FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelAttributes, KernelConfig, mul, Rank, rsqrt, scalar, sub, Tensor, Tensor4D, tidy} from '@tensorflow/tfjs';
+import {add, fill, FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelAttributes, KernelConfig, mul, Rank, rsqrt, scalar, sub, Tensor, Tensor4D, tidy, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -42,7 +42,7 @@ export const fusedBatchNormConfig: KernelConfig = {
         return offset != null ? add(xNorm, offset as Tensor) : xNorm;
       }
       const dataFormat = 'NHWC';
-      const depth = x.shape[3];
+      const depth = util.requiredNumericEntry(x.shape, 3);
       const opAttrs = [
         createTensorsTypeOpAttr('T', x.dtype),
         {

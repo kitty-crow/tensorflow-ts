@@ -22,6 +22,8 @@ import {splitV} from './kernels/SplitV';
 import {leakyRelu} from './kernels/LeakyRelu';
 import {multinomial} from './kernels/Multinomial';
 import {MathBackendCPU} from './backend_cpu';
+import {bincountImpl} from './kernels/Bincount_impl';
+import {oneHot} from './kernels/OneHot';
 import {all} from './kernels/All';
 import {any as anyReduction} from './kernels/Any';
 import {min} from './kernels/Min';
@@ -920,5 +922,29 @@ describe('checked unary entries and regex attributes', () => {
     expect(staticRegexReplaceImpl(values, 'string',
         {pattern: 'a', rewrite: 'x', replaceGlobal: false}))
         .toEqual(['', 'xba', 'xa']);
+  });
+});
+
+describe('checked index kernels', () => {
+  it('preserves weighted and unweighted bincounts and rejects missing weights', () => {
+    const x = new Int32Array([0, 1, 0, 4]);
+    expect(bincountImpl(x, new Float32Array([0, 2, 3, 4]),
+        'float32', [4], 2)).toEqual(new Float32Array([3, 2]));
+    expect(bincountImpl(x, new Float32Array(0), 'float32', [0], 2))
+        .toEqual(new Float32Array([2, 1]));
+    expect(() => bincountImpl(x, new Float32Array([1]),
+        'float32', [4], 2)).toThrowError();
+  });
+  it('keeps off values for indices outside the one-hot depth', () => {
+    const backend = new MathBackendCPU();
+    const indices = backend.makeTensorInfo([4], 'int32',
+        new Int32Array([0, 1, -1, 2]));
+    const result = oneHot({inputs: {indices}, backend,
+      attrs: {depth: 2, dtype: 'float32', onValue: 5, offValue: -1}});
+    expect(result.shape).toEqual([4, 2]);
+    expect(backend.readSync(result.dataId))
+        .toEqual(new Float32Array([5, -1, -1, 5, -1, -1, -1, -1]));
+    [indices, result].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
   });
 });

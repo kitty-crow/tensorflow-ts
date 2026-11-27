@@ -34,11 +34,11 @@ export function gatherV2(args: {
   assertNotComplex([x, indices], 'gatherV2');
 
   // Throw error when any index is out of bound.
-  const parsedAxis = util.parseAxisParam(axis, x.shape)[0];
+  const parsedAxis = util.requiredNumericEntry(util.parseAxisParam(axis, x.shape), 0);
   const indicesVals = backend.requireValues(indices.dataId) as TypedArray;
-  const axisDim = x.shape[parsedAxis];
+  const axisDim = util.requiredNumericEntry(x.shape, parsedAxis);
   for (let i = 0; i < indicesVals.length; ++i) {
-    const index = indicesVals[i];
+    const index = util.requiredNumericEntry(indicesVals, i);
     util.assert(
         index <= axisDim - 1 && index >= 0,
         () =>

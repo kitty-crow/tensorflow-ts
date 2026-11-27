@@ -36,8 +36,9 @@ export function oneHot(
   const indicesVal = backend.requireValues(indices.dataId) as TypedArray;
 
   for (let event = 0; event < indicesSize; ++event) {
-    if (indicesVal[event] >= 0 && indicesVal[event] < depth) {
-      res[event * depth + indicesVal[event]] = onValue;
+    const index = util.requiredNumericEntry(indicesVal, event);
+    if (index >= 0 && index < depth) {
+      res[event * depth + index] = onValue;
     }
   }
 

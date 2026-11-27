@@ -19,6 +19,7 @@ import {BroadcastTo, BroadCastToAttrs} from '../kernel_names';
 import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {requiredNumericEntry} from '../util_base';
 
 export const broadcastToGradConfig: GradConfig = {
   kernelName: BroadcastTo,
@@ -31,18 +32,19 @@ export const broadcastToGradConfig: GradConfig = {
 
     const reps: number[] = Array.from(outputShape);
     for (let i = inputShape.length - 1; i >= 0; i--) {
-      if (inputShape[i] === outputShape[i]) {
+      const inputDimension = requiredNumericEntry(inputShape, i);
+      if (inputDimension === requiredNumericEntry(outputShape, i)) {
         reps[i] = 1;
         continue;
       }
-      if (inputShape[i] !== 1) {
+      if (inputDimension !== 1) {
         throw new Error(`broadcastTo(): [${
             inputShape}] cannot be broadcast to [${outputShape}].`);
       }
     }
     const axes: number[] = [];
     for (let i = 0; i < reps.length; i++) {
-      if (reps[i] > 1) {
+      if (requiredNumericEntry(reps, i) > 1) {
         axes.push(i);
       }
     }

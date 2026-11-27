@@ -15,6 +15,7 @@
  * =============================================================================
  */
 import {Tensor} from '../tensor';
+import {requiredNumericEntry} from '../util_base';
 
 /**
  * Validate sparseToDense inputs.
@@ -43,8 +44,10 @@ export function validateInput(
         ` but got shape ${sparseIndices.shape}.`);
   }
 
-  const numElems = sparseIndices.rank > 0 ? sparseIndices.shape[0] : 1;
-  const numDims = sparseIndices.rank > 1 ? sparseIndices.shape[1] : 1;
+  const numElems = sparseIndices.rank > 0 ?
+      requiredNumericEntry(sparseIndices.shape, 0) : 1;
+  const numDims = sparseIndices.rank > 1 ?
+      requiredNumericEntry(sparseIndices.shape, 1) : 1;
 
   if (outputShape.length !== numDims) {
     throw new Error(

@@ -830,7 +830,7 @@ export class WebGPUBackend extends KernelBackend {
         Math.ceil(currentOffset / maxAlignmentOfField) * maxAlignmentOfField;
     const arrayBuffer = new ArrayBuffer(currentOffset);
     programUniform.forEach((d, i) => {
-      const offset = offsets[i];
+      const offset = util.requiredNumericEntry(offsets, i);
       switch (d.type) {
         case 'int32':
           new Int32Array(arrayBuffer, offset, d.data.length).set(d.data);

@@ -17,6 +17,7 @@
 // Workaround for allowing cjs module to be included in bundle created by
 // rollup.
 import * as LongExports from 'long';
+import {requiredNumericEntry} from './util_base';
 // tslint:disable-next-line
 const Long: LongExports.LongConstructor =
     // tslint:disable-next-line
@@ -101,9 +102,9 @@ function hashLen0to16(s: Uint8Array, len = s.length): Long {
     return hashLen16(a.shl(3).add(len), fetch32(s, len - 4), mul);
   }
   if (len > 0) {
-    const a = s[0];
-    const b = s[len >> 1];
-    const c = s[len - 1];
+    const a = requiredNumericEntry(s, 0);
+    const b = requiredNumericEntry(s, len >> 1);
+    const c = requiredNumericEntry(s, len - 1);
     const y = a + (b << 8);
     const z = len + (c << 2);
     return shiftMix(k2.mul(y).xor(k0.mul(z))).mul(k2);

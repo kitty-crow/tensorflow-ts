@@ -103,7 +103,7 @@ export function swap<T>(
 export function sum(arr: number[]): number {
   let sum = 0;
   for (let i = 0; i < arr.length; i++) {
-    sum += arr[i];
+    sum += requiredNumericEntry(arr, i);
   }
   return sum;
 }
@@ -180,9 +180,9 @@ export function sizeFromShape(shape: number[]): number {
     // Scalar.
     return 1;
   }
-  let size = shape[0];
+  let size = requiredNumericEntry(shape, 0);
   for (let i = 1; i < shape.length; i++) {
-    size *= shape[i];
+    size *= requiredNumericEntry(shape, i);
   }
   return size;
 }
@@ -336,7 +336,7 @@ export function inferFromImplicitShape(
   let implicitIdx = -1;
 
   for (let i = 0; i < shape.length; ++i) {
-    const dimension = shape[i];
+    const dimension = requiredNumericEntry(shape, i);
     if (dimension >= 0) {
       shapeProd *= dimension;
       continue;
@@ -414,7 +414,7 @@ export function squeezeShape(shape: number[], axis?: number[]):
   let j = 0;
   for (let i = 0; i < shape.length; ++i) {
     const selectedAxis = axes === null ? null : axes[j] ?? null;
-    const dimension = shape[i];
+    const dimension = requiredNumericEntry(shape, i);
     if (selectedAxis === i && dimension !== 1) {
       throw new Error(
           `Can't squeeze axis ${i} since its dim '${dimension}' is not 1`);

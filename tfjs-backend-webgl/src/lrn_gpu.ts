@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {util} from '@tensorflow/tfjs-core';
+
 import {GPGPUProgram} from './gpgpu_math';
 
 export class LRNProgram implements GPGPUProgram {
@@ -26,7 +28,7 @@ export class LRNProgram implements GPGPUProgram {
       xShape: number[], radius: number, bias: number, alpha: number,
       beta: number) {
     const rad = radius;
-    const maxD = xShape[3] - 1;
+    const maxD = util.requiredNumericEntry(xShape, 3) - 1;
     this.outputShape = xShape;
 
     // optimize pow(bias + alpha * sum, -beta)

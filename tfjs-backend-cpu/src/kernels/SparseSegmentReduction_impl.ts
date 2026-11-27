@@ -101,13 +101,16 @@ export function sparseSegmentReductionImpl(
                 i, index, numRows));
       }
       for (let j = 0; j < numCol; j++) {
-        output[outIndex * numCol + j] += input[index * numCol + j];
+        output[outIndex * numCol + j] =
+            requiredCpuEntry(output, outIndex * numCol + j) +
+            requiredCpuEntry(input, index * numCol + j);
       }
     }
 
     if (isMean) {
       for (let j = 0; j < numCol; j++) {
-        output[outIndex * numCol + j] /= end - start;
+        output[outIndex * numCol + j] =
+            requiredCpuEntry(output, outIndex * numCol + j) / (end - start);
       }
     }
 

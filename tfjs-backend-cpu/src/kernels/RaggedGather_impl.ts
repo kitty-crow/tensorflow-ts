@@ -162,7 +162,7 @@ function writeValueSlices(
   for (const slice of valueSlices) {
     for (let i = slice[0]; i < slice[1]; ++i) {
       for (let j = 0; j < valueSize; ++j) {
-        values[outPos * valuesM + j] = paramsDenseValues[i * denseM + j];
+        values[outPos * valuesM + j] = requiredCpuEntry(paramsDenseValues, i * denseM + j);
       }
       ++outPos;
     }

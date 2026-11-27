@@ -19,7 +19,7 @@ import {ENGINE} from '../engine';
 import {Tensor} from '../tensor';
 import {isWebGLData, isWebGPUData, TensorLike, TypedArray, WebGLData, WebGPUData} from '../types';
 import {DataType} from '../types';
-import {assert, assertNonNegativeIntegerDimensions, flatten, inferDtype, isTypedArray, sizeFromShape, toTypedArray} from '../util';
+import {assert, assertNonNegativeIntegerDimensions, flatten, inferDtype, isTypedArray, requiredNumericEntry, sizeFromShape, toTypedArray} from '../util';
 
 /** This is shared code across all tensor creation methods. */
 export function makeTensor(
@@ -57,12 +57,12 @@ export function makeTensor(
             `${providedSize} values but has ${inferredSize}`);
 
     for (let i = 0; i < inferredShape.length; ++i) {
-      const inferred = inferredShape[i];
+      const inferred = requiredNumericEntry(inferredShape, i);
       const flatDimsDontMatch = i === inferredShape.length - 1 ?
           inferred !== sizeFromShape(shape.slice(i)) :
           true;
       assert(
-          inferredShape[i] === shape[i] || !flatDimsDontMatch,
+          inferred === shape[i] || !flatDimsDontMatch,
           () => `Error creating a new Tensor. Inferred shape ` +
               `(${inferredShape}) does not match the provided ` +
               `shape (${shape}). `);

@@ -60,7 +60,7 @@ async function booleanMaskAsync_(
 
   let leadingSize = 1;
   for (let i = axisFrom; i < axisFrom + maskDim; i++) {
-    leadingSize *= tensorShape[i];
+    leadingSize *= util.requiredNumericEntry(tensorShape, i);
   }
   const targetTensorShape =
       tensorShape.slice(0, axisFrom)

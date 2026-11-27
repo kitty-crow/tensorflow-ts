@@ -35,7 +35,7 @@ export function cumsum(
   if (permutation != null) {
     $x = transpose({inputs: {x}, backend, attrs: {perm: permutation}});
   }
-  const permutedAxis = backend_util.getInnerMostAxes(1, x.shape.length)[0];
+  const permutedAxis = requiredCpuEntry(backend_util.getInnerMostAxes(1, x.shape.length), 0);
 
   if (permutedAxis !== $x.shape.length - 1) {
     throw new Error(

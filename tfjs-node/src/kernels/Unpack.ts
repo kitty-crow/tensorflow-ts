@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, Unpack, UnpackAttrs, UnpackInputs} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Unpack, UnpackAttrs, UnpackInputs, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -38,7 +38,7 @@ export const unpackConfig: KernelConfig = {
       throw new Error(
           `Invalid axis supplied: ${axis} shape length: ${value.shape.length}`);
     }
-    const num = value.shape[axis];
+    const num = util.requiredNumericEntry(value.shape, axis);
     const opAttrs = [
       {name: 'num', type: backend.binding.TF_ATTR_INT, value: num},
       createTensorsTypeOpAttr('T', value.dtype),

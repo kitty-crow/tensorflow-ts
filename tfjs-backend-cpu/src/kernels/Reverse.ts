@@ -44,7 +44,8 @@ export function reverse(
   for (let i = 0; i < outBuf.size; i++) {
     const outLoc = outBuf.indexToLoc(i);
     const inLoc = outLoc.slice();
-    $dims.forEach(d => inLoc[d] = x.shape[d] - 1 - inLoc[d]);
+    $dims.forEach(d => inLoc[d] = util.requiredNumericEntry(x.shape, d) -
+        1 - util.requiredNumericEntry(inLoc, d));
     outBuf.set(xBuf.get(...inLoc), ...outLoc);
   }
 

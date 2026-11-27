@@ -96,7 +96,7 @@ export function encodeInt32ArrayAsInt64(value: Int32Array): Int32Array {
 
   const buffer = new Int32Array(value.length * 2);
   for (let i = 0; i < value.length; i++) {
-    buffer[i * 2] = value[i];
+    buffer[i * 2] = util.requiredNumericEntry(value, i);
   }
   return buffer;
 }

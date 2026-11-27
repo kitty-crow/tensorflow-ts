@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {buffer, DataType, Rank, TensorBuffer, TypedArray} from '@tensorflow/tfjs-core';
+import {buffer, DataType, Rank, TensorBuffer, TypedArray, util} from '@tensorflow/tfjs-core';
 
 export function gatherNdImpl<R extends Rank>(
     indicesData: TypedArray, paramsBuf: TensorBuffer<R>, dtype: DataType,
@@ -27,8 +27,8 @@ export function gatherNdImpl<R extends Rank>(
     const index: number[] = [];
     let flattenIndex = 0;
     for (let j = 0; j < sliceRank; j++) {
-      const dim = indicesData[i * sliceRank + j];
-      flattenIndex += dim * strides[j];
+      const dim = util.requiredNumericEntry(indicesData, i * sliceRank + j);
+      flattenIndex += dim * util.requiredNumericEntry(strides, j);
       index.push(dim);
     }
     if (flattenIndex < 0 || flattenIndex >= paramsSize / sliceSize) {

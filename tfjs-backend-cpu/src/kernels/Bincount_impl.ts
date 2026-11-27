@@ -24,7 +24,7 @@ export function bincountImpl(
   const outVals = util.makeZerosTypedArray(size, weightsDtype) as TypedArray;
 
   for (let i = 0; i < xVals.length; i++) {
-    const value = xVals[i];
+    const value = util.requiredNumericEntry(xVals, i);
     if (value < 0) {
       throw new Error('Input x must be non-negative!');
     }
@@ -34,7 +34,7 @@ export function bincountImpl(
     }
 
     if (weightsSize > 0) {
-      outVals[value] += weightsVals[i];
+      outVals[value] += util.requiredNumericEntry(weightsVals, i);
     } else {
       outVals[value] += 1;
     }
@@ -46,8 +46,8 @@ export function bincountImpl(
 export function bincountReduceImpl<R extends Rank>(
     xBuf: TensorBuffer<R>, weightsBuf: TensorBuffer<R>, size: number,
     binaryOutput = false): TensorBuffer<R> {
-  const numRows = xBuf.shape[0];
-  const numCols = xBuf.shape[1];
+  const numRows = util.requiredNumericEntry(xBuf.shape, 0);
+  const numCols = util.requiredNumericEntry(xBuf.shape, 1);
 
   const outBuf = buffer([numRows, size], weightsBuf.dtype);
 

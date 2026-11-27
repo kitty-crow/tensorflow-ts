@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, env, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, env, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {Conv2DMMProgram} from '../conv2d_mm_webgpu';
@@ -300,7 +300,7 @@ export function conv2DImpl({
   if (hasBias) {
     if (!isChannelsLast && bias.shape.length === 1) {
       bias = reshape(
-          {inputs: {x: bias}, backend, attrs: {shape: [bias.shape[0], 1, 1]}});
+          {inputs: {x: bias}, backend, attrs: {shape: [util.requiredNumericEntry(bias.shape, 0), 1, 1]}});
       intermediates.push(bias);
     }
     inputVar.push(bias);
@@ -310,7 +310,7 @@ export function conv2DImpl({
       preluActivationWeights = reshape({
         inputs: {x: preluActivationWeights},
         backend,
-        attrs: {shape: [preluActivationWeights.shape[0], 1, 1]}
+        attrs: {shape: [util.requiredNumericEntry(preluActivationWeights.shape, 0), 1, 1]}
       });
       intermediates.push(preluActivationWeights);
     }

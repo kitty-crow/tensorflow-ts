@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, SparseFillEmptyRows, SparseFillEmptyRowsInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, SparseFillEmptyRows, SparseFillEmptyRowsInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {sparseFillEmptyRowsImplCPU} from '../kernel_utils/shared';
@@ -57,7 +57,7 @@ export function sparseFillEmptyRows(args: {
   return [
     backend.makeTensorInfo(outputIndicesShape, indices.dtype, outputIndices),
     backend.makeTensorInfo(
-        [outputIndicesShape[0]], values.dtype, outputValues),
+        [util.requiredNumericEntry(outputIndicesShape, 0)], values.dtype, outputValues),
     backend.makeTensorInfo(
         [emptyRowIndicator.length], 'bool',
         new Uint8Array(

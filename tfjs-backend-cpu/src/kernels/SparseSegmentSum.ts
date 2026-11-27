@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, SparseSegmentSum, SparseSegmentSumInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
+import {KernelConfig, SparseSegmentSum, SparseSegmentSumInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -38,7 +38,8 @@ export function sparseSegmentSum(
     throw new Error(`Segment ids should be a vector but received shape
          ${segmentIds.shape}`);
   }
-  if (indices.shape[0] !== segmentIds.shape[0]) {
+  if (util.requiredNumericEntry(indices.shape, 0) !==
+      util.requiredNumericEntry(segmentIds.shape, 0)) {
     throw new Error(`segmentIds and indices should have same size.`);
   }
 
