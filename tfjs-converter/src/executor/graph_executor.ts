@@ -741,14 +741,14 @@ export class GraphExecutor implements FunctionExecutor {
         throw new Error(`Missing tensor for input '${inputName}'`);
       }
       const tensor = this._signature ?.inputs ?.[inputName];
-      if (tensor != null) {
-        if (tensor.name == null) {
-          throw new Error(`Missing signature tensor name for input '${inputName}'`);
-        }
-        result[tensor.name] = input;
-      } else {
+      if (tensor == null) {
         result[inputName] = input;
+        continue;
       }
+      if (tensor.name == null) {
+        throw new Error(`Missing signature tensor name for input '${inputName}'`);
+      }
+      result[tensor.name] = input;
     }
     return result;
   }
@@ -776,13 +776,13 @@ export class GraphExecutor implements FunctionExecutor {
   private mapOutputs(outputs: string[]): string[] {
     return outputs.map(name => {
       const tensor = this._signature ?.outputs ?.[name];
-      if (tensor != null) {
-        if (tensor.name == null) {
-          throw new Error(`Missing signature tensor name for output '${name}'`);
-        }
-        return tensor.name;
+      if (tensor == null) {
+        return name;
       }
-      return name;
+      if (tensor.name == null) {
+        throw new Error(`Missing signature tensor name for output '${name}'`);
+      }
+      return tensor.name;
     }, {});
   }
 

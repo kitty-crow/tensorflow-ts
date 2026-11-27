@@ -80,7 +80,7 @@ describe('SavedModel', () => {
     const inputsMapKeys = inputsMapMessage.keys();
     const inputsMapKey1 = inputsMapKeys.next();
     expect(inputsMapKey1.done).toBe(false);
-    if (inputsMapKey1.done) {
+    if (inputsMapKey1.done === true) {
       throw new Error('Missing input map key.');
     }
     expect(inputsMapKey1.value).toBe('x');
@@ -98,7 +98,7 @@ describe('SavedModel', () => {
     const outputsMapKeys = outputsMapMessage.keys();
     const outputsMapKey1 = outputsMapKeys.next();
     expect(outputsMapKey1.done).toBe(false);
-    if (outputsMapKey1.done) {
+    if (outputsMapKey1.done === true) {
       throw new Error('Missing output map key.');
     }
     expect(outputsMapKey1.value).toBe('output_0');
