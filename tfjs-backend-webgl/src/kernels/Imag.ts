@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Imag, ImagInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, Imag, ImagInputs, KernelConfig, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {identity} from './Identity';
@@ -26,7 +26,8 @@ export function imag(args: {inputs: ImagInputs, backend: MathBackendWebGL}):
   const {input} = inputs;
   const inputData = backend.texData.get(input.dataId);
 
-  return identity({inputs: {x: inputData.complexTensorInfos.imag}, backend});
+  const parts = backend_util.requiredComplexParts(inputData);
+  return identity({inputs: {x: parts.imag}, backend});
 }
 
 export const imagConfig: KernelConfig = {

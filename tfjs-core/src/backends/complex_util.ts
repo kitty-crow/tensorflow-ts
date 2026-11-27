@@ -15,8 +15,35 @@
  * =============================================================================
  */
 
+import {TensorInfo} from '../tensor_info';
 import {TypedArray} from '../types';
 import {requiredNumericEntry} from '../util_base';
+
+/** The backing real and imaginary tensors of a complex tensor. */
+export interface ComplexTensorParts {
+  real: TensorInfo;
+  imag: TensorInfo;
+}
+
+/** Require complex storage only at operations which consume its components. */
+export function requiredComplexParts(data: {complexTensorInfos?: ComplexTensorParts}):
+    ComplexTensorParts {
+  const parts = data.complexTensorInfos ?? null;
+  if (parts == null) {
+    throw new Error('Missing complex tensor components.');
+  }
+  return parts;
+}
+
+/** View the original data IDs with the caller's logical (possibly reshaped) shape. */
+export function complexComponentViews(parts: ComplexTensorParts, shape: number[]):
+    [TensorInfo, TensorInfo] {
+  return [
+    {dataId: parts.real.dataId, dtype: parts.real.dtype, shape},
+    {dataId: parts.imag.dataId, dtype: parts.imag.dtype, shape}
+  ];
+}
+
 /**
  * Merges real and imaginary Float32Arrays into a single complex Float32Array.
  *

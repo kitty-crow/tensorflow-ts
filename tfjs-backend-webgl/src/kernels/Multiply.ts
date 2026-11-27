@@ -37,6 +37,8 @@ export function multiply(
   if (a.dtype === 'complex64') {
     const aData = backend.texData.get(a.dataId);
     const bData = backend.texData.get(b.dataId);
+    const aParts = backend_util.requiredComplexParts(aData);
+    const bParts = backend_util.requiredComplexParts(bData);
 
     const realProgram = new BinaryOpComplexProgram(
         binaryop_complex_gpu.COMPLEX_MULTIPLY.REAL, a.shape, b.shape);
@@ -44,26 +46,8 @@ export function multiply(
         binaryop_complex_gpu.COMPLEX_MULTIPLY.IMAG, a.shape, b.shape);
 
     const inputs = [
-      {
-        dataId: aData.complexTensorInfos.real.dataId,
-        dtype: aData.complexTensorInfos.real.dtype,
-        shape: a.shape
-      },
-      {
-        dataId: aData.complexTensorInfos.imag.dataId,
-        dtype: aData.complexTensorInfos.imag.dtype,
-        shape: a.shape
-      },
-      {
-        dataId: bData.complexTensorInfos.real.dataId,
-        dtype: bData.complexTensorInfos.real.dtype,
-        shape: b.shape
-      },
-      {
-        dataId: bData.complexTensorInfos.imag.dataId,
-        dtype: bData.complexTensorInfos.imag.dtype,
-        shape: b.shape
-      }
+      ...backend_util.complexComponentViews(aParts, a.shape),
+      ...backend_util.complexComponentViews(bParts, b.shape)
     ];
 
     const realPart = backend.runWebGLProgram(realProgram, inputs, 'float32');

@@ -18,11 +18,9 @@
 import {ENGINE} from '../engine';
 import {FloorDiv, FloorDivInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {matchedBinaryInputs, op} from './operation';
 
 /**
  * Divides two `tf.Tensor`s element-wise, A / B. Supports broadcasting.
@@ -52,9 +50,7 @@ import {op} from './operation';
  */
 function floorDiv_<T extends Tensor>(
     a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'floorDiv');
-  let $b = convertToTensor(b, 'b', 'floorDiv');
-  [$a, $b] = makeTypesMatch($a, $b);
+  const {a: $a, b: $b} = matchedBinaryInputs(a, b, 'floorDiv');
 
   const inputs = {a: $a, b: $b} satisfies FloorDivInputs;
 

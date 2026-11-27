@@ -16,13 +16,11 @@
  */
 
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
 import {div} from './div';
 import {equal} from './equal';
-import {op} from './operation';
+import {matchedBinaryInputs, op} from './operation';
 import {where} from './where';
 import {zerosLike} from './zeros_like';
 
@@ -59,9 +57,7 @@ import {zerosLike} from './zeros_like';
 function divNoNan_<T extends Tensor>(
     a: Tensor|TensorLike, b: Tensor|TensorLike): T {
   // TODO: Make this into its own kernel.
-  let $a = convertToTensor(a, 'a', 'div');
-  let $b = convertToTensor(b, 'b', 'div');
-  [$a, $b] = makeTypesMatch($a, $b);
+  const {a: $a, b: $b} = matchedBinaryInputs(a, b, 'div');
 
   const divResult = div($a, $b);
   const zeros = zerosLike(divResult);

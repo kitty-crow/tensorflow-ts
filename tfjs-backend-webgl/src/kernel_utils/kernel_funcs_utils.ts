@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import { backend_util, BinaryInputs, DataType, env, KernelFunc, TypedArray, UnaryInputs, upcastType} from '@tensorflow/tfjs-core';
+import { backend_util, BinaryInputs, DataType, env, KernelFunc, TensorInfo, TypedArray, UnaryInputs, upcastType} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {BinaryOpProgram} from '../binaryop_gpu';
@@ -108,28 +108,18 @@ export function binaryKernelFunc({
     if (supportsComplex && a.dtype === 'complex64') {
       const aData = webglBackend.texData.get(a.dataId);
       const bData = webglBackend.texData.get(b.dataId);
+      const aParts = backend_util.requiredComplexParts(aData);
+      const bParts = backend_util.requiredComplexParts(bData);
 
-      const [real, imag] = [
-        [aData.complexTensorInfos.real, bData.complexTensorInfos.real],
-        [aData.complexTensorInfos.imag, bData.complexTensorInfos.imag]
-      ].map(complexParts => {
-        const [aPart, bPart] = complexParts;
-
-        const aHandle = {
-          dataId: aPart.dataId,
-          dtype: aPart.dtype,
-          shape: a.shape
-        };
-        const bHandle = {
-          dataId: bPart.dataId,
-          dtype: bPart.dtype,
-          shape: b.shape
-        };
-
+      const [aReal, aImag] = backend_util.complexComponentViews(aParts, a.shape);
+      const [bReal, bImag] = backend_util.complexComponentViews(bParts, b.shape);
+      const runComponent = (aPart: TensorInfo, bPart: TensorInfo): TensorInfo => {
         const program = new BinaryOpProgram(opSnippet, a.shape, b.shape);
         return webglBackend.runWebGLProgram(
-            program, [aHandle, bHandle], upcastType(aPart.dtype, bPart.dtype));
-      });
+            program, [aPart, bPart], upcastType(aPart.dtype, bPart.dtype));
+      };
+      const real = runComponent(aReal, bReal);
+      const imag = runComponent(aImag, bImag);
 
       const complexOutput =
           complex({inputs: {real, imag}, backend: webglBackend});

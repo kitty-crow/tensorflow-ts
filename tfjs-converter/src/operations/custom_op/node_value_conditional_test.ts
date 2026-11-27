@@ -22,6 +22,7 @@ import {assertShapesMatchAllowUndefinedSize, mergeElementShape} from '../../exec
 import {Graph, Node} from '../types';
 import {getExecutionSubgraph, getNodesInTopologicalOrder, getNodeLiveUntilMap} from '../../executor/model_analysis';
 import {GraphExecutor} from '../../executor/graph_executor';
+import {getNumericArrayParam, OperationMapper, parseStringParam} from '../operation_mapper';
 
 import {NodeValueImpl} from './node_value_impl';
 import {getPadding, parseNodeName} from '../executors/utils';
@@ -142,5 +143,55 @@ describe('tensor list shape metadata', () => {
     expect(() => mergeElementShape([2], [3])).toThrowError(/Incompatible shape/);
     expect(() => mergeElementShape(new Array<number>(1), [2]))
         .toThrowError(/Missing numeric entry/);
+  });
+});
+
+
+describe('checked function signature mapping', () => {
+  const dtype = tensorflow.DataType.DT_FLOAT;
+  it('keeps argument order and maps output names to their returned tensor', () => {
+    const graph = OperationMapper.Instance.transformGraph({
+      node: [], library: {function: [{
+        signature: {name: 'inner', inputArg: [{name: 'arg', type: dtype}],
+          outputArg: [{name: 'result', type: dtype}]},
+        nodeDef: [], ret: {result: 'arg:0'}
+      }]}
+    });
+    const inner = test_util.requiredTestEntry(
+        test_util.requiredTestValue(graph.functions, 'functions'), 'inner');
+    const input = test_util.requiredTestElement(inner.inputs, 0);
+    expect(input.signatureKey).toBe('arg');
+    expect(test_util.requiredTestElement(inner.outputs, 0)).toBe(input);
+    expect(inner.signature).toEqual({
+      methodName: 'inner', inputs: {arg: {name: 'arg', dtype}},
+      outputs: {result: {name: 'arg:0', dtype}}
+    });
+  });
+
+  it('rejects missing return names and permits an empty signature', () => {
+    const definition = {name: 'inner', inputArg: [],
+      outputArg: [{name: 'result', type: dtype}]};
+    expect(() => OperationMapper.Instance.transformGraph({
+      node: [], library: {function: [{signature: definition, ret: {}}]}
+    })).toThrowError(/missing return "result"/);
+    const empty = OperationMapper.Instance.transformGraph({
+      node: [], library: {function: [{
+        signature: {name: 'empty', inputArg: [], outputArg: []}
+      }]}
+    });
+    const fn = test_util.requiredTestEntry(
+        test_util.requiredTestValue(empty.functions, 'functions'), 'empty');
+    expect(fn.signature).toEqual({methodName: 'empty', inputs: {}, outputs: {}});
+  });
+
+  it('retains float precedence, zero, integer strings and empty numeric arrays', () => {
+    expect(getNumericArrayParam({a: {list: {f: [0, 1.5], i: [3]}}}, 'a', [9]))
+        .toEqual([0, 1.5]);
+    expect(getNumericArrayParam({a: {list: {f: [], i: ['2', 0]}}}, 'a', [9]))
+        .toEqual([2, 0]);
+    expect(getNumericArrayParam({a: {list: {}}}, 'a', [9])).toEqual([]);
+    expect(getNumericArrayParam({}, 'a', [9])).toEqual([9]);
+    expect(() => getNumericArrayParam({a: {}}, 'a', [])).toThrowError(/missing its list/);
+    expect(parseStringParam([], true)).toBe('');
   });
 });

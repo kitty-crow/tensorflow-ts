@@ -239,21 +239,22 @@ export class BaseLogger extends BaseCallback {
     const batchSize = logs['size'] == null ? 0 : logs['size'] as number;
     this.seen += batchSize;
     for (const key in logs) {
-      const value = logs[key];
+      const value = generic_utils.requiredEntry(logs, key);
       if (typeof value === 'number') {
         if (!this.totals.hasOwnProperty(key)) {
           this.totals[key] = 0;
         }
-        this.totals[key] = this.totals[key] as number + value * batchSize;
+        const previous = generic_utils.requiredEntry(this.totals, key);
+        this.totals[key] = (previous as number) + value * batchSize;
       } else {
         let oldTotalsToDispose: Scalar;
         if (key in this.totals) {
-          oldTotalsToDispose = this.totals[key] as Scalar;
+          oldTotalsToDispose = generic_utils.requiredEntry(this.totals, key) as Scalar;
         } else {
           this.totals[key] = 0;
         }
-        const total: Scalar =
-            tidy(() => add((this.totals[key]), mul(value, batchSize)));
+        const previous = generic_utils.requiredEntry(this.totals, key);
+        const total: Scalar = tidy(() => add(previous, mul(value, batchSize)));
         this.totals[key] = total;
         if (oldTotalsToDispose != null) {
           oldTotalsToDispose.dispose();
@@ -266,17 +267,18 @@ export class BaseLogger extends BaseCallback {
     if (!(logs != null)) return;
     {
       for (const key of this.params['metrics'] as string[]) {
-        if (this.totals[key] == null) {
+        const total = this.totals[key];
+        if (total == null) {
           continue;
         }
-        if (typeof this.totals[key] === 'number') {
-          logs[key] = this.totals[key] as number / this.seen;
+        if (typeof total === 'number') {
+          logs[key] = total / this.seen;
         } else {
           tidy(() => {
-            const log: Scalar = mul(div(1, this.seen), this.totals[key]);
+            const log: Scalar = mul(div(1, this.seen), total);
             logs[key] = log;
-            (this.totals[key] as Tensor).dispose();
-            keep(logs[key] as Scalar);
+            total.dispose();
+            keep(log);
           });
         }
       }

@@ -18,11 +18,9 @@
 import {ENGINE} from '../engine';
 import {Mod, ModInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {matchedBinaryInputs, op} from './operation';
 
 /**
  * Returns the mod of a and b element-wise.
@@ -53,9 +51,7 @@ import {op} from './operation';
  * @doc {heading: 'Operations', subheading: 'Arithmetic'}
  */
 function mod_<T extends Tensor>(a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'mod');
-  let $b = convertToTensor(b, 'b', 'mod');
-  [$a, $b] = makeTypesMatch($a, $b);
+  const {a: $a, b: $b} = matchedBinaryInputs(a, b, 'mod');
 
   const inputs = {a: $a, b: $b} satisfies ModInputs;
 

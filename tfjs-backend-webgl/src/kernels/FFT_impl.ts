@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {FFTProgram} from '../fft_gpu';
@@ -26,10 +26,11 @@ import {reshape} from './Reshape';
 export function fftImpl(
     x: TensorInfo, inverse: boolean, backend: MathBackendWebGL): TensorInfo {
   const xData = backend.texData.get(x.dataId);
+  const parts = backend_util.requiredComplexParts(xData);
 
   const inputSize = util.sizeFromShape(x.shape);
   // Collapse all outer dimensions to a single batch dimension.
-  const innerDimensionSize = x.shape[x.shape.length - 1];
+  const innerDimensionSize = backend_util.requiredDimension(x.shape, x.shape.length - 1);
   const batch = inputSize / innerDimensionSize;
 
   const input2D = reshape(
@@ -39,18 +40,7 @@ export function fftImpl(
   const realProgram = new FFTProgram('real', xShape, inverse);
   const imagProgram = new FFTProgram('imag', xShape, inverse);
 
-  const inputs = [
-    {
-      dataId: xData.complexTensorInfos.real.dataId,
-      dtype: xData.complexTensorInfos.real.dtype,
-      shape: xShape
-    },
-    {
-      dataId: xData.complexTensorInfos.imag.dataId,
-      dtype: xData.complexTensorInfos.imag.dtype,
-      shape: xShape
-    }
-  ];
+  const inputs = backend_util.complexComponentViews(parts, xShape);
 
   const realPart = backend.runWebGLProgram(realProgram, inputs, 'float32');
   const imagPart = backend.runWebGLProgram(imagProgram, inputs, 'float32');

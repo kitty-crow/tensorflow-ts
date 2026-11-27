@@ -18,12 +18,10 @@
 import {ENGINE} from '../engine';
 import {SquaredDifference, SquaredDifferenceInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
 import {assertAndGetBroadcastShape} from './broadcast_util';
-import {op} from './operation';
+import {matchedBinaryInputs, op} from './operation';
 
 /**
  * Returns (a - b) * (a - b) element-wise.
@@ -51,9 +49,7 @@ import {op} from './operation';
  */
 function squaredDifference_<T extends Tensor>(
     a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'squaredDifference');
-  let $b = convertToTensor(b, 'b', 'squaredDifference');
-  [$a, $b] = makeTypesMatch($a, $b);
+  const {a: $a, b: $b} = matchedBinaryInputs(a, b, 'squaredDifference');
 
   assertAndGetBroadcastShape($a.shape, $b.shape);
 

@@ -8,8 +8,10 @@
  * =============================================================================
  */
 
-import {Tensor} from '@tensorflow/tfjs-core';
-import {History} from '../base_callbacks';
+import {Rank, Tensor} from '@tensorflow/tfjs-core';
+import {BaseLogger, History} from '../base_callbacks';
+import {getSourceInputs} from './topology';
+import {disposeTensorsInLogs, resolveScalarsInLogs, UnresolvedLogs} from '../logs';
 import {BytePairTokenizerCache, StaticHashTable} from '../layers/nlp/tokenizers_utils';
 import '@tensorflow/tfjs-core/dist/public/chained_ops/register_all_chained_ops';
 import '../flags_layers';
@@ -290,5 +292,41 @@ describe('typed JSON test fixture boundaries', () => {
     expect(() => parseTestJsonDict('false')).toThrowError(/JSON dictionary/);
     expect(() => parseTestJsonDict('{')).toThrow();
     expect(() => requireTestJsonDict(null, 'config')).toThrowError(/config/);
+  });
+});
+
+
+describe('checked training log and source graph contracts', () => {
+  it('retains weighted numeric metrics and skips absent metrics', async () => {
+    const logger = new BaseLogger();
+    logger.setParams({metrics: ['loss', 'absent']});
+    await logger.onEpochBegin(0);
+    await logger.onBatchEnd(0, {size: 2, loss: 0});
+    await logger.onBatchEnd(1, {size: 1, loss: 6});
+    const logs: UnresolvedLogs = {};
+    await logger.onEpochEnd(0, logs);
+    expect(logs).toEqual({loss: 2});
+  });
+
+  it('resolves scalar logs in place and disposes only the original tensors', async () => {
+    const scalar = new Tensor<Rank.R0>([], 'float32', {}, 100);
+    spyOn(scalar, 'data').and.returnValue(Promise.resolve(new Float32Array([4])));
+    const disposed = spyOn(scalar, 'dispose');
+    const logs: UnresolvedLogs = {scalar, zero: 0};
+    await resolveScalarsInLogs(logs);
+    expect(logs).toEqual({scalar: 4, zero: 0});
+    expect(disposed).toHaveBeenCalledTimes(1);
+    disposeTensorsInLogs(logs);
+    expect(disposed).toHaveBeenCalledTimes(1);
+    disposeTensorsInLogs({scalar});
+    expect(disposed).toHaveBeenCalledTimes(2);
+  });
+
+  it('follows symbolic source identity through multiple layers', () => {
+    const model = new Sequential({layers: [new ReLU({inputShape: [2]}), new ReLU({})]});
+    const input = requiredElement(model.inputs, 0);
+    const output = requiredElement(model.outputs, 0);
+    expect(getSourceInputs(output)).toEqual([input]);
+    expect(getSourceInputs(input)).toEqual([input]);
   });
 });

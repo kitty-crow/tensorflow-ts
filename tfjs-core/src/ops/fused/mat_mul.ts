@@ -30,7 +30,7 @@ import * as broadcast_util from '../broadcast_util';
 import {Activation} from '../fused_types';
 import {applyActivation, getFusedBiasGradient, getFusedDyActivation, shouldFuse} from '../fused_util';
 import {matMul as unfusedMatMul} from '../mat_mul';
-import {op} from '../operation';
+import {matchedBinaryInputs, op} from '../operation';
 import {reshape} from '../reshape';
 import {matrixDimensions} from '../shape_dimension';
 
@@ -84,9 +84,7 @@ function fusedMatMul_({
                  result, activation, preluActivationWeights, leakyreluAlpha);
     }
 
-    let $a = convertToTensor(a, 'a', 'fused matMul');
-    let $b = convertToTensor(b, 'b', 'fused matMul');
-    [$a, $b] = makeTypesMatch($a, $b);
+    const {a: $a, b: $b} = matchedBinaryInputs(a, b, 'fused matMul');
 
     const [aRows, aCols] = matrixDimensions($a.shape);
     const [bRows, bCols] = matrixDimensions($b.shape);

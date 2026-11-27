@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import {ENGINE} from '../engine';
-import {Add, All, Any, Asinh, Ceil, Equal, Greater, Identity, Imag, LogicalNot, Maximum, Minimum, Multiply, Real, Relu, Sub} from '../kernel_names';
+import {Add, All, Any, Asinh, Atan2, BatchMatMul, Ceil, Equal, FloorDiv, Greater, Identity, Imag, LogicalNot, Maximum, Minimum, Mod, Multiply, Pow, Real, RealDiv, Relu, SquaredDifference, Sub} from '../kernel_names';
 import {Tensor} from '../tensor';
 import {Rank} from '../types';
 
@@ -23,6 +23,13 @@ import {add} from './add';
 import {all} from './all';
 import {any} from './any';
 import {asinh} from './asinh';
+import {atan2} from './atan2';
+import {div} from './div';
+import {floorDiv} from './floorDiv';
+import {matMul} from './mat_mul';
+import {mod} from './mod';
+import {pow} from './pow';
+import {squaredDifference} from './squared_difference';
 import {ceil} from './ceil';
 import {clone} from './clone';
 import {equal} from './equal';
@@ -88,6 +95,30 @@ describe('unary operation dispatch contracts', () => {
     expect(ENGINE.runKernel).toHaveBeenCalledWith(Sub, {a: float, b: right});
     expect(mul(float, right)).toBe(float);
     expect(ENGINE.runKernel).toHaveBeenCalledWith(Multiply, {a: float, b: right});
+  });
+
+  it('retains arithmetic dispatch, operand order and diagnostic names', () => {
+    const right = new Tensor<Rank.R1>([1], 'float32', {}, 9);
+    expect(floorDiv(float, right)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(FloorDiv, {a: float, b: right});
+    expect(div(float, right)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(RealDiv, {a: float, b: right}, {});
+    expect(div(integer, integer)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(FloorDiv, {a: integer, b: integer});
+    expect(atan2(float, right)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(Atan2, {a: float, b: right});
+    expect(mod(float, right)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(Mod, {a: float, b: right});
+    expect(pow(float, right)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(Pow, {a: float, b: right});
+    expect(squaredDifference(float, right)).toBe(float);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(SquaredDifference, {a: float, b: right}, {});
+    expect(() => pow(float, string)).toThrowError(/Argument 'exp' passed to 'pow'/);
+    expect(() => mod(string, right)).toThrowError(/Argument 'a' passed to 'mod'/);
+    const matrix = new Tensor<Rank.R2>([1, 1], 'float32', {}, 10);
+    matMul(matrix, matrix, true, false);
+    expect(ENGINE.runKernel).toHaveBeenCalledWith(
+        BatchMatMul, {a: matrix, b: matrix}, {transposeA: true, transposeB: false});
   });
 
   it('retains string comparison and broadcast validation', () => {

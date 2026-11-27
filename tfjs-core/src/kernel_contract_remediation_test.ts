@@ -26,6 +26,7 @@ import {Tensor} from './tensor';
 import {getFilteredNodesXToY, TapeNode} from './tape';
 import {getFloat16Decoder} from './io/io_utils';
 import {TensorInfo} from './tensor_info';
+import {complexComponentViews, requiredComplexParts} from './backends/complex_util';
 import {Rank} from './types';
 import {sparseReshape} from './ops/sparse/sparse_reshape';
 import {maxPoolWithArgmax} from './ops/max_pool_with_argmax';
@@ -275,5 +276,26 @@ describe('checked gradient tape and encoded weights', () => {
     expect(Object.is(requiredTestElement(decoded, 1), -0)).toBeTrue();
     expect(Array.from(decoded)).toEqual([0, -0, 1, -2, Infinity, NaN]);
     expect(decode(new Uint16Array(0)).length).toBe(0);
+  });
+});
+
+
+describe('complex component storage contracts', () => {
+  it('keeps real and imaginary data identity, order and original shapes', () => {
+    const real: TensorInfo = {dataId: {}, dtype: 'float32', shape: [6]};
+    const imag: TensorInfo = {dataId: {}, dtype: 'float32', shape: [6]};
+    const parts = {real, imag};
+    expect(requiredComplexParts({complexTensorInfos: parts})).toBe(parts);
+    const shape = [2, 3];
+    const [realView, imagView] = complexComponentViews(parts, shape);
+    expect(realView.dataId).toBe(real.dataId);
+    expect(imagView.dataId).toBe(imag.dataId);
+    expect(realView.shape).toBe(shape);
+    expect(imagView.shape).toBe(shape);
+    expect(realView.dtype).toBe('float32');
+    expect(imagView.dtype).toBe('float32');
+    expect(real.shape).toEqual([6]);
+    expect(imag.shape).toEqual([6]);
+    expect(() => requiredComplexParts({})).toThrowError('Missing complex tensor components.');
   });
 });

@@ -26,6 +26,7 @@ import {reshape} from './Reshape';
 export function fftImpl(
     x: TensorInfo, inverse: boolean, backend: WebGPUBackend): TensorInfo {
   const xData = backend.tensorMap.get(x.dataId);
+  const parts = backend_util.requiredComplexParts(xData);
 
   const inputSize = util.sizeFromShape(x.shape);
   // Collapse all outer dimensions to a single batch dimension.
@@ -41,18 +42,7 @@ export function fftImpl(
   const realProgram = new FFTProgram('real', xShape);
   const imagProgram = new FFTProgram('imag', xShape);
 
-  const inputs = [
-    {
-      dataId: xData.complexTensorInfos.real.dataId,
-      dtype: xData.complexTensorInfos.real.dtype,
-      shape: xShape
-    },
-    {
-      dataId: xData.complexTensorInfos.imag.dataId,
-      dtype: xData.complexTensorInfos.imag.dtype,
-      shape: xShape
-    }
-  ];
+  const inputs = backend_util.complexComponentViews(parts, xShape);
 
   const exponentMultiplier = inverse ? 2.0 * Math.PI : -2.0 * Math.PI;
   const denominator = inverse ? xShape[1] : 1.0;

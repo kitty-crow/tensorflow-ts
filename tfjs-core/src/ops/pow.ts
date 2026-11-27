@@ -53,9 +53,9 @@ import {op} from './operation';
  */
 function pow_<T extends Tensor>(
     base: Tensor|TensorLike, exp: Tensor|TensorLike): T {
-  let $base = convertToTensor(base, 'base', 'pow');
-  let $exp = convertToTensor(exp, 'exp', 'pow');
-  [$base, $exp] = makeTypesMatch($base, $exp);
+  const baseTensor = convertToTensor(base, 'base', 'pow');
+  const expTensor = convertToTensor(exp, 'exp', 'pow');
+  const [$base, $exp] = makeTypesMatch(baseTensor, expTensor);
 
   const inputs = {a: $base, b: $exp} satisfies PowInputs;
 

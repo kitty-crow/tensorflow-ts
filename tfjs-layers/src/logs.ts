@@ -9,6 +9,7 @@
  */
 
 import {dispose, Scalar} from '@tensorflow/tfjs-core';
+import {requiredElement, requiredEntry} from './utils/generic_utils';
 
 /**
  * Logs in which values can be either numbers or Tensors (Scalars).
@@ -32,7 +33,7 @@ export async function resolveScalarsInLogs(logs: UnresolvedLogs) {
   const keys: string[] = [];
   const scalarsToDispose: Scalar[] = [];
   for (const key in logs) {
-    const value = logs[key];
+    const value = requiredEntry(logs, key);
     if (typeof value !== 'number') {
       const valueScalar = value;
       promises.push(valueScalar.data());
@@ -43,7 +44,9 @@ export async function resolveScalarsInLogs(logs: UnresolvedLogs) {
   if (promises.length > 0) {
     const values = await Promise.all(promises);
     for (let i = 0; i < values.length; ++i) {
-      logs[keys[i]] = values[i][0];
+      const key = requiredElement(keys, i);
+      const scalar = requiredElement(values, i);
+      logs[key] = requiredElement(scalar, 0);
     }
     // Dispose the original scalar tensors.
     dispose(scalarsToDispose);
@@ -61,7 +64,7 @@ export function disposeTensorsInLogs(logs: UnresolvedLogs) {
     return;
   }
   for (const key in logs) {
-    const value = logs[key];
+    const value = requiredEntry(logs, key);
     if (typeof value !== 'number') {
       value.dispose();
     }

@@ -1582,15 +1582,15 @@ export function getSourceInputs(
   if (layer.inboundNodes.length === 0) {
     return [tensor];
   }
-  const node = layer.inboundNodes[nodeIndex];
+  const node = generic_utils.requiredElement(layer.inboundNodes, nodeIndex);
   if (node.inboundLayers.length === 0) {
     return node.inputTensors;
   }
   const sourceTensors: SymbolicTensor[] = [];
   for (let i = 0; i < node.inboundLayers.length; i++) {
-    const x = node.inputTensors[i];
-    const parentLayer = node.inboundLayers[i];
-    const parentNodeIndex = node.nodeIndices[i];
+    const x = generic_utils.requiredElement(node.inputTensors, i);
+    const parentLayer = generic_utils.requiredElement(node.inboundLayers, i);
+    const parentNodeIndex = generic_utils.requiredElement(node.nodeIndices, i);
     const previousSources = getSourceInputs(x, parentLayer, parentNodeIndex);
     // Avoid input redundancy.
     for (const source of previousSources) {

@@ -18,11 +18,9 @@
 import {ENGINE} from '../engine';
 import {Atan2, Atan2Inputs} from '../kernel_names';
 import {Tensor} from '../tensor';
-import {makeTypesMatch} from '../tensor_util';
-import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 
-import {op} from './operation';
+import {matchedBinaryInputs, op} from './operation';
 
 /**
  * Computes arctangent of `tf.Tensor`s a / b element-wise: `atan2(a, b)`.
@@ -42,9 +40,7 @@ import {op} from './operation';
  */
 function atan2_<T extends Tensor>(
     a: Tensor|TensorLike, b: Tensor|TensorLike): T {
-  let $a = convertToTensor(a, 'a', 'atan2');
-  let $b = convertToTensor(b, 'b', 'atan2');
-  [$a, $b] = makeTypesMatch($a, $b);
+  const {a: $a, b: $b} = matchedBinaryInputs(a, b, 'atan2');
 
   const inputs = {a: $a, b: $b} satisfies Atan2Inputs;
 

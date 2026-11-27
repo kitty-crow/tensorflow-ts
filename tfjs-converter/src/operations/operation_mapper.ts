@@ -140,11 +140,11 @@ export class OperationMapper {
     const functions: {[key: string]: Graph} = {};
     if (graph.library != null && graph.library.function != null) {
       for (const func of graph.library.function) {
-        const name = func.signature?.name ?? null;
-        if (name == null) {
+        const signature = func.signature ?? null;
+        if (signature == null || signature.name == null) {
           throw new Error('Graph function is missing its signature name.');
         }
-        functions[name] = this.mapFunction(func);
+        functions[signature.name] = this.mapFunction(func, signature, signature.name);
       }
     }
 
@@ -356,7 +356,9 @@ export class OperationMapper {
   }
 
   // map the TFunctionDef to TFJS graph object
-  private mapFunction(functionDef: tensorflow.IFunctionDef): Graph {
+  private mapFunction(
+      functionDef: tensorflow.IFunctionDef, definition: tensorflow.IOpDef,
+      methodName: string): Graph {
     const tfNodes = functionDef.nodeDef ?? null;
     const placeholders: Node[] = [];
     const weights: Node[] = [];
@@ -374,8 +376,19 @@ export class OperationMapper {
     const inputs: Node[] = [];
     const outputs: Node[] = [];
 
-    functionDef.signature.inputArg.forEach(arg => {
-      const [nodeName, ] = getNodeNameAndIndex(arg.name);
+    const inputArgs = definition.inputArg ?? null;
+    const outputArgs = definition.outputArg ?? null;
+    if (inputArgs == null || outputArgs == null) {
+      throw new Error(`Graph function "${methodName}" is missing its argument lists.`);
+    }
+    const inputSignature: {[key: string]: tensorflow.ITensorInfo} = {};
+    const outputSignature: {[key: string]: tensorflow.ITensorInfo} = {};
+    inputArgs.forEach(arg => {
+      const name = arg.name ?? null;
+      if (name == null) {
+        throw new Error(`Graph function "${methodName}" has an unnamed input.`);
+      }
+      const [nodeName, ] = getNodeNameAndIndex(name);
       const node: Node = {
         name: nodeName,
         op: 'Placeholder',
@@ -386,17 +399,27 @@ export class OperationMapper {
         attrParams: {dtype: {value: parseDtypeParam(arg.type), type: 'dtype'}},
         children: []
       };
-      node.signatureKey = arg.name;
+      node.signatureKey = name;
       inputs.push(node);
       nodes[nodeName] = node;
+      inputSignature[name] = {name, dtype: arg.type};
     });
 
     this.linkNodes(nodes);
 
-    const returnNodeMap = functionDef.ret;
+    const returnNodeMap = functionDef.ret ?? {};
 
-    functionDef.signature.outputArg.forEach(output => {
-      const [nodeName, index] = getNodeNameAndIndex(returnNodeMap[output.name]);
+    outputArgs.forEach(output => {
+      const name = output.name ?? null;
+      if (name == null) {
+        throw new Error(`Graph function "${methodName}" has an unnamed output.`);
+      }
+      const returnName = returnNodeMap[name] ?? null;
+      if (returnName == null) {
+        throw new Error(`Graph function "${methodName}" is missing return "${name}".`);
+      }
+      const [nodeName, index] = getNodeNameAndIndex(returnName);
+      outputSignature[name] = {name: returnName, dtype: output.type};
       const node = nodes[nodeName] ?? null;
       if (node != null) {
         node.defaultOutput = index;
@@ -404,37 +427,10 @@ export class OperationMapper {
       }
     });
 
-    const signature = this.mapArgsToSignature(functionDef);
-    return {nodes, inputs, outputs, weights, placeholders, signature};
-  }
-
-  private mapArgsToSignature(functionDef: tensorflow.IFunctionDef):
-      tensorflow.ISignatureDef {
-    return {
-      methodName: functionDef.signature.name,
-      inputs: functionDef.signature.inputArg.reduce(
-          (map, arg) => {
-            map[arg.name] = this.mapArgToTensorInfo(arg);
-            return map;
-          },
-          {} as {[key: string]: tensorflow.ITensorInfo}),
-      outputs: functionDef.signature.outputArg.reduce(
-          (map, arg) => {
-            map[arg.name] = this.mapArgToTensorInfo(arg, functionDef.ret);
-            return map;
-          },
-          {} as {[key: string]: tensorflow.ITensorInfo}),
+    const signature: tensorflow.ISignatureDef = {
+      methodName, inputs: inputSignature, outputs: outputSignature
     };
-  }
-
-  private mapArgToTensorInfo(
-      arg: tensorflow.OpDef.IArgDef,
-      nameMap?: {[key: string]: string}): tensorflow.ITensorInfo {
-    let name = arg.name;
-    if (nameMap != null) {
-      name = nameMap[name];
-    }
-    return {name, dtype: arg.type};
+    return {nodes, inputs, outputs, weights, placeholders, signature};
   }
 }
 
@@ -454,7 +450,7 @@ export function decodeBase64(text: string): string {
 
 export function parseStringParam(s: []|string, keepCase: boolean): string {
   const value =
-      Array.isArray(s) ? String.fromCharCode.apply(null, s) : decodeBase64(s);
+      Array.isArray(s) ? String.fromCharCode(...s) : decodeBase64(s);
   return keepCase ? value : value.toLowerCase();
 }
 
@@ -574,11 +570,14 @@ export function getNumericArrayParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: number[]): number[] {
   const param = attrs[name] ?? null;
-  if (param) {
-    return ((param.list.f && param.list.f.length ? param.list.f :
-                                                   param.list.i) ||
-            [])
-        .map(v => (typeof v === 'number') ? v : parseInt(v, 10));
+  if (param != null) {
+    const list = param.list ?? null;
+    if (list == null) {
+      throw new Error(`Numeric array attribute "${name}" is missing its list.`);
+    }
+    const floats = list.f ?? [];
+    const values = floats.length ? floats : (list.i ?? []);
+    return values.map(v => (typeof v === 'number') ? v : parseInt(v, 10));
   }
   return def;
 }

@@ -86,30 +86,19 @@ export function binaryKernelFunc(
     if (supportsComplex && a.dtype === 'complex64') {
       const aData = webgpuBackend.tensorMap.get(a.dataId);
       const bData = webgpuBackend.tensorMap.get(b.dataId);
+      const aParts = backend_util.requiredComplexParts(aData);
+      const bParts = backend_util.requiredComplexParts(bData);
       let real: TensorInfo, imag: TensorInfo;
       if (opType !== BinaryOpType.MUL) {
-        [real, imag] = [
-          [aData.complexTensorInfos.real, bData.complexTensorInfos.real],
-          [aData.complexTensorInfos.imag, bData.complexTensorInfos.imag]
-        ].map(complexParts => {
-          const [aPart, bPart] = complexParts;
-
-          const aHandle = {
-            dataId: aPart.dataId,
-            dtype: aPart.dtype,
-            shape: a.shape
-          };
-          const bHandle = {
-            dataId: bPart.dataId,
-            dtype: bPart.dtype,
-            shape: b.shape
-          };
-
+        const [aReal, aImag] = backend_util.complexComponentViews(aParts, a.shape);
+        const [bReal, bImag] = backend_util.complexComponentViews(bParts, b.shape);
+        const runComponent = (aPart: TensorInfo, bPart: TensorInfo): TensorInfo => {
           const program = new BinaryOpProgram(opType, a.shape, b.shape);
           return webgpuBackend.runWebGPUProgram(
-              program, [aHandle, bHandle],
-              upcastType(aPart.dtype, bPart.dtype));
-        });
+              program, [aPart, bPart], upcastType(aPart.dtype, bPart.dtype));
+        };
+        real = runComponent(aReal, bReal);
+        imag = runComponent(aImag, bImag);
       } else {
         const realProgram = new BinaryOpComplexProgram(
             BinaryOpType.COMPLEX_MULTIPLY_REAL, a.shape, b.shape);
@@ -117,26 +106,8 @@ export function binaryKernelFunc(
             BinaryOpType.COMPLEX_MULTIPLY_IMAG, a.shape, b.shape);
 
         const inputs = [
-          {
-            dataId: aData.complexTensorInfos.real.dataId,
-            dtype: aData.complexTensorInfos.real.dtype,
-            shape: a.shape
-          },
-          {
-            dataId: aData.complexTensorInfos.imag.dataId,
-            dtype: aData.complexTensorInfos.imag.dtype,
-            shape: a.shape
-          },
-          {
-            dataId: bData.complexTensorInfos.real.dataId,
-            dtype: bData.complexTensorInfos.real.dtype,
-            shape: b.shape
-          },
-          {
-            dataId: bData.complexTensorInfos.imag.dataId,
-            dtype: bData.complexTensorInfos.imag.dtype,
-            shape: b.shape
-          }
+          ...backend_util.complexComponentViews(aParts, a.shape),
+          ...backend_util.complexComponentViews(bParts, b.shape)
         ];
 
         real = webgpuBackend.runWebGPUProgram(realProgram, inputs, 'float32');
