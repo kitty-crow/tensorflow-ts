@@ -28,7 +28,7 @@ import {calculateShapes} from './scatter_nd_util';
 import {collectGatherOpShapeInfo, computeOutShape} from './segment_util';
 import * as concat from './concat_util';
 import * as slice from './slice_util';
-import {depthToSpaceOutputShape, imageDimensions, matrixDimensions, permutedShape, unpackShape, requiredKernelEntry} from './shape_dimension';
+import {depthToSpaceOutputShape, imageDimensions, matrixDimensions, permutedShape, unpackShape, requiredKernelEntry, unbatchedShape} from './shape_dimension';
 
 describe('checked shape utility regressions', () => {
   it('interleaves coordinates including zero', () => {
@@ -247,5 +247,20 @@ describe('shared tensor pixel conversion', () => {
         .toThrowError(/range \[0 - 1\]/);
     expect(() => pixelBytes(new Float32Array(0), 1, 1, 1, 'float32', 255))
         .toThrowError(/Missing kernel entry/);
+  });
+});
+
+describe('inserted batch-axis kernel result geometry', () => {
+  it('retains zero dimensions and does not mutate either spatial rank', () => {
+    const image = [1, 0, 3, 4];
+    const volume = [1, 2, 0, 4, 5];
+    expect(unbatchedShape(image, 4)).toEqual([0, 3, 4]);
+    expect(unbatchedShape(volume, 5)).toEqual([2, 0, 4, 5]);
+    expect(image).toEqual([1, 0, 3, 4]);
+    expect(volume).toEqual([1, 2, 0, 4, 5]);
+  });
+  it('rejects an unexpected kernel result rank', () => {
+    expect(() => unbatchedShape([1, 2, 3], 4)).toThrowError();
+    expect(() => unbatchedShape([1, 2, 3, 4, 5], 4)).toThrowError();
   });
 });

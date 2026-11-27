@@ -18,7 +18,7 @@
 import {backend_util, DepthwiseConv2dNative, DepthwiseConv2dNativeAttrs, DepthwiseConv2dNativeInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex, rankFourStrides} from '../cpu_util';
+import {assertNotComplex, rankFourStrides, requiredCpuEntry} from '../cpu_util';
 
 export function depthwiseConv2dNative(args: {
   inputs: DepthwiseConv2dNativeInputs,
@@ -88,9 +88,11 @@ export function depthwiseConv2dNative(args: {
             let yOffset4 = yOffset3;
             let wOffset3 = wOffset2;
             for (let d1 = 0; d1 < convInfo.inChannels; ++d1) {
-              const xVal = xVals[xOffset3 + d1];
+              const xVal = requiredCpuEntry(xVals, xOffset3 + d1);
               for (let q = 0; q < chMul; ++q) {
-                yVals[yOffset4 + q] += xVal * wVals[wOffset3 + q];
+                const index = yOffset4 + q;
+                yVals[index] = requiredCpuEntry(yVals, index) +
+                    xVal * requiredCpuEntry(wVals, wOffset3 + q);
               }
               yOffset4 += chMul;
               wOffset3 += chMul;

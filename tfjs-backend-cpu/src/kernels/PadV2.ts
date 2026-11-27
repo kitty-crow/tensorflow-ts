@@ -18,7 +18,7 @@
 import {KernelConfig, KernelAttributes, NumericDataType, PadV2, PadV2Attrs, PadV2Inputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
 
 export function padV2(
     args: {inputs: PadV2Inputs, backend: MathBackendCPU, attrs: KernelAttributes<PadV2Attrs>}):
@@ -30,7 +30,7 @@ export function padV2(
   assertNotComplex(x, 'pad');
 
   const outShape = paddings.map(
-      (p, i) => p[0] /* beforePad */ + x.shape[i] + p[1] /* afterPad */);
+      (p, i) => p[0] /* beforePad */ + requiredCpuEntry(x.shape, i) + p[1] /* afterPad */);
 
   const start = paddings.map(p => p[0]);
 
@@ -51,10 +51,10 @@ export function padV2(
 
   for (let i = 0; i < xSize; i++) {
     const coords = util.indexToLoc(i, xRank, xStrides);
-    const outCoords = coords.map((c, i) => c + start[i]);
+    const outCoords = coords.map((c, i) => c + requiredCpuEntry(start, i));
     const outIndex = util.locToIndex(outCoords, resultRank, resultStrides);
 
-    resVals[outIndex] = xVals[i];
+    resVals[outIndex] = requiredCpuEntry(xVals, i);
   }
 
   const outId = backend.write(resVals, outShape, x.dtype);

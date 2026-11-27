@@ -88,3 +88,15 @@ export function unpackShape(shape: readonly number[], axis: number):
   }
   return {num, outShape};
 }
+
+/** Read the spatial result of a kernel invoked with an inserted batch axis. */
+export function unbatchedShape(shape: readonly number[], rank: 4|5): number[] {
+  if (shape.length !== rank) {
+    throw new Error(`Expected a rank-${rank} batched kernel result.`);
+  }
+  const spatial: number[] = [];
+  for (let i = 1; i < rank; i++) {
+    spatial.push(requiredDimension(shape, i));
+  }
+  return spatial;
+}

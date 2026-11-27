@@ -24,6 +24,7 @@ import * as util from '../../util';
 
 import {op} from '../operation';
 import {reshape} from '../reshape';
+import {unbatchedShape} from '../shape_dimension';
 
 /**
  * NearestNeighbor resize a batch of 3D images to a new shape.
@@ -82,7 +83,7 @@ function resizeNearestNeighbor_<T extends Tensor3D|Tensor4D>(
                   attrs) as T;
 
   if (reshapedTo4D) {
-    return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;
+    return reshape(res, unbatchedShape(res.shape, 4)) as T;
   }
   return res;
 }

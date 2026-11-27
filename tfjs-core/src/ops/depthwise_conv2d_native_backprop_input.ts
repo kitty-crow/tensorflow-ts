@@ -21,6 +21,7 @@ import {Tensor3D, Tensor4D} from '../tensor';
 import {ExplicitPadding} from './conv_util';
 import {op} from './operation';
 import {reshape} from './reshape';
+import {unbatchedShape} from './shape_dimension';
 
 function depthwiseConv2dNativeBackpropInput_<T extends Tensor3D|Tensor4D>(
     xShape: [number, number, number, number], dy: T, filter: Tensor4D,
@@ -46,7 +47,7 @@ function depthwiseConv2dNativeBackpropInput_<T extends Tensor3D|Tensor4D>(
           attrs) as T;
 
   if (reshapedTo4D) {
-    return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;
+    return reshape(res, unbatchedShape(res.shape, 4)) as T;
   }
   return res;
 }

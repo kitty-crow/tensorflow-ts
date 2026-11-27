@@ -18,6 +18,7 @@
 import {KernelConfig, KernelAttributes, SearchSorted, SearchSortedAttrs, SearchSortedInputs, TensorInfo, TypedArray} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
+import {requiredCpuEntry} from '../cpu_util';
 
 import {searchSortedImpl} from './SearchSorted_impl';
 
@@ -35,8 +36,9 @@ export function searchSorted(args: {
   const $values = backend.requireValues(values.dataId) as TypedArray;
 
   const output = searchSortedImpl(
-      $sortedSequence, $values, sortedSequence.shape[0],
-      sortedSequence.shape[1], values.shape[1], side);
+      $sortedSequence, $values, requiredCpuEntry(sortedSequence.shape, 0),
+      requiredCpuEntry(sortedSequence.shape, 1),
+      requiredCpuEntry(values.shape, 1), side);
   return backend.makeTensorInfo(values.shape, 'int32', output);
 }
 

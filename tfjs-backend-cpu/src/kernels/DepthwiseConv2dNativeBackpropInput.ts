@@ -18,7 +18,7 @@
 import {backend_util, DepthwiseConv2dNativeBackpropInput, DepthwiseConv2dNativeBackpropInputAttrs, DepthwiseConv2dNativeBackpropInputInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex, rankFourStrides} from '../cpu_util';
+import {assertNotComplex, rankFourStrides, requiredCpuEntry} from '../cpu_util';
 
 export function depthwiseConv2dNativeBackpropInput(args: {
   inputs: DepthwiseConv2dNativeBackpropInputInputs,
@@ -88,8 +88,8 @@ export function depthwiseConv2dNativeBackpropInput(args: {
 
               for (let dm = 0; dm < chMul; ++dm) {
                 const d2 = d1 * chMul + dm;
-                const pixel = dyValues[dyOffset + d2];
-                const weight = fltValues[fltOffset + dm];
+                const pixel = requiredCpuEntry(dyValues, dyOffset + d2);
+                const weight = requiredCpuEntry(fltValues, fltOffset + dm);
                 dotProd += pixel * weight;
               }
             }

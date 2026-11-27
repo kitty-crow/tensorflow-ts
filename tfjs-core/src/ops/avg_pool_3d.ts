@@ -26,6 +26,7 @@ import {cast} from './cast';
 import {checkPadOnDimRoundingMode} from './conv_util';
 import {op} from './operation';
 import {reshape} from './reshape';
+import {unbatchedShape} from './shape_dimension';
 
 /**
  * Computes the 3D average pooling.
@@ -102,7 +103,7 @@ function avgPool3d_<T extends Tensor4D|Tensor5D>(
 
   if (reshapedTo5D) {
     return reshape(
-               res, [res.shape[1], res.shape[2], res.shape[3], res.shape[4]]) as
+               res, unbatchedShape(res.shape, 5)) as
         T;
   }
 

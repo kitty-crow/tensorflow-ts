@@ -34,6 +34,7 @@ import {Activation} from '../fused_types';
 import {applyActivation, getFusedBiasGradient, getFusedDyActivation, shouldFuse} from '../fused_util';
 import {op} from '../operation';
 import {reshape} from '../reshape';
+import {unbatchedShape} from '../shape_dimension';
 
 /**
  * Computes depthwise 2D convolution, optionally fused with adding a
@@ -227,7 +228,7 @@ function fusedDepthwiseConv2d_<T extends Tensor3D|Tensor4D>({
 
           if (reshapedTo4D) {
             // tslint:disable-next-line: no-unnecessary-type-assertion
-            res = reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as
+            res = reshape(res, unbatchedShape(res.shape, 4)) as
                 Tensor3D;
           }
 
@@ -246,7 +247,7 @@ function fusedDepthwiseConv2d_<T extends Tensor3D|Tensor4D>({
 
           if (reshapedTo4D) {
             // tslint:disable-next-line: no-unnecessary-type-assertion
-            res = reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as
+            res = reshape(res, unbatchedShape(res.shape, 4)) as
                 Tensor3D;
           }
 

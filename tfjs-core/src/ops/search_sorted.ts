@@ -23,6 +23,7 @@ import {TensorLike} from '../types';
 import {sizeFromShape} from '../util_base';
 import {op} from './operation';
 import {reshape} from './reshape';
+import {requiredDimension} from './shape_dimension';
 
 const INT32_MAX = 2147483648;
 /**
@@ -84,8 +85,8 @@ function searchSorted_(
       convertToTensor(sortedSequence, 'sortedSequence', 'searchSorted');
   const $values = convertToTensor(values, 'values', 'searchSorted');
 
-  const sequenceSize = $sortedSequence.shape[$sortedSequence.shape.length - 1];
-  const valuesSize = $values.shape[$values.shape.length - 1];
+  const sequenceSize = requiredDimension($sortedSequence.shape, $sortedSequence.rank - 1);
+  const valuesSize = requiredDimension($values.shape, $values.rank - 1);
   const $sortedSequence2D = reshape($sortedSequence, [-1, sequenceSize]);
   const $values2D = reshape($values, [-1, valuesSize]);
 
@@ -99,9 +100,10 @@ function searchSorted_(
   if (sizeFromShape($values2D.shape) >= INT32_MAX) {
     throw new Error(`values tensor size must less than ${INT32_MAX}`);
   }
-  if ($sortedSequence2D.shape[1] >= INT32_MAX) {
+  const trailingSize = requiredDimension($sortedSequence2D.shape, 1);
+  if (trailingSize >= INT32_MAX) {
     throw new Error(`trailing dim_size must less than ${
-        INT32_MAX} for int32 output type, was ${$sortedSequence2D.shape[1]}`);
+        INT32_MAX} for int32 output type, was ${trailingSize}`);
   }
 
   const inputs: SearchSortedInputs = {

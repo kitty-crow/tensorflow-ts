@@ -18,7 +18,7 @@
 import {backend_util, Conv2D, Conv2DAttrs, Conv2DInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex, rankFourStrides, spatialStrides2D} from '../cpu_util';
+import {assertNotComplex, rankFourStrides, spatialStrides2D, requiredCpuEntry} from '../cpu_util';
 
 export function conv2D(
     args: {inputs: Conv2DInputs, backend: MathBackendCPU, attrs: KernelAttributes<Conv2DAttrs>}):
@@ -83,10 +83,11 @@ export function conv2D(
             const xOffset3 = xOffset2 + xC * xColStride;
             let wOffset3 = wOffset2;
             for (let d1 = 0; d1 < convInfo.inChannels; ++d1) {
-              const xVal = xVals[xOffset3 + d1 * xChannelStride];
+              const xVal = requiredCpuEntry(xVals, xOffset3 + d1 * xChannelStride);
               for (let d2 = 0; d2 < convInfo.outChannels; ++d2) {
-                yVals[yOffset3 + d2 * yChannelStride] +=
-                    xVal * wVals[wOffset3 + d2];
+                const index = yOffset3 + d2 * yChannelStride;
+                yVals[index] = requiredCpuEntry(yVals, index) +
+                    xVal * requiredCpuEntry(wVals, wOffset3 + d2);
               }
               wOffset3 += convInfo.outChannels;
             }

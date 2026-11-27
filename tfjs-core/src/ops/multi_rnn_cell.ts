@@ -55,10 +55,12 @@ function multiRNNCell_(
   const newStates: Tensor2D[] = [];
   for (let i = 0; i < lstmCells.length; i++) {
     const cell = requiredKernelEntry(lstmCells, i);
-    const output = cell.call(lstmCells, input, requiredKernelEntry($c, i), requiredKernelEntry($h, i));
-    newStates.push(output[0]);
-    newStates.push(output[1]);
-    input = output[1];
+    const output: [Tensor2D, Tensor2D] = cell.call(
+        lstmCells, input, requiredKernelEntry($c, i), requiredKernelEntry($h, i));
+    const state = requiredKernelEntry(output, 0);
+    const hidden = requiredKernelEntry(output, 1);
+    newStates.push(state, hidden);
+    input = hidden;
   }
   const newC: Tensor2D[] = [];
   const newH: Tensor2D[] = [];

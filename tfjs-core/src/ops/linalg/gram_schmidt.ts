@@ -23,6 +23,7 @@ import {div} from '../div';
 import {mul} from '../mul';
 import {norm} from '../norm';
 import {op} from '../operation';
+import {requiredKernelEntry} from '../shape_dimension';
 import {split} from '../split';
 import {squeeze} from '../squeeze';
 import {stack} from '../stack';
@@ -65,33 +66,36 @@ function gramSchmidt_(xs: Tensor1D[]|Tensor2D): Tensor1D[]|Tensor2D {
         xs != null && xs.length > 0,
         () => 'Gram-Schmidt process: input must not be null, undefined, or ' +
             'empty');
-    const dim = xs[0].shape[0];
+    const dim = requiredKernelEntry(xs, 0).shape[0];
     for (let i = 1; i < xs.length; ++i) {
+      const current = requiredKernelEntry(xs, i);
       assert(
-          xs[i].shape[0] === dim,
+          current.shape[0] === dim,
           () =>
               'Gram-Schmidt: Non-unique lengths found in the input vectors: ' +
-              `(${(xs as Tensor1D[])[i].shape[0]} vs. ${dim})`);
+              `(${current.shape[0]} vs. ${dim})`);
     }
   } else {
     inputIsTensor2D = true;
     xs = split(xs, xs.shape[0], 0).map(x => squeeze(x, [0]));
   }
 
+  const first = requiredKernelEntry(xs, 0);
   assert(
-      xs.length <= xs[0].shape[0],
+      xs.length <= first.shape[0],
       () => `Gram-Schmidt: Number of vectors (${
                 (xs as Tensor1D[]).length}) exceeds ` +
-          `number of dimensions (${(xs as Tensor1D[])[0].shape[0]}).`);
+          `number of dimensions (${first.shape[0]}).`);
 
   const ys: Tensor1D[] = [];
   const xs1d = xs;
   for (let i = 0; i < xs.length; ++i) {
     ys.push(ENGINE.tidy(() => {
-      let x = xs1d[i];
+      let x = requiredKernelEntry(xs1d, i);
       if (i > 0) {
         for (let j = 0; j < i; ++j) {
-          const proj = mul(sum(mul(ys[j], x)), ys[j]);
+          const basis = requiredKernelEntry(ys, j);
+          const proj = mul(sum(mul(basis, x)), basis);
           x = sub(x, proj);
         }
       }

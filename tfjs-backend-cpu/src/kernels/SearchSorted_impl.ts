@@ -16,29 +16,17 @@
  */
 
 import {TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
-function lowerBound(array: TypedArray, value: number) {
+/** Find the first insertion point, retaining distinct equal-value policies. */
+function insertionBound(array: TypedArray, value: number, side: 'left'|'right') {
   let left = 0;
   let right = array.length;
-  let mid = 0;
   while (left < right) {
-    mid = Math.floor((left + right) / 2);
-    if (array[mid] < value) {
-      left = mid + 1;
-    } else {
-      right = mid;
-    }
-  }
-  return right;
-}
-
-function upperBound(array: TypedArray, value: number) {
-  let left = 0;
-  let right = array.length;
-  let mid = 0;
-  while (left < right) {
-    mid = Math.floor((left + right) / 2);
-    if (array[mid] <= value) {
+    const mid = Math.floor((left + right) / 2);
+    const entry = requiredCpuEntry(array, mid);
+    const advance = side === 'left' ? entry < value : entry <= value;
+    if (advance) {
       left = mid + 1;
     } else {
       right = mid;
@@ -57,9 +45,8 @@ export function searchSortedImpl(
         sortedInputs.slice(b * numInputs, (b + 1) * numInputs);
     const outputOffset = b * numValues;
     for (let i = 0; i < numValues; ++i) {
-      output[outputOffset + i] = side === 'left' ?
-          lowerBound(sortedInputsSlice, values[i + outputOffset]) :
-          upperBound(sortedInputsSlice, values[i + outputOffset]);
+      output[outputOffset + i] = insertionBound(
+          sortedInputsSlice, requiredCpuEntry(values, i + outputOffset), side);
     }
   }
   return output;

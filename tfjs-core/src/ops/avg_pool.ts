@@ -26,6 +26,7 @@ import {cast} from './cast';
 import * as conv_util from './conv_util';
 import {op} from './operation';
 import {reshape} from './reshape';
+import {unbatchedShape} from './shape_dimension';
 
 /**
  * Computes the 2D average pooling of an image.
@@ -84,7 +85,7 @@ function avgPool_<T extends Tensor3D|Tensor4D>(
   res = cast(res, $x.dtype);
 
   if (reshapedTo4D) {
-    return reshape(res, [res.shape[1], res.shape[2], res.shape[3]]) as T;
+    return reshape(res, unbatchedShape(res.shape, 4)) as T;
   }
 
   return res;

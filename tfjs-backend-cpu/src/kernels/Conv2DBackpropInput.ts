@@ -18,7 +18,7 @@
 import {backend_util, Conv2DBackpropInput, Conv2DBackpropInputAttrs, Conv2DBackpropInputInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex, rankFourStrides, spatialStrides2D} from '../cpu_util';
+import {assertNotComplex, rankFourStrides, spatialStrides2D, requiredCpuEntry} from '../cpu_util';
 
 export function conv2DBackpropInput(args: {
   inputs: Conv2DBackpropInputInputs,
@@ -93,8 +93,8 @@ export function conv2DBackpropInput(args: {
                   fltS1 * (filterWidth - 1 - wC) + fltS2 * d1;
 
               for (let d2 = 0; d2 < outChannels; ++d2) {
-                const pixel = dyValues[dyOffset + yChannelStride * d2];
-                const weight = fltValues[fltOffset + d2];
+                const pixel = requiredCpuEntry(dyValues, dyOffset + yChannelStride * d2);
+                const weight = requiredCpuEntry(fltValues, fltOffset + d2);
                 dotProd += pixel * weight;
               }
             }

@@ -30,6 +30,7 @@ import {neg} from '../neg';
 import {norm} from '../norm';
 import {op} from '../operation';
 import {reshape} from '../reshape';
+import {matrixDimensions} from '../shape_dimension';
 import {slice} from '../slice';
 import {stack} from '../stack';
 import {sub} from '../sub';
@@ -96,14 +97,8 @@ function qr_(x: Tensor, fullMatrices = false): [Tensor, Tensor] {
     //   together. We should explore whether this can be parallelized.
     const outerDimsProd = x.shape.slice(0, x.shape.length - 2)
                               .reduce((value, prev) => value * prev);
-    const x2ds = unstack(
-        reshape(
-            x,
-            [
-              outerDimsProd, x.shape[x.shape.length - 2],
-              x.shape[x.shape.length - 1]
-            ]),
-        0);
+    const [rows, columns] = matrixDimensions(x.shape);
+    const x2ds = unstack(reshape(x, [outerDimsProd, rows, columns]), 0);
     const q2ds: Tensor2D[] = [];
     const r2ds: Tensor2D[] = [];
     x2ds.forEach(x2d => {
@@ -151,13 +146,14 @@ function qr2d(x: Tensor2D, fullMatrices = false): [Tensor2D, Tensor2D] {
 
         const u1 = sub(rjj, mul(s, normX));
         const wPre = div(rjEnd1, u1);
-        if (wPre.shape[0] === 1) {
+        const [wRows, wColumns] = matrixDimensions(wPre.shape);
+        if (wRows === 1) {
           w = clone(one2D);
         } else {
           w = concat(
               [
                 one2D,
-                slice(wPre, [1, 0], [wPre.shape[0] - 1, wPre.shape[1]]) as
+                slice(wPre, [1, 0], [wRows - 1, wColumns]) as
                     Tensor2D
               ],
               0);

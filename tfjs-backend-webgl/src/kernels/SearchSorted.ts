@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, SearchSorted, SearchSortedAttrs, SearchSortedInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, SearchSorted, SearchSortedAttrs, SearchSortedInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {SearchSortedProgram} from '../search_sorted_gpu';
@@ -30,8 +30,8 @@ export function searchSorted(args: {
   const {side} = attrs;
 
   const program = new SearchSortedProgram(
-      sortedSequence.shape[0], sortedSequence.shape[1], values.shape[1], side);
-  const customValues = [[sortedSequence.shape[1]]];
+      backend_util.requiredDimension(sortedSequence.shape, 0), backend_util.requiredDimension(sortedSequence.shape, 1), backend_util.requiredDimension(values.shape, 1), side);
+  const customValues = [[backend_util.requiredDimension(sortedSequence.shape, 1)]];
   return backend.runWebGLProgram(
       program, [sortedSequence, values], 'int32', customValues);
 }

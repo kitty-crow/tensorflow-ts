@@ -32,6 +32,9 @@ import {concatImpl} from './kernels/Concat_impl';
 import {createSimpleBinaryKernelImpl} from './utils/binary_impl';
 import {addComplexImpl} from './kernels/Add';
 import {equal} from './kernels/Equal';
+import {eluGrad} from './kernels/EluGrad';
+import {padV2} from './kernels/PadV2';
+import {searchSortedImpl} from './kernels/SearchSorted_impl';
 import {cumsum} from './kernels/Cumsum';
 import {cumprod} from './kernels/Cumprod';
 import {mirrorPad} from './kernels/MirrorPad';
@@ -830,6 +833,41 @@ describe('CPU binary payload and complex broadcasting', () => {
     expect(backend.readSync(strings.dataId)).toEqual(new Uint8Array([1, 0]));
     expect(backend.readSync(numbers.dataId)).toEqual(new Uint8Array([1, 0]));
     [a, b, c, d, strings, numbers].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('checked CPU insertion points and numeric kernel entries', () => {
+  it('retains left and right insertion points for duplicate and NaN queries', () => {
+    const sorted = new Float32Array([0, 2, 2, 4, -1, 0, 0, 3]);
+    const queries = new Float32Array([2, 5, NaN, 0, -2, NaN]);
+    expect(searchSortedImpl(sorted, queries, 2, 4, 3, 'left'))
+        .toEqual(new Int32Array([1, 4, 0, 1, 0, 0]));
+    expect(searchSortedImpl(sorted, queries, 2, 4, 3, 'right'))
+        .toEqual(new Int32Array([3, 4, 0, 3, 0, 0]));
+    expect(searchSortedImpl(new Float32Array(0), new Float32Array([3]), 1, 0, 1, 'right'))
+        .toEqual(new Int32Array([0]));
+  });
+  it('retains ELU gradient branches and NaN without coercing zero', () => {
+    const backend = new MathBackendCPU();
+    const y = backend.makeTensorInfo([4], 'float32', new Float32Array([0, -0.5, 2, NaN]));
+    const dy = backend.makeTensorInfo([4], 'float32', new Float32Array([0, 4, -2, 1]));
+    const result = eluGrad({inputs: {y, dy}, backend});
+    expect(backend.readSync(result.dataId)).toEqual(new Float32Array([0, 2, -2, NaN]));
+    [y, dy, result].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+  it('retains asymmetric padding, empty input and the fill value', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2], 'float32', new Float32Array([0, -3]));
+    const empty = backend.makeTensorInfo([0], 'float32', new Float32Array(0));
+    const result = padV2({inputs: {x}, backend, attrs: {paddings: [[1, 2]], constantValue: 5}});
+    const emptyResult = padV2({inputs: {x: empty}, backend, attrs: {paddings: [[1, 1]], constantValue: 7}});
+    expect(result.shape).toEqual([5]);
+    expect(backend.readSync(result.dataId)).toEqual(new Float32Array([5, 0, -3, 5, 5]));
+    expect(emptyResult.shape).toEqual([2]);
+    expect(backend.readSync(emptyResult.dataId)).toEqual(new Float32Array([7, 7]));
+    [x, empty, result, emptyResult].forEach(t => backend.disposeData(t.dataId));
     expect(backend.numDataIds()).toBe(0);
   });
 });

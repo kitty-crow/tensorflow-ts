@@ -18,7 +18,7 @@
 import {backend_util, Conv3D, Conv3DAttrs, Conv3DInputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex, rankFiveStrides} from '../cpu_util';
+import {assertNotComplex, rankFiveStrides, requiredCpuEntry} from '../cpu_util';
 
 export function conv3D(
     args: {inputs: Conv3DInputs, backend: MathBackendCPU, attrs: KernelAttributes<Conv3DAttrs>}):
@@ -95,9 +95,11 @@ export function conv3D(
                 const xOffset4 = xOffset3 + xC * convInfo.inChannels;
                 let wOffset4 = wOffset3;
                 for (let d1 = 0; d1 < convInfo.inChannels; ++d1) {
-                  const xVal = xVals[xOffset4 + d1];
+                  const xVal = requiredCpuEntry(xVals, xOffset4 + d1);
                   for (let d2 = 0; d2 < convInfo.outChannels; ++d2) {
-                    yVals[yOffset4 + d2] += xVal * wVals[wOffset4 + d2];
+                    const index = yOffset4 + d2;
+                    yVals[index] = requiredCpuEntry(yVals, index) +
+                        xVal * requiredCpuEntry(wVals, wOffset4 + d2);
                   }
                   wOffset4 += convInfo.outChannels;
                 }

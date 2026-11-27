@@ -18,7 +18,7 @@
 import {EluGrad, EluGradInputs, KernelConfig, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
 
 export function eluGrad(args: {inputs: EluGradInputs, backend: MathBackendCPU}):
     TensorInfo {
@@ -31,12 +31,9 @@ export function eluGrad(args: {inputs: EluGradInputs, backend: MathBackendCPU}):
   const values = backend.requireValues(y.dataId) as TypedArray;
   const dyValues = backend.requireValues(dy.dataId) as TypedArray;
   for (let i = 0; i < values.length; ++i) {
-    const v = values[i];
-    if (v >= 0) {
-      resultValues[i] = dyValues[i];
-    } else {
-      resultValues[i] = dyValues[i] * (v + 1);
-    }
+    const v = requiredCpuEntry(values, i);
+    const gradient = requiredCpuEntry(dyValues, i);
+    resultValues[i] = v >= 0 ? gradient : gradient * (v + 1);
   }
 
   return backend.makeTensorInfo(y.shape, 'float32', resultValues);

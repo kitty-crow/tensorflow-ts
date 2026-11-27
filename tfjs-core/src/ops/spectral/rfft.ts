@@ -23,6 +23,7 @@ import {imag} from '../imag';
 import {op} from '../operation';
 import {real} from '../real';
 import {reshape} from '../reshape';
+import {requiredDimension, requiredKernelEntry} from '../shape_dimension';
 import {slice} from '../slice';
 import {split} from '../split';
 import {zeros} from '../zeros';
@@ -50,7 +51,7 @@ function rfft_(input: Tensor, fftLength?: number): Tensor {
       input.dtype === 'float32',
       () => `The dtype for rfft() must be real value but got ${input.dtype}`);
 
-  let innerDimensionSize = input.shape[input.shape.length - 1];
+  let innerDimensionSize = requiredDimension(input.shape, input.rank - 1);
   const batch = input.size / innerDimensionSize;
 
   let adjustedInput: Tensor;
@@ -93,7 +94,8 @@ function rfft_(input: Tensor, fftLength?: number): Tensor {
   outputShape[adjustedInput.shape.length - 1] = half;
 
   return reshape(
-      complex(realComplexConjugate[0], imagComplexConjugate[0]), outputShape);
+      complex(requiredKernelEntry(realComplexConjugate, 0),
+          requiredKernelEntry(imagComplexConjugate, 0)), outputShape);
 }
 
 export const rfft = /* @__PURE__ */ op({rfft_});
