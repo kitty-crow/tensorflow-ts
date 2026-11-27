@@ -19,6 +19,7 @@ import {Scalar, Tensor} from '../../tensor';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import {assert} from '../../util';
+import {matrixDimensions} from '../shape_dimension';
 
 import {greaterEqual} from '../greater_equal';
 import {less} from '../less';
@@ -81,7 +82,7 @@ function bandPart_<T extends Tensor>(
       () => `bandPart(): Rank must be at least 2, got ${$a.rank}.`);
 
   const shape = $a.shape;
-  const [M, N] = $a.shape.slice(-2);
+  const [M, N] = matrixDimensions($a.shape);
 
   let $numLower: Scalar;
   let $numUpper: Scalar;

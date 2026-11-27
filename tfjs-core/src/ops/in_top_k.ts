@@ -18,8 +18,9 @@
 import {Tensor} from '../tensor';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
-import {assert, assertShapesMatch, getTypedArrayFromDType} from '../util';
+import {assert, assertShapesMatch, getTypedArrayFromDType, requiredNumericEntry} from '../util';
 import {tensor} from './tensor';
+import {requiredKernelEntry} from './shape_dimension';
 
 /**
  * Returns whether the targets are in the top K predictions.
@@ -57,7 +58,7 @@ async function inTopKAsync_<T extends Tensor, U extends Tensor>(
       $targets.shape,
       `predictions's shape should be align with the targets' shape, ` +
           'except the last dimension.');
-  const lastDim = $predictions.shape[$predictions.shape.length - 1];
+  const lastDim = requiredNumericEntry($predictions.shape, $predictions.shape.length - 1);
   assert(
       k > 0 && k <= lastDim,
       () => `'k' passed to inTopK() must be > 0 && <= the predictions last ` +
@@ -76,13 +77,13 @@ async function inTopKAsync_<T extends Tensor, U extends Tensor>(
     const vals = predictionsVals.subarray(offset, offset + size);
     const valAndInd: Array<{value: number, index: number}> = [];
     for (let i = 0; i < vals.length; i++) {
-      valAndInd.push({value: vals[i], index: i});
+      valAndInd.push({value: requiredNumericEntry(vals, i), index: i});
     }
     valAndInd.sort((a, b) => b.value - a.value);
 
     precision[b] = 0;
     for (let i = 0; i < k; i++) {
-      if (valAndInd[i].index === targetsVals[b]) {
+      if (requiredKernelEntry(valAndInd, i).index === requiredNumericEntry(targetsVals, b)) {
         precision[b] = 1;
         break;
       }

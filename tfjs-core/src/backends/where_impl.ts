@@ -20,11 +20,12 @@
 import {buffer} from '../ops/buffer';
 import {Tensor2D} from '../tensor';
 import {TypedArray} from '../types';
+import {requiredNumericEntry} from '../util_base';
 
 export function whereImpl(condShape: number[], condVals: TypedArray): Tensor2D {
-  const indices = [];
+  const indices: number[] = [];
   for (let i = 0; i < condVals.length; i++) {
-    if (condVals[i]) {
+    if (requiredNumericEntry(condVals, i)) {
       indices.push(i);
     }
   }
@@ -33,7 +34,7 @@ export function whereImpl(condShape: number[], condVals: TypedArray): Tensor2D {
 
   const out = buffer([indices.length, condShape.length], 'int32');
   for (let i = 0; i < indices.length; i++) {
-    const loc = inBuffer.indexToLoc(indices[i]);
+    const loc = inBuffer.indexToLoc(requiredNumericEntry(indices, i));
     const offset = i * condShape.length;
     out.values.set(loc, offset);
   }

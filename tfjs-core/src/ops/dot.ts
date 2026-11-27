@@ -50,8 +50,8 @@ function dot_(t1: Tensor|TensorLike, t2: Tensor|TensorLike): Tensor {
       () => `Error in dot: inputs must all be rank 1 or 2, but got ranks ` +
           `${$t1.rank} and ${$t2.rank}.`);
 
-  const t1Inner = ($t1.rank === 1 ? $t1.size : $t1.shape[1]);
-  const t2Inner = ($t2.rank === 1 ? $t2.size : $t2.shape[0]);
+  const t1Inner = ($t1.rank === 1 ? $t1.size : util.requiredNumericEntry($t1.shape, 1));
+  const t2Inner = ($t2.rank === 1 ? $t2.size : util.requiredNumericEntry($t2.shape, 0));
 
   util.assert(
       t1Inner === t2Inner,
@@ -66,7 +66,7 @@ function dot_(t1: Tensor|TensorLike, t2: Tensor|TensorLike): Tensor {
   }
   if ($t1.rank === 1 && $t2.rank === 2) {
     const t12D = reshape($t1, [1, -1]);
-    const t22D = reshape($t2, [$t2.shape[0], $t2.shape[1]]);
+    const t22D = reshape($t2, [util.requiredNumericEntry($t2.shape, 0), util.requiredNumericEntry($t2.shape, 1)]);
     const t1t2 = matMul(t12D, t22D);
     return reshape(t1t2, [t1t2.size]);
   }
@@ -75,7 +75,7 @@ function dot_(t1: Tensor|TensorLike, t2: Tensor|TensorLike): Tensor {
     const t1t2 = matMul($t1, t22D);
     return reshape(t1t2, [t1t2.size]);
   } else {
-    const t22D = reshape($t2, [$t2.shape[0], $t2.shape[1]]);
+    const t22D = reshape($t2, [util.requiredNumericEntry($t2.shape, 0), util.requiredNumericEntry($t2.shape, 1)]);
     const t1t2 = matMul($t1, t22D);
     return t1t2;
   }

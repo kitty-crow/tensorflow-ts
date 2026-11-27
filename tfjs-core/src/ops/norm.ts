@@ -25,6 +25,7 @@ import * as axis_util from './axis_util';
 import {max} from './max';
 import {min} from './min';
 import {op} from './operation';
+import {requiredDimension} from './shape_dimension';
 import {pow} from './pow';
 import {reshape} from './reshape';
 import {scalar} from './scalar';
@@ -103,15 +104,15 @@ function vectorNorm(
   }
 }
 
-/** Compute a supported matrix norm, assuming axis[0] precedes axis[1]. */
+/** Compute a supported matrix norm, assuming requiredDimension(axis, 0) precedes requiredDimension(axis, 1). */
 function matrixNorm(x: Tensor, p: number|string, axis: number[]): Tensor {
   switch (p) {
     case 1:
-      return max(sum(abs(x), axis[0]), axis[1] - 1);
+      return max(sum(abs(x), requiredDimension(axis, 0)), requiredDimension(axis, 1) - 1);
     case Infinity:
-      return max(sum(abs(x), axis[1]), axis[0]);
+      return max(sum(abs(x), requiredDimension(axis, 1)), requiredDimension(axis, 0));
     case -Infinity:
-      return min(sum(abs(x), axis[1]), axis[0]);
+      return min(sum(abs(x), requiredDimension(axis, 1)), requiredDimension(axis, 0));
     case 'fro':
     case 'euclidean':
       return sqrt(sum(square(x), axis));

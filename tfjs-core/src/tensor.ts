@@ -138,10 +138,12 @@ export class TensorBuffer<R extends Rank, D extends DataType = 'float32'> {
     if (this.rank === 1) {
       return [index];
     }
-    const locs: number[] = new Array(this.shape.length);
+    const locs: number[] = new Array<number>(this.shape.length);
     for (let i = 0; i < locs.length - 1; ++i) {
-      locs[i] = Math.floor(index / this.strides[i]);
-      index -= locs[i] * this.strides[i];
+      const stride = util.requiredNumericEntry(this.strides, i);
+      const coordinate = Math.floor(index / stride);
+      locs[i] = coordinate;
+      index -= coordinate * stride;
     }
     locs[locs.length - 1] = index;
     return locs;

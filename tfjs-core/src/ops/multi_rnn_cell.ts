@@ -18,6 +18,7 @@ import {Tensor2D} from '../tensor';
 import {convertToTensor, convertToTensorArray} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import {op} from './operation';
+import {requiredKernelEntry} from './shape_dimension';
 
 /**
  * @docalias (data: Tensor2D, c: Tensor2D, h: Tensor2D): [Tensor2D, Tensor2D]
@@ -51,9 +52,10 @@ function multiRNNCell_(
   const $h = convertToTensorArray(h, 'h', 'multiRNNCell');
 
   let input = $data;
-  const newStates = [];
+  const newStates: Tensor2D[] = [];
   for (let i = 0; i < lstmCells.length; i++) {
-    const output = lstmCells[i](input, $c[i], $h[i]);
+    const cell = requiredKernelEntry(lstmCells, i);
+    const output = cell.call(lstmCells, input, requiredKernelEntry($c, i), requiredKernelEntry($h, i));
     newStates.push(output[0]);
     newStates.push(output[1]);
     input = output[1];
@@ -61,8 +63,8 @@ function multiRNNCell_(
   const newC: Tensor2D[] = [];
   const newH: Tensor2D[] = [];
   for (let i = 0; i < newStates.length; i += 2) {
-    newC.push(newStates[i]);
-    newH.push(newStates[i + 1]);
+    newC.push(requiredKernelEntry(newStates, i));
+    newH.push(requiredKernelEntry(newStates, i + 1));
   }
   return [newC, newH];
 }

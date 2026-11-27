@@ -24,7 +24,7 @@ import {transpose} from '../ops/transpose';
 import {unsortedSegmentSum} from '../ops/unsorted_segment_sum';
 import {Tensor, Tensor1D} from '../tensor';
 import {parseAxisParam} from '../util';
-import {assertArrayLength} from '../util_base';
+import {assertArrayLength, requiredNumericEntry} from '../util_base';
 
 export const gatherGradConfig: GradConfig = {
   kernelName: GatherV2,
@@ -34,7 +34,7 @@ export const gatherGradConfig: GradConfig = {
     const [x, indices] = saved;
     const {axis, batchDims} = attrs;
 
-    const parsedAxis = parseAxisParam(axis, x.shape)[0];
+    const parsedAxis = requiredNumericEntry(parseAxisParam(axis, x.shape), 0);
 
     const derXBatch = (x: Tensor, indices: Tensor, dy: Tensor) => {
       return (): Tensor => {
@@ -60,7 +60,7 @@ export const gatherGradConfig: GradConfig = {
             arrayConcat([[outerDims], outerAxesIndices, innerAxesIndices]);
         const valuesTranspose = transpose(values, transposeDims);
         let paramsGrad = unsortedSegmentSum(
-            valuesTranspose, reshapedIndices as Tensor1D, x.shape[parsedAxis]);
+            valuesTranspose, reshapedIndices as Tensor1D, requiredNumericEntry(x.shape, parsedAxis));
         const invertTransposeDims = getUndoAxesPermutation(transposeDims);
         paramsGrad = transpose(paramsGrad, invertTransposeDims);
         return paramsGrad;
@@ -85,7 +85,7 @@ export const gatherGradConfig: GradConfig = {
 };
 
 function arrayRange(start: number, stop: number): number[] {
-  const result = [];
+  const result: number[] = [];
   for (let i = start; i < stop; ++i) {
     result.push(i);
   }
@@ -93,10 +93,10 @@ function arrayRange(start: number, stop: number): number[] {
 }
 
 function arrayConcat(arrays: number[][]): number[] {
-  const result = [];
-  for (let i = 0; i < arrays.length; ++i) {
-    for (let j = 0; j < arrays[i].length; ++j) {
-      result.push(arrays[i][j]);
+  const result: number[] = [];
+  for (const array of arrays) {
+    for (const value of array) {
+      result.push(value);
     }
   }
   return result;

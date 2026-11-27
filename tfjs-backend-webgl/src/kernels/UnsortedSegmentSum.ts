@@ -44,12 +44,12 @@ export function unsortedSegmentSum(args: {
   if (permutation != null) {
     permutedX = transpose({inputs: {x}, backend, attrs: {perm: permutation}});
     toDispose.push(permutedX);
-    axis = backend_util.getInnerMostAxes(1, xRank)[0];
+    axis = util.requiredNumericEntry(backend_util.getInnerMostAxes(1, xRank), 0);
   }
 
   const outShape = backend_util.segment_util.computeOutShape(
       permutedX.shape, axis, numSegments);
-  const inSize = util.sizeFromShape([permutedX.shape[axis]]);
+  const inSize = util.sizeFromShape([util.requiredNumericEntry(permutedX.shape, axis)]);
   const a2D =
       reshape({inputs: {x: permutedX}, backend, attrs: {shape: [-1, inSize]}});
   toDispose.push(a2D);
@@ -59,8 +59,8 @@ export function unsortedSegmentSum(args: {
   const segOpCompute =
       (x: TensorInfo, segOpType: 'unsortedSegmentSum', segmentIds: TensorInfo,
        dtype: DataType, numSegments: number): TensorInfo => {
-        const batchSize = x.shape[0];
-        const inSize = x.shape[1];
+        const batchSize = util.requiredNumericEntry(x.shape, 0);
+        const inSize = util.requiredNumericEntry(x.shape, 1);
         const windowSize =
             backend_util.segment_util.segOpComputeOptimalWindowSize(
                 inSize, numSegments);
@@ -69,7 +69,7 @@ export function unsortedSegmentSum(args: {
         const output = backend.compileAndRun(program, [x, segmentIds], dtype);
         toDispose.push(output);
         // No need to run another GPGPU program.
-        if (output.shape[1] === numSegments) {
+        if (util.requiredNumericEntry(output.shape, 1) === numSegments) {
           return output;
         }
         const rangeInfo = range({

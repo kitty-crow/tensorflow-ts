@@ -20,7 +20,7 @@ import {GradConfig, KernelAttributes} from '../kernel_registry';
 import {pad} from '../ops/pad';
 import {parseSliceParams} from '../ops/slice_util';
 import {Tensor} from '../tensor';
-import {assertArrayLength} from '../util_base';
+import {assertArrayLength, requiredNumericEntry} from '../util_base';
 
 export const sliceGradConfig: GradConfig = {
   kernelName: Slice,
@@ -41,7 +41,9 @@ export const sliceGradConfig: GradConfig = {
     // elementwise-subtracted by both the begin vector and sizes vector.
     const paddings: Array<[number, number]> = [];
     for (let i = 0; i < dy.rank; i++) {
-      paddings.push([begin_[i], inputShape[i] - begin_[i] - size_[i]]);
+      const start = requiredNumericEntry(begin_, i);
+      paddings.push([start, requiredNumericEntry(inputShape, i) - start -
+        requiredNumericEntry(size_, i)]);
     }
     return {x: () => pad(dy, paddings)};
   }

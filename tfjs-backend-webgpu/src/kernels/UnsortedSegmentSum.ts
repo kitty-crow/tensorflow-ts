@@ -43,18 +43,18 @@ export function unsortedSegmentSum(args: {
   if (permutation != null) {
     permutedX = transpose({inputs: {x}, backend, attrs: {perm: permutation}});
     toDispose.push(permutedX);
-    axis = backend_util.getInnerMostAxes(1, xRank)[0];
+    axis = util.requiredNumericEntry(backend_util.getInnerMostAxes(1, xRank), 0);
   }
 
   const outShape = backend_util.segment_util.computeOutShape(
       permutedX.shape, axis, numSegments);
-  const inSize = util.sizeFromShape([permutedX.shape[axis]]);
+  const inSize = util.sizeFromShape([util.requiredNumericEntry(permutedX.shape, axis)]);
   const a2D =
       reshape({inputs: {x: permutedX}, backend, attrs: {shape: [-1, inSize]}});
   toDispose.push(a2D);
 
   const dtype = x.dtype;
-  const shape = [a2D.shape[0], numSegments];
+  const shape = [util.requiredNumericEntry(a2D.shape, 0), numSegments];
   const output = fill({backend, attrs: {shape, value: 0, dtype}});
   const program = new UnsortedSegmentSumProgram(a2D.shape, shape, dtype);
   const uniformData = [

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import { TensorInfo } from '../tensor_info';
-import {computeStrides, sizeFromShape} from '../util';
+import {computeStrides, requiredNumericEntry, sizeFromShape} from '../util';
 
 /**
  * Validate gather nd inputs.
@@ -44,10 +44,10 @@ export function prepareAndValidate(tensor: TensorInfo, indices: TensorInfo):
         'tf.gatherND() expects the indices to be int32 type,' +
         ` but the dtype was ${indices.dtype}.`);
   }
-  if (indices.shape[indicesRank - 1] > tensorRank) {
+  if (requiredNumericEntry(indices.shape, indicesRank - 1) > tensorRank) {
     throw new Error(
         'index innermost dimension length must be <= tensor rank; saw: ' +
-        `${indices.shape[indicesRank - 1]} vs. ${tensorRank}`);
+        `${requiredNumericEntry(indices.shape, indicesRank - 1)} vs. ${tensorRank}`);
   }
 
   if (sizeFromShape(tensor.shape) === 0) {
@@ -57,13 +57,13 @@ export function prepareAndValidate(tensor: TensorInfo, indices: TensorInfo):
   }
 
   const indicesShape = indices.shape;
-  const sliceRank = indicesShape[indicesShape.length - 1];
+  const sliceRank = requiredNumericEntry(indicesShape, indicesShape.length - 1);
 
   // The result shape is
   //   indices.shape[:-1] + params.shape[indices.shape[-1]:]
   let nResult = 1;
   for (let i = 0; i < indicesShape.length - 1; ++i) {
-    nResult *= indicesShape[i];
+    nResult *= requiredNumericEntry(indicesShape, i);
   }
 
   const inputShape = tensor.shape;
@@ -73,8 +73,8 @@ export function prepareAndValidate(tensor: TensorInfo, indices: TensorInfo):
 
   let sliceSize = 1;
   for (let i = sliceRank; i < tensorRank; ++i) {
-    sliceSize *= inputShape[i];
-    resultShape.push(inputShape[i]);
+    sliceSize *= requiredNumericEntry(inputShape, i);
+    resultShape.push(requiredNumericEntry(inputShape, i));
   }
 
   const strides =

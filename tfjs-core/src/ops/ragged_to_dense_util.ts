@@ -30,7 +30,7 @@ export function combineRaggedTensorToTensorShapes(
   // If shape is unspecified and valueShape is specified, then copy
   // over the size from the valueShape dimension.
 
-  let outputShape: number[] = new Array();
+  let outputShape: number[] = [];
   if (valueShape == null && shape == null) {
     return outputShape;
   }

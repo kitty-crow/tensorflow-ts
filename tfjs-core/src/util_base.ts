@@ -237,9 +237,9 @@ export function isInt(a: number): boolean {
 
 export function tanh(x: number): number {
   // tslint:disable-next-line:no-any
-  if ((Math as any).tanh != null) {
+  if (Math.tanh != null) {
     // tslint:disable-next-line:no-any
-    return (Math as any).tanh(x);
+    return Math.tanh(x);
   }
   if (x === Infinity) {
     return 1;
@@ -789,12 +789,12 @@ export function locToIndex(
       return 0;
     }
     case 1: {
-      return locs[0];
+      return requiredNumericEntry(locs, 0);
     }
   }
-  let index = locs[locs.length - 1];
+  let index = requiredNumericEntry(locs, locs.length - 1);
   for (let i = 0; i < locs.length - 1; ++i) {
-    index += strides[i] * locs[i];
+    index += requiredNumericEntry(strides, i) * requiredNumericEntry(locs, i);
   }
   return index;
 }
@@ -819,8 +819,9 @@ export function indexToLoc(
   }
   const locs = new Array<number>(rank);
   for (let i = 0; i < locs.length - 1; ++i) {
-    locs[i] = Math.floor(index / strides[i]);
-    index -= locs[i] * strides[i];
+    const coordinate = Math.floor(index / requiredNumericEntry(strides, i));
+    locs[i] = coordinate;
+    index -= coordinate * requiredNumericEntry(strides, i);
   }
   locs[locs.length - 1] = index;
   return locs;

@@ -16,7 +16,7 @@
  */
 
 import {requiredTestEntry} from './test_util';
-import {assertArrayLength, inferFromImplicitShape, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
+import {assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
 
 describe('shape utility regression coverage', () => {
   it('infers a missing dimension without mutating the input', () => {
@@ -93,5 +93,18 @@ describe('required named test fixture', () => {
     const values: {[key: string]: number|undefined} = {present: undefined};
     expect(() => requiredTestEntry(values, 'present'))
         .toThrowError('Missing required test entry: present.');
+  });
+});
+
+describe('checked coordinate conversion', () => {
+  it('round trips non-square shapes and scalar coordinates', () => {
+    expect(indexToLoc(17, 3, [12, 4])).toEqual([1, 1, 1]);
+    expect(locToIndex([1, 1, 1], 3, [12, 4])).toBe(17);
+    expect(indexToLoc(0, 0, [])).toEqual([]);
+    expect(locToIndex([], 0, [])).toBe(0);
+  });
+  it('rejects missing stride data rather than producing NaN', () => {
+    expect(() => indexToLoc(17, 3, [12])).toThrowError();
+    expect(() => locToIndex([1, 1, 1], 3, [12])).toThrowError();
   });
 });
