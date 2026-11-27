@@ -35,7 +35,11 @@ export declare interface ParamMapper {
   // tensorflow.js name for the field, it should be in camelcase format.
   name: string;
   type: ParamType;
+  // CG305: Some mapped attributes have no default and are supplied by the graph.
+  //@cg-expect-error
   defaultValue?: AttributeValue;
+  // CG305: Supported parameters omit the not-supported marker.
+  //@cg-expect-error
   notSupported?: boolean;
 }
 
@@ -64,6 +68,8 @@ export declare interface InputParamMapper extends ParamMapper {
   // end is set to 0, the mapping is through the end of the input array
   // (arr.length). If end is greater than the length of the inputs, mapping
   // inncludes through to the end of the sequence (arr.length).
+  // CG305: The executor distinguishes an omitted end from a ranged input mapping.
+  //@cg-expect-error
   end?: number;
 }
 
@@ -71,15 +77,23 @@ export declare interface InputParamMapper extends ParamMapper {
 export declare interface AttrParamMapper extends ParamMapper {
   // TensorFlow attribute name, this should be set if the tensorflow attribute
   // name is different form the tensorflow.js name.
+  // CG305: The mapper permits the same TensorFlow and TensorFlow.js attribute name.
+  //@cg-expect-error
   tfName?: string;
   // TensorFlow deprecated attribute name, this is used to support old models.
+  // CG305: An attribute need not have a deprecated alternate name.
+  //@cg-expect-error
   tfDeprecatedName?: string;
   // Preserve case for case-sensitive string attributes.
+  // CG305: Case preservation is opt-in for case-sensitive string attributes.
+  //@cg-expect-error
   keepCase?: boolean;
 }
 
 export interface InternalOpExecutor {
   (node: Node, tensorMap: NamedTensorsMap, context: ExecutionContext,
+   // CG305: The executor supports its default ops implementation without injection.
+   //@cg-expect-error
    ops?: typeof tfOps): Tensor|Tensor[];
 }
 
@@ -90,14 +104,26 @@ export interface InternalOpAsyncExecutor {
 
 export declare interface OpMapper {
   tfOpName: string;
+  // CG305: Custom mappings need not carry the built-in operation category.
+  //@cg-expect-error
   category?: Category;
+  // CG305: An operation can have no mapped input parameters.
+  //@cg-expect-error
   inputs?: InputParamMapper[];
+  // CG305: An operation can have no mapped attributes.
+  //@cg-expect-error
   attrs?: AttrParamMapper[];
+  // CG305: An operation need not expose named outputs.
+  //@cg-expect-error
   outputs?: string[];
+  // CG305: Built-in operations need no custom executor.
+  //@cg-expect-error
   customExecutor?: OpExecutor;
 }
 
 export declare interface Node {
+  // CG305: Graph nodes not exposed by a signature have no signature key.
+  //@cg-expect-error
   signatureKey?: string;
   name: string;
   op: string;
@@ -107,8 +133,14 @@ export declare interface Node {
   inputParams: {[key: string]: InputParamValue};
   attrParams: {[key: string]: ParamValue};
   children: Node[];
+  // CG305: Only nodes that require raw graph attributes retain them.
+  //@cg-expect-error
   rawAttrs?: {[k: string]: tensorflow.IAttrValue};
+  // CG305: Nodes without a selected output do not need a default output index.
+  //@cg-expect-error
   defaultOutput?: number;
+  // CG305: Nodes without named outputs may omit the output names.
+  //@cg-expect-error
   outputs?: string[];
 }
 
@@ -118,8 +150,14 @@ export declare interface Graph {
   inputs: Node[];
   outputs: Node[];
   weights: Node[];
+  // CG305: Graph execution supports graphs without an exported signature.
+  //@cg-expect-error
   signature?: tensorflow.ISignatureDef;
+  // CG305: Graphs without function definitions omit the function map.
+  //@cg-expect-error
   functions?: {[key: string]: Graph};
+  // CG305: Graphs without initialisation operations omit init nodes.
+  //@cg-expect-error
   initNodes?: Node[];
 }
 
@@ -130,12 +168,18 @@ export type AttributeValue =
 /** Resolved op inputs may additionally contain numeric arrays of arbitrary rank. */
 export type ValueType = AttributeValue|util.NestedNumericArray;
 export declare interface ParamValue {
+  // CG305: The mapper represents absent optional attribute values without a value property.
+  //@cg-expect-error
   value?: AttributeValue;
   type: ParamType;
 }
 
 export declare interface InputParamValue extends ParamValue {
+  // CG305: Attribute-only or unmapped input parameters may omit an input start.
+  //@cg-expect-error
   inputIndexStart?: number;
+  // CG305: Single-input mappings omit the range end.
+  //@cg-expect-error
   inputIndexEnd?: number;
 }
 

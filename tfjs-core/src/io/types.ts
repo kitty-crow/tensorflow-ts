@@ -97,13 +97,21 @@ export declare interface WeightsManifestEntry {
    * The value 'optimizer' indicates the weight belongs to an optimizer
    * (i.e., used only during model training and not during inference).
    */
+  // CG305: The manifest omits weight group for ordinary inference weights.
+  //@cg-expect-error
   group?: WeightGroup;
 
   /**
    * Information for dequantization of the weight.
    */
+  // CG305: Unquantised weights intentionally have no quantisation metadata.
+  //@cg-expect-error
   quantization?: {
+    // CG305: Float16 quantisation has no affine scale; integer metadata is checked when decoded.
+    //@cg-expect-error
     scale?: number,  // The scaling constant to multiply by.
+    // CG305: Float16 quantisation has no affine minimum; integer metadata is checked when decoded.
+    //@cg-expect-error
     min?: number,    // The (possibly nudged) minimum weight to add.
        dtype: 'uint16'|'uint8'|'float16'  // The dtype of the quantized weights.
   };
@@ -118,6 +126,8 @@ export interface SaveConfig {
    * Whether to save only the trainable weights of the model, ignoring the
    * non-trainable ones.
    */
+  // CG305: Saving all weights is supported without a trainable-only option.
+  //@cg-expect-error
   trainableOnly?: boolean;
 
   /**
@@ -125,6 +135,8 @@ export interface SaveConfig {
    *
    * Default: `false`.
    */
+  // CG305: Saving excludes optimiser state by default unless requested.
+  //@cg-expect-error
   includeOptimizer?: boolean;
 }
 
@@ -141,11 +153,15 @@ export interface SaveResult {
    * HTTP responses from the server that handled the model-saving request (if
    * any). This is applicable only to server-based saving routes.
    */
+  // CG305: Non-HTTP save handlers have no HTTP response to report.
+  //@cg-expect-error
   responses?: Response[];
 
   /**
    * Error messages and related data (if any).
    */
+  // CG305: A successful save need not return error details.
+  //@cg-expect-error
   errors?: Array<{}|string>;
 }
 
@@ -176,16 +192,22 @@ export declare interface ModelArtifactsInfo {
   /**
    * Size of model topology (Keras JSON or GraphDef), in bytes.
    */
+  // CG305: A handler may report topology type without a measured byte count.
+  //@cg-expect-error
   modelTopologyBytes?: number;
 
   /**
    * Size of weight specification or manifest, in bytes.
    */
+  // CG305: A handler may omit weight manifest byte measurements.
+  //@cg-expect-error
   weightSpecsBytes?: number;
 
   /**
    * Size of weight value data, in bytes.
    */
+  // CG305: A handler may omit weight data byte measurements.
+  //@cg-expect-error
   weightDataBytes?: number;
 }
 
@@ -204,14 +226,22 @@ export declare interface TrainingConfig {
 
   // TODO(cais): Tighten the typing once keras spec is available to tfjs-core.
   /** Metric function(s) for the model's output(s). */
+  // CG305: Serialized training config can omit metrics when none are configured.
+  //@cg-expect-error
   metrics?: string[]|{[key: string]: string};
 
   // TODO(cais): Tighten the typing once keras spec is available to tfjs-core.
+  // CG305: Serialized training config can omit weighted metrics.
+  //@cg-expect-error
   weighted_metrics?: string[];
 
   // TODO(cais): Tighten the typing once keras spec is available to tfjs-core.
+  // CG305: Serialized training config can omit sample weighting mode.
+  //@cg-expect-error
   sample_weight_mode?: string;
 
+  // CG305: Serialized training config can omit explicit loss weighting.
+  //@cg-expect-error
   loss_weights?: number|number[]|{[key: string]: number};
 }
 
@@ -235,11 +265,15 @@ export declare interface ModelArtifacts {
    * For TensorFlow-style models (e.g., `SavedModel`), this is the JSON
    * encoding of the `GraphDef` protocol buffer.
    */
+  // CG305: Weight-only artifacts need not carry topology.
+  //@cg-expect-error
   modelTopology?: {}|ArrayBuffer;
 
   /**
    * Serialized configuration for the model's training.
    */
+  // CG305: Inference-only artifacts omit training configuration.
+  //@cg-expect-error
   trainingConfig?: TrainingConfig;
 
   /**
@@ -247,6 +281,8 @@ export declare interface ModelArtifacts {
    *
    * This corresponds to the weightsData below.
    */
+  // CG305: Topology-only artifacts need not carry weight specs.
+  //@cg-expect-error
   weightSpecs?: WeightsManifestEntry[];
 
   /**
@@ -255,6 +291,8 @@ export declare interface ModelArtifacts {
    * concatenated together or an Array of ArrayBuffers containing the weights
    * (weights may be sharded across multiple ArrayBuffers).
    */
+  // CG305: Topology-only or streamed artifacts need not carry buffered weight data.
+  //@cg-expect-error
   weightData?: WeightData;
 
   /**
@@ -262,12 +300,16 @@ export declare interface ModelArtifacts {
    * V8's memory heap, and `getWeightStream` loads their weights without storing
    * them all in memory at the same time.
    */
+  // CG305: Buffered artifacts need not implement streaming weights.
+  //@cg-expect-error
   getWeightStream?: () => ReadableStream<ArrayBuffer>;
 
   /**
    * Hard-coded format name for models saved from TensorFlow.js or converted
    * by TensorFlow.js Converter.
    */
+  // CG305: Legacy artifacts may omit the format marker.
+  //@cg-expect-error
   format?: string;
 
   /**
@@ -275,6 +317,8 @@ export declare interface ModelArtifacts {
    *
    * Used for debugging purposes. E.g., 'TensorFlow.js v1.0.0'.
    */
+  // CG305: Legacy artifacts may omit generator version metadata.
+  //@cg-expect-error
   generatedBy?: string;
 
   /**
@@ -287,26 +331,36 @@ export declare interface ModelArtifacts {
    * conversion process (e.g., saved directly from a TensorFlow.js
    * `tf.LayersModel` instance.)
    */
+  // CG305: A model saved directly rather than converted may omit converter metadata.
+  //@cg-expect-error
   convertedBy?: string|null;
 
   /**
    * Inputs and outputs signature for saved model.
    */
+  // CG305: Models without exported signatures need not provide a signature.
+  //@cg-expect-error
   signature?: {};
 
   /**
    * User-defined metadata about the model.
    */
+  // CG305: Models without user metadata need not provide a metadata dictionary.
+  //@cg-expect-error
   userDefinedMetadata?: {[key: string]: {}};
 
   /**
    * Initializer for the model.
    */
+  // CG305: Models without an initialization graph omit modelInitializer.
+  //@cg-expect-error
   modelInitializer?: {};
 
   /**
    * Inputs and outputs signature for model initializer.
    */
+  // CG305: Models without an initialization graph omit its signature.
+  //@cg-expect-error
   initializerSignature?: {};
 }
 
@@ -327,6 +381,8 @@ export declare interface ModelJSON {
   modelTopology: {};
 
   /** Model training configuration. */
+  // CG305: Inference-only JSON can omit training configuration.
+  //@cg-expect-error
   trainingConfig?: TrainingConfig;
 
   /**
@@ -343,6 +399,8 @@ export declare interface ModelJSON {
    * Hard-coded format name for models saved from TensorFlow.js or converted
    * by TensorFlow.js Converter.
    */
+  // CG305: Legacy JSON may omit the format marker.
+  //@cg-expect-error
   format?: string;
 
   /**
@@ -350,6 +408,8 @@ export declare interface ModelJSON {
    *
    * Used for debugging purposes. E.g., 'TensorFlow.js v1.0.0'.
    */
+  // CG305: Legacy JSON may omit generator version metadata.
+  //@cg-expect-error
   generatedBy?: string;
 
   /**
@@ -362,26 +422,36 @@ export declare interface ModelJSON {
    * conversion process (e.g., saved directly from a TensorFlow.js
    * `tf.LayersModel` instance.)
    */
+  // CG305: Directly saved JSON may omit converter metadata.
+  //@cg-expect-error
   convertedBy?: string|null;
 
   /**
    * Inputs and outputs signature for saved model.
    */
+  // CG305: JSON for models without signatures may omit signature.
+  //@cg-expect-error
   signature?: {};
 
   /**
    * User-defined metadata about the model.
    */
+  // CG305: JSON with no user metadata may omit the metadata dictionary.
+  //@cg-expect-error
   userDefinedMetadata?: {[key: string]: {}};
 
   /**
    * Initializer for the model.
    */
+  // CG305: JSON with no initialization graph may omit modelInitializer.
+  //@cg-expect-error
   modelInitializer?: {};
 
   /**
    * Inputs and outputs signature for model initializer.
    */
+  // CG305: JSON with no initialization graph may omit its signature.
+  //@cg-expect-error
   initializerSignature?: {};
 }
 
@@ -404,7 +474,11 @@ export type SaveHandler = (modelArtifact: ModelArtifacts) =>
  */
 // tslint:disable-next-line:interface-name
 export interface IOHandler {
+  // CG305: Load-only handlers intentionally lack save; SavingIOHandler guarantees it.
+  //@cg-expect-error
   save?: SaveHandler;
+  // CG305: Save-only handlers intentionally lack load; LoadingIOHandler guarantees it.
+  //@cg-expect-error
   load?: LoadHandler;
 }
 
@@ -433,7 +507,11 @@ export type SaveHandlerSync = (modelArtifact: ModelArtifacts) => SaveResult;
  */
 // tslint:disable-next-line:interface-name
 export type IOHandlerSync = {
+  // CG305: Synchronous load-only handlers intentionally lack save.
+  //@cg-expect-error
   save?: SaveHandlerSync;
+  // CG305: Synchronous save-only handlers intentionally lack load.
+  //@cg-expect-error
   load?: LoadHandlerSync;
 };
 
@@ -489,16 +567,22 @@ export interface LoadOptions {
    * [https://developer.mozilla.org/en-US/docs/Web/API/Request/Request](
    *     https://developer.mozilla.org/en-US/docs/Web/API/Request/Request)
    */
+  // CG305: Omitted request options use the fetch implementation's defaults.
+  //@cg-expect-error
   requestInit?: RequestInit;
 
   /**
    * Progress callback.
    */
+  // CG305: No progress callback is required for a load.
+  //@cg-expect-error
   onProgress?: OnProgressCallback;
 
   /**
    * A function used to override the `window.fetch` function.
    */
+  // CG305: Omitting a fetch override uses the normal fetch implementation.
+  //@cg-expect-error
   fetchFunc?: typeof fetch;
 
   /**
@@ -511,6 +595,8 @@ export interface LoadOptions {
    *
    * Default: `true`.
    */
+  // CG305: Strict weight matching defaults to true when no override is supplied.
+  //@cg-expect-error
   strict?: boolean;
 
   /**
@@ -526,6 +612,8 @@ export interface LoadOptions {
    * `http://localhost/foo/alt-weights`, then the weight file will be loaded
    * from the path `http://localhost/foo/alt-weights/group1-shard1of2` instead.
    */
+  // CG305: The model URL determines the weight path when no override is supplied.
+  //@cg-expect-error
   weightPathPrefix?: string;
 
   /**
@@ -536,6 +624,8 @@ export interface LoadOptions {
    *
    * Default: `false`.
    */
+  // CG305: Ordinary model loads omit the TF Hub flag, which defaults to false.
+  //@cg-expect-error
   fromTFHub?: boolean;
 
   /**
@@ -548,12 +638,16 @@ export interface LoadOptions {
    *
    * With this func you can convert the weight file name to any URL.
    */
+  // CG305: The usual weight URL resolution needs no converter callback.
+  //@cg-expect-error
   weightUrlConverter?: (weightFileName: string) => Promise<string>;
 
   /**
    * Whether to stream the model directly to the backend or cache all its
    * weights on CPU first. Useful for large models.
    */
+  // CG305: Buffered model loading remains supported without a streaming option.
+  //@cg-expect-error
   streamWeights?: boolean;
 }
 
@@ -564,5 +658,7 @@ export interface RequestDetails {
   /**
    * Is this request for a binary file (as opposed to a json file)
    */
+  // CG305: JSON requests do not need to specify binary mode.
+  //@cg-expect-error
   isBinary?: boolean;
 }

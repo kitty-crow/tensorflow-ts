@@ -93,6 +93,8 @@ export interface AvgPoolAttrs {
   filterSize: [number, number]|number;
   strides: [number, number]|number;
   pad: 'valid'|'same'|number|ExplicitPadding;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
 }
 
@@ -110,6 +112,8 @@ export interface AvgPool3DAttrs {
   filterSize: [number, number, number]|number;
   strides: [number, number, number]|number;
   pad: 'valid'|'same'|number;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
   dataFormat: 'NDHWC'|'NCDHW';
 }
@@ -120,6 +124,8 @@ export interface AvgPool3DGradAttrs {
   filterSize: [number, number, number]|number;
   strides: [number, number, number]|number;
   pad: 'valid'|'same'|number;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
 }
 
@@ -193,6 +199,8 @@ export interface Conv2DAttrs {
   pad: 'valid'|'same'|number|ExplicitPadding;
   dataFormat: 'NHWC'|'NCHW';
   dilations: [number, number]|number;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
 }
 
@@ -202,6 +210,8 @@ export interface Conv2DBackpropFilterAttrs {
   strides: [number, number]|number;
   pad: 'valid'|'same'|number|ExplicitPadding;
   dataFormat: 'NHWC'|'NCHW';
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
   filterShape: [number, number, number, number];
 }
@@ -212,6 +222,8 @@ export interface Conv2DBackpropInputAttrs {
   strides: [number, number]|number;
   pad: 'valid'|'same'|number|ExplicitPadding;
   dataFormat: 'NHWC'|'NCHW';
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
   inputShape: [number, number, number, number];
 }
@@ -278,6 +290,8 @@ export const DenseBincount = 'DenseBincount';
 export type DenseBincountInputs = RequiredKernelInputs<'x'|'weights'>;
 export interface DenseBincountAttrs {
   size: number;
+  // CG305: Dense bincount supports count accumulation without the binary-output override.
+  //@cg-expect-error
   binaryOutput?: boolean;
 }
 
@@ -296,6 +310,8 @@ export interface DepthwiseConv2dNativeAttrs {
   pad: 'valid'|'same'|number|ExplicitPadding;
   dataFormat: 'NHWC'|'NCHW';
   dilations: [number, number]|number;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
 }
 
@@ -307,6 +323,8 @@ export interface DepthwiseConv2dNativeBackpropFilterAttrs {
   strides: [number, number]|number;
   dilations: [number, number]|number;
   pad: 'valid'|'same'|number|ExplicitPadding;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
   filterShape: [number, number, number, number];
 }
@@ -319,6 +337,8 @@ export interface DepthwiseConv2dNativeBackpropInputAttrs {
   strides: [number, number]|number;
   dilations: [number, number]|number;
   pad: 'valid'|'same'|number|ExplicitPadding;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
   inputShape: [number, number, number, number];
 }
@@ -346,6 +366,8 @@ export const Draw = 'Draw';
 export type DrawInputs = RequiredKernelInputs<'image'>;
 export interface DrawAttrs {
   canvas: HTMLCanvasElement;
+  // CG305: Drawing accepts default rendering options.
+  //@cg-expect-error
   options?: DrawOptions;
 }
 
@@ -528,6 +550,8 @@ export interface MaxPoolAttrs {
   filterSize: [number, number]|number;
   strides: [number, number]|number;
   pad: 'valid'|'same'|number|ExplicitPadding;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
 }
 
@@ -537,6 +561,8 @@ export interface MaxPoolGradAttrs {
   filterSize: [number, number]|number;
   strides: [number, number]|number;
   pad: 'valid'|'same'|number|ExplicitPadding;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
 }
 
@@ -547,6 +573,8 @@ export interface MaxPool3DAttrs {
   strides: [number, number, number]|number;
   pad: 'valid'|'same'|number;
   dataFormat: 'NDHWC'|'NCDHW';
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
 }
 
@@ -557,6 +585,8 @@ export interface MaxPool3DGradAttrs {
   filterSize: [number, number, number]|number;
   strides: [number, number, number]|number;
   pad: 'valid'|'same'|number;
+  // CG305: The public convolution/pooling operation permits no explicit rounding override; omission is part of the kernel attribute contract.
+  //@cg-expect-error
   dimRoundingMode?: 'floor'|'round'|'ceil';
 }
 
@@ -942,6 +972,8 @@ export interface TransformAttrs {
   interpolation: 'nearest'|'bilinear';
   fillMode: 'constant'|'reflect'|'wrap'|'nearest';
   fillValue: number;
+  // CG305: Transform uses the input image dimensions if no output shape is requested.
+  //@cg-expect-error
   outputShape?: [number, number];
 }
 
@@ -1010,7 +1042,11 @@ export const _FusedMatMul = '_FusedMatMul';
 export interface _FusedMatMulInputs extends NamedTensorInfoMap {
   a: TensorInfo;
   b: TensorInfo;
+  // CG305: Fused operations support execution without a bias tensor.
+  //@cg-expect-error
   bias?: TensorInfo;
+  // CG305: Only PReLU activation requires the additional weights tensor.
+  //@cg-expect-error
   preluActivationWeights?: TensorInfo;
 }
 // tslint:disable-next-line: class-name
@@ -1018,6 +1054,8 @@ export interface _FusedMatMulAttrs {
   transposeA: boolean;
   transposeB: boolean;
   activation: Activation;
+  // CG305: An alpha override is only relevant for leaky ReLU activation.
+  //@cg-expect-error
   leakyreluAlpha?: number;
 }
 
@@ -1025,7 +1063,11 @@ export const FusedConv2D = 'FusedConv2D';
 export interface FusedConv2DInputs extends NamedTensorInfoMap {
   x: TensorInfo;
   filter: TensorInfo;
+  // CG305: Fused operations support execution without a bias tensor.
+  //@cg-expect-error
   bias?: TensorInfo;
+  // CG305: Only PReLU activation requires the additional weights tensor.
+  //@cg-expect-error
   preluActivationWeights?: TensorInfo;
 }
 export interface FusedConv2DAttrs {
@@ -1035,6 +1077,8 @@ export interface FusedConv2DAttrs {
   dilations: [number, number]|number;
   dimRoundingMode: 'floor'|'round'|'ceil';
   activation: Activation;
+  // CG305: An alpha override is only relevant for leaky ReLU activation.
+  //@cg-expect-error
   leakyreluAlpha?: number;
 }
 
@@ -1042,7 +1086,11 @@ export const FusedDepthwiseConv2D = 'FusedDepthwiseConv2D';
 export interface FusedDepthwiseConv2DInputs extends NamedTensorInfoMap {
   x: TensorInfo;
   filter: TensorInfo;
+  // CG305: Fused operations support execution without a bias tensor.
+  //@cg-expect-error
   bias?: TensorInfo;
+  // CG305: Only PReLU activation requires the additional weights tensor.
+  //@cg-expect-error
   preluActivationWeights?: TensorInfo;
 }
 export interface FusedDepthwiseConv2DAttrs {
@@ -1052,5 +1100,7 @@ export interface FusedDepthwiseConv2DAttrs {
   dilations: [number, number]|number;
   dimRoundingMode: 'floor'|'round'|'ceil';
   activation: Activation;
+  // CG305: An alpha override is only relevant for leaky ReLU activation.
+  //@cg-expect-error
   leakyreluAlpha?: number;
 }

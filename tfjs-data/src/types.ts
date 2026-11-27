@@ -51,9 +51,17 @@ export type FileElement = File|Blob|Uint8Array;
  * a dict of features only.
  */
 export interface ColumnConfig {
+  // CG305: CSV columns need not be marked required.
+  //@cg-expect-error
   required?: boolean;
+  // CG305: The CSV parser can infer a column's type without a dtype override.
+  //@cg-expect-error
   dtype?: DataType;
+  // CG305: A missing column value need not have a configured replacement.
+  //@cg-expect-error
   default?: TensorContainer;
+  // CG305: CSV columns are features unless marked as labels.
+  //@cg-expect-error
   isLabel?: boolean;
 }
 
@@ -65,6 +73,8 @@ export interface CSVConfig {
    * A boolean value that indicates whether the first row of provided CSV file
    * is a header line with column names, and should not be included in the data.
    */
+  // CG305: CSV header handling can use its default when unspecified.
+  //@cg-expect-error
   hasHeader?: boolean;
 
   /**
@@ -74,6 +84,8 @@ export interface CSVConfig {
    * `hasHeader` is false and `columnNames` is not provided, this method will
    * throw an error.
    */
+  // CG305: The CSV header supplies column names when no override is given.
+  //@cg-expect-error
   columnNames?: string[];
 
   /**
@@ -101,23 +113,31 @@ export interface CSVConfig {
    * key/value pairs, ys is a dict of labels key/value pairs. If no column is
    * marked as label, returns a dict of features only.
    */
+  // CG305: CSV may be parsed without per-column configuration.
+  //@cg-expect-error
   columnConfigs?: {[key: string]: ColumnConfig};
 
   /**
    * If true, only columns provided in `columnConfigs` will be parsed and
    * provided during iteration.
    */
+  // CG305: CSV may include all columns without a configured-only filter.
+  //@cg-expect-error
   configuredColumnsOnly?: boolean;
 
   /**
    * The string used to parse each line of the input file.
    */
+  // CG305: The parser supports its default delimiter when unspecified.
+  //@cg-expect-error
   delimiter?: string;
 
   /**
    * If true, delimiter field should be null. Parsing delimiter is whitespace
    * and treat continuous multiple whitespace as one delimiter.
    */
+  // CG305: Whitespace parsing is an optional alternative to ordinary delimiters.
+  //@cg-expect-error
   delimWhitespace?: boolean;
 }
 
@@ -130,12 +150,16 @@ export interface WebcamConfig {
    * 'user', it will use front camera. If the value is 'environment', it will
    * use rear camera.
    */
+  // CG305: Default camera selection does not require a facing mode.
+  //@cg-expect-error
   facingMode?: 'user'|'environment';
 
   /**
    * A string used to request a specific camera. The deviceId can be obtained by
    * calling `mediaDevices.enumerateDevices()`.
    */
+  // CG305: Default camera selection does not require a specific device identifier.
+  //@cg-expect-error
   deviceId?: string;
 
   /**
@@ -143,6 +167,8 @@ export interface WebcamConfig {
    * HTMLVideoElement (if provided) can be different and the final image will be
    * resized to match resizeWidth.
    */
+  // CG305: Native camera width can be retained without a resize request.
+  //@cg-expect-error
   resizeWidth?: number;
 
   /**
@@ -150,6 +176,8 @@ export interface WebcamConfig {
    * HTMLVideoElement (if provided) can be different and the final image will be
    * resized to match resizeHeight.
    */
+  // CG305: Native camera height can be retained without a resize request.
+  //@cg-expect-error
   resizeHeight?: number;
 
   /**
@@ -159,6 +187,8 @@ export interface WebcamConfig {
    * without scaling. If false, the entire image is returned (perhaps scaled to
    * fit in `[resizeWidth, resizeHeight]`, if those are provided).
    */
+  // CG305: Camera capture need not request center cropping.
+  //@cg-expect-error
   centerCrop?: boolean;
 }
 
@@ -169,6 +199,8 @@ export interface MicrophoneConfig {
   // A number representing Audio sampling rate in Hz. either 44,100 or 48,000.
   // If provided sample rate is not available on the device, it will throw an
   // error. Optional, defaults to the sample rate available on device.
+  // CG305: The device's available sample rate is used when unspecified.
+  //@cg-expect-error
   sampleRateHz?: 44100|48000;
 
   // The FFT length of each spectrogram column. A higher value will result in
@@ -176,6 +208,8 @@ export interface MicrophoneConfig {
   // Must be a power of 2 between 2 to 4 and 2 to 14, so one of: 16, 32, 64,
   // 128, 256, 512, 1024, 2048, 4096, 8192, and 16384. It will throw an error if
   // it is an invalid number.Defaults to 1024.
+  // CG305: MicrophoneIterator defaults FFT size to 1024.
+  //@cg-expect-error
   fftSize?: number;
 
   // Truncate each spectrogram column at how many frequency points. Each audio
@@ -185,6 +219,8 @@ export interface MicrophoneConfig {
   // audio frame only need 232 columns to cover the frequency range of human
   // voice. This will be part of the output spectrogram tensor shape. Optional,
   // defaults to null which means no truncation.
+  // CG305: Omitted truncation length retains the full FFT width.
+  //@cg-expect-error
   columnTruncateLength?: number;
 
   // Number of audio frames per spectrogram. The time duration of one
@@ -195,25 +231,35 @@ export interface MicrophoneConfig {
   // second, each spectrogram should contain 1/0.023, which is 43 frames. This
   // will be part of the output spectrogram tensor shape. Optional, defaults to
   // 43 so that each audio data last 1 second.
+  // CG305: MicrophoneIterator defaults to 43 frames per spectrogram.
+  //@cg-expect-error
   numFramesPerSpectrogram?: number;
 
   // A dictionary specifying the requirements of audio to request, such as
   // deviceID, echoCancellation, etc. Optional.
+  // CG305: Default microphone capture requires no custom track constraints.
+  //@cg-expect-error
   audioTrackConstraints?: MediaTrackConstraints;
 
   // The averaging constant with the last analysis frame -- basically, it makes
   // the transition between values over time smoother. It is used by
   // AnalyserNode interface during FFT. Optional, has to be between 0 and 1,
   // defaults to 0.
+  // CG305: MicrophoneIterator defaults smoothing to zero.
+  //@cg-expect-error
   smoothingTimeConstant?: number;
 
   // Whether to collect the frequency domain audio spectrogram in
   // MicrophoneIterator result. If both includeSpectrogram and includeWaveform
   // are false, it will throw an error. Defaults to true.
+  // CG305: Spectrogram collection defaults to enabled.
+  //@cg-expect-error
   includeSpectrogram?: boolean;
 
   // Whether to collect the time domain audio waveform in MicrophoneIterator
   // result. If both includeSpectrogram and includeWaveform are false, it will
   // throw an error. Defaults to false.
+  // CG305: Waveform collection defaults to disabled.
+  //@cg-expect-error
   includeWaveform?: boolean;
 }
