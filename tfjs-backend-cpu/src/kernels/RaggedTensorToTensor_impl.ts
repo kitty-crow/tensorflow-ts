@@ -16,6 +16,7 @@
  */
 
 import {backend_util, broadcastTo, DataType, reshape, tidy, TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 import RowPartitionType = backend_util.RowPartitionType;
 // Based on
@@ -38,18 +39,18 @@ class RaggedTensorToTensorOp {
 
   private getRowPartitionTypeByDimension(dimension: number) {
     if (this.rowPartitionTypes[0] === RowPartitionType.FIRST_DIM_SIZE) {
-      return this.rowPartitionTypes[dimension + 1];
+      return requiredCpuEntry(this.rowPartitionTypes, dimension + 1);
     } else {
-      return this.rowPartitionTypes[dimension];
+      return requiredCpuEntry(this.rowPartitionTypes, dimension);
     }
   }
 
   // Returns the relationship between dimension and dimension + 1.
   private getRowPartitionTensor(dimension: number) {
     if (this.rowPartitionTypes[0] === RowPartitionType.FIRST_DIM_SIZE) {
-      return this.rowPartitionValues[dimension + 1];
+      return requiredCpuEntry(this.rowPartitionValues, dimension + 1);
     } else {
-      return this.rowPartitionValues[dimension];
+      return requiredCpuEntry(this.rowPartitionValues, dimension);
     }
   }
 
@@ -74,7 +75,7 @@ class RaggedTensorToTensorOp {
     }
     let maxWidth = 0;
     for (let i = 0; i < tensorLength - 1; ++i) {
-      const currentWidth = rowSplit[i + 1] - rowSplit[i];
+      const currentWidth = requiredCpuEntry(rowSplit, i + 1) - requiredCpuEntry(rowSplit, i);
       if (currentWidth > maxWidth) {
         maxWidth = currentWidth;
       }
@@ -88,10 +89,10 @@ class RaggedTensorToTensorOp {
       return 0;
     }
     let firstEqualIndex = 0;
-    let firstEqualIndexValue = valueRowIds[0];
+    let firstEqualIndexValue = requiredCpuEntry(valueRowIds, 0);
     let maxWidth = 0;
     for (let i = 1; i < indexLength; ++i) {
-      const value = valueRowIds[i];
+      const value = requiredCpuEntry(valueRowIds, i);
       if (value !== firstEqualIndexValue) {
         firstEqualIndexValue = value;
         maxWidth = Math.max(i - firstEqualIndex, maxWidth);
@@ -126,11 +127,11 @@ class RaggedTensorToTensorOp {
 
     const result = outputShape;
 
-    if (result[0] < 0) {
+    if (requiredCpuEntry(result, 0) < 0) {
       result[0] = firstDim;
     }
     for (let i = 1; i <= this.raggedRank; ++i) {
-      if (result[i] < 0) {
+      if (requiredCpuEntry(result, i) < 0) {
         result[i] = this.getMaxWidth(i);
       }
     }
@@ -174,9 +175,9 @@ class RaggedTensorToTensorOp {
     const rowSplitSize = rowSplit.length;
     const result: number[] = [];
     for (let i = 0; i < rowSplitSize - 1; ++i) {
-      const rowLength = rowSplit[i + 1] - rowSplit[i];
+      const rowLength = requiredCpuEntry(rowSplit, i + 1) - requiredCpuEntry(rowSplit, i);
       let realLength = Math.min(outputSize, rowLength);
-      let parentOutputIndexCurrent = parentOutputIndex[i];
+      let parentOutputIndexCurrent = requiredCpuEntry(parentOutputIndex, i);
 
       if (parentOutputIndexCurrent === -1) {
         realLength = 0;
@@ -189,7 +190,7 @@ class RaggedTensorToTensorOp {
         result.push(-1);
       }
     }
-    if (rowSplitSize > 0 && result.length !== rowSplit[rowSplitSize - 1]) {
+    if (rowSplitSize > 0 && result.length !== requiredCpuEntry(rowSplit, rowSplitSize - 1)) {
       throw new Error('Invalid row split size.');
     }
 
@@ -227,7 +228,7 @@ class RaggedTensorToTensorOp {
     }
 
     let currentOutputColumn = 0;
-    let currentValueRowId = valueRowIds[0];
+    let currentValueRowId = requiredCpuEntry(valueRowIds, 0);
 
     if (currentValueRowId >= parentOutputIndex.length) {
       throw new Error(
@@ -235,10 +236,10 @@ class RaggedTensorToTensorOp {
               parentOutputIndex.length}`);
     }
 
-    let currentOutputIndex = parentOutputIndex[currentValueRowId];
+    let currentOutputIndex = requiredCpuEntry(parentOutputIndex, currentValueRowId);
     result.push(currentOutputIndex);
     for (let i = 1; i < indexSize; ++i) {
-      const nextValueRowId = valueRowIds[i];
+      const nextValueRowId = requiredCpuEntry(valueRowIds, i);
       const sameRow = nextValueRowId === currentValueRowId;
       if (sameRow && currentOutputIndex >= 0) {
         ++currentOutputColumn;
@@ -255,7 +256,7 @@ class RaggedTensorToTensorOp {
         throw new Error(
             `Got nextValueRowId=${nextValueRowId} which is not less than ${parentOutputIndex.length}`);
       }
-      currentOutputIndex = parentOutputIndex[nextValueRowId];
+      currentOutputIndex = requiredCpuEntry(parentOutputIndex, nextValueRowId);
       result.push(currentOutputIndex);
     }
 
@@ -291,18 +292,18 @@ class RaggedTensorToTensorOp {
   }
 
   private getFirstDimensionSize() {
-    const firstPartitionTensor = this.rowPartitionValues[0];
+    const firstPartitionTensor = requiredCpuEntry(this.rowPartitionValues, 0);
     if (this.rowPartitionTypes.length === 0) {
       throw new Error('No row_partition_types given.');
     }
-    const firstPartitionType = this.rowPartitionTypes[0];
+    const firstPartitionType = requiredCpuEntry(this.rowPartitionTypes, 0);
     switch (firstPartitionType) {
       case RowPartitionType.FIRST_DIM_SIZE:
-        return firstPartitionTensor[0];
+        return requiredCpuEntry(firstPartitionTensor, 0);
       case RowPartitionType.VALUE_ROWIDS:
         throw new Error('Cannot handle VALUE_ROWIDS in first dimension.');
       case RowPartitionType.ROW_SPLITS:
-        return this.rowPartitionValuesShapes[0][0] - 1;
+        return requiredCpuEntry(requiredCpuEntry(this.rowPartitionValuesShapes, 0), 0) - 1;
       default:
         throw new Error(
             `Cannot handle type ${RowPartitionType[firstPartitionType]}`);
@@ -310,7 +311,7 @@ class RaggedTensorToTensorOp {
   }
 
   compute(): [number[], TypedArray] {
-    const firstPartitionTensor = this.rowPartitionValues[0];
+    const firstPartitionTensor = requiredCpuEntry(this.rowPartitionValues, 0);
     if (firstPartitionTensor.length <= 0) {
       throw new Error(
           'Invalid first partition input. ' +
@@ -318,11 +319,11 @@ class RaggedTensorToTensorOp {
     }
     const firstDimension = this.getFirstDimensionSize();
     const outputSize = this.calculateOutputSize(firstDimension);
-    const multiplier: number[] = new Array(this.raggedRank + 1);
+    const multiplier: number[] = new Array<number>(this.raggedRank + 1);
 
     multiplier[multiplier.length - 1] = 1;
     for (let i = multiplier.length - 2; i >= 0; --i) {
-      multiplier[i] = multiplier[i + 1] * outputSize[i + 1];
+      multiplier[i] = requiredCpuEntry(multiplier, i + 1) * requiredCpuEntry(outputSize, i + 1);
     }
     // Full size of the tensor.
     const outputShape: number[] = makeShape(outputSize, false);
@@ -330,13 +331,13 @@ class RaggedTensorToTensorOp {
         util.getArrayFromDType(
             this.valuesDType, util.sizeFromShape(outputShape)) as TypedArray;
 
-    const fullSize = multiplier[0] * outputSize[0];
+    const fullSize = requiredCpuEntry(multiplier, 0) * requiredCpuEntry(outputSize, 0);
     if (fullSize > 0) {
       let outputIndex = this.calculateFirstParentOutputIndex(
-          firstDimension, multiplier[0], outputSize[0]);
+          firstDimension, requiredCpuEntry(multiplier, 0), requiredCpuEntry(outputSize, 0));
       for (let i = 1; i <= this.raggedRank; ++i) {
         const newOutputIndex = this.calculateOutputIndex(
-            i - 1, outputIndex, multiplier[i], outputSize[i]);
+            i - 1, outputIndex, requiredCpuEntry(multiplier, i), requiredCpuEntry(outputSize, i));
         outputIndex = newOutputIndex;
       }
 
@@ -380,7 +381,7 @@ class RaggedTensorToTensorOp {
     let dstEnd = 0;    // Destination for contiguous region (in output)
     for (let srcI = 0; srcI <= outputIndexSize; ++srcI) {
       // dstI is the destination where the value at srcI should be copied.
-      let dstI = srcI < outputIndexSize ? outputIndex[srcI] : -1;
+      let dstI = srcI < outputIndexSize ? requiredCpuEntry(outputIndex, srcI) : -1;
 
       // If we're still in a contiguous region, then update dstEnd go to the
       // next srcI.
@@ -410,7 +411,7 @@ class RaggedTensorToTensorOp {
       if (dstI > dstEnd && this.defaultValue.length === 1) {
         outputBase
             .subarray(dstEnd * valueElementSize, dstI * valueElementSize)
-            .fill(this.defaultValue[0]);
+            .fill(requiredCpuEntry(this.defaultValue, 0));
         dstEnd = dstI;
       }
       while (dstI > dstEnd) {

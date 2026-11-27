@@ -16,6 +16,7 @@
  */
 
 import {backend_util, util} from '@tensorflow/tfjs-core';
+import {shaderEntry} from './shader_util';
 
 import {BinaryOpType, getBinaryOpString} from './binary_op_util';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
@@ -44,9 +45,9 @@ export class BinaryOpProgram implements WebGPUProgram {
     this.op = op;
 
     this.useSharedMemoryWithA =
-        aShape.length <= 1 && bShape.length > 1 && aShape[0] < 128;
+        aShape.length === 1 && bShape.length > 1 && shaderEntry(aShape, 0) < 128;
     this.useSharedMemoryWithB =
-        bShape.length <= 1 && aShape.length > 1 && bShape[0] < 128;
+        bShape.length === 1 && aShape.length > 1 && shaderEntry(bShape, 0) < 128;
 
     if (this.useSharedMemoryWithA || this.useSharedMemoryWithB) {
       this.outputComponent = 1;
@@ -54,7 +55,7 @@ export class BinaryOpProgram implements WebGPUProgram {
       // lastDimensionSize is used as sharedBuf array size, so can not be
       // used as uniform.
       this.lastDimensionSize =
-          this.useSharedMemoryWithB ? bShape[0] : aShape[0];
+          this.useSharedMemoryWithB ? shaderEntry(bShape, 0) : shaderEntry(aShape, 0);
       this.shaderKey = `binary_${op}_${this.lastDimensionSize}`;
       this.type = 'shared';
       // This is an experimental value when using shared memory.
@@ -62,17 +63,17 @@ export class BinaryOpProgram implements WebGPUProgram {
       this.workgroupSize = [256, 1, 1];
     } else {
       const aDivisibleBy4 =
-          aShape.length > 0 && aShape[aShape.length - 1] % 4 === 0;
+          aShape.length > 0 && shaderEntry(aShape, aShape.length - 1) % 4 === 0;
       const bDivisibleBy4 =
-          bShape.length > 0 && bShape[bShape.length - 1] % 4 === 0;
+          bShape.length > 0 && shaderEntry(bShape, bShape.length - 1) % 4 === 0;
       if (aDivisibleBy4 && bDivisibleBy4) {
         this.outputComponent = 4;
         this.variableComponents = [4, 4];
       } else if (
           (aDivisibleBy4 &&
-           (util.isScalarShape(bShape) || bShape[bShape.length - 1] === 1)) ||
+           (util.isScalarShape(bShape) || shaderEntry(bShape, bShape.length - 1) === 1)) ||
           (bDivisibleBy4 &&
-           (util.isScalarShape(aShape) || aShape[aShape.length - 1] === 1))) {
+           (util.isScalarShape(aShape) || shaderEntry(aShape, aShape.length - 1) === 1))) {
         this.outputComponent = 4;
         this.variableComponents = aDivisibleBy4 ? [4, 1] : [1, 4];
       } else {
@@ -91,7 +92,7 @@ export class BinaryOpProgram implements WebGPUProgram {
   }
 
   getUserCode(): string {
-    let userCode;
+    let userCode: string;
     const dType = this.outputComponent === 4 ? 'vec4<f32>' : 'f32';
     const opFnStr = `
     fn binaryOperation(a : ${dType}, b : ${dType}) -> ${dType} {

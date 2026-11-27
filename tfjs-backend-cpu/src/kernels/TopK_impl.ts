@@ -18,6 +18,7 @@
 /** An implementation of the TopK kernel shared between webgl and cpu. */
 
 import {buffer, NumericDataType, Rank, ShapeMap, Tensor, TensorBuffer, TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 type Pair = {
   value: number,
@@ -56,27 +57,27 @@ function select(array: Pair[], k: number, left = 0, right = array.length - 1) {
       select(array, k, newLeft, newRight);
     }
     // partition the elements between left and right around t
-    const t = array[k];
+    const t = requiredCpuEntry(array, k);
     let i = left;
     let j = right;
 
     util.swap(array, left, k);
 
-    if (comparePair(array[right], t) > 0) {
+    if (comparePair(requiredCpuEntry(array, right), t) > 0) {
       util.swap(array, left, right);
     }
     while (i < j) {
       util.swap(array, i, j);
       i++;
       j--;
-      while (comparePair(array[i], t) < 0) {
+      while (comparePair(requiredCpuEntry(array, i), t) < 0) {
         i = i + 1;
       }
-      while (comparePair(array[j], t) > 0) {
+      while (comparePair(requiredCpuEntry(array, j), t) > 0) {
         j = j - 1;
       }
     }
-    if (comparePair(array[left], t) === 0) {
+    if (comparePair(requiredCpuEntry(array, left), t) === 0) {
       util.swap(array, left, j);
     } else {
       j = j + 1;
@@ -98,7 +99,7 @@ export function topKImpl<T extends Tensor, R extends Rank>(
     sorted: boolean):
     [TensorBuffer<R, NumericDataType>, TensorBuffer<R, 'int32'>] {
   // Reshape into a 2d tensor [batch, lastDim] and compute topk along lastDim.
-  const lastDim = xShape[xShape.length - 1];
+  const lastDim = requiredCpuEntry(xShape, xShape.length - 1);
   const [batch, size] = [x.length / lastDim, lastDim];
   const allTopKVals = util.getTypedArrayFromDType(xDtype, batch * k);
   const allTopKIndices = util.getTypedArrayFromDType('int32', batch * k);
@@ -107,7 +108,7 @@ export function topKImpl<T extends Tensor, R extends Rank>(
     const offset = b * size;
     const vals = x.subarray(offset, offset + size);
 
-    let valAndInd: Pair[] = new Array(vals.length);
+    let valAndInd: Pair[] = new Array<Pair>(vals.length);
     vals.forEach(
         (value: number, index: number) => valAndInd[index] = {value, index});
 
@@ -124,8 +125,9 @@ export function topKImpl<T extends Tensor, R extends Rank>(
     const topKVals = allTopKVals.subarray(outOffset, outOffset + k);
     const topKIndices = allTopKIndices.subarray(outOffset, outOffset + k);
     for (let i = 0; i < k; i++) {
-      topKVals[i] = valAndInd[i].value;
-      topKIndices[i] = valAndInd[i].index;
+      const pair = requiredCpuEntry(valAndInd, i);
+      topKVals[i] = pair.value;
+      topKIndices[i] = pair.index;
     }
   }
   // Reshape back to the original input shape, except that the last

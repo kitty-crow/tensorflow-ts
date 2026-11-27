@@ -16,6 +16,7 @@
  */
 
 import {getCoordsDataType, getCoordsXYZ, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
+import {shaderEntry} from './shader_util';
 import {FlatDispatchProgram} from './flat_dispatch_program';
 
 const workPerThread = 1;
@@ -26,9 +27,9 @@ export class TransposeProgram extends FlatDispatchProgram implements WebGPUProgr
   newDim: number[];
 
   constructor(aShape: number[], newDim: number[]) {
-    const outputShape: number[] = new Array(aShape.length);
+    const outputShape: number[] = new Array<number>(aShape.length);
     for (let i = 0; i < outputShape.length; i++) {
-      outputShape[i] = aShape[newDim[i]];
+      outputShape[i] = shaderEntry(aShape, shaderEntry(newDim, i));
     }
     super(outputShape, [64, 1, 1], ['A'], [workPerThread, 1, 1]);
 
@@ -62,9 +63,9 @@ export function getSwitchedCoords(newDim: number[]): string {
   if (rank > 6) {
     throw Error(`Transpose for rank ${rank} is not yet supported`);
   }
-  const switchedCoords = new Array(rank);
+  const switchedCoords = new Array<string>(rank);
   for (let i = 0; i < newDim.length; i++) {
-    switchedCoords[newDim[i]] = `coords.${getCoordsXYZ(i)}`;
+    switchedCoords[shaderEntry(newDim, i)] = `coords.${getCoordsXYZ(i)}`;
   }
 
   return switchedCoords.join();

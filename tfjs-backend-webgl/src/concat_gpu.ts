@@ -17,6 +17,7 @@
 
 import {backend_util} from '@tensorflow/tfjs-core';
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 
 export class ConcatProgram implements GPGPUProgram {
   variableNames: string[];
@@ -28,21 +29,21 @@ export class ConcatProgram implements GPGPUProgram {
     this.outputShape = backend_util.computeOutShape(shapes, 1 /* axis */);
     this.variableNames = shapes.map((_, i) => `T${i}`);
 
-    const offsets: number[] = new Array(shapes.length - 1);
-    offsets[0] = shapes[0][1];
+    const offsets: number[] = new Array<number>(shapes.length - 1);
+    offsets[0] = shaderEntry(shaderEntry(shapes, 0), 1);
     for (let i = 1; i < offsets.length; i++) {
-      offsets[i] = offsets[i - 1] + shapes[i][1];
+      offsets[i] = shaderEntry(offsets, i - 1) + shaderEntry(shaderEntry(shapes, i), 1);
     }
 
-    const snippets = [`if (yC < ${offsets[0]}) setOutput(getT0(yR, yC));`];
+    const snippets = [`if (yC < ${shaderEntry(offsets, 0)}) setOutput(getT0(yR, yC));`];
     for (let i = 1; i < offsets.length; i++) {
-      const shift = offsets[i - 1];
+      const shift = shaderEntry(offsets, i - 1);
       snippets.push(
-          `else if (yC < ${offsets[i]}) ` +
+          `else if (yC < ${shaderEntry(offsets, i)}) ` +
           `setOutput(getT${i}(yR, yC-${shift}));`);
     }
     const lastIndex = offsets.length;
-    const lastShift = offsets[offsets.length - 1];
+    const lastShift = shaderEntry(offsets, offsets.length - 1);
     snippets.push(`else setOutput(getT${lastIndex}(yR, yC-${lastShift}));`);
 
     this.userCode = `

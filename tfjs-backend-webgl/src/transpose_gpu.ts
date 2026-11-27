@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export class TransposeProgram implements GPGPUProgram {
@@ -25,9 +26,9 @@ export class TransposeProgram implements GPGPUProgram {
   rank: number;
 
   constructor(aShape: number[], newDim: number[]) {
-    const outputShape: number[] = new Array(aShape.length);
+    const outputShape: number[] = new Array<number>(aShape.length);
     for (let i = 0; i < outputShape.length; i++) {
-      outputShape[i] = aShape[newDim[i]];
+      outputShape[i] = shaderEntry(aShape, shaderEntry(newDim, i));
     }
     this.outputShape = outputShape;
     this.rank = outputShape.length;
@@ -50,9 +51,9 @@ function getSwitchedCoords(newDim: number[]): string {
   }
   const originalOrder =
       ['resRC.x', 'resRC.y', 'resRC.z', 'resRC.w', 'resRC.u', 'resRC.v'];
-  const switchedCoords = new Array(rank);
+  const switchedCoords = new Array<string>(rank);
   for (let i = 0; i < newDim.length; i++) {
-    switchedCoords[newDim[i]] = originalOrder[i];
+    switchedCoords[shaderEntry(newDim, i)] = shaderEntry(originalOrder, i);
   }
   return switchedCoords.join();
 }

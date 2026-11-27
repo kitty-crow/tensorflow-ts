@@ -19,6 +19,7 @@
 
 import { Tensor, tensor } from '@tensorflow/tfjs-core';
 import { ValueError } from '../../errors';
+import {requiredElement} from '../../utils/generic_utils';
 import { matchAll } from './match_all_polyfill';
 import { tensorArrTo2DArr, tensorToArr } from './utils';
 
@@ -65,9 +66,8 @@ export class StaticHashTable<K, V extends number|string> {
       );
     }
     const keyValPairs: Array<[K, V]> = [];
-    for (let idx = 0; idx < keys.length; idx++) {
-      const key = keys[idx];
-      const val = values[idx];
+    for (const [idx, key] of keys.entries()) {
+      const val = requiredElement(values, idx);
       keyValPairs.push([key, val]);
     }
 
@@ -75,10 +75,7 @@ export class StaticHashTable<K, V extends number|string> {
   }
 
   get(key: K): V {
-    if (this._map.has(key)) {
-      return this._map.get(key);
-    }
-    return this.defaultValue;
+    return this._map.get(key) ?? this.defaultValue;
   }
 
   lookup(keys: Tensor[]): Tensor[] {
@@ -120,14 +117,11 @@ export class BytePairTokenizerCache {
   private _cache: Map<string, string>;
 
   constructor() {
-    this._cache = new Map();
+    this._cache = new Map<string, string>();
   }
 
   get(key: string): string {
-    if (this._cache.has(key)) {
-      return this._cache.get(key);
-    }
-    return '';
+    return this._cache.get(key) ?? '';
   }
 
   /**
@@ -139,7 +133,7 @@ export class BytePairTokenizerCache {
       keys.dataSync() as unknown as string[] : keys;
 
     for (const [idx, key] of arrKeys.entries()) {
-      this._cache.set(key, values[idx]);
+      this._cache.set(key, requiredElement(values, idx));
     }
     return this;
   }
@@ -280,7 +274,7 @@ export function splitStringsForBpe(
   if (unsplittableTokens && unsplittableTokens.length > 0) {
     alts = createAltsForUnsplittableTokens(unsplittableTokens);
     for (const [idx, token] of unsplittableTokens.entries()) {
-      const alt = alts[idx];
+      const alt = requiredElement(alts, idx);
       const escapedToken = escape(token);
 
       rawTokens = regexSplit(rawTokens !== undefined ?
@@ -297,7 +291,7 @@ export function splitStringsForBpe(
   if (unsplittableTokens && unsplittableTokens.length > 0) {
     // Replace special tokens alternate with originals.
     for (const [idx, token] of unsplittableTokens.entries()) {
-      const alt = alts[idx];
+      const alt = requiredElement(alts, idx);
       const escapedAlt = escape(alt);
       rawTokens = rawTokens.map(
         arr => arr.map(t => t.replace(new RegExp(escapedAlt), token)));

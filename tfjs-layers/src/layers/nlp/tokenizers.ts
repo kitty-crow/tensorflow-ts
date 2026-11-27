@@ -24,6 +24,7 @@ import { Tensor, serialization, tensor, tidy} from '@tensorflow/tfjs-core';
 
 import { Layer, LayerArgs } from '../../engine/topology';
 import { NotImplementedError, ValueError } from '../../errors';
+import {requiredElement} from '../../utils/generic_utils';
 import { BytePairTokenizerCache, StaticHashTable, bytesToUnicode, createStaticHashtable, removeStringsFromInputs, splitStringsForBpe } from './tokenizers_utils';
 import { tensorToArr, tensorArrTo2DArr } from './utils';
 
@@ -287,7 +288,7 @@ export class BytePairTokenizer extends Tokenizer {
     this.mergeRanksLookupDefault = this.merges.length + 1;
     this.mergeRanks = createStaticHashtable(
       this.merges,
-      [...Array(this.merges.length).keys()],
+      [...Array<number>(this.merges.length).keys()],
       this.mergeRanksLookupDefault
     );
   }
@@ -356,7 +357,7 @@ export class BytePairTokenizer extends Tokenizer {
 
     // Mask empty.
     const nonEmptyMask = second.map(arr => arr.length > 0);
-    mask = mask.map((a, idx) => a && nonEmptyMask[idx]);
+    mask = mask.map((a, idx) => a && requiredElement(nonEmptyMask, idx));
     if (!mask.some(e => e)) {
       return [words, mask];
     }
@@ -364,14 +365,14 @@ export class BytePairTokenizer extends Tokenizer {
       .map((bool, idx) => bool ? idx : -1)
       .filter(e => e !== -1);
 
-    const filteredFirst = nonEmptyIndices.map(idx => first[idx]);
-    const filteredSecond = nonEmptyIndices.map(idx => second[idx]);
+    const filteredFirst = nonEmptyIndices.map(idx => requiredElement(first, idx));
+    const filteredSecond = nonEmptyIndices.map(idx => requiredElement(second, idx));
 
     // Get byte pair ranking in merge rules.
     const pairs: string[][] = filteredFirst.map((firstSubArr, idx) => {
-      const secondSubArr = filteredSecond[idx];
+      const secondSubArr = requiredElement(filteredSecond, idx);
 
-      return firstSubArr.map((char, idx) => `${char} ${secondSubArr[idx]}`);
+      return firstSubArr.map((char, idx) => `${char} ${requiredElement(secondSubArr, idx)}`);
     });
     const pairRanksTensor = this.mergeRanks.lookup(
       pairs.map(arr => tensor(arr)));
@@ -385,7 +386,7 @@ export class BytePairTokenizer extends Tokenizer {
 
     // Tokens that cannot be further merged are marked as finished.
     for (const [idx, index] of nonEmptyIndices.entries()) {
-      const update = pairFoundMask[idx];
+      const update = requiredElement(pairFoundMask, idx);
       mask[index] = update;
     }
     if (!mask.some(e => e)) {
@@ -396,40 +397,42 @@ export class BytePairTokenizer extends Tokenizer {
       return arr.indexOf(arr.reduce((a, b) => Math.min(a, b), Infinity));
     }
 
-    const maskedPairRanks = pairRanks.filter((_, idx) => pairFoundMask[idx]);
+    const maskedPairRanks = pairRanks.filter((_, idx) => requiredElement(pairFoundMask, idx));
     const minPairRankIndices = maskedPairRanks.map(arr => argMin(arr));
 
     // Get words and pairs to process.
-    const unfinishedWords = wordsStr.filter((_, idx) => mask[idx]);
+    const unfinishedWords = wordsStr.filter((_, idx) => requiredElement(mask, idx));
 
     const pairLeft = unfinishedWords.map(
-      (word, idx) => word[minPairRankIndices[idx]]);
+      (word, idx) => requiredElement(word, requiredElement(minPairRankIndices, idx)));
 
     const pairRight = unfinishedWords.map(
-      (word, idx) => word[minPairRankIndices[idx] + 1]);
+      (word, idx) => requiredElement(word, requiredElement(minPairRankIndices, idx) + 1));
 
     const mergedPairs = pairLeft.map((left, idx) => {
-      const right = pairRight[idx];
+      const right = requiredElement(pairRight, idx);
       return `${left}${right}`;
     });
     const unfinishedWordsIndices = mask
       .map((_, idx) => idx)
-      .filter((_, idx) => mask[idx]);
+      .filter((_, idx) => requiredElement(mask, idx));
 
     const mergedPairIndices = unfinishedWordsIndices.map(
-      (index, idx) => [index, minPairRankIndices[idx]]);
+      (index, idx): [number, number] =>
+        [index, requiredElement(minPairRankIndices, idx)]);
     const emptyStringIndices = unfinishedWordsIndices.map(
-      (index, idx) => [index, minPairRankIndices[idx] + 1]);
+      (index, idx): [number, number] =>
+        [index, requiredElement(minPairRankIndices, idx) + 1]);
 
     for (const [idx, indices] of mergedPairIndices.entries()) {
       const [wordIdx, charIdx] = indices;
-      const mergedPair = mergedPairs[idx];
-      wordsStr[wordIdx][charIdx] = mergedPair;
+      const mergedPair = requiredElement(mergedPairs, idx);
+      requiredElement(wordsStr, wordIdx)[charIdx] = mergedPair;
     }
 
     for (const indices of emptyStringIndices) {
       const [wordIdx, charIdx] = indices;
-      wordsStr[wordIdx][charIdx] = '';
+      requiredElement(wordsStr, wordIdx)[charIdx] = '';
     }
 
     words = wordsStr.map(word => tensor(word));
@@ -449,7 +452,7 @@ export class BytePairTokenizer extends Tokenizer {
       return mask.some(e => e);
     }
 
-    const initialMask: boolean[] = Array(numWords).fill(true);
+    const initialMask: boolean[] = Array<boolean>(numWords).fill(true);
 
     let mergedWords = words;
     let mask = initialMask;
@@ -501,7 +504,7 @@ export class BytePairTokenizer extends Tokenizer {
 
       const tokenRowSplits = [0];
       for (const [idx, token] of rawTokens.entries()) {
-        tokenRowSplits.push(tokenRowSplits[idx] + token.length);
+        tokenRowSplits.push(requiredElement(tokenRowSplits, idx) + token.length);
       }
 
       const flatTokens = rawTokens.reduce((acc, e) => acc.concat(e), []);
@@ -511,10 +514,10 @@ export class BytePairTokenizer extends Tokenizer {
       const cacheMask = cacheLookup.map(e => e === '');
 
       const hasUnseenWords = cacheMask.some(
-        (bool, idx) => bool && flatTokens[idx] !== '');
+        (bool, idx) => bool && requiredElement(flatTokens, idx) !== '');
 
       const processUnseenTokens = (): string[]  => {
-        const unseenTokens = flatTokens.filter((_, idx) => cacheMask[idx]);
+        const unseenTokens = flatTokens.filter((_, idx) => requiredElement(cacheMask, idx));
         this.bpeMergeAndUpdateCache(tensor(unseenTokens));
         return this.cache.lookup(flatTokens);
       };
@@ -531,15 +534,16 @@ export class BytePairTokenizer extends Tokenizer {
       // Unflatten to match input.
       const newTokenRowSplits = [0];
       for (const [idx, token] of tokens.entries()) {
-        newTokenRowSplits.push(newTokenRowSplits[idx] + token.length);
+        newTokenRowSplits.push(requiredElement(newTokenRowSplits, idx) + token.length);
       }
       const newFlatTokens = tokens.reduce((acc, e) => acc.concat(e), []);
       const gatheredIndices =
-        tokenRowSplits.map(index => newTokenRowSplits[index]);
+        tokenRowSplits.map(index => requiredElement(newTokenRowSplits, index));
 
       let tokens2D: Tensor[] = [];
       for (let i = 0; i < gatheredIndices.length - 1; i++) {
-        const [start, end] = [gatheredIndices[i], gatheredIndices[i+1]];
+        const [start, end] = [requiredElement(gatheredIndices, i),
+          requiredElement(gatheredIndices, i + 1)];
         const row = newFlatTokens.slice(start, end);
         tokens2D.push(tensor(row));
       }

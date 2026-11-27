@@ -74,3 +74,12 @@ export const atomicAddSnippet =
           }`;
       }
     };
+
+/** Read a required host-side shader entry, retaining zero and empty strings. */
+export function shaderEntry<T>(entries: readonly T[], index: number): T {
+  const entry = entries[index];
+  if (entry == null) {
+    throw new Error(`Missing shader entry at index ${index}.`);
+  }
+  return entry;
+}

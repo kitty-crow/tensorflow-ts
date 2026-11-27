@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export class ReverseProgram implements GPGPUProgram {
@@ -35,14 +36,14 @@ export class ReverseProgram implements GPGPUProgram {
       this.userCode = `
         void main() {
           int coord = getOutputCoords();
-          setOutput(getX(${xShape[0]} - coord - 1));
+          setOutput(getX(${shaderEntry(xShape, 0)} - coord - 1));
         }
       `;
       return;
     }
     const getInCoord = (i: number) => {
-      if (axis.indexOf(i) !== -1 && xShape[i] !== 1) {
-        return `${xShape[i]} - coords[${i}] - 1`;
+      if (axis.indexOf(i) !== -1 && shaderEntry(xShape, i) !== 1) {
+        return `${shaderEntry(xShape, i)} - coords[${i}] - 1`;
       }
       return `coords[${i}]`;
     };

@@ -16,6 +16,7 @@
  */
 
 import {DataType, TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 const INT32_MAX = 2147483647;
 
@@ -43,30 +44,29 @@ export function raggedRangeImpl(
   // or 1 if all inputs are scalars.
   const inSizes: number[] = [];
   if (!broadcastStarts) {
-    inSizes.push(startsShape[0]);
+    inSizes.push(requiredCpuEntry(startsShape, 0));
   }
   if (!broadcastLimits) {
-    inSizes.push(limitsShape[0]);
+    inSizes.push(requiredCpuEntry(limitsShape, 0));
   }
   if (!broadcastDeltas) {
-    inSizes.push(deltasShape[0]);
+    inSizes.push(requiredCpuEntry(deltasShape, 0));
   }
 
   for (let i = 1; i < inSizes.length; ++i) {
-    if (inSizes[i] !== inSizes[i - 1]) {
+    if (requiredCpuEntry(inSizes, i) !== requiredCpuEntry(inSizes, i - 1)) {
       throw new Error('starts, limits, and deltas must have the same shape');
     }
   }
-  const nRows = inSizes.length === 0 ? 1 : inSizes[0];
+  const nRows = inSizes.length === 0 ? 1 : requiredCpuEntry(inSizes, 0);
 
   // Construct the rtNestedSplits tensor.
-  const rtNestedSplits =
-      util.getArrayFromDType('int32', nRows + 1) as TypedArray;
+  const rtNestedSplits = new Int32Array(nRows + 1);
   rtNestedSplits[0] = 0;
   for (let row = 0; row < nRows; ++row) {
-    const start = broadcastStarts ? starts[0] : starts[row];
-    const limit = broadcastLimits ? limits[0] : limits[row];
-    const delta = broadcastDeltas ? deltas[0] : deltas[row];
+    const start = requiredCpuEntry(starts, broadcastStarts ? 0 : row);
+    const limit = requiredCpuEntry(limits, broadcastLimits ? 0 : row);
+    const delta = requiredCpuEntry(deltas, broadcastDeltas ? 0 : row);
     if (delta === 0) {
       throw new Error('Requires delta != 0');
     }
@@ -76,10 +76,10 @@ export function raggedRangeImpl(
     if (size > INT32_MAX) {
       throw new Error(`Requires ((limit - start) / delta) <= ${INT32_MAX}`);
     }
-    rtNestedSplits[row + 1] = rtNestedSplits[row] + size;
+    rtNestedSplits[row + 1] = requiredCpuEntry(rtNestedSplits, row) + size;
   }
 
-  const nVals = rtNestedSplits[nRows];
+  const nVals = requiredCpuEntry(rtNestedSplits, nRows);
 
   // Construct the rtDenseValues tensor.
   const rtDenseValues =
@@ -87,9 +87,10 @@ export function raggedRangeImpl(
 
   let valueIndex = 0;
   for (let row = 0; row < nRows; ++row) {
-    const rowSize = rtNestedSplits[row + 1] - rtNestedSplits[row];
-    let value = broadcastStarts ? starts[0] : starts[row];
-    const delta = broadcastDeltas ? deltas[0] : deltas[row];
+    const rowSize = requiredCpuEntry(rtNestedSplits, row + 1) -
+        requiredCpuEntry(rtNestedSplits, row);
+    let value = requiredCpuEntry(starts, broadcastStarts ? 0 : row);
+    const delta = requiredCpuEntry(deltas, broadcastDeltas ? 0 : row);
     for (let i = 0; i < rowSize; ++i) {
       rtDenseValues[valueIndex++] = value;
       value += delta;

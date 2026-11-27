@@ -16,6 +16,7 @@
  */
 
 import {padCommon} from './pad_webgpu';
+import {shaderEntry} from './shader_util';
 import {getSwitchedCoords} from './transpose_webgpu';
 import {getCoordsDataType, getCoordsFromIndexSnippet, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
 import {FlatDispatchProgram} from './flat_dispatch_program';
@@ -31,9 +32,9 @@ export class SpaceToBatchNDProgram extends FlatDispatchProgram implements WebGPU
       xShape: number[], paddedXShape: number[],
       paddings: Array<[number, number]>, reshapedPaddedXShape: number[],
       newDim: number[], paddedXShapeStridesShapeLength: number) {
-    const outputShape: number[] = new Array(reshapedPaddedXShape.length);
+    const outputShape: number[] = new Array<number>(reshapedPaddedXShape.length);
     for (let i = 0; i < outputShape.length; i++) {
-      outputShape[i] = reshapedPaddedXShape[newDim[i]];
+      outputShape[i] = shaderEntry(reshapedPaddedXShape, shaderEntry(newDim, i));
     }
     super(outputShape, [64, 1, 1], ['x']);
     this.newDim = newDim;

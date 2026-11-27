@@ -16,6 +16,7 @@
  */
 
 import {util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 /**
  * The StringNGramsOp class creates ngrams from ragged string data.
@@ -74,7 +75,7 @@ class StringNGramsOp {
       nGramSize += leftPadding * this.leftPad.length;
       // Size of the tokens.
       for (let n = 0; n < numTokens; ++n) {
-        nGramSize += data[dataStartIndex + n].length;
+        nGramSize += requiredCpuEntry(data, dataStartIndex + n).length;
       }
       // Size of the right padding.
       nGramSize += rightPadding * this.rightPad.length;
@@ -83,8 +84,8 @@ class StringNGramsOp {
       nGramSize += numSeparators * this.separator.length;
 
       // Build the nGram.
-      output[outputStartIndex + nGramIndex] = new Uint8Array(nGramSize);
-      const nGram = output[outputStartIndex + nGramIndex];
+      const nGram = new Uint8Array(nGramSize);
+      output[outputStartIndex + nGramIndex] = nGram;
 
       let nextNGramIndex = 0;
       const appendToNGram = (str: Uint8Array) =>
@@ -96,7 +97,7 @@ class StringNGramsOp {
       }
       // Only output first numTokens - 1 pairs of data and separator
       for (let n = 0; n < numTokens - 1; ++n) {
-        appendToNGram(data[dataStartIndex + n]);
+        appendToNGram(requiredCpuEntry(data, dataStartIndex + n));
         appendToNGram(this.separator);
       }
       // Handle case when there are no tokens or no right padding as these
@@ -105,7 +106,7 @@ class StringNGramsOp {
         // If we have tokens, then output last and then pair each separator
         // with the right padding that follows, to ensure nGram ends either with
         // the token or with the right pad.
-        appendToNGram(data[dataStartIndex + numTokens - 1]);
+        appendToNGram(requiredCpuEntry(data, dataStartIndex + numTokens - 1));
         for (let n = 0; n < rightPadding; ++n) {
           appendToNGram(this.separator);
           appendToNGram(this.rightPad);
@@ -134,18 +135,19 @@ class StringNGramsOp {
     const inputDataSize = data.length;
     const splitsSize = splits.length;
     if (splitsSize > 0) {
-      let prevSplit = splits[0];
+      let prevSplit = requiredCpuEntry(splits, 0);
       if (prevSplit !== 0) {
         throw new Error(`First split value must be 0, got ${prevSplit}`);
       }
       for (let i = 1; i < splitsSize; ++i) {
-        let validSplits = splits[i] >= prevSplit;
-        validSplits = validSplits && (splits[i] <= inputDataSize);
+        const currentSplit = requiredCpuEntry(splits, i);
+        let validSplits = currentSplit >= prevSplit;
+        validSplits = validSplits && (currentSplit <= inputDataSize);
         if (!validSplits) {
-          throw new Error(`Invalid split value ${splits[i]}, must be in [${
+          throw new Error(`Invalid split value ${currentSplit}, must be in [${
               prevSplit}, ${inputDataSize}]`);
         }
-        prevSplit = splits[i];
+        prevSplit = currentSplit;
       }
       if (prevSplit !== inputDataSize) {
         throw new Error(`Last split value must be data size. Expected ${
@@ -154,10 +156,10 @@ class StringNGramsOp {
     }
 
     const numBatchItems = splitsSize - 1;
-    const nGramsSplits = util.getArrayFromDType('int32', splitsSize);
+    const nGramsSplits = new Int32Array(splitsSize);
     // If there is no data or size, return an empty ragged tensor.
     if (inputDataSize === 0 || splitsSize === 0) {
-      const empty: Uint8Array[] = new Array(inputDataSize);
+      const empty: Uint8Array[] = new Array<Uint8Array>(inputDataSize);
       for (let i = 0; i <= numBatchItems; ++i) {
         nGramsSplits[i] = 0;
       }
@@ -166,7 +168,7 @@ class StringNGramsOp {
 
     nGramsSplits[0] = 0;
     for (let i = 1; i <= numBatchItems; ++i) {
-      const length = splits[i] - splits[i - 1];
+      const length = requiredCpuEntry(splits, i) - requiredCpuEntry(splits, i - 1);
       let numNGrams = 0;
       this.nGramWidths.forEach((nGramWidth) => {
         numNGrams += this.getNumNGrams(length, nGramWidth);
@@ -174,16 +176,17 @@ class StringNGramsOp {
       if (this.preserveShort && length > 0 && numNGrams === 0) {
         numNGrams = 1;
       }
-      nGramsSplits[i] = nGramsSplits[i - 1] + numNGrams;
+      nGramsSplits[i] = requiredCpuEntry(nGramsSplits, i - 1) + numNGrams;
     }
 
-    const nGrams: Uint8Array[] = new Array(nGramsSplits[numBatchItems]);
+    const nGrams: Uint8Array[] = new Array<Uint8Array>(requiredCpuEntry(nGramsSplits, numBatchItems));
 
     for (let i = 0; i < numBatchItems; ++i) {
-      const splitIndex = splits[i];
-      let outputStartIdx = nGramsSplits[i];
+      const splitIndex = requiredCpuEntry(splits, i);
+      const initialOutputStart = requiredCpuEntry(nGramsSplits, i);
+      let outputStartIdx = initialOutputStart;
       this.nGramWidths.forEach((nGramWidth) => {
-        const length = splits[i + 1] - splits[i];
+        const length = requiredCpuEntry(splits, i + 1) - splitIndex;
         const numNGrams = this.getNumNGrams(length, nGramWidth);
         this.createNGrams(
             data, splitIndex, nGrams, outputStartIdx, numNGrams, nGramWidth);
@@ -194,9 +197,9 @@ class StringNGramsOp {
       // one (nGramSplitsdata). If no ngrams were generated, then they will
       // be equal (since we increment outputStartIdx by numNGrams every
       // time we create a set of ngrams.)
-      if (!(this.preserveShort && outputStartIdx === nGramsSplits[i])) continue;
+      if (!(this.preserveShort && outputStartIdx === initialOutputStart)) continue;
       {
-        const dataLength = splits[i + 1] - splits[i];
+        const dataLength = requiredCpuEntry(splits, i + 1) - splitIndex;
         // One legitimate reason to not have any ngrams when this.preserveShort
         // is true is if the sequence itself is empty. In that case, move on.
         if (dataLength === 0) {

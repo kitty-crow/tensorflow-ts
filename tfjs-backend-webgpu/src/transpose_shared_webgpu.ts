@@ -16,6 +16,7 @@
  */
 
 import {util} from '@tensorflow/tfjs-core';
+import {shaderEntry} from './shader_util';
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
 import {computeDispatch} from './webgpu_util';
 
@@ -29,9 +30,9 @@ export class TransposeSharedProgram implements WebGPUProgram {
   workgroupSize: [number, number, number] = [16, 16, 1];
 
   constructor(aShape: number[], newDim: number[]) {
-    const outputShape: number[] = new Array(aShape.length);
+    const outputShape: number[] = new Array<number>(aShape.length);
     for (let i = 0; i < outputShape.length; i++) {
-      outputShape[i] = aShape[newDim[i]];
+      outputShape[i] = shaderEntry(aShape, shaderEntry(newDim, i));
     }
     this.outputShape = outputShape;
     this.dispatchLayout = {x: [0], y: [1]};

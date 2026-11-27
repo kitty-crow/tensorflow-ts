@@ -15,6 +15,7 @@
  * =============================================================================
  */
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export class GatherNDProgram implements GPGPUProgram {
@@ -33,8 +34,8 @@ export class GatherNDProgram implements GPGPUProgram {
       mainLoop += `
           index = round(getIndices(coords[0], ${j}));
           out_of_bounds = out_of_bounds || index < 0;
-          out_of_bounds = out_of_bounds || index >= ${this.paramsShape[j]};
-          flattenIndex += index * ${this.strides[j]};`;
+          out_of_bounds = out_of_bounds || index >= ${shaderEntry(this.paramsShape, j)};
+          flattenIndex += index * ${shaderEntry(this.strides, j)};`;
     }
 
     this.userCode = `

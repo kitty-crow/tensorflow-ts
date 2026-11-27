@@ -16,6 +16,7 @@
  */
 
 import {BackendValues, DataType, TensorBuffer, TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 export function uniqueImpl(
     values: BackendValues, axis: number, shape: number[], dtype: DataType): {
@@ -24,7 +25,7 @@ export function uniqueImpl(
   indices: BackendValues
 } {
   // Normalize and validate axis.
-  const $axis = util.parseAxisParam(axis, shape)[0];
+  const $axis = requiredCpuEntry(util.parseAxisParam(axis, shape), 0);
 
   // Calculate the new shape that is suitable for extracting data along the
   // given axis.
@@ -81,13 +82,12 @@ export function uniqueImpl(
   // Iteration 4: data at [0, 2, 0] => "3"
   // Iteration 5: data at [1, 2, 0] => "6"
   // We got [3,6].
-  const newShape = [1, shape[0], 1];
+  const newShape: [number, number, number] = [1, requiredCpuEntry(shape, $axis), 1];
   for (let i = 0; i < $axis; i++) {
-    newShape[0] *= shape[i];
+    newShape[0] *= requiredCpuEntry(shape, i);
   }
-  newShape[1] = shape[$axis];
   for (let i = $axis + 1; i < shape.length; i++) {
-    newShape[2] *= shape[i];
+    newShape[2] *= requiredCpuEntry(shape, i);
   }
 
   // A map from unique elements (their string representations) to their values
@@ -95,21 +95,25 @@ export function uniqueImpl(
   const uniqueElements = new Map<string, number>();
   // The indices of each unique element in the original tensor along the given
   // axis. It is 1D and has the same size as the given axis.
-  const indices = new Int32Array(shape[$axis]);
+  const indices = new Int32Array(newShape[1]);
   // Create a buffer so we can easily extract value at a given location.
   const inputBuffer = new TensorBuffer(newShape, dtype, values as TypedArray);
   // The indices along the given axis that have unique elements. This is a
   // de-duped version of "indices" above.
   const uniqueIndices: number[] = [];
   const is1DTensor = newShape[0] === 1 && newShape[2] === 1;
-  for (let i = 0; i < shape[$axis]; i++) {
+  for (let i = 0; i < newShape[1]; i++) {
     // Extract values along the axis.
     let element: string;
     if (is1DTensor) {
       // Fast path for 1D tensor input.
-      element = values[i].toString();
+      const value = values[i];
+      if (value == null) {
+        throw new Error(`Missing unique input value at index ${i}.`);
+      }
+      element = value.toString();
     } else {
-      const axisValues = [];
+      const axisValues: Array<ReturnType<typeof inputBuffer.get>> = [];
       for (let m = 0; m < newShape[0]; m++) {
         for (let n = 0; n < newShape[2]; n++) {
           axisValues.push(inputBuffer.get(m, i, n));
@@ -133,7 +137,7 @@ export function uniqueImpl(
   // Now we know where each of the unique elements are located along the axis
   // (uniqueIndices). Extract them from input buffer and store them in the
   // output buffer.
-  const outputTmpShape = newShape.slice();
+  const outputTmpShape: [number, number, number] = [...newShape];
   outputTmpShape[1] = uniqueElements.size;
   const outputBuffer = new TensorBuffer(outputTmpShape, dtype);
   uniqueIndices.forEach((uniqueElementIndex, i) => {

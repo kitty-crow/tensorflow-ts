@@ -16,6 +16,7 @@
  */
 
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
+import {shaderEntry} from './shader_util';
 import {FlatDispatchProgram} from './flat_dispatch_program';
 
 export class TileProgram extends FlatDispatchProgram implements WebGPUProgram {
@@ -23,9 +24,9 @@ export class TileProgram extends FlatDispatchProgram implements WebGPUProgram {
   rank: number;
 
   constructor(aShape: number[], reps: number[]) {
-    const outputShape: number[] = new Array(aShape.length);
+    const outputShape: number[] = new Array<number>(aShape.length);
     for (let i = 0; i < outputShape.length; i++) {
-      outputShape[i] = aShape[i] * reps[i];
+      outputShape[i] = shaderEntry(aShape, i) * shaderEntry(reps, i);
     }
     super(outputShape, [64, 1, 1], ['A']);
     this.rank = this.outputShape.length;
@@ -56,9 +57,9 @@ function getSourceCoords(rank: number, uniformPrefix = ''): string {
   }
 
   const currentCoords = ['resRC.x', 'resRC.y', 'resRC.z', 'resRC.w'];
-  const sourceCoords = [];
+  const sourceCoords: string[] = [];
   for (let i = 0; i < rank; i++) {
-    sourceCoords.push(`(${currentCoords[i]} % ${uniformPrefix}aShape[${i}])`);
+    sourceCoords.push(`(${shaderEntry(currentCoords, i)} % ${uniformPrefix}aShape[${i}])`);
   }
   return sourceCoords.join();
 }

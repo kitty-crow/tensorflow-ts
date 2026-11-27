@@ -16,6 +16,7 @@
  */
 
 import {DataType, TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 function validateIndices(
     indices: TypedArray, indicesShape: number[], numParams: number) {
@@ -35,21 +36,21 @@ function validateSplits(
     paramsNestedSplits: TypedArray[], numParamsDenseValues: number) {
   // Validate
   for (let dim = 0; dim < paramsNestedSplits.length; ++dim) {
-    const splits = paramsNestedSplits[dim];
+    const splits = requiredCpuEntry(paramsNestedSplits, dim);
     const lastSplit = (dim === paramsNestedSplits.length - 1) ?
         numParamsDenseValues :
-        paramsNestedSplits[dim + 1].length;
+        requiredCpuEntry(paramsNestedSplits, dim + 1).length;
     if (splits.length === 0) {
       throw new Error('Ragged splits may not be empty');
     }
-    if (splits[0] < 0) {
+    if (requiredCpuEntry(splits, 0) < 0) {
       throw new Error('Ragged splits must be non-negative');
     }
-    if (splits[splits.length - 1] > lastSplit) {
+    if (requiredCpuEntry(splits, splits.length - 1) > lastSplit) {
       throw new Error('Ragged splits must not point past values');
     }
     for (let i = 1; i < splits.length; ++i) {
-      if (splits[i - 1] > splits[i]) {
+      if (requiredCpuEntry(splits, i - 1) > requiredCpuEntry(splits, i)) {
         throw new Error('Ragged splits must be sorted in ascending order');
       }
     }
@@ -67,7 +68,7 @@ function makeSplits(
   let numValues = 0;
 
   const numSplits = indicesShape.length - 1 + paramsNestedSplits.length;
-  const outSplits = new Array(numSplits).fill(null).map(() => [0]);
+  const outSplits = Array.from({length: numSplits}, () => [0]);
 
   validateSplits(paramsNestedSplits, numParamsDenseValues);
 
@@ -80,10 +81,10 @@ function makeSplits(
   //   [0, 4, 8, 12, 16, 20, 24]    # length=2*3+1, stride=4
   let nrows = 1;
   for (let dim = 0; dim < indicesShape.length - 1; ++dim) {
-    nrows *= indicesShape[dim];
-    const rowLength = indicesShape[dim + 1];
+    nrows *= requiredCpuEntry(indicesShape, dim);
+    const rowLength = requiredCpuEntry(indicesShape, dim + 1);
     for (let i = 1; i < nrows + 1; ++i) {
-      outSplits[dim].push(i * rowLength);
+      requiredCpuEntry(outSplits, dim).push(i * rowLength);
     }
   }
 
@@ -97,23 +98,24 @@ function makeSplits(
   // should add a new split point to outSplits that is 4 greater than the
   // previous split point in outSplits.
   for (let i = 0; i < indices.length; ++i) {
-    let start = indices[i];
-    let limit = indices[i] + 1;
+    let start = requiredCpuEntry(indices, i);
+    let limit = start + 1;
 
     // Copy splits.
     for (let dim = 0; dim < paramsNestedSplits.length; ++dim) {
-      const splits = paramsNestedSplits[dim];
+      const splits = requiredCpuEntry(paramsNestedSplits, dim);
       const outDim = dim + indicesShape.length - 1;
       if (outDim >= 0) {
-        const outSplitsOutDim = outSplits[outDim];
+        const outSplitsOutDim = requiredCpuEntry(outSplits, outDim);
         const delta =
-            outSplitsOutDim[outSplitsOutDim.length - 1] - splits[start];
+            requiredCpuEntry(outSplitsOutDim, outSplitsOutDim.length - 1) -
+            requiredCpuEntry(splits, start);
         for (let j = start; j < limit; ++j) {
-          outSplits[outDim].push(splits[j + 1] + delta);
+          outSplitsOutDim.push(requiredCpuEntry(splits, j + 1) + delta);
         }
       }
-      start = splits[start];
-      limit = splits[limit];
+      start = requiredCpuEntry(splits, start);
+      limit = requiredCpuEntry(splits, limit);
     }
     if (limit !== start) {
       valueSlices.push([start, limit]);
@@ -126,12 +128,8 @@ function makeSplits(
 
 function getSplits(outSplits: number[][]) {
   const splitsOut: TypedArray[] = [];
-  for (let i = 0; i < outSplits.length; ++i) {
-    const numSplits = outSplits[i].length;
-    const splits = util.getArrayFromDType('int32', numSplits) as TypedArray;
-    splitsOut.push(splits);
-
-    outSplits[i].forEach((value, j: number) => splits[j] = value);
+  for (const row of outSplits) {
+    splitsOut.push(Int32Array.from(row));
   }
 
   return splitsOut;
@@ -144,7 +142,8 @@ function computeFlatOuterDims(orig: number[], numOutDims: number) {
   }
 
   for (let inDim = numOutDims; inDim < orig.length; inDim++) {
-    outDims[numOutDims - 1] *= orig[inDim];
+    outDims[numOutDims - 1] = requiredCpuEntry(outDims, numOutDims - 1) *
+        requiredCpuEntry(orig, inDim);
   }
 
   return outDims;
@@ -156,8 +155,8 @@ function writeValueSlices(
     paramsDenseValues: TypedArray, paramsDenseValuesShape: number[],
     valueSlices: Array<[number, number]>, valueSize: number, values: TypedArray,
     valuesShape: number[]) {
-  const denseM = computeFlatOuterDims(paramsDenseValuesShape, 2)[1];
-  const valuesM = computeFlatOuterDims(valuesShape, 2)[1];
+  const denseM = requiredCpuEntry(computeFlatOuterDims(paramsDenseValuesShape, 2), 1);
+  const valuesM = requiredCpuEntry(computeFlatOuterDims(valuesShape, 2), 1);
 
   let outPos = 0;
   for (const slice of valueSlices) {
@@ -183,7 +182,7 @@ function getValues(
 
   const numElements = paramsDenseValues.length;
   const valueSize =
-      numElements === 0 ? 0 : (numElements / paramsDenseValuesShape[0]);
+      numElements === 0 ? 0 : (numElements / requiredCpuEntry(paramsDenseValuesShape, 0));
   writeValueSlices(
       paramsDenseValues, paramsDenseValuesShape, valueSlices, valueSize,
       valuesOut, valuesShape);
@@ -200,16 +199,16 @@ export function raggedGatherImpl(
     throw new Error('paramsNestedSplits must be non empty');
   }
 
-  if (paramsNestedSplitsShapes[0].length === 0) {
+  if (requiredCpuEntry(paramsNestedSplitsShapes, 0).length === 0) {
     throw new Error('Split tensors must not be scalars');
   }
-  const numParams = paramsNestedSplitsShapes[0][0] - 1;
+  const numParams = requiredCpuEntry(requiredCpuEntry(paramsNestedSplitsShapes, 0), 0) - 1;
   validateIndices(indices, indicesShape, numParams);
 
   if (paramsDenseValuesShape.length === 0) {
     throw new Error('params.rank must be nonzero');
   }
-  const numParamsDenseValues = paramsDenseValuesShape[0];
+  const numParamsDenseValues = requiredCpuEntry(paramsDenseValuesShape, 0);
 
   // Calculate the `splits`, and store the value slices that we need to
   // copy in `valueSlices`.

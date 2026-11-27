@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export class TileProgram implements GPGPUProgram {
@@ -25,9 +26,9 @@ export class TileProgram implements GPGPUProgram {
   rank: number;
 
   constructor(aShape: number[], reps: number[]) {
-    const outputShape: number[] = new Array(aShape.length);
+    const outputShape: number[] = new Array<number>(aShape.length);
     for (let i = 0; i < outputShape.length; i++) {
-      outputShape[i] = aShape[i] * reps[i];
+      outputShape[i] = shaderEntry(aShape, i) * shaderEntry(reps, i);
     }
     this.outputShape = outputShape;
     this.rank = outputShape.length;
@@ -49,14 +50,14 @@ function getSourceCoords(aShape: number[]): string {
     throw Error(`Tile for rank ${rank} is not yet supported`);
   }
   if (rank === 1) {
-    return `imod(resRC, ${aShape[0]})`;
+    return `imod(resRC, ${shaderEntry(aShape, 0)})`;
   }
 
   const currentCoords = ['resRC.x', 'resRC.y', 'resRC.z', 'resRC.w', 'resRC.u'];
 
-  const sourceCoords = [];
+  const sourceCoords: string[] = [];
   for (let i = 0; i < aShape.length; i++) {
-    sourceCoords.push(`imod(${currentCoords[i]}, ${aShape[i]})`);
+    sourceCoords.push(`imod(${shaderEntry(currentCoords, i)}, ${shaderEntry(aShape, i)})`);
   }
   return sourceCoords.join();
 }

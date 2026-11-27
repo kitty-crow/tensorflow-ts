@@ -45,6 +45,17 @@ import {nonMaxSuppressionV3} from './kernels/NonMaxSuppressionV3';
 import {nonMaxSuppressionV4} from './kernels/NonMaxSuppressionV4';
 import {nonMaxSuppressionV5} from './kernels/NonMaxSuppressionV5';
 
+import {stringNGramsImpl} from './kernels/StringNGrams_impl';
+import {stringSplitImpl} from './kernels/StringSplit_impl';
+import {sparseReshapeImpl} from './kernels/SparseReshape_impl';
+import {sparseSegmentReductionImpl} from './kernels/SparseSegmentReduction_impl';
+import {uniqueImpl} from './kernels/Unique_impl';
+import {topKImpl} from './kernels/TopK_impl';
+import {raggedRangeImpl} from './kernels/RaggedRange_impl';
+import {raggedGatherImpl} from './kernels/RaggedGather_impl';
+import {raggedTensorToTensorImpl} from './kernels/RaggedTensorToTensor_impl';
+import {sparseFillEmptyRowsImpl} from './kernels/SparseFillEmptyRows_impl';
+
 describe('CPU tensor storage payload', () => {
   it('preserves the numeric array identity, including zero and NaN', () => {
     const values = new Float32Array([0, NaN, -2]);
@@ -422,5 +433,70 @@ describe('checked CPU volumetric and depthwise geometry', () => {
         new Float32Array([8, 32, 28, 68]));
     [x, filter, dy, y, dx].forEach(t => backend.disposeData(t.dataId));
     expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('checked CPU ragged and sparse metadata', () => {
+  it('retains scalar broadcast, descending ranges and empty rows', () => {
+    const scalar = raggedRangeImpl(new Int32Array([0]), [], 'int32',
+        new Int32Array([3]), [], new Int32Array([1]), []);
+    expect(scalar).toEqual([new Int32Array([0, 3]), new Int32Array([0, 1, 2])]);
+    const rows = raggedRangeImpl(new Int32Array([4, 1]), [2], 'int32',
+        new Int32Array([0, 0]), [2], new Int32Array([-2, 1]), [2]);
+    expect(rows).toEqual([new Int32Array([0, 2, 2]), new Int32Array([4, 2])]);
+    expect(() => raggedRangeImpl(new Int32Array(0), [], 'int32',
+        new Int32Array([3]), [], new Int32Array([1]), [])).toThrowError();
+  });
+
+  it('gathers ragged rows in requested order, including empty rows', () => {
+    const output = raggedGatherImpl([new Int32Array([0, 2, 2, 3])], [[4]],
+        new Int32Array([10, 20, 30]), [3], 'int32',
+        new Int32Array([2, 0, 1]), [3], 1);
+    expect(output).toEqual([[new Int32Array([0, 1, 3, 3])],
+      new Int32Array([30, 10, 20]), [3]]);
+  });
+
+  it('densifies an inferred shape while preserving empty rows and padding', () => {
+    const output = raggedTensorToTensorImpl(new Int32Array([-1]), [],
+        new Int32Array([1, 2, 3]), [3], 'int32', new Int32Array([0]), [],
+        [new Int32Array([0, 2, 2, 3])], [[4]], ['ROW_SPLITS']);
+    expect(output).toEqual([[3, 2], new Int32Array([1, 2, 0, 0, 3, 0])]);
+  });
+
+  it('fills sparse rows, restores row order and retains reverse indices', () => {
+    const output = sparseFillEmptyRowsImpl(new Int32Array([2, 0, 0, 1]),
+        [2, 2], 'int32', new Int32Array([5, 7]), 'int32',
+        new Int32Array([3, 2]), -1);
+    expect(output).toEqual([new Int32Array([0, 1, 1, 0, 2, 0]), [3, 2],
+      new Int32Array([7, -1, 5]), [false, true, false], [2, 0]]);
+  });
+});
+
+describe('checked CPU string and index kernels', () => {
+  it('preserves empty string tokens, short sequences and ragged splits', () => {
+    const a = new Uint8Array([97]);
+    const b = new Uint8Array([98]);
+    expect(stringNGramsImpl([a, b], new Int32Array([0, 2, 2]),
+        ' ', [2], '', '', 0, true)).toEqual([
+      [new Uint8Array([97, 32, 98])], new Int32Array([0, 1, 1])]);
+    expect(stringSplitImpl([new Uint8Array([97, 44, 44, 98])],
+        new Uint8Array([44]), false)).toEqual([
+      new Int32Array([0, 0, 0, 1, 0, 2]), [a, new Uint8Array(0), b], [1, 3]]);
+  });
+  it('preserves inferred sparse dimensions, segment gaps and means', () => {
+    expect(sparseReshapeImpl(new Int32Array([1, 2]), [1, 2], 'int32',
+        [2, 3], [3, -1])).toEqual([new Int32Array([2, 1]), [1, 2], [3, 2]]);
+    expect(sparseSegmentReductionImpl(new Float32Array([2, 4, 8]), [3, 1],
+        'float32', new Int32Array([0, 1, 2]), new Int32Array([0, 0, 2]),
+        true, -1)).toEqual([new Float32Array([3, -1, 8]), [3, 1]]);
+  });
+  it('preserves first-occurrence unique order and stable TopK ties', () => {
+    const unique = uniqueImpl(new Int32Array([4, 2, 4]), 0, [3], 'int32');
+    expect(unique).toEqual({outputValues: new Int32Array([4, 2]),
+      outputShape: [2], indices: new Int32Array([0, 1, 0])});
+    const [values, indices] = topKImpl(new Float32Array([4, 2, 4]),
+        [3], 'float32', 2, true);
+    expect(values.values).toEqual(new Float32Array([4, 4]));
+    expect(indices.values).toEqual(new Int32Array([0, 2]));
   });
 });

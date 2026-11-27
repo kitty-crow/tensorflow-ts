@@ -16,13 +16,14 @@
  */
 
 import {backend_util, DataType, TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 export function sparseReshapeImpl(
     inputIndices: TypedArray, inputIndicesShape: number[], inputDType: DataType,
     inputShape: number[],
     targetShape: number[]): [TypedArray, number[], number[]] {
   const denseSize = util.sizeFromShape(inputShape);
-  const nnz = inputIndicesShape[0];
+  const nnz = requiredCpuEntry(inputIndicesShape, 0);
   const outputRank = targetShape.length;
 
   // Compute the output shape. Determine product of specified dimensions, and
@@ -31,7 +32,7 @@ export function sparseReshapeImpl(
   let product = 1;
   let unknownIndex = -1;
   for (let d = 0; d < outputRank; ++d) {
-    const size = targetShape[d];
+    const size = requiredCpuEntry(targetShape, d);
     if (size === -1 && unknownIndex !== -1) {
       throw new Error(
           backend_util.getSparseReshapeMultipleNegativeOneOutputDimErrorMessage(
@@ -69,7 +70,7 @@ export function sparseReshapeImpl(
   if (inputRank > 0) {
     inputStrides[inputRank - 1] = 1;
     for (let d = inputRank - 2; d >= 0; --d) {
-      inputStrides[d] = inputStrides[d + 1] * inputShape[d + 1];
+      inputStrides[d] = requiredCpuEntry(inputStrides, d + 1) * requiredCpuEntry(inputShape, d + 1);
     }
   }
 
@@ -77,7 +78,7 @@ export function sparseReshapeImpl(
   if (outputRank > 0) {
     outputStrides[outputRank - 1] = 1;
     for (let d = outputRank - 2; d >= 0; --d) {
-      outputStrides[d] = outputStrides[d + 1] * outputShape[d + 1];
+      outputStrides[d] = requiredCpuEntry(outputStrides, d + 1) * requiredCpuEntry(outputShape, d + 1);
     }
   }
 
@@ -87,12 +88,13 @@ export function sparseReshapeImpl(
     let id = 0;
     for (let j = 0; j < inputRank; ++j) {
       // inputIndices is a 2d tensor with shape of [nnz, inputRank]
-      id += inputIndices[i * inputRank + j] * inputStrides[j];
+      id += requiredCpuEntry(inputIndices, i * inputRank + j) * requiredCpuEntry(inputStrides, j);
     }
     for (let j = 0; j < outputRank; ++j) {
       // newIndices is a 2d tensor with shape of [nnz, outputRank]
-      newIndices[i * outputRank + j] = Math.trunc(id / outputStrides[j]);
-      id %= outputStrides[j];
+      const stride = requiredCpuEntry(outputStrides, j);
+      newIndices[i * outputRank + j] = Math.trunc(id / stride);
+      id %= stride;
     }
   }
   return [newIndices, [nnz, outputRank], outputShape];

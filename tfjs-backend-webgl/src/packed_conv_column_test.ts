@@ -16,6 +16,10 @@
  */
 
 import {ConcatPackedProgram} from './concat_packed_gpu';
+import {ConcatProgram} from './concat_gpu';
+import {TileProgram} from './tile_gpu';
+import {TransposePackedProgram} from './transpose_packed_gpu';
+import {TransposeProgram} from './transpose_gpu';
 import {ReversePackedProgram} from './reverse_packed_gpu';
 import {shaderEntry} from './packing_util';
 import {getLogicalCoordinatesFromFlatIndexByUniform} from './shader_compiler_util';
@@ -236,5 +240,30 @@ describe('checked packed shader metadata', () => {
     expect(shaderEntry([0], 0)).toBe(0);
     expect(shaderEntry([''], 0)).toBe('');
     expect(() => shaderEntry([], 0)).toThrowError();
+  });
+});
+
+describe('checked WebGL transpose, tile and concatenation geometry', () => {
+  it('preserves permutation order and zero dimensions', () => {
+    const shape = [2, 0, 3];
+    const order = [2, 0, 1];
+    const plain = new TransposeProgram(shape, order);
+    const packed = new TransposePackedProgram(shape, order);
+    expect(plain.outputShape).toEqual([3, 2, 0]);
+    expect(packed.outputShape).toEqual([3, 2, 0]);
+    expect(plain.userCode).toContain('getA(resRC.y,resRC.z,resRC.x)');
+    expect(packed.userCode).not.toContain('undefined');
+    expect(shape).toEqual([2, 0, 3]);
+    expect(order).toEqual([2, 0, 1]);
+    expect(() => new TransposeProgram([2, 3], [1, 2])).toThrowError();
+  });
+  it('preserves tile and concatenation coordinates and rejects missing repeats', () => {
+    const tiled = new TileProgram([2, 3], [2, 1]);
+    expect(tiled.outputShape).toEqual([4, 3]);
+    expect(tiled.userCode).toContain('imod(resRC.x, 2),imod(resRC.y, 3)');
+    expect(() => new TileProgram([2, 3], [2])).toThrowError();
+    const concat = new ConcatProgram([[2, 3], [2, 0], [2, 4]]);
+    expect(concat.outputShape).toEqual([2, 7]);
+    expect(concat.userCode).toContain('getT2(yR, yC-3)');
   });
 });

@@ -16,6 +16,7 @@
  */
 
 import * as axis from './axis_util';
+import {fingerPrint64, hexToLong} from '../hash_util';
 import * as broadcast from './broadcast_util';
 import {decodeEinsumEquation, getEinsumComputePath, getEinsumPermutation} from '../backends/einsum_util';
 import {TensorInfo} from '../tensor_info';
@@ -156,5 +157,19 @@ describe('checked einsum metadata', () => {
       allDims: [], summedDims: [], idDims: [[]]
     });
     expect(() => decodeEinsumEquation('ii->i', 1)).toThrowError();
+  });
+});
+
+describe('fixed-width fingerprint state', () => {
+  it('preserves existing reference hashes across multiple 64-byte blocks', () => {
+    const bytes = new Uint8Array(132);
+    let seed = 10;
+    for (let i = 0; i < bytes.length; i++) {
+      seed = (seed * 16807) % 2147483647;
+      bytes[i] = (seed >> 1) & 255;
+    }
+    expect(fingerPrint64(bytes, 0)).toEqual(hexToLong('9ae16a3b2f90404f'));
+    expect(fingerPrint64(bytes, 67)).toEqual(hexToLong('0ced753b45740875'));
+    expect(fingerPrint64(bytes, 132)).toEqual(hexToLong('f2e4c5b6db6c154a'));
   });
 });

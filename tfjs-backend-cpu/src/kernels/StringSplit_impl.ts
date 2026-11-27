@@ -16,6 +16,7 @@
  */
 
 import {TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 function split(
     str: Uint8Array, delimiters: Uint8Array, skipEmpty: boolean,
@@ -32,7 +33,7 @@ function split(
   }
   // When there is one delimiter, the input is split only at that delimiter.
   if (delimiters.length === 1) {
-    const delimiter = delimiters[0];
+    const delimiter = requiredCpuEntry(delimiters, 0);
     let f = str.indexOf(delimiter);
     while (f !== -1) {
       const token = str.subarray(0, f);
@@ -51,7 +52,7 @@ function split(
   // one of the delimiters appears.
   let tokenStart = 0;
   for (let i = 0; i < str.length + 1; i++) {
-    if (!((i === str.length) || (delimiters.indexOf(str[i]) !== -1))) continue;
+    if (!((i === str.length) || (delimiters.indexOf(requiredCpuEntry(str, i)) !== -1))) continue;
     {
       const token = str.subarray(tokenStart, i);
       if (!skipEmpty || token.length !== 0) {
@@ -72,10 +73,10 @@ export function stringSplitImpl(
 
   let outputSize = 0;
   let maxNumEntries = 0;
-  const numIndices: number[] = new Array(batchSize);
+  const numIndices: number[] = new Array<number>(batchSize);
   for (let i = 0; i < batchSize; ++i) {
     const prevTokensLength = tokens.length;
-    split(input[i], delimiter, skipEmpty, tokens);
+    split(requiredCpuEntry(input, i), delimiter, skipEmpty, tokens);
     const nEntries = tokens.length - prevTokensLength;
     numIndices[i] = nEntries;
     outputSize += nEntries;
@@ -83,16 +84,16 @@ export function stringSplitImpl(
   }
 
   const indices = util.getArrayFromDType('int32', outputSize * 2) as TypedArray;
-  const values: Uint8Array[] = new Array(outputSize);
+  const values: Uint8Array[] = new Array<Uint8Array>(outputSize);
   const shape: [number, number] = [batchSize, maxNumEntries];
 
   let c = 0;
   for (let i = 0; i < batchSize; ++i) {
-    for (let j = 0; j < numIndices[i]; ++j) {
+    for (let j = 0; j < requiredCpuEntry(numIndices, i); ++j) {
       // indices is a 2d tensor with shape of [outputSize, 2]
       indices[c * 2] = i;
       indices[c * 2 + 1] = j;
-      values[c] = tokens[c];
+      values[c] = requiredCpuEntry(tokens, c);
       ++c;
     }
   }

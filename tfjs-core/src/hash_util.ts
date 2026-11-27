@@ -69,7 +69,7 @@ function hashLen16(u: Long, v: Long, mul = hexToLong('9ddfea08eb382d69')) {
 // Return a 16-byte hash for 48 bytes.  Quick and dirty.
 // Callers do best to use "random-looking" values for a and b.
 function weakHashLen32WithSeeds(
-    w: Long, x: Long, y: Long, z: Long, a: Long, b: Long) {
+    w: Long, x: Long, y: Long, z: Long, a: Long, b: Long): [Long, Long] {
   a = a.add(w);
   b = rotate64(b.add(a).add(z), 21);
   const c = a;
@@ -157,8 +157,8 @@ export function fingerPrint64(s: Uint8Array, len = s.length): Long {
   let y = seed.mul(k1).add(113);
 
   let z = shiftMix(y.mul(k2).add(113)).mul(k2);
-  let v = [Long.UZERO, Long.UZERO];
-  let w = [Long.UZERO, Long.UZERO];
+  let v: [Long, Long] = [Long.UZERO, Long.UZERO];
+  let w: [Long, Long] = [Long.UZERO, Long.UZERO];
   x = x.mul(k2).add(fetch64(s, 0));
 
   let offset = 0;

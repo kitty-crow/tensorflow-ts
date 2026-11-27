@@ -15,6 +15,7 @@
  * =============================================================================
  */
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 import {getCoordsDataType, UniformType} from './shader_compiler';
 
 export enum CumOpType {
@@ -34,7 +35,7 @@ export class CumProgram implements GPGPUProgram {
     const initVal = this.op === CumOpType.Prod ? '1.0' : '0.0';
     const val =
         exclusive ? initVal : `getX(${getCoords(rank, 'coords', this.op)})`;
-    const length = this.outputShape[this.outputShape.length - 1];
+    const length = shaderEntry(this.outputShape, this.outputShape.length - 1);
     let condition = '';
     let idxString = '';
     // When exclusive is set, the cum op becomes roll op that copies the

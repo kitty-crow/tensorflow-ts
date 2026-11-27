@@ -87,3 +87,12 @@ export function imageDimensions(shape: readonly number[]):
   }
   return [batch, height, width, channels];
 }
+
+/** Read required row and partition metadata without coercing absent entries. */
+export function requiredCpuEntry<T>(values: ArrayLike<T>, index: number): T {
+  const value = values[index];
+  if (value == null) {
+    throw new Error(`Missing CPU metadata entry at index ${index}.`);
+  }
+  return value;
+}

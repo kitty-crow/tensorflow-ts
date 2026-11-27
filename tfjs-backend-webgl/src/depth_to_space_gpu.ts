@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 
 export class DepthToSpaceProgram implements GPGPUProgram {
   variableNames = ['x'];
@@ -77,9 +78,9 @@ export class DepthToSpaceProgram implements GPGPUProgram {
 
   private getOutputDepthSize(): number {
     if (this.dataFormat === 'NHWC') {
-      return this.outputShape[3];
+      return shaderEntry(this.outputShape, 3);
     } else {
-      return this.outputShape[1];
+      return shaderEntry(this.outputShape, 1);
     }
   }
 

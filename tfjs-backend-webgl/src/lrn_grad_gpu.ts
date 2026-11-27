@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 
 export class LRNGradProgram implements GPGPUProgram {
   variableNames = ['inputImage', 'outputImage', 'dy'];
@@ -31,7 +32,7 @@ export class LRNGradProgram implements GPGPUProgram {
       inputShape: number[], depthRadius: number, bias: number, alpha: number,
       beta: number) {
     this.outputShape = inputShape;
-    this.depth = inputShape[3];
+    this.depth = shaderEntry(inputShape, 3);
     this.depthRadius = depthRadius;
     this.bias = bias;
     this.alpha = alpha;

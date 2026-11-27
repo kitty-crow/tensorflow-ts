@@ -16,6 +16,7 @@
  */
 
 import {getCoordsDataType, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
+import {shaderEntry} from './shader_util';
 import {FlatDispatchProgram} from './flat_dispatch_program';
 
 export function padCommon(shape: number[], fillZero = false): string {
@@ -58,7 +59,7 @@ export class PadProgram extends FlatDispatchProgram implements WebGPUProgram {
   constructor(xShape: number[], paddings: Array<[number, number]>) {
     super(
         paddings.map(
-        (p, i) => p[0] /* beforePad */ + xShape[i] + p[1] /* afterPad */), [64, 1, 1], ['x']);
+        (p, i) => p[0] /* beforePad */ + shaderEntry(xShape, i) + p[1] /* afterPad */), [64, 1, 1], ['x']);
     paddings.map((_, i) => {
       this.uniforms += ` pad${i} : vec2<i32>,`;
     });

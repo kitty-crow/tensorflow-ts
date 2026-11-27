@@ -16,6 +16,7 @@
  */
 
 import {getCoordsDataType, getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
+import {shaderEntry} from './shader_util';
 import {FlatDispatchProgram} from './flat_dispatch_program';
 
 export class MirrorPadProgram extends FlatDispatchProgram implements WebGPUProgram {
@@ -29,7 +30,7 @@ export class MirrorPadProgram extends FlatDispatchProgram implements WebGPUProgr
       mode: 'reflect'|'symmetric') {
     super(
         paddings.map(
-        (p, i) => p[0] /* beforePad */ + xShape[i] + p[1] /* afterPad */), [64, 1, 1], ['x']);
+        (p, i) => p[0] /* beforePad */ + shaderEntry(xShape, i) + p[1] /* afterPad */), [64, 1, 1], ['x']);
 
     this.xShape = xShape;
     paddings.map((_, i) => {

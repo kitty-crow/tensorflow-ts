@@ -16,6 +16,7 @@
  */
 
 import {backend_util, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {shaderEntry} from './shader_util';
 
 import {activationFnSnippet, biasActivationSnippet} from './activation_util';
 import {getMainHeaderString as main, typeSnippet, WebGPUProgram} from './webgpu_program';
@@ -141,31 +142,31 @@ export function makeMatMulPackedVec4Source(
     workPerThread: number[], workgroupSize: [number, number, number],
     transposeA = false, tileInner = 32, splitK = false, splitedDimInner = 32,
     broadcastBatch = false): string {
-  const tileAOuter = workgroupSize[1] * workPerThread[1];
-  const tileBOuter = workgroupSize[0] * workPerThread[0];
+  const tileAOuter = workgroupSize[1] * shaderEntry(workPerThread, 1);
+  const tileBOuter = workgroupSize[0] * shaderEntry(workPerThread, 0);
   const tileAWidth = transposeA ? tileAOuter : tileInner;
   const tileAHight = transposeA ? tileInner : tileAOuter;
   const innerElementSize = tileAWidth / workgroupSize[0];
   const rowPerThreadB = tileInner / workgroupSize[1];
-  const rowPerThread = workPerThread[1];
-  const colPerThread = workPerThread[0];
+  const rowPerThread = shaderEntry(workPerThread, 1);
+  const colPerThread = shaderEntry(workPerThread, 0);
   util.assert(
-      ((transposeA && innerElementSize === 4 && workPerThread[1] === 4) ||
+      ((transposeA && innerElementSize === 4 && shaderEntry(workPerThread, 1) === 4) ||
        (!transposeA && (innerElementSize === 3 || innerElementSize === 4))) &&
           tileAWidth % workgroupSize[0] === 0 &&
-          tileInner % workgroupSize[1] === 0 && workPerThread[0] === 4,
+          tileInner % workgroupSize[1] === 0 && shaderEntry(workPerThread, 0) === 4,
       () => `If transposeA ${transposeA} is true, innerElementSize ${
-          innerElementSize} and workPerThread[1] ${workPerThread[1]} must be 4.
+          innerElementSize} and shaderEntry(workPerThread, 1) ${shaderEntry(workPerThread, 1)} must be 4.
           Otherwise, innerElementSize ${innerElementSize} must be 3 or 4.
       tileAWidth ${tileAWidth} must be divisible by workgroupSize[0]${
           workgroupSize[0]}. tileInner ${
           tileInner} must be divisible by workgroupSize[1] ${
-          workgroupSize[1]}. colPerThread ${workPerThread[0]} must be 4.`);
+          workgroupSize[1]}. colPerThread ${shaderEntry(workPerThread, 0)} must be 4.`);
   return `
   var<workgroup> mm_Asub : array<array<vec${innerElementSize}<f32>, ${
       tileAWidth / innerElementSize}>, ${tileAHight}>;
   var<workgroup> mm_Bsub : array<array<vec4<f32>, ${
-      tileBOuter / workPerThread[0]}>, ${tileInner}>;
+      tileBOuter / shaderEntry(workPerThread, 0)}>, ${tileInner}>;
 
   ${main()} {
     let localRow = i32(localId.y);
@@ -249,8 +250,8 @@ export function makeMatMulPackedSource(
     workPerThread: number[], workgroupSize: [number, number, number],
     transposeA = false, tileInner = 32, splitK = false, splitedDimInner = 32,
     sequentialAccessByThreads = false, broadcastBatch = false): string {
-  const tileAOuter = workPerThread[1] * workgroupSize[1];
-  const tileBOuter = workPerThread[0] * workgroupSize[0];
+  const tileAOuter = shaderEntry(workPerThread, 1) * workgroupSize[1];
+  const tileBOuter = shaderEntry(workPerThread, 0) * workgroupSize[0];
   const tileAWidth = transposeA ? tileAOuter : tileInner;
   const tileAHight = transposeA ? tileInner : tileAOuter;
   util.assert(
@@ -265,8 +266,8 @@ export function makeMatMulPackedSource(
   const rowPerThreadA = tileAHight / workgroupSize[1];
   const colPerThreadA = tileAWidth / workgroupSize[0];
   const rowPerThreadB = tileInner / workgroupSize[1];
-  const rowPerThread = workPerThread[1];
-  const colPerThread = workPerThread[0];
+  const rowPerThread = shaderEntry(workPerThread, 1);
+  const colPerThread = shaderEntry(workPerThread, 0);
   const matmulSnippet = sequentialAccessByThreads ?
       `
       let localRow = i32(localId.y);
@@ -555,7 +556,7 @@ export class MatMulPackedProgram implements WebGPUProgram {
   }
 
   getShapeFit(dimAOuter: number, dimBOuter: number, dimInner: number):
-      boolean[] {
+      [boolean, boolean, boolean] {
     const tileAOuter = this.workgroupSize[1] * this.elementsPerThread[1];
     const tileBOuter = this.workgroupSize[0] * this.elementsPerThread[0];
 

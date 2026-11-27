@@ -307,7 +307,8 @@ export class History extends BaseCallback {
       if (this.history[key] == null) {
         this.history[key] = [];
       }
-      this.history[key].push(logs[key]);
+      generic_utils.requiredEntry(this.history, key).push(
+          generic_utils.requiredEntry(logs, key));
     }
   }
 
@@ -319,10 +320,11 @@ export class History extends BaseCallback {
     const keys: string[] = [];
     const indices: number[] = [];
     for (const key in this.history) {
-      const valueArray = this.history[key];
+      const valueArray = generic_utils.requiredEntry(this.history, key);
       for (let i = 0; i < valueArray.length; ++i) {
-        if (typeof valueArray[i] !== 'number') {
-          const valueScalar = valueArray[i] as Tensor;
+        const value = generic_utils.requiredElement(valueArray, i);
+        if (typeof value !== 'number') {
+          const valueScalar = value;
           promises.push(valueScalar.data());
           keys.push(key);
           indices.push(i);
@@ -331,9 +333,12 @@ export class History extends BaseCallback {
     }
     const values = await Promise.all(promises);
     for (let n = 0; n < values.length; ++n) {
-      const tensorToDispose = this.history[keys[n]][indices[n]] as Tensor;
+      const key = generic_utils.requiredElement(keys, n);
+      const index = generic_utils.requiredElement(indices, n);
+      const row = generic_utils.requiredEntry(this.history, key);
+      const tensorToDispose = generic_utils.requiredElement(row, index) as Tensor;
       tensorToDispose.dispose();
-      this.history[keys[n]][indices[n]] = values[n][0];
+      row[index] = generic_utils.requiredElement(generic_utils.requiredElement(values, n), 0);
     }
   }
 }
@@ -534,14 +539,14 @@ export class CallbackConstructorRegistry {
     if (CallbackConstructorRegistry.constructors[verbosityLevel] == null) {
       CallbackConstructorRegistry.constructors[verbosityLevel] = [];
     }
-    CallbackConstructorRegistry.constructors[verbosityLevel].push(
+    generic_utils.requiredEntry(CallbackConstructorRegistry.constructors, verbosityLevel).push(
         callbackConstructor);
   }
 
   private static checkForDuplicate(callbackConstructor:
                                        BaseCallbackConstructor) {
     for (const levelName in CallbackConstructorRegistry.constructors) {
-      const constructors = CallbackConstructorRegistry.constructors[+levelName];
+      const constructors = generic_utils.requiredEntry(CallbackConstructorRegistry.constructors, +levelName);
       constructors.forEach(ctor => {
         if (ctor === callbackConstructor) {
           throw new ValueError('Duplicate callback constructor.');
@@ -570,7 +575,7 @@ export class CallbackConstructorRegistry {
     for (const levelName in CallbackConstructorRegistry.constructors) {
       const level = +levelName;
       if (verbosityLevel >= level) {
-        constructors.push(...CallbackConstructorRegistry.constructors[level]);
+        constructors.push(...generic_utils.requiredEntry(CallbackConstructorRegistry.constructors, level));
       }
     }
     return constructors.map(ctor => new ctor());

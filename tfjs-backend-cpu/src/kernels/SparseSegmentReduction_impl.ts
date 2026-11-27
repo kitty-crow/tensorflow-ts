@@ -16,6 +16,7 @@
  */
 
 import {backend_util, DataType, TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 export function sparseSegmentReductionImpl(
     input: TypedArray, inputShape: number[], inputDType: DataType,
@@ -24,12 +25,12 @@ export function sparseSegmentReductionImpl(
   const numIndices = indices.length;
 
   // Flatten the array to two dimensions
-  const inputFlat: number[] = [inputShape[0], input.length / inputShape[0]];
-  const numCol = inputFlat[1];
+  const numRows = requiredCpuEntry(inputShape, 0);
+  const numCol = input.length / numRows;
   // Note that the current implementation assumes that segmentIds values are
   // sorted.
   const lastSegmentIdPlusOne =
-      numIndices > 0 ? segmentIds[numIndices - 1] + 1 : 0;
+      numIndices > 0 ? requiredCpuEntry(segmentIds, numIndices - 1) + 1 : 0;
   const outputRows = lastSegmentIdPlusOne;
 
   if (outputRows < 0) {
@@ -62,13 +63,13 @@ export function sparseSegmentReductionImpl(
   let start = 0, end = 1;
   // Index from which the output is not initialized.
   let uninitializedIndex = 0;
-  let outIndex = segmentIds[start];
+  let outIndex = requiredCpuEntry(segmentIds, start);
 
   while (true) {
     // We initialize nextIndex to 0 to avoid may be uninitialized warning
     let nextIndex = 0;
     if (end < numIndices) {
-      nextIndex = segmentIds[end];
+      nextIndex = requiredCpuEntry(segmentIds, end);
       if (outIndex === nextIndex) {
         ++end;
         continue;
@@ -93,11 +94,11 @@ export function sparseSegmentReductionImpl(
     }
 
     for (let i = start; i < end; ++i) {
-      const index = indices[i];
-      if (index < 0 || index >= inputFlat[0]) {
+      const index = requiredCpuEntry(indices, i);
+      if (index < 0 || index >= numRows) {
         throw new Error(
             backend_util.getSparseSegmentReductionIndicesOutOfRangeErrorMessage(
-                i, indices[i], inputFlat[0]));
+                i, index, numRows));
       }
       for (let j = 0; j < numCol; j++) {
         output[outIndex * numCol + j] += input[index * numCol + j];

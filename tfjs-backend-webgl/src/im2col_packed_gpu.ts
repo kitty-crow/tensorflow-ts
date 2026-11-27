@@ -18,6 +18,7 @@
 import {backend_util} from '@tensorflow/tfjs-core';
 import {getGlslDifferences} from './glsl_version';
 import {GPGPUProgram, useShapeUniforms} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 
 export class Im2ColPackedProgram implements GPGPUProgram {
   variableNames = ['A'];
@@ -47,7 +48,7 @@ export class Im2ColPackedProgram implements GPGPUProgram {
 
     const boundsCheckingSnippet = this.enableShapeUniforms ?
         'if(blockIndex < outShape[2] && pos < outShape[1]) {' :
-        `if(blockIndex < ${outputShape[2]} && pos < ${outputShape[1]}) {`;
+        `if(blockIndex < ${shaderEntry(outputShape, 2)} && pos < ${shaderEntry(outputShape, 1)}) {`;
     let unrolled = ``;
 
     for (let row = 0; row <= 1; row++) {

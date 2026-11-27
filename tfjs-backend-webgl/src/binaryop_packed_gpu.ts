@@ -18,7 +18,7 @@
 import {backend_util, util} from '@tensorflow/tfjs-core';
 
 import {GPGPUProgram, useShapeUniforms} from './gpgpu_math';
-import {getChannels} from './packing_util';
+import {getChannels, shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export const CHECK_NAN_SNIPPET_PACKED = `
@@ -74,7 +74,7 @@ export class BinaryOpPackedProgram implements GPGPUProgram {
           `;
           } else {
             checkOutOfBoundsString += `
-            result.y = (coords + 1) >= ${this.outputShape[0]} ? 0. : result.y;
+            result.y = (coords + 1) >= ${shaderEntry(this.outputShape, 0)} ? 0. : result.y;
             result.z = 0.;
             result.w = 0.;
           `;
@@ -84,9 +84,9 @@ export class BinaryOpPackedProgram implements GPGPUProgram {
           if (this.enableShapeUniforms) {
             checkOutOfBoundsString += `
             bool nextRowOutOfBounds =
-              (${channels[rank - 2]} + 1) >= outShape[${rank} - 2];
+              (${shaderEntry(channels, rank - 2)} + 1) >= outShape[${rank} - 2];
             bool nextColOutOfBounds =
-              (${channels[rank - 1]} + 1) >= outShape[${rank} - 1];
+              (${shaderEntry(channels, rank - 1)} + 1) >= outShape[${rank} - 1];
             result.y = nextColOutOfBounds ? 0. : result.y;
             result.z = nextRowOutOfBounds ? 0. : result.z;
             result.w = nextColOutOfBounds || nextRowOutOfBounds ? 0. : result.w;
@@ -94,9 +94,9 @@ export class BinaryOpPackedProgram implements GPGPUProgram {
           } else {
             checkOutOfBoundsString += `
             bool nextRowOutOfBounds =
-              (${channels[rank - 2]} + 1) >= ${this.outputShape[rank - 2]};
+              (${shaderEntry(channels, rank - 2)} + 1) >= ${shaderEntry(this.outputShape, rank - 2)};
             bool nextColOutOfBounds =
-              (${channels[rank - 1]} + 1) >= ${this.outputShape[rank - 1]};
+              (${shaderEntry(channels, rank - 1)} + 1) >= ${shaderEntry(this.outputShape, rank - 1)};
             result.y = nextColOutOfBounds ? 0. : result.y;
             result.z = nextRowOutOfBounds ? 0. : result.z;
             result.w = nextColOutOfBounds || nextRowOutOfBounds ? 0. : result.w;

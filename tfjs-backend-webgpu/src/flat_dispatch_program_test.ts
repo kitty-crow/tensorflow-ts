@@ -15,7 +15,11 @@
  * =============================================================================
  */
 
-import {symbolicallyComputeStrides} from './shader_util';
+import {shaderEntry, symbolicallyComputeStrides} from './shader_util';
+import {MatMulPackedProgram} from './matmul_packed_webgpu';
+import {TileProgram} from './tile_webgpu';
+import {TransposeSharedProgram} from './transpose_shared_webgpu';
+import {TransposeProgram} from './transpose_webgpu';
 import {getCoordsFromIndexSnippet} from './webgpu_program';
 import {SoftmaxProgram} from './softmax_webgpu';
 import {CropAndResizeProgram} from './crop_and_resize_webgpu';
@@ -239,5 +243,32 @@ describe('checked WebGPU shader strides', () => {
     expect(source).toContain('let d2 = index2 - d1 * uniforms.outShapeStrides.y');
     expect(source).toContain('return vec3<i32>(d0,d1,d2)');
     expect(source).not.toContain('undefined');
+  });
+});
+
+describe('checked WebGPU permutation and tile metadata', () => {
+  it('preserves transpose order and zero-sized dimensions', () => {
+    const shape = [2, 0, 3];
+    const order = [2, 0, 1];
+    const transpose = new TransposeProgram(shape, order);
+    expect(transpose.outputShape).toEqual([3, 2, 0]);
+    expect(transpose.getUserCode()).toContain('coords.y,coords.z,coords.x');
+    expect(new TransposeSharedProgram([2, 3], [1, 0]).outputShape)
+        .toEqual([3, 2]);
+    expect(shape).toEqual([2, 0, 3]);
+    expect(order).toEqual([2, 0, 1]);
+    expect(() => new TransposeProgram([2, 3], [1, 2])).toThrowError();
+  });
+  it('retains scalar and zero-sized tiling and checks missing repeats', () => {
+    expect(new TileProgram([], []).outputShape).toEqual([]);
+    expect(new TileProgram([0, 3], [2, 4]).outputShape).toEqual([0, 12]);
+    expect(() => new TileProgram([2, 3], [2])).toThrowError();
+    expect(shaderEntry([0], 0)).toBe(0);
+    expect(() => shaderEntry([], 0)).toThrowError();
+  });
+  it('retains a complete three-value matrix shape-fit result', () => {
+    const program = new MatMulPackedProgram([1, 8, 4], [1, 8, 8]);
+    expect(program.getShapeFit(0, 0, 0)).toEqual([true, true, true]);
+    expect(program.getUserCode()).not.toContain('undefined');
   });
 });

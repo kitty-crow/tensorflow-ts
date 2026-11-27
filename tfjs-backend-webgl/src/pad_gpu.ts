@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 import {getCoordsDataType, UniformType} from './shader_compiler';
 
 export class PadProgram implements GPGPUProgram {
@@ -28,12 +29,12 @@ export class PadProgram implements GPGPUProgram {
       xShape: number[], paddings: Array<[number, number]>,
       constantValue: number) {
     this.outputShape = paddings.map(
-        (p, i) => p[0] /* beforePad */ + xShape[i] + p[1] /* afterPad */);
+        (p, i) => p[0] /* beforePad */ + shaderEntry(xShape, i) + p[1] /* afterPad */);
     const rank = xShape.length;
     const type = getCoordsDataType(rank);
 
     const start = paddings.map(p => p[0]).join(',');
-    const end = paddings.map((p, i) => p[0] + xShape[i]).join(',');
+    const end = paddings.map((p, i) => p[0] + shaderEntry(xShape, i)).join(',');
     const unpackedCoords =
         ['coords[0]', 'coords[1]', 'coords[2]', 'coords[3]'].slice(0, rank);
 

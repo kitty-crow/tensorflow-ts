@@ -16,7 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
-import {getVecChannels} from './packing_util';
+import {getVecChannels, shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export class TransposePackedProgram implements GPGPUProgram {
@@ -28,9 +28,9 @@ export class TransposePackedProgram implements GPGPUProgram {
   packedOutput = true;
 
   constructor(aShape: number[], newDim: number[]) {
-    const outputShape: number[] = new Array(aShape.length);
+    const outputShape: number[] = new Array<number>(aShape.length);
     for (let i = 0; i < outputShape.length; i++) {
-      outputShape[i] = aShape[newDim[i]];
+      outputShape[i] = shaderEntry(aShape, shaderEntry(newDim, i));
     }
     this.outputShape = outputShape;
     this.rank = outputShape.length;
@@ -41,13 +41,13 @@ export class TransposePackedProgram implements GPGPUProgram {
     const dtype = getCoordsDataType(this.rank);
 
     const outputOrder = getVecChannels('rc', this.rank);
-    const switchedOrder = new Array(this.rank);
+    const switchedOrder = new Array<string>(this.rank);
     for (let i = 0; i < newDim.length; i++) {
-      switchedOrder[newDim[i]] = outputOrder[i];
+      switchedOrder[shaderEntry(newDim, i)] = shaderEntry(outputOrder, i);
     }
     const innerDims = `vec2(${switchedOrder.slice(-2).join()})`;
     const nextColumn =
-        `++${outputOrder[this.rank - 1]} < ${outputShape[this.rank - 1]}`;
+        `++${shaderEntry(outputOrder, this.rank - 1)} < ${shaderEntry(outputShape, this.rank - 1)}`;
     const getc = `getChannel(getA(${switchedOrder.join()}), ${innerDims})`;
 
     this.userCode = `
@@ -58,8 +58,8 @@ export class TransposePackedProgram implements GPGPUProgram {
       if(${nextColumn}) {
         result[1] = ${getc};
       }
-      --${outputOrder[this.rank - 1]};
-      if(++${outputOrder[this.rank - 2]} < ${outputShape[this.rank - 2]}) {
+      --${shaderEntry(outputOrder, this.rank - 1)};
+      if(++${shaderEntry(outputOrder, this.rank - 2)} < ${shaderEntry(outputShape, this.rank - 2)}) {
         result[2] = ${getc};
         if(${nextColumn}) {
           result[3] = ${getc};

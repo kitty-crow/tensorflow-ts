@@ -16,6 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
+import {shaderEntry} from './packing_util';
 
 export class LRNPackedProgram implements GPGPUProgram {
   variableNames = ['x'];
@@ -28,14 +29,14 @@ export class LRNPackedProgram implements GPGPUProgram {
       xShape: number[], radius: number, bias: number, alpha: number,
       beta: number) {
     const rad = radius;
-    const maxD = xShape[3] - 1;
+    const maxD = shaderEntry(xShape, 3) - 1;
     this.outputShape = xShape;
 
     // optimize pow(bias + alpha * sum, -beta)
     // src: https://github.com/tensorflow/tensorflow/..
     // blob/26033a1644a9c4a5fbe3170ab2e864b6a4ccd4ca/..
     // tensorflow/core/kernels/mkl_lrn_op.cc#L320
-    let powOperator;
+    let powOperator: string;
     const basis = `float(${bias}) + float(${alpha}) * sum`;
     switch (beta) {
       case 0.5: {
@@ -59,8 +60,8 @@ export class LRNPackedProgram implements GPGPUProgram {
         int c = coords.z;
         int d = coords.w;
 
-        bool hasNextCol = d < ${this.outputShape[3]};
-        bool hasNextRow = c < ${this.outputShape[2]};
+        bool hasNextCol = d < ${shaderEntry(this.outputShape, 3)};
+        bool hasNextRow = c < ${shaderEntry(this.outputShape, 2)};
 
         vec4 sum = vec4(0.);
         vec4 xFragAtOutputCoords = getX(b, r, c, d);

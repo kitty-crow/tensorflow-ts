@@ -9,6 +9,8 @@
  */
 
 import {Tensor} from '@tensorflow/tfjs-core';
+import {History} from '../base_callbacks';
+import {BytePairTokenizerCache, StaticHashTable} from '../layers/nlp/tokenizers_utils';
 import '@tensorflow/tfjs-core/dist/public/chained_ops/register_all_chained_ops';
 import '../flags_layers';
 
@@ -189,5 +191,32 @@ describe('checked callback shape contracts', () => {
     expect(firstBuild.calls.mostRecent().args[0]).toBe(flatShape);
     expect(secondBuild.calls.mostRecent().args[0]).toEqual([0, 3]);
     expect(thirdBuild.calls.mostRecent().args[0]).toEqual([0, 5]);
+  });
+});
+
+describe('checked tokenizer lookup metadata', () => {
+  it('preserves zero token IDs, empty strings and lookup defaults', () => {
+    const ids = new StaticHashTable(['zero', 'one'], [0, 1], -1);
+    expect(ids.get('zero')).toBe(0);
+    expect(ids.get('unknown')).toBe(-1);
+    const tokens = new StaticHashTable([0, 1], ['', 'one'], 'missing');
+    expect(tokens.get(0)).toBe('');
+    expect(tokens.get(2)).toBe('missing');
+    const cache = new BytePairTokenizerCache();
+    cache.insert(['empty', 'word'], ['', 'w ord']);
+    expect(cache.lookup(['word', 'unknown', 'empty'])).toEqual(['w ord', '', '']);
+    expect(() => cache.insert(['missing'], [])).toThrowError();
+  });
+});
+
+describe('checked training history entries', () => {
+  it('retains numeric zero, epoch order and independent metric arrays', async () => {
+    const history = new History();
+    await history.onTrainBegin();
+    await history.onEpochEnd(0, {loss: 0, accuracy: 1});
+    await history.onEpochEnd(1, {loss: 2, accuracy: 0});
+    await history.syncData();
+    expect(history.epoch).toEqual([0, 1]);
+    expect(history.history).toEqual({loss: [0, 2], accuracy: [1, 0]});
   });
 });
