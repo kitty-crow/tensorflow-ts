@@ -286,7 +286,8 @@ describeAllEnvs('Dataset', () => {
 
   it('can be repeated indefinitely', async () => {
     const a = tfd.array([{'item': 1}, {'item': 2}, {'item': 3}]);
-    await a.repeat().take(234).toArrayForTest();
+    const repeated = await a.repeat().take(234).toArrayForTest();
+    expect(repeated).toEqual(Array.from({length: 234}, (_, i) => ({item: i % 3 + 1})));
   });
 
   it('can be repeated with state in a closure', async () => {
@@ -305,7 +306,8 @@ describeAllEnvs('Dataset', () => {
       }
     }
     const a = new CustomDataset();
-    await a.repeat().take(1234).toArrayForTest();
+    const repeated = await a.repeat().take(1234).toArrayForTest();
+    expect(repeated).toEqual(Array.from({length: 1234}, (_, i) => ({item: i + 1})));
   });
 
   it('can collect all items into memory', async () => {
