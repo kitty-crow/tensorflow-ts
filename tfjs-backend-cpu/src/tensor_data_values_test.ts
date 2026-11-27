@@ -47,6 +47,11 @@ import {concat} from './kernels/Concat';
 import {flipLeftRightConfig} from './kernels/FlipLeftRight';
 import {imageDimensions, matrixBatchStrides, matrixDimensions, rankFiveStrides, spatialStrides2D} from './cpu_util';
 import {batchMatMul} from './kernels/BatchMatMul';
+import {scatterNd} from './kernels/ScatterNd';
+import {sparseToDense} from './kernels/SparseToDense';
+import {gatherV2Impl} from './kernels/GatherV2_impl';
+import {tileImpl} from './kernels/Tile_impl';
+import {buffer} from '@tensorflow/tfjs-core';
 import {sum} from './kernels/Sum';
 import {simpleAbsImpl} from './kernels/Abs';
 import {prodImpl} from './kernels/Prod';
@@ -1004,5 +1009,75 @@ describe('CPU resize empty input behaviour', () => {
         new Float32Array([NaN, NaN]));
     [images, bilinear, nearest].forEach(t => backend.disposeData(t.dataId));
     expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('CPU multidimensional matrix batches and required tensor entries', () => {
+  it('broadcasts independent singleton batch axes in row-major order', () => {
+    const backend = new MathBackendCPU();
+    const a = backend.makeTensorInfo([2, 1, 1, 1], 'float32',
+        new Float32Array([2, 3]));
+    const b = backend.makeTensorInfo([1, 3, 1, 1], 'float32',
+        new Float32Array([5, 7, 11]));
+    const result = batchMatMul({inputs: {a, b}, backend,
+      attrs: {transposeA: false, transposeB: false}});
+    expect(result.shape).toEqual([2, 3, 1, 1]);
+    expect(backend.readSync(result.dataId)).toEqual(
+        new Float32Array([10, 14, 22, 15, 21, 33]));
+    [a, b, result].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('retains a zero broadcast batch dimension', () => {
+    const backend = new MathBackendCPU();
+    const a = backend.makeTensorInfo([0, 1, 1], 'float32',
+        new Float32Array(0));
+    const b = backend.makeTensorInfo([1, 1, 1], 'float32',
+        new Float32Array([5]));
+    const result = batchMatMul({inputs: {a, b}, backend,
+      attrs: {transposeA: false, transposeB: false}});
+    expect(result.shape).toEqual([0, 1, 1]);
+    expect(backend.readSync(result.dataId)).toEqual(new Float32Array(0));
+    [a, b, result].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('accumulates duplicate scatter indices and preserves NaN', () => {
+    const backend = new MathBackendCPU();
+    const indices = backend.makeTensorInfo([3, 1], 'int32',
+        new Int32Array([0, 0, 2]));
+    const updates = backend.makeTensorInfo([3], 'float32',
+        new Float32Array([0, 2, NaN]));
+    const result = scatterNd({inputs: {indices, updates}, backend,
+      attrs: {shape: [3]}});
+    expect(backend.readSync(result.dataId)).toEqual(
+        new Float32Array([2, 0, NaN]));
+    [indices, updates, result].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('broadcasts a scalar sparse update without replacing zero by the default', () => {
+    const backend = new MathBackendCPU();
+    const sparseIndices = backend.makeTensorInfo([2, 1], 'int32',
+        new Int32Array([0, 2]));
+    const sparseValues = backend.makeTensorInfo([], 'float32',
+        new Float32Array([0]));
+    const defaultValue = backend.makeTensorInfo([], 'float32',
+        new Float32Array([5]));
+    const result = sparseToDense({inputs: {sparseIndices, sparseValues, defaultValue},
+      backend, attrs: {outputShape: [3]}});
+    expect(backend.readSync(result.dataId)).toEqual(new Float32Array([0, 5, 0]));
+    [sparseIndices, sparseValues, defaultValue, result].forEach(
+        t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('retains empty string and zero payloads in tile and gather', () => {
+    const strings = buffer([2], 'string', ['', 'x']);
+    expect(tileImpl(strings, [2]).values).toEqual(['', 'x', '', 'x']);
+    const x = buffer([1, 1, 2, 1], 'int32', new Int32Array([0, 4]));
+    const indices = buffer([1, 2], 'int32', new Int32Array([1, 0]));
+    expect(gatherV2Impl(x, indices, [1, 1, 2, 1]).values)
+        .toEqual(new Int32Array([4, 0]));
   });
 });

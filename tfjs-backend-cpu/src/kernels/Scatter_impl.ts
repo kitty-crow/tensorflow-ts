@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {buffer, Rank, ShapeMap, TensorBuffer, TypedArray} from '@tensorflow/tfjs-core';
+import {buffer, Rank, ShapeMap, TensorBuffer, TypedArray, util} from '@tensorflow/tfjs-core';
 
 interface DefaultValueTypeMap {
   bool: boolean;
@@ -56,9 +56,9 @@ scatterImpl<R extends Rank, D extends 'float32'|'int32'|'bool'|'string'>(
     const index: number[] = [];
     let flattenIndex = 0;
     for (let j = 0; j < sliceRank; j++) {
-      const dim = indicesData[i * sliceRank + j];
+      const dim = util.requiredNumericEntry(indicesData, i * sliceRank + j);
       index.push(dim);
-      flattenIndex += dim * strides[j];
+      flattenIndex += dim * util.requiredNumericEntry(strides, j);
     }
 
     if (flattenIndex < 0 || flattenIndex >= outputSize / sliceSize) {
@@ -66,13 +66,19 @@ scatterImpl<R extends Rank, D extends 'float32'|'int32'|'bool'|'string'>(
     }
 
     for (let k = 0; k < sliceSize; k++) {
+      const outputIndex = flattenIndex * sliceSize + k;
       if (sumDupeIndices) {
-        (outBuf.values as TypedArray)[flattenIndex * sliceSize + k] +=
-            (updatesData as TypedArray)[i * sliceSize + k];
+        const outputValues = outBuf.values as TypedArray;
+        outputValues[outputIndex] =
+            util.requiredNumericEntry(outputValues, outputIndex) +
+            util.requiredNumericEntry(updatesData as TypedArray, i * sliceSize + k);
       } else {
-        outBuf.values[flattenIndex * sliceSize + k] = updates.rank === 0 ?
-            updatesData[0] :
-            updatesData[i * sliceSize + k];
+        const updateIndex = updates.rank === 0 ? 0 : i * sliceSize + k;
+        const value = updatesData[updateIndex];
+        if (value == null) {
+          throw new Error(`Missing scatter update at index ${updateIndex}.`);
+        }
+        outBuf.values[outputIndex] = value;
       }
     }
   }

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, buffer, DataType, Rank, TensorBuffer, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, buffer, DataType, Rank, TensorBuffer, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {rankFourStrides, rankFiveStrides} from '../cpu_util';
 
@@ -67,7 +67,7 @@ export function pool(
             const xROffset = inputBatchOffset + xR * rowStride;
             for (let xC = xCMin; xC < xCMax; xC += dilationWidth) {
               const xCOffset = xROffset + xC * colStride;
-              const pixel = xValues[xCOffset + d];
+              const pixel = util.requiredNumericEntry(xValues, xCOffset + d);
               if ((poolType === 'max' && pixel > minMaxValue)) {
                 minMaxValue = pixel;
               }
@@ -234,7 +234,7 @@ export function pool3d(
                 for (let xCol = xColMin; xCol < xColMax;
                      xCol += dilationWidth) {
                   const xColOffset = xRowOffset + xCol * colStride;
-                  const pixel = xValues[xColOffset + channel];
+                  const pixel = util.requiredNumericEntry(xValues, xColOffset + channel);
                   if ((poolType === 'max' && pixel > minMaxValue)) {
                     minMaxValue = pixel;
                   }

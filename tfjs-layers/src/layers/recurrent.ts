@@ -2102,11 +2102,15 @@ export class StackedRNNCells extends RNNCell {
    * @returns A flat `Array` of `tf.Tensor`s.
    */
   override getWeights(): Tensor[] {
+    return batchGetValue(this.cellWeights());
+  }
+
+  private cellWeights(): LayerVariable[] {
     const weights: LayerVariable[] = [];
     for (const cell of this.cells) {
       weights.push(...cell.weights);
     }
-    return batchGetValue(weights);
+    return weights;
   }
 
   /**
@@ -2116,14 +2120,19 @@ export class StackedRNNCells extends RNNCell {
    *     the output of `getWeights()`.
    */
   override setWeights(weights: Tensor[]): void {
-    const tuples: Array<[LayerVariable, Tensor]> = [];
-    for (const cell of this.cells) {
-      const numParams = cell.weights.length;
-      const inputWeights = weights.splice(numParams);
-      for (let i = 0; i < cell.weights.length; ++i) {
-        tuples.push([cell.weights[i], inputWeights[i]]);
-      }
+    const params = this.cellWeights();
+    if (params.length !== weights.length) {
+      throw new ValueError(
+          `Expected ${params.length} weights, received ${weights.length}.`);
     }
+    const tuples = params.map((param, i): [LayerVariable, Tensor] => {
+      const weight = requiredElement(weights, i);
+      if (!util.arraysEqual(param.shape, weight.shape)) {
+        throw new ValueError(
+            `Weight ${i} shape ${weight.shape} does not match ${param.shape}.`);
+      }
+      return [param, weight];
+    });
     batchSetValue(tuples);
   }
 

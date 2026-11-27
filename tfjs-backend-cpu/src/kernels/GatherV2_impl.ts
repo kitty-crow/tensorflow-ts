@@ -30,12 +30,20 @@ export function gatherV2Impl<R extends Rank, D extends DataType>(
     const batchIdx = requiredCpuEntry(originalLoc, 0);
     const indicesIdx = requiredCpuEntry(originalLoc, 2);
     const indicesIndex = indicesBuf.locToIndex([batchIdx, indicesIdx]);
-    originalLoc[2] = indicesBuf.values[indicesIndex] as number;
+    const index = indicesBuf.values[indicesIndex];
+    if (typeof index !== 'number') {
+      throw new Error(`Missing or invalid gather index at ${indicesIndex}.`);
+    }
+    originalLoc[2] = index;
 
     const originalIndex = xBuf.locToIndex(originalLoc);
 
     if (0 <= originalIndex && originalIndex < xBuf.values.length) {
-      outBuf.values[i] = xBuf.values[originalIndex];
+      const value = xBuf.values[originalIndex];
+      if (value == null) {
+        throw new Error(`Missing gather value at index ${originalIndex}.`);
+      }
+      outBuf.values[i] = value;
     } // Else, index is out of bounds, so leave the default zero val in outBuf.
   }
 

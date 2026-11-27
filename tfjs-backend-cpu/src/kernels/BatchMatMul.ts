@@ -22,6 +22,25 @@ import {assertNotComplex, matrixBatchStrides, matrixDimensions} from '../cpu_uti
 
 import {reshape} from './Reshape';
 
+/** Map a flattened output batch to its trailing-aligned input batch. */
+function inputBatchIndex(
+    outputIndex: number, outputShape: number[], inputShape: number[]): number {
+  let index = 0;
+  let stride = 1;
+  for (let i = 1; i <= inputShape.length; ++i) {
+    const dim = util.requiredNumericEntry(inputShape, inputShape.length - i);
+    const outDim =
+        util.requiredNumericEntry(outputShape, outputShape.length - i);
+    const coord = outputIndex % outDim;
+    outputIndex = Math.floor(outputIndex / outDim);
+    if (dim !== 1) {
+      index += coord * stride;
+    }
+    stride *= dim;
+  }
+  return index;
+}
+
 export function batchMatMul(args: {
   inputs: BatchMatMulInputs,
   attrs: KernelAttributes<BatchMatMulAttrs>,
@@ -71,7 +90,7 @@ export function batchMatMul(args: {
   const sharedDim = innerShapeA;
   const leftDim = outerShapeA;
   const rightDim = outerShapeB;
-  const batchDim = Math.max(batchDimA, batchDimB);
+  const batchDim = util.sizeFromShape(outShapeOuterDims);
 
   const a3dValues = backend.requireValues(a3d.dataId) as TypedArray;
   const b3dValues = backend.requireValues(b3d.dataId) as TypedArray;
@@ -93,8 +112,10 @@ export function batchMatMul(args: {
   const blockSize = backend.blockSize;
 
   for (let bi = 0; bi < batchDim; bi++) {
-    const batchIndexA = bi % batchDimA;
-    const batchIndexB = bi % batchDimB;
+    const batchIndexA = batchDimA === batchDim ? bi :
+        inputBatchIndex(bi, outShapeOuterDims, outerDimsA);
+    const batchIndexB = batchDimB === batchDim ? bi :
+        inputBatchIndex(bi, outShapeOuterDims, outerDimsB);
     for (let i0 = 0; i0 < leftDim; i0 += blockSize) {
       // for when blockSize doesn't evenly divide the input
       const iBlock = Math.min(i0 + blockSize, leftDim);
@@ -108,15 +129,17 @@ export function batchMatMul(args: {
               let sum = 0.0;
 
               for (let k = k0; k < kBlock; k++) {
-                const aVal =
-                    // tslint:disable-next-line: max-line-length
-                    a3dValues[batchIndexA * aBatch + i * aOuterStep + k * aInnerStep];
-                const bVal =
-                    // tslint:disable-next-line: max-line-length
-                    b3dValues[k * bInnerStep + j * bOuterStep + batchIndexB * bBatch];
+                const aVal = util.requiredNumericEntry(
+                    a3dValues, batchIndexA * aBatch + i * aOuterStep +
+                        k * aInnerStep);
+                const bVal = util.requiredNumericEntry(
+                    b3dValues, k * bInnerStep + j * bOuterStep +
+                        batchIndexB * bBatch);
                 sum += aVal * bVal;
               }
-              resVals[bi * size + (i * rightDim + j)] += sum;
+              const resultIndex = bi * size + i * rightDim + j;
+              resVals[resultIndex] =
+                  util.requiredNumericEntry(resVals, resultIndex) + sum;
             }
           }
         }

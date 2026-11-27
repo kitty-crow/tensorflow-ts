@@ -42,7 +42,11 @@ export function tileImpl<R extends Rank>(
 
     const originalIndex = xBuf.locToIndex(originalLoc);
 
-    result.values[i] = xBuf.values[originalIndex];
+    const value = xBuf.values[originalIndex];
+    if (value == null) {
+      throw new Error(`Missing tile value at index ${originalIndex}.`);
+    }
+    result.values[i] = value;
   }
   return result as TensorBuffer<R, DataType>;
 }

@@ -9,6 +9,7 @@
  */
 
 import {Rank, Tensor} from '@tensorflow/tfjs-core';
+import {LayerVariable} from '../variables';
 import {BaseLogger, History} from '../base_callbacks';
 import {getSourceInputs} from './topology';
 import {Input, InputLayer, InputLayerArgs} from './input_layer';
@@ -384,5 +385,33 @@ describe('model summary traversal', () => {
     expect(rows).toContain('Total params: 0');
     expect(rows).toContain('Trainable params: 0');
     expect(rows).toContain('Non-trainable params: 0');
+  });
+});
+
+describe('stacked RNN weight assignment', () => {
+  it('uses cell order, leaves the supplied array intact, and checks shapes first', () => {
+    const first = new SimpleRNNCell({units: 2});
+    const second = new SimpleRNNCell({units: 3});
+    const a = jasmine.createSpyObj<LayerVariable>('firstWeight', ['read', 'write'],
+        {shape: [1, 2]});
+    const b = jasmine.createSpyObj<LayerVariable>('secondWeight', ['read', 'write'],
+        {shape: [2, 3]});
+    spyOnProperty(first, 'weights', 'get').and.returnValue([a]);
+    spyOnProperty(second, 'weights', 'get').and.returnValue([b]);
+    const stack = new StackedRNNCells({cells: [first, second]});
+    const firstValue = new Tensor([1, 2], 'float32', {}, 201);
+    const secondValue = new Tensor([2, 3], 'float32', {}, 202);
+    const weights = [firstValue, secondValue];
+    a.read.and.returnValue(firstValue);
+    b.read.and.returnValue(secondValue);
+    expect(stack.getWeights()).toEqual(weights);
+    expect(() => stack.setWeights([firstValue])).toThrowError(/Expected 2 weights/);
+    expect(() => stack.setWeights([firstValue, firstValue])).toThrowError(/Weight 1 shape/);
+    expect(a.write).not.toHaveBeenCalled();
+    expect(b.write).not.toHaveBeenCalled();
+    stack.setWeights(weights);
+    expect(a.write).toHaveBeenCalledOnceWith(firstValue);
+    expect(b.write).toHaveBeenCalledOnceWith(secondValue);
+    expect(weights).toEqual([firstValue, secondValue]);
   });
 });
