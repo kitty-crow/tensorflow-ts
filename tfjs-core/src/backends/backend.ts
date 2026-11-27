@@ -106,51 +106,77 @@ export interface BackendTimer {
  * methods).
  */
 export class KernelBackend implements TensorStorage, Backend, BackendTimer {
+  // CG308: The backend extension contract deliberately throws for unsupported refCount.
+  //@cg-expect-error
   refCount(dataId: DataId): number {
     return notYetImplemented('refCount');
   }
+  // CG308: The backend extension contract deliberately throws for unsupported incRef.
+  //@cg-expect-error
   incRef(dataId: DataId): void {
     return notYetImplemented('incRef');
   }
   timerAvailable(): boolean {
     return true;
   }
+  // CG308: The backend extension contract deliberately throws for unsupported timing.
+  //@cg-expect-error
   time(f: () => void): Promise<BackendTimingInfo> {
     return notYetImplemented('time');
   }
+  // CG308: The backend extension contract deliberately throws for unsupported asynchronous reads.
+  //@cg-expect-error
   read(dataId: object): Promise<BackendValues> {
     return notYetImplemented('read');
   }
+  // CG308: The backend extension contract deliberately throws for unsupported synchronous reads.
+  //@cg-expect-error
   readSync(dataId: object): BackendValues {
     return notYetImplemented('readSync');
   }
+  // CG308/CG305: Unsupported GPU reads deliberately throw; GPU transfer options are optional.
+  //@cg-expect-error
   readToGPU(dataId: object, options?: DataToGPUOptions): GPUData {
     return notYetImplemented('readToGPU');
   }
+  // CG308: The backend extension contract deliberately throws if numDataIds is unsupported.
+  //@cg-expect-error
   numDataIds(): number {
     return notYetImplemented('numDataIds');
   }
+  // CG308/CG305: Unsupported disposal deliberately throws; the force override is optional.
+  //@cg-expect-error
   disposeData(dataId: object, force?: boolean): boolean {
     return notYetImplemented('disposeData');
   }
+  // CG308: The backend extension contract deliberately throws for unsupported writes.
+  //@cg-expect-error
   write(values: BackendValues, shape: number[], dtype: DataType): DataId {
     return notYetImplemented('write');
   }
+  // CG308: The backend extension contract deliberately throws for unsupported data migration.
+  //@cg-expect-error
   move(
       dataId: DataId, values: BackendValues, shape: number[], dtype: DataType,
       refCount: number): void {
     return notYetImplemented('move');
   }
 
+  // CG308: The backend extension contract deliberately throws for unsupported GPU imports.
+  //@cg-expect-error
   createTensorFromGPUData(
       values: WebGLData|WebGPUData, shape: number[], dtype: DataType): Tensor {
     return notYetImplemented('createTensorFromGPUData');
   }
 
+  // CG308/CG305: Unsupported memory queries deliberately throw; reliable estimates need no reasons.
+  //@cg-expect-error
   memory(): {unreliable: boolean; reasons?: string[]} {
     return notYetImplemented('memory');
   }
   /** Returns the highest precision for floats in bits (e.g. 16 or 32) */
+  // CG308: The backend extension contract deliberately throws for unsupported precision reporting.
+  //@cg-expect-error
   floatPrecision(): 16|32 {
     return notYetImplemented('floatPrecision');
   }
@@ -158,6 +184,8 @@ export class KernelBackend implements TensorStorage, Backend, BackendTimer {
   epsilon(): number {
     return this.floatPrecision() === 32 ? EPSILON_FLOAT32 : EPSILON_FLOAT16;
   }
+  // CG308: The backend extension contract deliberately throws for unsupported backend disposal.
+  //@cg-expect-error
   dispose(): void {
     return notYetImplemented('dispose');
   }

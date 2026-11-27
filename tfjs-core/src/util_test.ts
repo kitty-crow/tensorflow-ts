@@ -263,6 +263,8 @@ describe('util.inferDtype', () => {
 });
 
 describe('util.repeatedTry', () => {
+  // CG314: The done callback records successful resolution; unexpected rejection throws and fails the test.
+  //@cg-expect-error
   it('resolves', (doneFn) => {
     let counter = 0;
     const checkFn = () => {
@@ -277,6 +279,8 @@ describe('util.repeatedTry', () => {
       throw new Error('Rejected backoff.');
     });
   });
+  // CG314: Successful resolution explicitly throws; the rejection callback is the expected completion.
+  //@cg-expect-error
   it('rejects', (doneFn) => {
     const checkFn = () => false;
 

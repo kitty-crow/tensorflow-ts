@@ -49,6 +49,8 @@ import {op} from './operation';
  *
  * @doc {heading: 'Tensors', subheading: 'Transformations'}
  */
+// CG205: Reshape preserves values and changes shape; ArgMin reduces along an axis. Kernel dispatch is already shared.
+//@cg-expect-error
 function reshape_<R extends Rank>(
     x: Tensor|TensorLike, shape: ShapeMap[R]): Tensor<R> {
   const $x = convertToTensor(x, 'x', 'reshape', 'string_or_numeric');

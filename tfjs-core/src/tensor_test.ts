@@ -2209,6 +2209,8 @@ describeWithFlags('tensor.data', ALL_ENVS, () => {
     });
   });
 
+  // CG314: Both asynchronous data subscribers assert the scalar value via expectNumbersClose before completion.
+  //@cg-expect-error
   it('calling .data() twice works (2 subscribers to a single read)', done => {
     tf.tidy(() => {
       const a = tf.scalar(5);

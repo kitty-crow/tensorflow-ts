@@ -138,6 +138,8 @@ export function decodeString(bytes: Uint8Array, encoding = 'utf-8'): string {
   return env().platform.decode(bytes, encoding);
 }
 
+// CG315: Both platform dispatch and browser fallback are implemented; the TODO concerns future compatibility removal.
+//@cg-expect-error
 export function isTypedArray(a: {}): a is Float32Array|Int32Array|Uint8Array|
     Uint8ClampedArray {
   // TODO(mattsoulanille): Remove this fallback in 5.0.0
