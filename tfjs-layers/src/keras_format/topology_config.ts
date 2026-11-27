@@ -21,21 +21,35 @@ export interface LayerMetadata {
    * This argument is only applicable to input layers (the first layer of a
    * model).
    */
+  // CG305: Layer dtype can use the runtime default; serialized JSON may omit dtype.
+  //@cg-expect-error
   dtype?: DataType;
   /** Name for this layer. */
+  // CG305: Layer names can be generated automatically; serialized JSON may omit name.
+  //@cg-expect-error
   name?: string;
   /**
    * Whether the weights of this layer are updatable by `fit`.
    * Defaults to true.
    */
+  // CG305: Layer trainability can use the runtime default; serialized JSON may omit trainable.
+  //@cg-expect-error
   trainable?: boolean;
 }
 
 /** Constructor arguments for Layer. */
 export interface LayerConfig extends PyJsonDict, LayerMetadata {
+  // CG305: The graph may infer the input shape instead of declaring it here; serialized JSON may omit input_shape.
+  //@cg-expect-error
   input_shape?: Shape;
+  // CG305: The graph may infer the batch input shape instead of declaring it here; serialized JSON may omit batch_input_shape.
+  //@cg-expect-error
   batch_input_shape?: Shape;
+  // CG305: The batch dimension may be left unspecified; serialized JSON may omit batch_size.
+  //@cg-expect-error
   batch_size?: number;
+  // CG305: Input dtype may use the runtime default; serialized JSON may omit input_dtype.
+  //@cg-expect-error
   input_dtype?: DataType;
 }
 
@@ -63,5 +77,7 @@ export type JsonLayer<C extends LayerConfig> = C&LayerConfig&
 export interface BaseLayerSerialization<N extends string, C extends LayerConfig>
     extends BaseSerialization<N, JsonLayer<C>> {
   name: string;
+  // CG305: Layers without graph predecessors need not carry inbound nodes; serialized JSON may omit inbound_nodes.
+  //@cg-expect-error
   inbound_nodes?: NodeConfig[];
 }

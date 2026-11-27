@@ -17,7 +17,11 @@ import {BaseLayerSerialization, LayerConfig} from '../topology_config';
 
 export interface DropoutLayerConfig extends LayerConfig {
   rate: number;
+  // CG305: Dropout derives the default mask shape from the input; serialized JSON may omit noise_shape.
+  //@cg-expect-error
   noise_shape?: number[];
+  // CG305: Dropout can use an automatically selected seed; serialized JSON may omit seed.
+  //@cg-expect-error
   seed?: number;
 }
 
@@ -26,15 +30,35 @@ export type DropoutLayerSerialization =
 
 export interface DenseLayerConfig extends LayerConfig {
   units: number;
+  // CG305: Dense defaults the activation; serialized JSON may omit activation.
+  //@cg-expect-error
   activation?: ActivationSerialization;
+  // CG305: Dense defaults the use of bias; serialized JSON may omit use_bias.
+  //@cg-expect-error
   use_bias?: boolean;
+  // CG305: Dense can infer the input dimension from the graph; serialized JSON may omit input_dim.
+  //@cg-expect-error
   input_dim?: number;
+  // CG305: Dense defaults the kernel initializer; serialized JSON may omit kernel_initializer.
+  //@cg-expect-error
   kernel_initializer?: InitializerSerialization;
+  // CG305: Dense defaults the bias initializer; serialized JSON may omit bias_initializer.
+  //@cg-expect-error
   bias_initializer?: InitializerSerialization;
+  // CG305: Dense does not require a kernel constraint; serialized JSON may omit kernel_constraint.
+  //@cg-expect-error
   kernel_constraint?: ConstraintSerialization;
+  // CG305: Dense does not require a bias constraint; serialized JSON may omit bias_constraint.
+  //@cg-expect-error
   bias_constraint?: ConstraintSerialization;
+  // CG305: Dense does not require a kernel regularizer; serialized JSON may omit kernel_regularizer.
+  //@cg-expect-error
   kernel_regularizer?: RegularizerSerialization;
+  // CG305: Dense does not require a bias regularizer; serialized JSON may omit bias_regularizer.
+  //@cg-expect-error
   bias_regularizer?: RegularizerSerialization;
+  // CG305: Dense does not require an activity regularizer; serialized JSON may omit activity_regularizer.
+  //@cg-expect-error
   activity_regularizer?: RegularizerSerialization;
 }
 

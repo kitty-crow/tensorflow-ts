@@ -32,6 +32,8 @@ export type AdadeltaSerialization =
 
 export type AdagradOptimizerConfig = {
   learning_rate: number;
+  // CG305: Adagrad supplies a default accumulator value; serialized JSON may omit initial_accumulator_value.
+  //@cg-expect-error
   initial_accumulator_value?: number;
 };
 
@@ -40,6 +42,8 @@ export type AdagradSerialization =
 
 export type AdamOptimizerConfig = {
   learning_rate: number; beta1: number; beta2: number;
+  // CG305: Adam supplies its default epsilon; serialized JSON may omit epsilon.
+  //@cg-expect-error
   epsilon?: number;
 };
 
@@ -47,7 +51,11 @@ export type AdamSerialization = BaseSerialization<'Adam', AdamOptimizerConfig>;
 
 export type AdamaxOptimizerConfig = {
   learning_rate: number; beta1: number; beta2: number;
+  // CG305: Adamax supplies its default epsilon; serialized JSON may omit epsilon.
+  //@cg-expect-error
   epsilon?: number;
+  // CG305: Adamax supplies its default decay; serialized JSON may omit decay.
+  //@cg-expect-error
   decay?: number;
 };
 
@@ -57,6 +65,8 @@ export type AdamaxSerialization =
 export type MomentumOptimizerConfig = {
   // extends SGDOptimizerConfig {
   learning_rate: number; momentum: number;
+  // CG305: Momentum supplies its default Nesterov setting; serialized JSON may omit use_nesterov.
+  //@cg-expect-error
   use_nesterov?: boolean;
 };
 
@@ -65,9 +75,17 @@ export type MomentumSerialization =
 
 export type RMSPropOptimizerConfig = {
   learning_rate: number;
+  // CG305: RMSProp supplies its default decay; serialized JSON may omit decay.
+  //@cg-expect-error
   decay?: number;
+  // CG305: RMSProp supplies its default momentum; serialized JSON may omit momentum.
+  //@cg-expect-error
   momentum?: number;
+  // CG305: RMSProp supplies its default epsilon; serialized JSON may omit epsilon.
+  //@cg-expect-error
   epsilon?: number;
+  // CG305: RMSProp supplies its default centered setting; serialized JSON may omit centered.
+  //@cg-expect-error
   centered?: boolean;
 };
 

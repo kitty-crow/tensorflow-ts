@@ -12,8 +12,14 @@ import {DataFormatSerialization, PaddingMode} from '../common';
 import {BaseLayerSerialization, LayerConfig} from '../topology_config';
 
 export interface Pooling1DLayerConfig extends LayerConfig {
+  // CG305: Pooling1D supplies its default window size; serialized JSON may omit pool_size.
+  //@cg-expect-error
   pool_size?: [number];
+  // CG305: Pooling1D defaults strides to its window size; serialized JSON may omit strides.
+  //@cg-expect-error
   strides?: [number];
+  // CG305: Pooling1D defaults padding; serialized JSON may omit padding.
+  //@cg-expect-error
   padding?: PaddingMode;
 }
 
@@ -24,9 +30,17 @@ export type AveragePooling1DLayerSerialization =
     BaseLayerSerialization<'AveragePooling1D', Pooling1DLayerConfig>;
 
 export interface Pooling2DLayerConfig extends LayerConfig {
+  // CG305: Pooling2D supplies its default window size; serialized JSON may omit pool_size.
+  //@cg-expect-error
   pool_size?: number|[number, number];
+  // CG305: Pooling2D defaults strides to its window size; serialized JSON may omit strides.
+  //@cg-expect-error
   strides?: number|[number, number];
+  // CG305: Pooling2D defaults padding; serialized JSON may omit padding.
+  //@cg-expect-error
   padding?: PaddingMode;
+  // CG305: Pooling2D defaults the channel ordering; serialized JSON may omit data_format.
+  //@cg-expect-error
   data_format?: DataFormatSerialization;
 }
 
@@ -49,6 +63,8 @@ export type GlobalMaxPooling1DLayerSerialization =
 // LayerMetadata is inherited.
 //@cg-expect-error
 export interface GlobalPooling2DLayerConfig extends LayerConfig {
+  // CG305: GlobalPooling2D defaults the channel ordering; serialized JSON may omit data_format.
+  //@cg-expect-error
   data_format?: DataFormatSerialization;
 }
 

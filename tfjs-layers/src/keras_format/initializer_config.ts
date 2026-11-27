@@ -39,10 +39,16 @@ export type ConstantSerialization =
 
 export type RandomNormalConfig = {
   /** Mean of the random values to generate. */
+  // CG305: RandomNormal defaults the mean; serialized JSON may omit mean.
+  //@cg-expect-error
   mean?: number;
   /** Standard deviation of the random values to generate. */
+  // CG305: RandomNormal defaults the standard deviation; serialized JSON may omit stddev.
+  //@cg-expect-error
   stddev?: number;
   /** Used to seed the random generator. */
+  // CG305: RandomNormal can use an automatically selected seed; serialized JSON may omit seed.
+  //@cg-expect-error
   seed?: number;
 };
 
@@ -51,10 +57,16 @@ export type RandomNormalSerialization =
 
 export type RandomUniformConfig = {
   /** Lower bound of the range of random values to generate. */
+  // CG305: RandomUniform defaults the minimum; serialized JSON may omit minval.
+  //@cg-expect-error
   minval?: number;
   /** Upper bound of the range of random values to generate. */
+  // CG305: RandomUniform defaults the maximum; serialized JSON may omit maxval.
+  //@cg-expect-error
   maxval?: number;
   /** Used to seed the random generator. */
+  // CG305: RandomUniform can use an automatically selected seed; serialized JSON may omit seed.
+  //@cg-expect-error
   seed?: number;
 };
 
@@ -67,10 +79,18 @@ export type TruncatedNormalSerialization =
     BaseSerialization<'TruncatedNormal', RandomNormalConfig>;
 
 export type VarianceScalingConfig = {
+  // CG305: VarianceScaling defaults the scale; serialized JSON may omit scale.
+  //@cg-expect-error
   scale?: number;
 
+  // CG305: VarianceScaling defaults the fan mode; serialized JSON may omit mode.
+  //@cg-expect-error
   mode?: FanModeSerialization;
+  // CG305: VarianceScaling defaults the distribution; serialized JSON may omit distribution.
+  //@cg-expect-error
   distribution?: DistributionSerialization;
+  // CG305: VarianceScaling can use an automatically selected seed; serialized JSON may omit seed.
+  //@cg-expect-error
   seed?: number;
 };
 
@@ -79,8 +99,12 @@ export type VarianceScalingSerialization =
 
 export type OrthogonalConfig = {
   /** Random number generator seed. */
+  // CG305: Orthogonal initialization does not require a supplied seed; serialized JSON may omit seed.
+  //@cg-expect-error
   seed?: number;
   /** Multiplicative factor to apply to the orthogonal matrix. Defaults to 1. */
+  // CG305: Orthogonal defaults the gain; serialized JSON may omit gain.
+  //@cg-expect-error
   gain?: number;
 };
 
@@ -88,6 +112,8 @@ export type OrthogonalSerialization =
     BaseSerialization<'Orthogonal', OrthogonalConfig>;
 
 export type IdentityConfig = {
+  // CG305: Identity initialization defaults the gain; serialized JSON may omit gain.
+  //@cg-expect-error
   gain?: number;
 };
 

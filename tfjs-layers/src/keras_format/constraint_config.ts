@@ -11,13 +11,19 @@
 import {BaseSerialization} from './types';
 
 export type MaxNormConfig = {
+  // CG305: MaxNorm supplies its default norm limit; serialized JSON may omit max_value.
+  //@cg-expect-error
   max_value?: number;
+  // CG305: MaxNorm supplies its default axis; serialized JSON may omit axis.
+  //@cg-expect-error
   axis?: number;
 };
 
 export type MaxNormSerialization = BaseSerialization<'MaxNorm', MaxNormConfig>;
 
 export type UnitNormConfig = {
+  // CG305: UnitNorm supplies its default axis; serialized JSON may omit axis.
+  //@cg-expect-error
   axis?: number;
 };
 
@@ -27,9 +33,17 @@ export type UnitNormSerialization =
 export type NonNegSerialization = BaseSerialization<'NonNeg', null>;
 
 export type MinMaxNormConfig = {
+  // CG305: MinMaxNorm supplies its default minimum; serialized JSON may omit min_value.
+  //@cg-expect-error
   min_value?: number;
+  // CG305: MinMaxNorm supplies its default maximum; serialized JSON may omit max_value.
+  //@cg-expect-error
   max_value?: number;
+  // CG305: MinMaxNorm supplies its default axis; serialized JSON may omit axis.
+  //@cg-expect-error
   axis?: number;
+  // CG305: MinMaxNorm supplies its default rate; serialized JSON may omit rate.
+  //@cg-expect-error
   rate?: number;
 };
 

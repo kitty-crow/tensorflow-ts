@@ -20,6 +20,8 @@ import {BaseLayerSerialization, LayerConfig} from '../topology_config';
 // contracts.
 //@cg-expect-error
 export interface ReLULayerConfig extends LayerConfig {
+  // CG305: ReLU permits no maximum cap; serialized JSON may omit max_value.
+  //@cg-expect-error
   max_value?: number;
 }
 
@@ -27,6 +29,8 @@ export type ReLULayerSerialization =
     BaseLayerSerialization<'ReLU', ReLULayerConfig>;
 
 export interface LeakyReLULayerConfig extends LayerConfig {
+  // CG305: LeakyReLU supplies its default negative slope; serialized JSON may omit alpha.
+  //@cg-expect-error
   alpha?: number;
 }
 
@@ -34,9 +38,17 @@ export type LeakyReLULayerSerialization =
     BaseLayerSerialization<'LeakyReLU', LeakyReLULayerConfig>;
 
 export interface PReLULayerConfig extends LayerConfig {
+  // CG305: PReLU supplies its default alpha initializer; serialized JSON may omit alpha_initializer.
+  //@cg-expect-error
   alpha_initializer?: InitializerSerialization;
+  // CG305: PReLU does not require alpha regularization; serialized JSON may omit alpha_regularizer.
+  //@cg-expect-error
   alpha_regularizer?: RegularizerSerialization;
+  // CG305: PReLU does not require an alpha constraint; serialized JSON may omit alpha_constraint.
+  //@cg-expect-error
   alpha_constraint?: ConstraintSerialization;
+  // CG305: PReLU supports no shared axes; serialized JSON may omit shared_axes.
+  //@cg-expect-error
   shared_axes?: number|number[];
 }
 
@@ -44,6 +56,8 @@ export type PReLULayerSerialization =
     BaseLayerSerialization<'PReLU', PReLULayerConfig>;
 
 export interface ELULayerConfig extends LayerConfig {
+  // CG305: ELU supplies its default alpha; serialized JSON may omit alpha.
+  //@cg-expect-error
   alpha?: number;
 }
 
@@ -51,6 +65,8 @@ export type ELULayerSerialization =
     BaseLayerSerialization<'ELU', ELULayerConfig>;
 
 export interface ThresholdedReLULayerConfig extends LayerConfig {
+  // CG305: ThresholdedReLU supplies its default threshold; serialized JSON may omit theta.
+  //@cg-expect-error
   theta?: number;
 }
 
@@ -58,6 +74,8 @@ export type ThresholdedReLULayerSerialization =
     BaseLayerSerialization<'ThresholdedReLU', ThresholdedReLULayerConfig>;
 
 export interface SoftmaxLayerConfig extends LayerConfig {
+  // CG305: Softmax supplies its default axis; serialized JSON may omit axis.
+  //@cg-expect-error
   axis?: number;
 }
 
