@@ -31,6 +31,12 @@ export interface ConcatenateLayerConfig extends LayerConfig {
 export type ConcatenateLayerSerialization =
     BaseLayerSerialization<'Concatenate', ConcatenateLayerConfig>;
 
+// CG103: DotLayerConfig has no independently matching fields in its reported pairs.
+// Serialised axes and normalize describe dot-product contraction and
+// normalization, not activation coefficients, runtime activation, masking,
+// concatenation axis, dropout, dataFormat or seed. Shared LayerMetadata is
+// inherited.
+//@cg-expect-error
 export interface DotLayerConfig extends LayerConfig {
   axes: number|[number, number];
   normalize?: boolean;

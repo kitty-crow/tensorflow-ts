@@ -65,6 +65,12 @@ export interface Cropping2DLayerConfig extends LayerConfig {
 export type Cropping2DLayerSerialization =
     BaseLayerSerialization<'Cropping2D', Cropping2DLayerConfig>;
 
+// CG103: UpSampling2DLayerConfig has no independently matching fields in its reported pairs.
+// Serialised size and data_format describe spatial resizing, not activation
+// coefficients, recurrent cells, runtime activation, permutation axes,
+// concatenation axis or runtime dataFormat. Shared LayerMetadata is already
+// inherited.
+//@cg-expect-error
 export interface UpSampling2DLayerConfig extends LayerConfig {
   size?: number[];
   data_format?: DataFormatSerialization;

@@ -13,6 +13,12 @@ import {InitializerSerialization} from '../initializer_config';
 import {RegularizerSerialization} from '../regularizer_config';
 import {BaseLayerSerialization, LayerConfig} from '../topology_config';
 
+// CG103: ReLULayerConfig has no independently matching fields in its reported pairs.
+// The wire-only max_value field is not alpha, theta, cells, activation, n,
+// dims, maskValue, axis, stddev, rate, dataFormat or seed. Runtime LayerArgs
+// already shares LayerMetadata; the remaining fields represent different
+// contracts.
+//@cg-expect-error
 export interface ReLULayerConfig extends LayerConfig {
   max_value?: number;
 }

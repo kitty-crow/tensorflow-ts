@@ -16,6 +16,11 @@ import {RecurrentLayerSerialization} from './recurrent_serialization';
 export type TimeDistributedLayerSerialization =
     BaseLayerSerialization<'TimeDistributed', TimeDistributedLayerConfig>;
 
+// CG103: TimeDistributedLayerConfig has no independently matching fields in its reported pairs.
+// Serialised layer is a recursive LayerSerialization record, not a live Layer
+// or runtime activation, recurrent cell, permutation, mask, concatenation,
+// noise or format options. Shared LayerMetadata is inherited.
+//@cg-expect-error
 export interface TimeDistributedLayerConfig extends LayerConfig {
   layer: LayerSerialization;
 }
@@ -23,6 +28,12 @@ export interface TimeDistributedLayerConfig extends LayerConfig {
 export type BidirectionalLayerSerialization =
     BaseLayerSerialization<'Bidirectional', BidirectionalLayerConfig>;
 
+// CG103: BidirectionalLayerConfig has no independently matching fields in its reported pairs.
+// Serialised layer is a RecurrentLayerSerialization record with wire
+// merge_mode, not a live RNN and runtime mergeMode. Other reported constructor
+// arguments have unrelated activation, cell, reshape, masking, merge, noise,
+// format and seed fields. Shared LayerMetadata is inherited.
+//@cg-expect-error
 export interface BidirectionalLayerConfig extends LayerConfig {
   layer: RecurrentLayerSerialization;
   merge_mode?: BidirectionalMergeMode;

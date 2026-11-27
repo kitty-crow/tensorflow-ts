@@ -98,6 +98,12 @@ export interface LSTMLayerConfig extends SimpleRNNLayerConfig {
 export type LSTMLayerSerialization =
     BaseLayerSerialization<'LSTM', LSTMLayerConfig>;
 
+// CG103: StackedRNNCellsConfig has no independently matching fields in its reported pairs.
+// Serialised cells are RNNCellSerialization records rather than live RNNCell
+// instances or a wrapped Layer; unrelated activation coefficients, flatten
+// format, activation identifier, concatenation axis and global pooling format
+// are not cell stacks. Shared LayerMetadata is inherited.
+//@cg-expect-error
 export interface StackedRNNCellsConfig extends LayerConfig {
   // TODO(soergel): consider whether we can avoid improperly mixing
   // Simple / LSTM / GRU cells here and in the above Layer serializations.

@@ -44,6 +44,12 @@ export type DenseLayerSerialization =
 export type FlattenLayerSerialization =
     BaseLayerSerialization<'Flatten', LayerConfig>;
 
+// CG103: ActivationLayerConfig has no independently matching fields in its reported pairs.
+// Serialised activation identifier/config is not runtime layer arguments,
+// activation coefficients, recurrent cells, repetition count, permutation
+// pattern, masking value, concatenation axis, noise settings, dataFormat,
+// wrapped Layer or seed. LayerMetadata is already shared.
+//@cg-expect-error
 export interface ActivationLayerConfig extends LayerConfig {
   activation: ActivationSerialization;
 }
@@ -58,6 +64,11 @@ export interface RepeatVectorLayerConfig extends LayerConfig {
 export type RepeatVectorLayerSerialization =
     BaseLayerSerialization<'RepeatVector', RepeatVectorLayerConfig>;
 
+// CG103: ReshapeLayerConfig has no independently matching fields in its reported pairs.
+// Serialised target_shape is a wire key for reshape, not runtime targetShape
+// or the unrelated activation, repeat, masking, concatenation, noise, data
+// format, wrapped layer or seed fields. Shared LayerMetadata is inherited.
+//@cg-expect-error
 export interface ReshapeLayerConfig extends LayerConfig {
   target_shape: Shape;
 }
@@ -65,6 +76,12 @@ export interface ReshapeLayerConfig extends LayerConfig {
 export type ReshapeLayerSerialization =
     BaseLayerSerialization<'Reshape', ReshapeLayerConfig>;
 
+// CG103: PermuteLayerConfig has no independently matching fields in its reported pairs.
+// Serialised dims is a permutation pattern, not runtime activation
+// coefficients, activation identifier, repetition count, mask value,
+// concatenation axis, noise/dropout, dataFormat or seed. Shared LayerMetadata
+// is inherited.
+//@cg-expect-error
 export interface PermuteLayerConfig extends LayerConfig {
   dims: number[];
 }

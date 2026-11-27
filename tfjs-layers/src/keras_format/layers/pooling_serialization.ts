@@ -42,6 +42,12 @@ export type GlobalAveragePooling1DLayerSerialization =
 export type GlobalMaxPooling1DLayerSerialization =
     BaseLayerSerialization<'GlobalMaxPooling1D', LayerConfig>;
 
+// CG103: GlobalPooling2DLayerConfig has no independently matching fields in its reported pairs.
+// Wire data_format uses the serialisation enum rather than runtime dataFormat;
+// activation parameters, recurrent cells, runtime activation, mask,
+// concatenation axis and dropout rate do not describe pooling. Shared
+// LayerMetadata is inherited.
+//@cg-expect-error
 export interface GlobalPooling2DLayerConfig extends LayerConfig {
   data_format?: DataFormatSerialization;
 }
