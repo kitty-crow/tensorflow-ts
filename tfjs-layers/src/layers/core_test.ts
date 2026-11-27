@@ -21,7 +21,7 @@ import {ActivationIdentifier} from '../keras_format/activation_config';
 import {pyListRepeat} from '../utils/generic_utils';
 import {arrayProd} from '../utils/math_utils';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, requiredTestElement} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, requiredTestElement, requiredTestValue} from '../utils/test_utils';
 
 describe('Dropout Layer: Symbolic', () => {
   const dropoutRates = [0, 0.5];
@@ -172,8 +172,8 @@ describeMathCPUAndGPU('SpatialDropout1D Layer', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.spatialDropout1d(tsConfig);
-    expect(layerPrime.getConfig().rate).toEqual(0.3);
-    expect(layerPrime.getConfig().seed).toEqual(1337);
+    expect(requiredTestValue(layerPrime.getConfig().rate, 'rate')).toEqual(0.3);
+    expect(requiredTestValue(layerPrime.getConfig().seed, 'seed')).toEqual(1337);
   });
 });
 
@@ -452,7 +452,7 @@ describe('Flatten Layer: Symbolic', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.flatten(tsConfig);
-    expect(layerPrime.getConfig().dataFormat).toEqual('channelsFirst');
+    expect(requiredTestValue(layerPrime.getConfig().dataFormat, 'dataFormat')).toEqual('channelsFirst');
   });
 });
 
@@ -540,7 +540,7 @@ describeMathCPUAndGPU('Activation Layer: Tensor', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.activation(tsConfig);
-    expect(layerPrime.getConfig().activation).toEqual('relu');
+    expect(requiredTestValue(layerPrime.getConfig().activation, 'activation')).toEqual('relu');
   });
 });
 
@@ -624,7 +624,7 @@ describe('Reshape Layer: Symbolic', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.reshape(tsConfig);
-    expect(layerPrime.getConfig().targetShape).toEqual([2, 3]);
+    expect(requiredTestValue(layerPrime.getConfig().targetShape, 'targetShape')).toEqual([2, 3]);
   });
 });
 
@@ -778,7 +778,7 @@ describe('Permute Layer: Symbolic', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.permute(tsConfig);
-    expect(layerPrime.getConfig().dims).toEqual([1, 3, 2]);
+    expect(requiredTestValue(layerPrime.getConfig().dims, 'dims')).toEqual([1, 3, 2]);
   });
 });
 
@@ -796,7 +796,7 @@ describe('Masking Layer: Symbolic', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.masking(tsConfig);
-    expect(layerPrime.getConfig().maskValue).toEqual(-3);
+    expect(requiredTestValue(layerPrime.getConfig().maskValue, 'maskValue')).toEqual(-3);
   });
 });
 

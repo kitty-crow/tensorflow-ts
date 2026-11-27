@@ -25,7 +25,7 @@ const {decodeString} = util;
 
 import {getBinaryCache, MathBackendWebGL, WebGLMemoryInfo, WebGLTimingInfo} from './backend_webgl';
 import {computeBytes} from './texture_manager';
-import {PhysicalTextureType} from './tex_util';
+import {PhysicalTextureType, requireWebGL2TextureEnums} from './tex_util';
 import {WEBGL_ENVS} from './backend_webgl_test_registry';
 import {GPGPUContext} from './gpgpu_context';
 
@@ -1125,12 +1125,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
     const gl = webGlBackend.gpgpu.gl;
     const texture = gl.createTexture();
     const tex2d = gl.TEXTURE_2D;
-    // tslint:disable-next-line:no-any
-    const glany = gl as any;
-    const internalFormat =
-        tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-    const textureFormat = glany.RGBA;
-    const textureType = glany.FLOAT;
+    const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+        gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+    const textureFormat = gl.RGBA;
+    const textureType = gl.FLOAT;
     const dataForUpload = new Float32Array(
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 
@@ -1169,12 +1167,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
 
     const texture = gl.createTexture();
     const tex2d = gl.TEXTURE_2D;
-    // tslint:disable-next-line:no-any
-    const glany = gl as any;
-    const internalFormat =
-        tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-    const textureFormat = glany.RGBA;
-    const textureType = glany.FLOAT;
+    const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+        gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+    const textureFormat = gl.RGBA;
+    const textureType = gl.FLOAT;
     const dataForUpload = new Float32Array(
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 
@@ -1215,12 +1211,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
        const gl = webGlBackend.gpgpu.gl;
        const texture = gl.createTexture();
        const tex2d = gl.TEXTURE_2D;
-       // tslint:disable-next-line:no-any
-       const glany = gl as any;
-       const internalFormat =
-           tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-       const textureFormat = glany.RGBA;
-       const textureType = glany.FLOAT;
+       const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+           gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+       const textureFormat = gl.RGBA;
+       const textureType = gl.FLOAT;
        const dataForUpload = new Float32Array(
            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 
@@ -1257,12 +1251,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
     const gl = webGlBackend.gpgpu.gl;
     const texture = gl.createTexture();
     const tex2d = gl.TEXTURE_2D;
-    // tslint:disable-next-line:no-any
-    const glany = gl as any;
-    const internalFormat =
-        tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-    const textureFormat = glany.RGBA;
-    const textureType = glany.FLOAT;
+    const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+        gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+    const textureFormat = gl.RGBA;
+    const textureType = gl.FLOAT;
     const dataForUpload = new Float32Array(
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 
@@ -1298,12 +1290,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
     const gl = webGlBackend.gpgpu.gl;
     const texture = gl.createTexture();
     const tex2d = gl.TEXTURE_2D;
-    // tslint:disable-next-line:no-any
-    const glany = gl as any;
-    const internalFormat =
-        tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-    const textureFormat = glany.RGBA;
-    const textureType = glany.FLOAT;
+    const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+        gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+    const textureFormat = gl.RGBA;
+    const textureType = gl.FLOAT;
     const dataForUpload = new Float32Array(
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 
@@ -1339,12 +1329,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
     const gl = webGlBackend.gpgpu.gl;
     const texture = gl.createTexture();
     const tex2d = gl.TEXTURE_2D;
-    // tslint:disable-next-line:no-any
-    const glany = gl as any;
-    const internalFormat =
-        tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-    const textureFormat = glany.RGBA;
-    const textureType = glany.FLOAT;
+    const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+        gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+    const textureFormat = gl.RGBA;
+    const textureType = gl.FLOAT;
     const dataForUpload = new Float32Array(
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 
@@ -1381,12 +1369,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
     const gl = webGlBackend.gpgpu.gl;
     const texture = gl.createTexture();
     const tex2d = gl.TEXTURE_2D;
-    // tslint:disable-next-line:no-any
-    const glany = gl as any;
-    const internalFormat =
-        tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-    const textureFormat = glany.RGBA;
-    const textureType = glany.FLOAT;
+    const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+        gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+    const textureFormat = gl.RGBA;
+    const textureType = gl.FLOAT;
     const dataForUpload = new Float32Array([-1.2, -0.1, 0.1, 1.2]);
 
     gl.bindTexture(tex2d, texture);
@@ -1421,12 +1407,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
     const gl = webGlBackend.gpgpu.gl;
     const texture = gl.createTexture();
     const tex2d = gl.TEXTURE_2D;
-    // tslint:disable-next-line:no-any
-    const glany = gl as any;
-    const internalFormat =
-        tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-    const textureFormat = glany.RGBA;
-    const textureType = glany.FLOAT;
+    const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+        gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+    const textureFormat = gl.RGBA;
+    const textureType = gl.FLOAT;
     const dataForUpload = new Float32Array([-2, -1, 0, 1, 2, 3, 4, 5]);
 
     gl.bindTexture(tex2d, texture);
@@ -1459,12 +1443,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
        const gl = webGlBackend.gpgpu.gl;
        const texture = gl.createTexture();
        const tex2d = gl.TEXTURE_2D;
-       // tslint:disable-next-line:no-any
-       const glany = gl as any;
-       const internalFormat =
-           tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-       const textureFormat = glany.RGBA;
-       const textureType = glany.FLOAT;
+       const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+           gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+       const textureFormat = gl.RGBA;
+       const textureType = gl.FLOAT;
        const dataForUpload = new Float32Array([0, 1, 2, 3]);
 
        gl.bindTexture(tex2d, texture);
@@ -1499,12 +1481,10 @@ describeWithFlags('create tensor from texture', WEBGL_ENVS, () => {
     const gl = webGlBackend.gpgpu.gl;
     const texture = gl.createTexture();
     const tex2d = gl.TEXTURE_2D;
-    // tslint:disable-next-line:no-any
-    const glany = gl as any;
-    const internalFormat =
-        tf.env().getNumber('WEBGL_VERSION') === 1 ? gl.RGBA : glany.RGBA32F;
-    const textureFormat = glany.RGBA;
-    const textureType = glany.FLOAT;
+    const internalFormat = tf.env().getNumber('WEBGL_VERSION') === 1 ?
+        gl.RGBA : requireWebGL2TextureEnums(gl).RGBA32F;
+    const textureFormat = gl.RGBA;
+    const textureType = gl.FLOAT;
     const dataForUpload = new Float32Array(
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 

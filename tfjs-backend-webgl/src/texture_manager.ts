@@ -187,24 +187,22 @@ export class TextureManager {
 
 function numBytesForInternalFormat(
     gl: WebGLRenderingContext, internalFormat: number): number {
-  // tslint:disable-next-line:no-any
-  const glany = gl as any;
-  if (internalFormat === glany.R32F) {
+  if ('R32F' in gl && internalFormat === gl.R32F) {
     return 4;
   }
-  if (internalFormat === glany.R16F) {
+  if ('R16F' in gl && internalFormat === gl.R16F) {
     return 2;
   }
-  if (internalFormat === glany.RGBA32F) {
+  if ('RGBA32F' in gl && internalFormat === gl.RGBA32F) {
     return 16;
   }
   if (internalFormat === gl.RGBA) {
     return 16;
   }
-  if (internalFormat === glany.RGBA16F) {
+  if ('RGBA16F' in gl && internalFormat === gl.RGBA16F) {
     return 8;
   }
-  if (internalFormat === glany.RGBA8) {
+  if ('RGBA8' in gl && internalFormat === gl.RGBA8) {
     return 4;
   }
   throw new Error(`Unknown internal format ${internalFormat}`);

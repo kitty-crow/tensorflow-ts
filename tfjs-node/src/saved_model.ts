@@ -175,8 +175,7 @@ export async function getMetaGraphsFromSavedModel(path: string):
 export function getSignatureDefEntryFromMetaGraphInfo(
     savedModelInfo: MetaGraph[], tags: string[],
     signature: string): SignatureDefEntry {
-  for (let i = 0; i < savedModelInfo.length; i++) {
-    const metaGraphInfo = savedModelInfo[i];
+  for (const metaGraphInfo of savedModelInfo) {
     if (!(stringArraysHaveSameElements(tags, metaGraphInfo.tags))) continue;
     {
       if (metaGraphInfo.signatureDefs[signature] == null) {
@@ -209,7 +208,7 @@ export class TFSavedModel implements InferenceModel {
    */
   get inputs(): ModelTensorInfo[] {
     const entries = this.signature.inputs;
-    const results = Object.keys(entries).map((key: string) => entries[key]);
+    const results = Object.values(entries);
     results.forEach((info: ModelTensorInfo) => {
       info.name = info.name.replace(/:0$/, '');
     });
@@ -223,7 +222,7 @@ export class TFSavedModel implements InferenceModel {
    */
   get outputs(): ModelTensorInfo[] {
     const entries = this.signature.outputs;
-    const results = Object.keys(entries).map((key: string) => entries[key]);
+    const results = Object.values(entries);
     results.forEach((info: ModelTensorInfo) => {
       info.name = info.name.replace(/:0$/, '');
     });
@@ -244,8 +243,7 @@ export class TFSavedModel implements InferenceModel {
       this.disposed = true;
 
       loadedSavedModelPathMap.delete(this.jsid);
-      for (const id of Array.from(loadedSavedModelPathMap.keys())) {
-        const value = loadedSavedModelPathMap.get(id);
+      for (const value of Array.from(loadedSavedModelPathMap.values())) {
         if (value.sessionId === this.sessionId) {
           return;
         }
@@ -259,9 +257,9 @@ export class TFSavedModel implements InferenceModel {
       return this.outputNodeNames_;
     }
     this.outputNodeNames_ =
-        Object.keys(this.signature.outputs)
-            .reduce((names: {[key: string]: string}, key: string) => {
-              names[key] = this.signature.outputs[key].name;
+        Object.entries(this.signature.outputs)
+            .reduce((names: {[key: string]: string}, [key, info]) => {
+              names[key] = info.name;
               return names;
             }, {});
     return this.outputNodeNames_;
@@ -319,15 +317,12 @@ export class TFSavedModel implements InferenceModel {
               providedInputNames.join()}.`);
         }
         const inputNodeNamesArray: ModelTensorInfo[] = [];
-        for (let i = 0; i < inputTensorNames.length; i++) {
-          inputTensors.push(inputs[inputTensorNames[i]]);
-          inputNodeNamesArray.push(this.signature.inputs[inputTensorNames[i]]);
+        for (const name of inputTensorNames) {
+          inputTensors.push(util.requiredNamedEntry(inputs, name));
+          inputNodeNamesArray.push(util.requiredNamedEntry(this.signature.inputs, name));
         }
         const outputTensorNames = Object.keys(this.outputNodeNames);
-        const outputNodeNamesArray = [];
-        for (let i = 0; i < outputTensorNames.length; i++) {
-          outputNodeNamesArray.push(this.outputNodeNames[outputTensorNames[i]]);
-        }
+        const outputNodeNamesArray = Object.values(this.outputNodeNames);
         const outputTensors = this.backend.runSavedModel(
             this.sessionId, inputTensors, inputNodeNamesArray,
             outputNodeNamesArray);
@@ -337,8 +332,12 @@ export class TFSavedModel implements InferenceModel {
                 `receive ${outputTensors.length}) output tensors but ` +
                 `there are ${this.outputNodeNames.length} output nodes.`);
         const outputMap: NamedTensorMap = {};
-        for (let i = 0; i < outputTensorNames.length; i++) {
-          outputMap[outputTensorNames[i]] = outputTensors[i];
+        for (const [i, name] of outputTensorNames.entries()) {
+          const output = outputTensors[i];
+          if (output == null) {
+            throw new Error(`Missing output tensor ${name}`);
+          }
+          outputMap[name] = output;
         }
         return outputMap;
       }
@@ -406,8 +405,7 @@ export async function loadSavedModel(
 
   let sessionId: number;
 
-  for (const id of Array.from(loadedSavedModelPathMap.keys())) {
-    const modelInfo = loadedSavedModelPathMap.get(id);
+  for (const modelInfo of Array.from(loadedSavedModelPathMap.values())) {
     if (modelInfo.path === path &&
         stringArraysHaveSameElements(modelInfo.tags, tags)) {
       sessionId = modelInfo.sessionId;

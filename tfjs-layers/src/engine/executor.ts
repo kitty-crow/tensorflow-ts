@@ -316,8 +316,9 @@ export function execute(
         maskExists = true;
       }
       if (training) continue;
-      recipientCounts[input.name]--;
-      if (recipientCounts[input.name] === 0 && !feedDict.hasKey(input) &&
+      const remaining = requiredEntry(recipientCounts, input.name) - 1;
+      recipientCounts[input.name] = remaining;
+      if (remaining === 0 && !feedDict.hasKey(input) &&
           outputNames.indexOf(input.name) === -1 && !value.isDisposed &&
           input.sourceLayer.stateful !== true) {
         tensorsToDispose.push(value);

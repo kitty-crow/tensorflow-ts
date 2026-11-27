@@ -13,7 +13,7 @@ import {eye, memory, NamedTensorMap, ones, Tensor, tensor1d, tensor2d, zeros} fr
 import * as tfl from '../index';
 import * as initializers from '../initializers';
 import {Shape} from '../keras_format/common';
-import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose, LayerForTest, requiredTestElement} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose, LayerForTest, requiredTestElement, requiredTestValue} from '../utils/test_utils';
 import {LayerVariable, onesVariable, zerosVariable} from '../variables';
 
 import {InputSpec, Layer, LayerArgs, Node, SymbolicTensor} from './topology';
@@ -26,7 +26,7 @@ describe('InputSpec', () => {
     expect(inputSpec.ndim).toBeUndefined();
     expect(inputSpec.maxNDim).toBeUndefined();
     expect(inputSpec.minNDim).toBeUndefined();
-    expect(inputSpec.axes).toEqual({});
+    expect(requiredTestValue(inputSpec.axes, 'axes')).toEqual({});
   });
 
   it('initializes with inputSpec.ndim = shape.length when shape is specified.',
@@ -34,13 +34,13 @@ describe('InputSpec', () => {
        const shape = [1, 2, 3];
        const expectedValue = shape.length;
        const inputSpec = new InputSpec({shape: [1, 2, 3], ndim: -1});
-       expect(inputSpec.ndim).toEqual(expectedValue);
+       expect(requiredTestValue(inputSpec.ndim, 'ndim')).toEqual(expectedValue);
      });
 
   it('initializes inputSpec.axes when axes specified.', () => {
     const expectedValue = {1: 2};
     const inputSpec = new InputSpec({axes: expectedValue});
-    expect(inputSpec.axes).toEqual(expectedValue);
+    expect(requiredTestValue(inputSpec.axes, 'axes')).toEqual(expectedValue);
   });
 });
 
@@ -273,8 +273,8 @@ describeMathCPU('Layer', () => {
 
     it('correctly generates a config for serialization', () => {
       const config = defaultLayer.getConfig();
-      expect(config.name).toEqual(defaultLayer.name);
-      expect(config.trainable).toEqual(defaultLayer.trainable);
+      expect(requiredTestValue(config.name, 'name')).toEqual(defaultLayer.name);
+      expect(requiredTestValue(config.trainable, 'trainable')).toEqual(defaultLayer.trainable);
       expect(config.batchInputShape).toBeUndefined();
       expect(config.dtype).toBeUndefined();
     });
@@ -286,7 +286,7 @@ describeMathCPU('Layer', () => {
       const layer = new LayerForTest({name});
       expect(layer.name).toMatch(name);
       const config = layer.getConfig();
-      expect(config.name).toEqual(layer.name);
+      expect(requiredTestValue(config.name, 'name')).toEqual(layer.name);
     });
 
     for (const trainable of [true, false]) {
@@ -294,7 +294,7 @@ describeMathCPU('Layer', () => {
         const layer = new LayerForTest({trainable});
         expect(layer.trainable).toEqual(trainable);
         const config = layer.getConfig();
-        expect(config.trainable).toEqual(layer.trainable);
+        expect(requiredTestValue(config.trainable, 'trainable')).toEqual(layer.trainable);
       });
     }
 
@@ -303,7 +303,7 @@ describeMathCPU('Layer', () => {
         const layer = new LayerForTest({batchInputShape});
         expect(layer.batchInputShape).toEqual(batchInputShape);
         const config = layer.getConfig();
-        expect(config.batchInputShape).toEqual(layer.batchInputShape);
+        expect(requiredTestValue(config.batchInputShape, 'batchInputShape')).toEqual(layer.batchInputShape);
       });
     }
 
@@ -330,7 +330,7 @@ describeMathCPU('Layer', () => {
       const layer = new LayerForTest({inputShape: []});
       expect(layer.dtype).toEqual('float32');
       const config = layer.getConfig();
-      expect(config.dtype).toEqual(layer.dtype);
+      expect(requiredTestValue(config.dtype, 'dtype')).toEqual(layer.dtype);
     });
 
     it('initializes dtype to float32 if layerConfig.batchInputShape is set.',

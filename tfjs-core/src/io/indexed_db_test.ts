@@ -116,12 +116,12 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
            .toEqual(weightData1.byteLength);
 
        const loadedArtifacts = await handler.load();
-       expect(loadedArtifacts.modelTopology).toEqual(modelTopology1);
-       expect(loadedArtifacts.weightSpecs).toEqual(weightSpecs1);
-       expect(loadedArtifacts.format).toEqual('layers-model');
-       expect(loadedArtifacts.generatedBy).toEqual('TensorFlow.js v0.0.0');
-       expect(loadedArtifacts.convertedBy).toEqual(null);
-       expect(loadedArtifacts.modelInitializer).toEqual({});
+       expect(requiredTestValue(loadedArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+       expect(requiredTestValue(loadedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+       expect(requiredTestValue(loadedArtifacts.format, 'format')).toEqual('layers-model');
+       expect(requiredTestValue(loadedArtifacts.generatedBy, 'generatedBy')).toEqual('TensorFlow.js v0.0.0');
+       expect(requiredTestValue(loadedArtifacts.convertedBy, 'convertedBy')).toEqual(null);
+       expect(requiredTestValue(loadedArtifacts.modelInitializer, 'modelInitializer')).toEqual({});
        expectArrayBuffersEqual(CompositeArrayBuffer.join(
            loadedArtifacts.weightData), weightData1);
   }));
@@ -137,11 +137,11 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
        const saveResult1 = await handler1.save(artifacts1);
        // Note: The following two assertions work only because there is no
        // non-ASCII characters in `modelTopology1` and `weightSpecs1`.
-       expect(saveResult1.modelArtifactsInfo.modelTopologyBytes)
+       expect(requiredTestValue(saveResult1.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
            .toEqual(JSON.stringify(modelTopology1).length);
-       expect(saveResult1.modelArtifactsInfo.weightSpecsBytes)
+       expect(requiredTestValue(saveResult1.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
            .toEqual(JSON.stringify(weightSpecs1).length);
-       expect(saveResult1.modelArtifactsInfo.weightDataBytes)
+       expect(requiredTestValue(saveResult1.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'))
            .toEqual(weightData1.byteLength);
 
        const handler2 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://Model/2'), 0);
@@ -152,16 +152,16 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
        // Note: The following two assertions work only because there is
        // no non-ASCII characters in `modelTopology1` and
        // `weightSpecs1`.
-       expect(saveResult2.modelArtifactsInfo.modelTopologyBytes)
+       expect(requiredTestValue(saveResult2.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
            .toEqual(JSON.stringify(modelTopology1).length);
-       expect(saveResult2.modelArtifactsInfo.weightSpecsBytes)
+       expect(requiredTestValue(saveResult2.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
            .toEqual(JSON.stringify(weightSpecs2).length);
-       expect(saveResult2.modelArtifactsInfo.weightDataBytes)
+       expect(requiredTestValue(saveResult2.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'))
            .toEqual(weightData2.byteLength);
 
        const loadedArtifacts = await handler1.load();
-       expect(loadedArtifacts.modelTopology).toEqual(modelTopology1);
-       expect(loadedArtifacts.weightSpecs).toEqual(weightSpecs1);
+       expect(requiredTestValue(loadedArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+       expect(requiredTestValue(loadedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
        expect(loadedArtifacts.weightData).toBeDefined();
        expectArrayBuffersEqual(CompositeArrayBuffer.join(
            loadedArtifacts.weightData), weightData1);
@@ -215,12 +215,12 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
        expect(Object.keys(models).length).toEqual(1);
        expect(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').modelTopologyType)
            .toEqual(saveResult.modelArtifactsInfo.modelTopologyType);
-       expect(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').modelTopologyBytes)
-           .toEqual(saveResult.modelArtifactsInfo.modelTopologyBytes);
-       expect(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').weightSpecsBytes)
-           .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-       expect(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').weightDataBytes)
-           .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').modelTopologyBytes, 'modelTopologyBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').weightSpecsBytes, 'weightSpecsBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'baz/QuxModel').weightDataBytes, 'weightDataBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'));
      }));
 
   it('Manager: List models: 2 results', runWithLock(async () => {
@@ -237,20 +237,20 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
        expect(Object.keys(models).length).toEqual(2);
        expect(tf.test_util.requiredTestEntry(models, 'QuxModel').modelTopologyType)
            .toEqual(saveResult1.modelArtifactsInfo.modelTopologyType);
-       expect(tf.test_util.requiredTestEntry(models, 'QuxModel').modelTopologyBytes)
-           .toEqual(saveResult1.modelArtifactsInfo.modelTopologyBytes);
-       expect(tf.test_util.requiredTestEntry(models, 'QuxModel').weightSpecsBytes)
-           .toEqual(saveResult1.modelArtifactsInfo.weightSpecsBytes);
-       expect(tf.test_util.requiredTestEntry(models, 'QuxModel').weightDataBytes)
-           .toEqual(saveResult1.modelArtifactsInfo.weightDataBytes);
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'QuxModel').modelTopologyBytes, 'modelTopologyBytes'))
+           .toEqual(requiredTestValue(saveResult1.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'QuxModel').weightSpecsBytes, 'weightSpecsBytes'))
+           .toEqual(requiredTestValue(saveResult1.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'QuxModel').weightDataBytes, 'weightDataBytes'))
+           .toEqual(requiredTestValue(saveResult1.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'));
        expect(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').modelTopologyType)
            .toEqual(saveResult2.modelArtifactsInfo.modelTopologyType);
-       expect(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').modelTopologyBytes)
-           .toEqual(saveResult2.modelArtifactsInfo.modelTopologyBytes);
-       expect(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').weightSpecsBytes)
-           .toEqual(saveResult2.modelArtifactsInfo.weightSpecsBytes);
-       expect(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').weightDataBytes)
-           .toEqual(saveResult2.modelArtifactsInfo.weightDataBytes);
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').modelTopologyBytes, 'modelTopologyBytes'))
+           .toEqual(requiredTestValue(saveResult2.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').weightSpecsBytes, 'weightSpecsBytes'))
+           .toEqual(requiredTestValue(saveResult2.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(models, 'repeat/QuxModel').weightDataBytes, 'weightDataBytes'))
+           .toEqual(requiredTestValue(saveResult2.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'));
      }));
 
   it('Manager: Successful removeModel', runWithLock(async () => {

@@ -412,3 +412,24 @@ async function getUint8ArrayFromImage(path: string) {
   const buf = Buffer.from(image);
   return new Uint8Array(buf);
 }
+
+
+describe('image signature classification', () => {
+  it('recognises signatures within a nonzero-offset typed array view', () => {
+    const jpeg = new Uint8Array([0, 255, 216, 255, 0, 0]).subarray(1, 5);
+    expect(getImageType(jpeg)).toBe(ImageType.JPEG);
+    expect(getImageType(new Uint8Array([71, 73, 70, 56, 0])))
+        .toBe(ImageType.GIF);
+    expect(getImageType(new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0])))
+        .toBe(ImageType.PNG);
+    expect(getImageType(new Uint8Array([66, 77, 0, 0]))).toBe(ImageType.BMP);
+  });
+  it('preserves the minimum-length and unsupported-signature checks', () => {
+    expect(() => getImageType(new Uint8Array([255, 216, 255])))
+        .toThrowError(/unsupported image type/);
+    expect(() => getImageType(new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])))
+        .toThrowError(/unsupported image type/);
+    expect(() => getImageType(new Uint8Array(0)))
+        .toThrowError(/unsupported image type/);
+  });
+});

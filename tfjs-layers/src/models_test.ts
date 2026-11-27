@@ -1366,7 +1366,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     // Load the model back, with the optimizer.
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
-    expect(model2.optimizer.getConfig()['learningRate']).toEqual(learningRate);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['learningRate'], 'learningRate')).toEqual(learningRate);
 
     const optimizer1Weights = await model1.optimizer.getWeights();
     const optimizer2Weights = await model2.optimizer.getWeights();
@@ -1426,8 +1426,8 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     // Load the model back, with the optimizer.
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
-    expect(model2.optimizer.getConfig()['learningRate']).toEqual(learningRate);
-    expect(model2.optimizer.getConfig()['decay']).toEqual(decay);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['learningRate'], 'learningRate')).toEqual(learningRate);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['decay'], 'decay')).toEqual(decay);
 
     const optimizer1Weights = await model1.optimizer.getWeights();
     const optimizer2Weights = await model2.optimizer.getWeights();
@@ -1486,7 +1486,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     // Load the model back, with the optimizer.
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
-    expect(model2.optimizer.getConfig()['learningRate']).toEqual(learningRate);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['learningRate'], 'learningRate')).toEqual(learningRate);
 
     const optimizer1Weights = await model1.optimizer.getWeights();
     const optimizer2Weights = await model2.optimizer.getWeights();
@@ -1544,7 +1544,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     // Load the model back, with the optimizer.
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
-    expect(model2.optimizer.getConfig()['learningRate']).toEqual(learningRate);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['learningRate'], 'learningRate')).toEqual(learningRate);
     expect(model2.optimizer.getConfig()['initialAccumulatorValue'])
         .toEqual(initialAccumulatorValue);
 
@@ -1607,9 +1607,9 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     // Load the model back, with the optimizer.
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
-    expect(model2.optimizer.getConfig()['learningRate']).toEqual(learningRate);
-    expect(model2.optimizer.getConfig()['beta1']).toEqual(beta1);
-    expect(model2.optimizer.getConfig()['beta2']).toEqual(beta2);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['learningRate'], 'learningRate')).toEqual(learningRate);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['beta1'], 'beta1')).toEqual(beta1);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['beta2'], 'beta2')).toEqual(beta2);
 
     const optimizer1Weights = await model1.optimizer.getWeights();
     const optimizer2Weights = await model2.optimizer.getWeights();
@@ -1666,7 +1666,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     // Load the model back, with the optimizer.
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
-    expect(model2.optimizer.getConfig()['learningRate']).toEqual(1e-3);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['learningRate'], 'learningRate')).toEqual(1e-3);
 
     const optimizer1Weights = await model1.optimizer.getWeights();
     const optimizer2Weights = await model2.optimizer.getWeights();
@@ -1724,7 +1724,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     // Load the model back, with the optimizer.
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
-    expect(model2.optimizer.getConfig()['learningRate']).toEqual(learningRate);
+    expect(test_util.requiredTestValue(model2.optimizer.getConfig()['learningRate'], 'learningRate')).toEqual(learningRate);
 
     const optimizer1Weights = await model1.optimizer.getWeights();
     const optimizer2Weights = await model2.optimizer.getWeights();
@@ -1767,7 +1767,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('categorical_crossentropy');
-    expect(trainingConfig['metrics']).toEqual(['acc']);
+    expect(test_util.requiredTestValue(trainingConfig['metrics'], 'metrics')).toEqual(['acc']);
 
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
     h = await model2.fit(xs, ys, {epochs: 1});
@@ -1797,7 +1797,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
 
     const trainingConfig = test_util.requiredTestValue(savedArtifacts.trainingConfig, 'trainingConfig');
     expect(trainingConfig['loss']).toEqual('categorical_crossentropy');
-    expect(trainingConfig['metrics']).toEqual(['acc']);
+    expect(test_util.requiredTestValue(trainingConfig['metrics'], 'metrics')).toEqual(['acc']);
 
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
 
@@ -1847,7 +1847,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     expect(trainingConfig['loss']).toEqual([
       'categorical_crossentropy', 'binary_crossentropy'
     ]);
-    expect(trainingConfig['metrics']).toEqual(['acc']);
+    expect(test_util.requiredTestValue(trainingConfig['metrics'], 'metrics')).toEqual(['acc']);
 
     const model2 = await tfl.loadLayersModel(io.fromMemory(savedArtifacts));
 

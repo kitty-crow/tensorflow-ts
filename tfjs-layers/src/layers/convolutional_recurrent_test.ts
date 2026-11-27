@@ -22,7 +22,7 @@ import {modelFromJSON} from '../models';
 import {L1L2, serializeRegularizer} from '../regularizers';
 import {getCartesianProductOfValues} from '../utils/generic_utils';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, requiredTestElement, requiredTestValue} from '../utils/test_utils';
 
 import {ConvLSTM2DArgs, ConvLSTM2DCellArgs} from './convolutional_recurrent';
 
@@ -247,9 +247,9 @@ describeMathCPU('ConvLSTM2D Symbolic', () => {
         const layerPrime =
             tfl.layers.convLstm2d(tsConfig as unknown as ConvLSTM2DArgs);
 
-        expect(layerPrime.getConfig().filters).toEqual(filters);
-        expect(layerPrime.getConfig().kernelSize).toEqual(kernelSize);
-        expect(layerPrime.getConfig().implementation).toEqual(implementation);
+        expect(requiredTestValue(layerPrime.getConfig().filters, 'filters')).toEqual(filters);
+        expect(requiredTestValue(layerPrime.getConfig().kernelSize, 'kernelSize')).toEqual(kernelSize);
+        expect(requiredTestValue(layerPrime.getConfig().implementation, 'implementation')).toEqual(implementation);
       });
     }
   });
@@ -813,8 +813,8 @@ describeMathCPU('ConvLSTM2D Serialization and Deserialization', () => {
       const {dropout, recurrentDropout, ...configPrime} = cell.getConfig();
 
       expect(configPrime).toEqual(expectedCellConfigPrime);
-      expect(dropout).toBeCloseTo(0.1);
-      expect(recurrentDropout).toBeCloseTo(0.2);
+      expect(requiredTestValue(dropout, 'dropout')).toBeCloseTo(0.1);
+      expect(requiredTestValue(recurrentDropout, 'recurrentDropout')).toBeCloseTo(0.2);
     });
   });
 
@@ -847,8 +847,8 @@ describeMathCPU('ConvLSTM2D Serialization and Deserialization', () => {
         unroll: false,
         goBackwards: true,
       });
-      expect(dropout).toBeCloseTo(0.1);
-      expect(recurrentDropout).toBeCloseTo(0.2);
+      expect(requiredTestValue(dropout, 'dropout')).toBeCloseTo(0.1);
+      expect(requiredTestValue(recurrentDropout, 'recurrentDropout')).toBeCloseTo(0.2);
     });
   });
 

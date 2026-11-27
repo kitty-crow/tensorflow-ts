@@ -146,12 +146,12 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
            JSON.parse(LS.getItem('tensorflowjs_models/foo/FooModel/info'));
        expect(Date.parse(info.dateSaved))
            .toEqual(saveResult.modelArtifactsInfo.dateSaved.getTime());
-       expect(info.modelTopologyBytes)
-           .toEqual(saveResult.modelArtifactsInfo.modelTopologyBytes);
-       expect(info.weightSpecsBytes)
-           .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-       expect(info.weightDataBytes)
-           .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
+       expect(requiredTestValue(info.modelTopologyBytes, 'modelTopologyBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'));
+       expect(requiredTestValue(info.weightSpecsBytes, 'weightSpecsBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'));
+       expect(requiredTestValue(info.weightDataBytes, 'weightDataBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'));
 
        const topologyString =
            LS.getItem('tensorflowjs_models/foo/FooModel/model_topology');
@@ -173,16 +173,16 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
        await handler1.save(artifacts1);
        const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers('localstorage://FooModel'), 0);
        const loaded = await handler2.load();
-       expect(loaded.modelTopology).toEqual(modelTopology1);
-       expect(loaded.weightSpecs).toEqual(weightSpecs1);
-       expect(loaded.weightData).toEqual(weightData1);
-       expect(loaded.format).toEqual('layers-model');
-       expect(loaded.generatedBy).toEqual('TensorFlow.js v0.0.0');
-       expect(loaded.convertedBy).toEqual('1.13.1');
-       expect(loaded.userDefinedMetadata).toEqual({});
-       expect(loaded.modelInitializer).toEqual({});
+       expect(requiredTestValue(loaded.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+       expect(requiredTestValue(loaded.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+       expect(requiredTestValue(loaded.weightData, 'weightData')).toEqual(weightData1);
+       expect(requiredTestValue(loaded.format, 'format')).toEqual('layers-model');
+       expect(requiredTestValue(loaded.generatedBy, 'generatedBy')).toEqual('TensorFlow.js v0.0.0');
+       expect(requiredTestValue(loaded.convertedBy, 'convertedBy')).toEqual('1.13.1');
+       expect(requiredTestValue(loaded.userDefinedMetadata, 'userDefinedMetadata')).toEqual({});
+       expect(requiredTestValue(loaded.modelInitializer, 'modelInitializer')).toEqual({});
        expect(loaded.initializerSignature).toBeUndefined();
-       expect(loaded.trainingConfig).toEqual(trainingConfig1);
+       expect(requiredTestValue(loaded.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
      }));
 
   it('Save-load round trip succeeds: v0 format', runWithLock(async () => {
@@ -191,9 +191,9 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
        await handler1.save(artifactsV0);
        const handler2 = tf.test_util.requiredTestElement(tf.io.getLoadHandlers('localstorage://FooModel'), 0);
        const loaded = await handler2.load();
-       expect(loaded.modelTopology).toEqual(modelTopology1);
-       expect(loaded.weightSpecs).toEqual(weightSpecs1);
-       expect(loaded.weightData).toEqual(weightData1);
+       expect(requiredTestValue(loaded.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+       expect(requiredTestValue(loaded.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+       expect(requiredTestValue(loaded.weightData, 'weightData')).toEqual(weightData1);
        expect(loaded.format).toBeUndefined();
        expect(loaded.generatedBy).toBeUndefined();
        expect(loaded.convertedBy).toBeUndefined();
@@ -343,12 +343,12 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
        expect(Object.keys(out).length).toEqual(1);
        expect(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').modelTopologyType)
            .toEqual(saveResult.modelArtifactsInfo.modelTopologyType);
-       expect(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').modelTopologyBytes)
-           .toEqual(saveResult.modelArtifactsInfo.modelTopologyBytes);
-       expect(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').weightSpecsBytes)
-           .toEqual(saveResult.modelArtifactsInfo.weightSpecsBytes);
-       expect(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').weightDataBytes)
-           .toEqual(saveResult.modelArtifactsInfo.weightDataBytes);
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').modelTopologyBytes, 'modelTopologyBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').weightSpecsBytes, 'weightSpecsBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'baz/QuxModel').weightDataBytes, 'weightDataBytes'))
+           .toEqual(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'));
      }));
 
   it('Manager: List models: 2 results', runWithLock(async () => {
@@ -369,20 +369,20 @@ describeWithFlags('LocalStorage', BROWSER_ENVS, () => {
        expect(Object.keys(out).length).toEqual(2);
        expect(tf.test_util.requiredTestEntry(out, 'QuxModel').modelTopologyType)
            .toEqual(saveResult1.modelArtifactsInfo.modelTopologyType);
-       expect(tf.test_util.requiredTestEntry(out, 'QuxModel').modelTopologyBytes)
-           .toEqual(saveResult1.modelArtifactsInfo.modelTopologyBytes);
-       expect(tf.test_util.requiredTestEntry(out, 'QuxModel').weightSpecsBytes)
-           .toEqual(saveResult1.modelArtifactsInfo.weightSpecsBytes);
-       expect(tf.test_util.requiredTestEntry(out, 'QuxModel').weightDataBytes)
-           .toEqual(saveResult1.modelArtifactsInfo.weightDataBytes);
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'QuxModel').modelTopologyBytes, 'modelTopologyBytes'))
+           .toEqual(requiredTestValue(saveResult1.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'QuxModel').weightSpecsBytes, 'weightSpecsBytes'))
+           .toEqual(requiredTestValue(saveResult1.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'QuxModel').weightDataBytes, 'weightDataBytes'))
+           .toEqual(requiredTestValue(saveResult1.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'));
        expect(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').modelTopologyType)
            .toEqual(saveResult2.modelArtifactsInfo.modelTopologyType);
-       expect(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').modelTopologyBytes)
-           .toEqual(saveResult2.modelArtifactsInfo.modelTopologyBytes);
-       expect(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').weightSpecsBytes)
-           .toEqual(saveResult2.modelArtifactsInfo.weightSpecsBytes);
-       expect(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').weightDataBytes)
-           .toEqual(saveResult2.modelArtifactsInfo.weightDataBytes);
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').modelTopologyBytes, 'modelTopologyBytes'))
+           .toEqual(requiredTestValue(saveResult2.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').weightSpecsBytes, 'weightSpecsBytes'))
+           .toEqual(requiredTestValue(saveResult2.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'));
+       expect(requiredTestValue(tf.test_util.requiredTestEntry(out, 'repeat/QuxModel').weightDataBytes, 'weightDataBytes'))
+           .toEqual(requiredTestValue(saveResult2.modelArtifactsInfo.weightDataBytes, 'weightDataBytes'));
      }));
 
   it('Manager: Successful deleteModel', runWithLock(async () => {

@@ -23,6 +23,7 @@ import {ValueError} from '../errors';
 import type {Logs} from '../logs';
 
 export const requiredTestElement = test_util.requiredTestElement;
+export const requiredTestValue = test_util.requiredTestValue;
 export const requiredTestEntry = test_util.requiredTestEntry;
 
 /** A completed fit must contain the requested metric with numeric values. */

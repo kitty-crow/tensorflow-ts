@@ -8,6 +8,7 @@
  * =============================================================================
  */
 
+import {requiredElement, requiredEntry} from '../utils/generic_utils';
 import * as tfc from '@tensorflow/tfjs-core';
 
 import {Shape} from '../keras_format/common';
@@ -64,7 +65,7 @@ function mergeBatchSizeAndShape(
   } else {
     const output: {[name: string]: Shape} = {};
     for (const name in shape) {
-      output[name] = [batchSize].concat(shape[name]);
+      output[name] = [batchSize].concat(requiredEntry(shape, name));
     }
     return output;
   }
@@ -78,7 +79,7 @@ function generateRandomTensorContainer(shape: Shape|{[name: string]: Shape}):
   } else {
     output = {};
     for (const name in shape) {
-      output[name] = tfc.randomNormal(shape[name]);
+      output[name] = tfc.randomNormal(requiredEntry(shape, name));
     }
   }
   return output;
@@ -137,7 +138,7 @@ class FakeNumericIterator extends LazyIterator<FitDatasetElement> {
 
       let xs: tfc.Tensor|{[name: string]: tfc.Tensor};
       if (Array.isArray(this.xTensorValues)) {
-        xs = this.xTensorValues[index];
+        xs = requiredElement(this.xTensorValues, index);
         tfc.util.assert(
             tfc.util.arraysEqual(xs.shape, this.xBatchShape as Shape),
             () => `Shape mismatch: expected: ${
@@ -146,9 +147,10 @@ class FakeNumericIterator extends LazyIterator<FitDatasetElement> {
       } else {
         xs = {};
         for (const key in this.xTensorValues) {
-          xs[key] = this.xTensorValues[key][index];
+          const tensor = requiredElement(requiredEntry(this.xTensorValues, key), index);
+          xs[key] = tensor;
           tfc.util.assert(
-              tfc.util.arraysEqual(xs[key].shape, this.xBatchShape as Shape),
+              tfc.util.arraysEqual(tensor.shape, this.xBatchShape as Shape),
               () => `Shape mismatch: expected: ${
                         JSON.stringify(this.xBatchShape)}; ` +
                   `actual: ${JSON.stringify((xs as tfc.Tensor).shape)}`);
@@ -158,7 +160,7 @@ class FakeNumericIterator extends LazyIterator<FitDatasetElement> {
       let ys: tfc.Tensor|{[name: string]: tfc.Tensor};
       if (Array.isArray(this.yTensorValues)) {
         // Get preset ys tensors for single-output models.
-        ys = this.yTensorValues[index];
+        ys = requiredElement(this.yTensorValues, index);
         tfc.util.assert(
             tfc.util.arraysEqual(ys.shape, this.yBatchShape as Shape),
             () => `Shape mismatch: expected: ${
@@ -169,14 +171,15 @@ class FakeNumericIterator extends LazyIterator<FitDatasetElement> {
         ys = {};
         this.yBatchShape = this.yBatchShape as {[name: string]: Shape};
         for (const key in this.yTensorValues) {
-          ys[key] = this.yTensorValues[key][index];
+          const tensor = requiredElement(requiredEntry(this.yTensorValues, key), index);
+          ys[key] = tensor;
           tfc.util.assert(
-              tfc.util.arraysEqual(ys[key].shape, this.yBatchShape[key]),
+              tfc.util.arraysEqual(tensor.shape, requiredEntry(this.yBatchShape, key)),
               () => `Shape mismatch: expected: ${
                         JSON.stringify(this.yBatchShape)}; ` +
                   `actual: ${
                         JSON.stringify(
-                            (ys as {[name: string]: tfc.Tensor})[key].shape)}`);
+                            tensor.shape)}`);
         }
       }
 

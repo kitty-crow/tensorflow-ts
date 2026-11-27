@@ -667,8 +667,7 @@ function createFloatTextureAndBindToFramebuffer(gl: WebGLRenderingContext):
 }
 
 function createHalfFloatTextureAndBindToFramebuffer(
-    // tslint:disable-next-line:no-any
-    gl: WebGLRenderingContext, textureHalfFloatExtension: any): boolean {
+    gl: WebGLRenderingContext, textureHalfFloatExtension: {}): boolean {
   const texConfig = getTextureConfig(gl, textureHalfFloatExtension);
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -701,8 +700,7 @@ export function isWebGLFenceEnabled(webGLVersion: number) {
   }
   const gl = getWebGLContext(webGLVersion);
 
-  // tslint:disable-next-line:no-any
-  const isEnabled = (gl as any).fenceSync != null;
+  const isEnabled = 'fenceSync' in gl && gl.fenceSync != null;
   return isEnabled;
 }
 

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {requiredTestEntry} from './test_util';
+import {requiredTestEntry, requiredTestValue} from './test_util';
 import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
 
 describe('shape utility regression coverage', () => {
@@ -120,5 +120,15 @@ describe('required runtime named entry', () => {
   it('rejects absent or null entries', () => {
     expect(() => requiredNamedEntry({}, 'missing')).toThrowError(/Missing required entry/);
     expect(() => requiredNamedEntry({missing: null}, 'missing')).toThrowError(/Missing required entry/);
+  });
+});
+
+
+describe('required test values', () => {
+  it('retains zero, false and null, but rejects undefined', () => {
+    expect(requiredTestValue(0, 'count')).toBe(0);
+    expect(requiredTestValue(false, 'flag')).toBe(false);
+    expect(requiredTestValue(null, 'nullable')).toBeNull();
+    expect(() => requiredTestValue(undefined, 'missing')).toThrowError(/missing/);
   });
 });

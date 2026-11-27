@@ -25,7 +25,7 @@ import {ModelAndWeightsConfig, modelFromJSON} from '../models';
 import {L1L2, serializeRegularizer} from '../regularizers';
 import {Kwargs} from '../types';
 import {convertPythonicToTs, convertTsToPythonic} from '../utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathWebGL2, expectTensorsClose, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, describeMathWebGL2, expectTensorsClose, historyMetric, historyMetricAt, requiredTestElement, requiredTestValue} from '../utils/test_utils';
 
 import {GRUCellLayerArgs, GRULayerArgs, LSTMCellLayerArgs, LSTMLayerArgs, rnn, RNN, RNNCell, SimpleRNNCellLayerArgs, SimpleRNNLayerArgs} from './recurrent';
 
@@ -522,7 +522,7 @@ describeMathCPU('SimpleRNN Symbolic', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.simpleRNN(tsConfig);
-    expect(layerPrime.getConfig().units).toEqual(4);
+    expect(requiredTestValue(layerPrime.getConfig().units, 'units')).toEqual(4);
   });
 
   it('Invalid units leads to Error', () => {
@@ -1089,8 +1089,8 @@ describeMathCPU('SimpleRNN Serialization', () => {
       const {dropout, recurrentDropout, ...configPrime} = cell.getConfig();
 
       expect(configPrime).toEqual(expectedCellConfigPrime);
-      expect(dropout).toBeCloseTo(0.1);
-      expect(recurrentDropout).toBeCloseTo(0.2);
+      expect(requiredTestValue(dropout, 'dropout')).toBeCloseTo(0.1);
+      expect(requiredTestValue(recurrentDropout, 'recurrentDropout')).toBeCloseTo(0.2);
     });
   });
 
@@ -1123,8 +1123,8 @@ describeMathCPU('SimpleRNN Serialization', () => {
         unroll: true,
         goBackwards: true,
       });
-      expect(dropout).toBeCloseTo(0.1);
-      expect(recurrentDropout).toBeCloseTo(0.2);
+      expect(requiredTestValue(dropout, 'dropout')).toBeCloseTo(0.1);
+      expect(requiredTestValue(recurrentDropout, 'recurrentDropout')).toBeCloseTo(0.2);
     });
   });
 });
@@ -1186,8 +1186,8 @@ describeMathCPU('GRU Symbolic', () => {
       // tslint:disable-next-line:no-any
       const tsConfig = convertPythonicToTs(pythonicConfig) as any;
       const layerPrime = tfl.layers.gru(tsConfig);
-      expect(layerPrime.getConfig().units).toEqual(4);
-      expect(layerPrime.getConfig().implementation).toEqual(implementation);
+      expect(requiredTestValue(layerPrime.getConfig().units, 'units')).toEqual(4);
+      expect(requiredTestValue(layerPrime.getConfig().implementation, 'implementation')).toEqual(implementation);
     });
   }
 
@@ -1727,8 +1727,8 @@ describeMathCPU('GRU Serialization', () => {
       const {dropout, recurrentDropout, ...configPrime} = cell.getConfig();
 
       expect(configPrime).toEqual(expectedCellConfigPrime);
-      expect(dropout).toBeCloseTo(0.1);
-      expect(recurrentDropout).toBeCloseTo(0.2);
+      expect(requiredTestValue(dropout, 'dropout')).toBeCloseTo(0.1);
+      expect(requiredTestValue(recurrentDropout, 'recurrentDropout')).toBeCloseTo(0.2);
     });
   });
 
@@ -1761,8 +1761,8 @@ describeMathCPU('GRU Serialization', () => {
         unroll: true,
         goBackwards: true,
       });
-      expect(dropout).toBeCloseTo(0.1);
-      expect(recurrentDropout).toBeCloseTo(0.2);
+      expect(requiredTestValue(dropout, 'dropout')).toBeCloseTo(0.1);
+      expect(requiredTestValue(recurrentDropout, 'recurrentDropout')).toBeCloseTo(0.2);
     });
   });
 });
@@ -1826,8 +1826,8 @@ describeMathCPU('LSTM Symbolic', () => {
       // tslint:disable-next-line:no-any
       const tsConfig = convertPythonicToTs(pythonicConfig) as any;
       const layerPrime = tfl.layers.lstm(tsConfig);
-      expect(layerPrime.getConfig().units).toEqual(4);
-      expect(layerPrime.getConfig().implementation).toEqual(implementation);
+      expect(requiredTestValue(layerPrime.getConfig().units, 'units')).toEqual(4);
+      expect(requiredTestValue(layerPrime.getConfig().implementation, 'implementation')).toEqual(implementation);
     });
   }
 
@@ -2959,8 +2959,8 @@ describeMathCPU('LSTM Serialization', () => {
       const {dropout, recurrentDropout, ...configPrime} = cell.getConfig();
 
       expect(configPrime).toEqual(expectedCellConfigPrime);
-      expect(dropout).toBeCloseTo(0.1);
-      expect(recurrentDropout).toBeCloseTo(0.2);
+      expect(requiredTestValue(dropout, 'dropout')).toBeCloseTo(0.1);
+      expect(requiredTestValue(recurrentDropout, 'recurrentDropout')).toBeCloseTo(0.2);
     });
   });
 
@@ -2993,8 +2993,8 @@ describeMathCPU('LSTM Serialization', () => {
         unroll: true,
         goBackwards: true,
       });
-      expect(dropout).toBeCloseTo(0.1);
-      expect(recurrentDropout).toBeCloseTo(0.2);
+      expect(requiredTestValue(dropout, 'dropout')).toBeCloseTo(0.1);
+      expect(requiredTestValue(recurrentDropout, 'recurrentDropout')).toBeCloseTo(0.2);
     });
   });
 });

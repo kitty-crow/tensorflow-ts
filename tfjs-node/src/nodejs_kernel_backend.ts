@@ -127,15 +127,15 @@ export class NodeJSKernelBackend extends KernelBackend {
   // Prepares Tensor instances for Op execution.
   private getInputTensorIds(tensors: Array<TensorInfo|Int64Scalar>): number[] {
     const ids: number[] = [];
-    for (let i = 0; i < tensors.length; i++) {
-      if (tensors[i] instanceof Int64Scalar) {
+    for (const tensor of tensors) {
+      if (tensor instanceof Int64Scalar) {
         // Then `tensors[i]` is a Int64Scalar, which we currently represent
         // using an `Int32Array`.
-        const value = (tensors[i] as Int64Scalar).valueArray;
+        const value = tensor.valueArray;
         const id = this.binding.createTensor([], this.binding.TF_INT64, value);
         ids.push(id);
       } else {
-        const info = this.tensorMap.get((tensors[i] as TensorInfo).dataId);
+        const info = this.tensorMap.get(tensor.dataId);
         // TODO - what about ID in this case? Handle in write()??
         if (info.values != null) {
           // Values were delayed to write into the TensorHandle. Do that before
@@ -199,7 +199,11 @@ export class NodeJSKernelBackend extends KernelBackend {
       Tensor {
     const outputMetadata = this.binding.executeOp(
         name, opAttrs, this.getInputTensorIds(inputs), 1);
-    return this.createOutputTensor(outputMetadata[0]);
+    const output = outputMetadata[0];
+    if (output == null) {
+      throw new Error(`Missing output metadata for ${name}`);
+    }
+    return this.createOutputTensor(output);
   }
 
   /**
@@ -420,6 +424,9 @@ export class NodeJSKernelBackend extends KernelBackend {
         this.binding.executeOp(name, opAttrs, [inputTensorId], 1);
     this.binding.deleteTensor(inputTensorId);
     const outputTensorInfo = outputMetadata[0];
+    if (outputTensorInfo == null) {
+      throw new Error(`Missing output metadata for ${name}`);
+    }
     // prevent the tensor data from being converted to a UTF8 string, since
     // the encoded data is not valid UTF8
     outputTensorInfo.dtype = this.binding.TF_UINT8;
@@ -484,21 +491,22 @@ export class NodeJSKernelBackend extends KernelBackend {
   private getMappedInputTensorIds(
       inputs: Tensor[], inputTensorInfos: ModelTensorInfo[]) {
     const tensorIds = this.getInputTensorIds(inputs);
-    const newTensors = [];
-    for (let i = 0; i < inputs.length; i++) {
-      if (!(inputTensorInfos[i] != null)) continue;
+    const newTensors: number[] = [];
+    for (const [i, input] of inputs.entries()) {
+      const tensorInfo = inputTensorInfos[i];
+      if (tensorInfo == null) continue;
       {
-        if (inputTensorInfos[i].tfDtype === 'DT_UINT8') {
-          const data = Uint8Array.from(inputs[i].dataSync());
+        if (tensorInfo.tfDtype === 'DT_UINT8') {
+          const data = Uint8Array.from(input.dataSync());
           const inputTensorId = this.binding.createTensor(
-              inputs[i].shape, this.binding.TF_UINT8, data);
+              input.shape, this.binding.TF_UINT8, data);
           tensorIds[i] = inputTensorId;
           newTensors.push(i);
-        } else if (inputTensorInfos[i].tfDtype === 'DT_INT64') {
+        } else if (tensorInfo.tfDtype === 'DT_INT64') {
           const data =
-              encodeInt32ArrayAsInt64(inputs[i].dataSync() as Int32Array);
+              encodeInt32ArrayAsInt64(input.dataSync() as Int32Array);
           const inputTensorId = this.binding.createTensor(
-              inputs[i].shape, this.binding.TF_INT64, data);
+              input.shape, this.binding.TF_INT64, data);
           tensorIds[i] = inputTensorId;
           newTensors.push(i);
         }
@@ -515,9 +523,9 @@ export class NodeJSKernelBackend extends KernelBackend {
     const outputMetadata = this.binding.runSavedModel(
         id, tensorIds, inputTensorInfos.map(info => info.name).join(','),
         outputOpNames.join(','));
-    for (let i = 0; i < tensorIds.length; i++) {
+    for (const [i, id] of tensorIds.entries()) {
       if (newTensors.includes(i)) {
-        this.binding.deleteTensor(tensorIds[i]);
+        this.binding.deleteTensor(id);
       }
     }
     return outputMetadata.map(m => this.createOutputTensor(m));
@@ -580,7 +588,7 @@ export class NodeJSKernelBackend extends KernelBackend {
       const ids = this.getInputTensorIds(inputArgs);
       this.binding.executeOp('WriteScalarSummary', opAttrs, ids, 0);
       // release the tensorflow tensor for Int64Scalar value of step
-      this.binding.deleteTensor(ids[1]);
+      this.binding.deleteTensor(util.requiredNumericEntry(ids, 1));
     });
   }
 
@@ -634,7 +642,7 @@ export class NodeJSKernelBackend extends KernelBackend {
       const ids = this.getInputTensorIds(inputArgs);
       this.binding.executeOp('WriteSummary', opAttrs, ids, 0);
       // release the tensorflow tensor for Int64Scalar value of step
-      this.binding.deleteTensor(ids[1]);
+      this.binding.deleteTensor(util.requiredNumericEntry(ids, 1));
     });
   }
 
@@ -795,8 +803,8 @@ function getTFDTypeForInputs(tensors: tf.Tensor|tf.Tensor[]): number {
     throw new Error('Invalid input tensors value.');
   }
   if (Array.isArray(tensors)) {
-    for (let i = 0; i < tensors.length; i++) {
-      return getTFDType(tensors[i].dtype);
+    for (const tensor of tensors) {
+      return getTFDType(tensor.dtype);
     }
     return -1;
   } else {

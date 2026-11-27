@@ -180,11 +180,47 @@ export interface TextureConfig {
   textureTypeFloat: number;
 }
 
+/** Numeric texture constants required from a WebGL 2 context. */
+export interface WebGL2TextureEnums {
+  R32F: number;
+  R16F: number;
+  RGBA16F: number;
+  RGBA32F: number;
+  RED: number;
+  HALF_FLOAT: number;
+  RGBA8: number;
+}
+
+function hasWebGL2TextureEnums(gl: object): gl is WebGL2TextureEnums {
+  return 'R32F' in gl && typeof gl.R32F === 'number' &&
+      'R16F' in gl && typeof gl.R16F === 'number' &&
+      'RGBA16F' in gl && typeof gl.RGBA16F === 'number' &&
+      'RGBA32F' in gl && typeof gl.RGBA32F === 'number' &&
+      'RED' in gl && typeof gl.RED === 'number' &&
+      'HALF_FLOAT' in gl && typeof gl.HALF_FLOAT === 'number' &&
+      'RGBA8' in gl && typeof gl.RGBA8 === 'number';
+}
+
+export function requireWebGL2TextureEnums(gl: object): WebGL2TextureEnums {
+  if (!hasWebGL2TextureEnums(gl)) {
+    throw new Error('Missing WebGL 2 texture constants.');
+  }
+  return gl;
+}
+
+function halfFloatExtensionType(extension: {}): number {
+  if (extension == null) {
+    return null;
+  }
+  if (typeof extension === 'object' && 'HALF_FLOAT_OES' in extension &&
+      typeof extension.HALF_FLOAT_OES === 'number') {
+    return extension.HALF_FLOAT_OES;
+  }
+  throw new Error('Missing HALF_FLOAT_OES texture constant.');
+}
+
 export function getTextureConfig(
-    // tslint:disable-next-line:no-any
-    gl: WebGLRenderingContext, textureHalfFloatExtension?: any): TextureConfig {
-  // tslint:disable-next-line:no-any
-  const glany = gl as any;
+    gl: WebGLRenderingContext, textureHalfFloatExtension?: {}): TextureConfig {
 
   let internalFormatFloat: number;
   let internalFormatHalfFloat: number;
@@ -200,27 +236,26 @@ export function getTextureConfig(
   let textureTypeFloat: number;
 
   if (env().getNumber('WEBGL_VERSION') === 2) {
-    internalFormatFloat = glany.R32F;
-    internalFormatHalfFloat = glany.R16F;
-    internalFormatPackedHalfFloat = glany.RGBA16F;
-    internalFormatPackedFloat = glany.RGBA32F;
-    textureFormatFloat = glany.RED;
+    const gl2 = requireWebGL2TextureEnums(gl);
+    internalFormatFloat = gl2.R32F;
+    internalFormatHalfFloat = gl2.R16F;
+    internalFormatPackedHalfFloat = gl2.RGBA16F;
+    internalFormatPackedFloat = gl2.RGBA32F;
+    textureFormatFloat = gl2.RED;
     downloadUnpackNumChannels = 4;
     defaultNumChannels = 1;
-    textureTypeHalfFloat = glany.HALF_FLOAT;
-    textureTypeFloat = glany.FLOAT;
-    downloadTextureFormat = glany.RGBA8;
+    textureTypeHalfFloat = gl2.HALF_FLOAT;
+    textureTypeFloat = gl.FLOAT;
+    downloadTextureFormat = gl2.RGBA8;
   } else {
     internalFormatFloat = gl.RGBA;
     internalFormatHalfFloat = gl.RGBA;
     internalFormatPackedHalfFloat = gl.RGBA;
-    internalFormatPackedFloat = glany.RGBA;
+    internalFormatPackedFloat = gl.RGBA;
     textureFormatFloat = gl.RGBA;
     downloadUnpackNumChannels = 4;
     defaultNumChannels = 4;
-    textureTypeHalfFloat = textureHalfFloatExtension != null ?
-        textureHalfFloatExtension.HALF_FLOAT_OES :
-        null;
+    textureTypeHalfFloat = halfFloatExtensionType(textureHalfFloatExtension);
     textureTypeFloat = gl.FLOAT;
     downloadTextureFormat = gl.RGBA;
   }

@@ -22,6 +22,7 @@ import {TransposePackedProgram} from './transpose_packed_gpu';
 import {TransposeProgram} from './transpose_gpu';
 import {ReversePackedProgram} from './reverse_packed_gpu';
 import {shaderEntry} from './packing_util';
+import {requireWebGL2TextureEnums} from './tex_util';
 import {shaderKeyShapeFlags} from './gpgpu_math';
 import {getLogicalCoordinatesFromFlatIndexByUniform} from './shader_compiler_util';
 import {getRowsCols, getShapeAs3D, isReshapeFree} from './webgl_util';
@@ -279,5 +280,22 @@ describe('shader key shape discriminators', () => {
     expect(shaderKeyShapeFlags([2, 3, 4], [2, 4], false)).toEqual({rank1: '', rank2: '', rank34: 'false_true'});
     expect(shaderKeyShapeFlags([], [1, 1], false)).toEqual({rank1: '', rank2: '', rank34: ''});
     expect(shaderKeyShapeFlags([2, 3, 4], [2, 4], true)).toEqual({rank1: '', rank2: '', rank34: ''});
+  });
+});
+
+
+describe('checked WebGL 2 texture constants', () => {
+  const constants = {
+    R32F: 0x822e, R16F: 0x822d, RGBA16F: 0x881a, RGBA32F: 0x8814,
+    RED: 0x1903, HALF_FLOAT: 0x140b, RGBA8: 0x8058
+  };
+  it('retains the actual context constants and identity', () => {
+    expect(requireWebGL2TextureEnums(constants)).toBe(constants);
+    expect(requireWebGL2TextureEnums(constants).RGBA32F).toBe(0x8814);
+  });
+  it('rejects missing and nonnumeric constants', () => {
+    expect(() => requireWebGL2TextureEnums({RGBA32F: 0x8814})).toThrowError();
+    expect(() => requireWebGL2TextureEnums({...constants, RED: 'red'}))
+        .toThrowError();
   });
 });

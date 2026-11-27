@@ -300,7 +300,11 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
           `Found more than one (${handlers.length}) save handlers for ` +
           `URL '${url}'`);
     }
-    return handlers[0];
+    const handler = handlers[0];
+    if (handler == null) {
+      throw new Error(`Missing save handler for ${url}`);
+    }
+    return handler;
   }
 
   private addStructuredOutputNames(outputTensors: Tensor|Tensor[]) {
@@ -310,8 +314,13 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
       const outputTensorMap: NamedTensorMap = {};
 
       outputTensorsArray.forEach(
-          (outputTensor, i) => outputTensorMap[this.structuredOutputKeys[i]] =
-              outputTensor);
+          (outputTensor, i) => {
+            const key = this.structuredOutputKeys[i];
+            if (key == null) {
+              throw new Error(`Missing structured output key at index ${i}`);
+            }
+            outputTensorMap[key] = outputTensor;
+          });
 
       return outputTensorMap;
     }
@@ -574,8 +583,8 @@ export class GraphModel<ModelURL extends Url = string | io.IOHandler> implements
   }
 
   private convertTensorMapToTensorsMap(map: NamedTensorMap): NamedTensorsMap {
-    return Object.keys(map).reduce((newMap: NamedTensorsMap, key) => {
-      newMap[key] = [map[key]];
+    return Object.entries(map).reduce((newMap: NamedTensorsMap, [key, tensor]) => {
+      newMap[key] = [tensor];
       return newMap;
     }, {});
   }
