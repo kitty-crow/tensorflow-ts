@@ -34,27 +34,27 @@ describeWithFlags('gpgpu_util createWebGLContext', WEBGL_ENVS, () => {
   });
 
   it('disables DEPTH_TEST and STENCIL_TEST', () => {
-    expect(gpgpu.gl.getParameter(gpgpu.gl.DEPTH_TEST)).toEqual(false);
-    expect(gpgpu.gl.getParameter(gpgpu.gl.STENCIL_TEST)).toEqual(false);
+    expect(gpgpu.gl.isEnabled(gpgpu.gl.DEPTH_TEST)).toEqual(false);
+    expect(gpgpu.gl.isEnabled(gpgpu.gl.STENCIL_TEST)).toEqual(false);
   });
 
   it('disables BLEND', () => {
-    expect(gpgpu.gl.getParameter(gpgpu.gl.BLEND)).toEqual(false);
+    expect(gpgpu.gl.isEnabled(gpgpu.gl.BLEND)).toEqual(false);
   });
 
   it('disables DITHER, POLYGON_OFFSET_FILL', () => {
-    expect(gpgpu.gl.getParameter(gpgpu.gl.DITHER)).toEqual(false);
-    expect(gpgpu.gl.getParameter(gpgpu.gl.POLYGON_OFFSET_FILL)).toEqual(false);
+    expect(gpgpu.gl.isEnabled(gpgpu.gl.DITHER)).toEqual(false);
+    expect(gpgpu.gl.isEnabled(gpgpu.gl.POLYGON_OFFSET_FILL)).toEqual(false);
   });
 
   it('enables CULL_FACE with BACK', () => {
-    expect(gpgpu.gl.getParameter(gpgpu.gl.CULL_FACE)).toEqual(true);
+    expect(gpgpu.gl.isEnabled(gpgpu.gl.CULL_FACE)).toEqual(true);
     expect(gpgpu.gl.getParameter(gpgpu.gl.CULL_FACE_MODE))
         .toEqual(gpgpu.gl.BACK);
   });
 
   it('enables SCISSOR_TEST', () => {
-    expect(gpgpu.gl.getParameter(gpgpu.gl.SCISSOR_TEST)).toEqual(true);
+    expect(gpgpu.gl.isEnabled(gpgpu.gl.SCISSOR_TEST)).toEqual(true);
   });
 });
 

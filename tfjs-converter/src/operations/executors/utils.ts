@@ -140,9 +140,13 @@ export function parseNodeName(
   if (parts.length === 1) {
     result = [name, 0, undefined];
   } else {
-    const nodeName = parts[0];
-    const outputName = parts.length === 3 ? parts[1] : undefined;
-    const index = Number(parts[parts.length - 1]);
+    const nodeName = parts.shift();
+    const lastPart = parts.pop();
+    if (nodeName == null || lastPart == null) {
+      throw new Error(`Invalid node name: ${name}`);
+    }
+    const outputName = parts.length === 1 ? parts.shift() : undefined;
+    const index = Number(lastPart);
     result = [nodeName, index, outputName];
   }
   if (isCacheEnabled) {
@@ -168,9 +172,17 @@ export function getPadding(
     const explicitPadding: [
       [number, number], [number, number], [number, number], [number, number]
     ] = [[0, 0], [0, 0], [0, 0], [0, 0]];
-    for (let i = 0; i < 4; i++) {
-      explicitPadding[i][0] = (pad as number[])[i * 2];
-      explicitPadding[i][1] = (pad as number[])[i * 2 + 1];
+    if (!Array.isArray(pad)) {
+      throw new Error('Explicit padding must be an array of numbers.');
+    }
+    for (const [i, pair] of explicitPadding.entries()) {
+      const before = pad[i * 2];
+      const after = pad[i * 2 + 1];
+      if (typeof before !== 'number' || typeof after !== 'number') {
+        throw new Error(`Missing or invalid explicit padding for dimension ${i}.`);
+      }
+      pair[0] = before;
+      pair[1] = after;
     }
     return explicitPadding;
   }

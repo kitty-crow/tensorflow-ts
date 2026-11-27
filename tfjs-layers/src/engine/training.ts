@@ -952,7 +952,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
   async evaluateDataset(dataset: Dataset<{}>, args?: ModelEvaluateDatasetArgs):
       Promise<Scalar|Scalar[]> {
     this.makeTestFunction();
-    return evaluateDataset(this, dataset, args);
+    return evaluateDataset(this, dataset, args, this.testFunction);
   }
 
   /**
@@ -1856,7 +1856,14 @@ export class LayersModel extends Container implements tfc.InferenceModel {
    */
   async fitDataset<T>(dataset: Dataset<T>, args: ModelFitDatasetArgs<T>):
       Promise<History> {
-    return fitDataset(this, dataset, args);
+    return fitDataset(this, dataset, args, {
+      getIsTraining: () => this.isTraining,
+      setIsTraining: value => { this.isTraining = value; },
+      makeTrainFunction: () => this.makeTrainFunction(),
+      getDedupedMetricsNames: () => this.getDedupedMetricsNames(),
+      getStopTraining: () => this.stopTraining_,
+      setStopTraining: value => { this.stopTraining_ = value; }
+    });
   }
 
   /**

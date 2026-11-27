@@ -246,10 +246,13 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
           const body = init.body as FormData;
           const jsonFile = body.get('model.json') as File;
           const jsonFileReader = new FileReader();
-          jsonFileReader.onload = (event: Event) => {
-            const modelJSON =
-                // tslint:disable-next-line:no-any
-                JSON.parse((event.target as any).result) as tf.io.ModelJSON;
+          jsonFileReader.onload = () => {
+            const jsonText = jsonFileReader.result;
+            if (typeof jsonText !== 'string') {
+              done.fail('Expected a text result from FileReader.');
+              return;
+            }
+            const modelJSON = JSON.parse(jsonText) as tf.io.ModelJSON;
             expect(modelJSON.modelTopology).toEqual(modelTopology1);
             expect(modelJSON.weightsManifest.length).toEqual(1);
             expect(requiredTestElement(modelJSON.weightsManifest, 0).weights).toEqual(weightSpecs1);
@@ -257,9 +260,12 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
 
             const weightsFile = body.get('model.weights.bin') as File;
             const weightsFileReader = new FileReader();
-            weightsFileReader.onload = (event: Event) => {
-              // tslint:disable-next-line:no-any
-              const weightData = (event.target as any).result as ArrayBuffer;
+            weightsFileReader.onload = () => {
+              const weightData = weightsFileReader.result;
+              if (!(weightData instanceof ArrayBuffer)) {
+                done.fail('Expected an ArrayBuffer result from FileReader.');
+                return;
+              }
               expect(new Uint8Array(weightData))
                   .toEqual(new Uint8Array(weightData1));
               done();
@@ -300,9 +306,18 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
           const body = init.body as FormData;
           const jsonFile = body.get('model.json') as File;
           const jsonFileReader = new FileReader();
-          jsonFileReader.onload = (event: Event) => {
-            // tslint:disable-next-line:no-any
-            const modelJSON = JSON.parse((event.target as any).result);
+          jsonFileReader.onload = () => {
+            const jsonText = jsonFileReader.result;
+            if (typeof jsonText !== 'string') {
+              done.fail('Expected a text result from FileReader.');
+              return;
+            }
+            const modelJSON: unknown = JSON.parse(jsonText);
+            if (modelJSON == null || typeof modelJSON !== 'object' ||
+                !('modelTopology' in modelJSON)) {
+              done.fail('Expected model topology in the JSON result.');
+              return;
+            }
             expect(modelJSON.modelTopology).toEqual(modelTopology1);
             // No weights should have been sent to the server.
             expect(body.get('model.weights.bin')).toEqual(null);
@@ -353,10 +368,13 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
           const body = init.body as FormData;
           const jsonFile = body.get('model.json') as File;
           const jsonFileReader = new FileReader();
-          jsonFileReader.onload = (event: Event) => {
-            const modelJSON =
-                // tslint:disable-next-line:no-any
-                JSON.parse((event.target as any).result) as tf.io.ModelJSON;
+          jsonFileReader.onload = () => {
+            const jsonText = jsonFileReader.result;
+            if (typeof jsonText !== 'string') {
+              done.fail('Expected a text result from FileReader.');
+              return;
+            }
+            const modelJSON = JSON.parse(jsonText) as tf.io.ModelJSON;
             expect(modelJSON.format).toEqual('layers-model');
             expect(modelJSON.generatedBy).toEqual('TensorFlow.js v0.0.0');
             expect(modelJSON.convertedBy).toEqual(null);
@@ -368,9 +386,12 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
 
             const weightsFile = body.get('model.weights.bin') as File;
             const weightsFileReader = new FileReader();
-            weightsFileReader.onload = (event: Event) => {
-              // tslint:disable-next-line:no-any
-              const weightData = (event.target as any).result as ArrayBuffer;
+            weightsFileReader.onload = () => {
+              const weightData = weightsFileReader.result;
+              if (!(weightData instanceof ArrayBuffer)) {
+                done.fail('Expected an ArrayBuffer result from FileReader.');
+                return;
+              }
               expect(new Uint8Array(weightData))
                   .toEqual(new Uint8Array(weightData1));
               done();

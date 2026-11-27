@@ -278,10 +278,10 @@ describe('tensorBoard callback', () => {
       validationData: [valXs, valYs],
       callbacks: tfn.node.tensorBoard(tmpLogDir)
     });
-    expect(history.history.loss.length).toEqual(3);
-    expect(history.history.val_loss.length).toEqual(3);
-    expect(history.history.MAE.length).toEqual(3);
-    expect(history.history.val_MAE.length).toEqual(3);
+    expect(tf.test_util.requiredTestEntry(history.history, 'loss').length).toEqual(3);
+    expect(tf.test_util.requiredTestEntry(history.history, 'val_loss').length).toEqual(3);
+    expect(tf.test_util.requiredTestEntry(history.history, 'MAE').length).toEqual(3);
+    expect(tf.test_util.requiredTestEntry(history.history, 'val_MAE').length).toEqual(3);
 
     const trainFileSize1 =
         fs.statSync(path.join(trainLogDir, tf.test_util.requiredTestElement(trainFiles, 0))).size;
@@ -338,10 +338,10 @@ describe('tensorBoard callback', () => {
       validationData: [valXs, valYs],
       callbacks: tfn.node.tensorBoard(tmpLogDir)
     });
-    expect(history.history.loss.length).toEqual(3);
-    expect(history.history.val_loss.length).toEqual(3);
-    expect(history.history.MAE.length).toEqual(3);
-    expect(history.history.val_MAE.length).toEqual(3);
+    expect(tf.test_util.requiredTestEntry(history.history, 'loss').length).toEqual(3);
+    expect(tf.test_util.requiredTestEntry(history.history, 'val_loss').length).toEqual(3);
+    expect(tf.test_util.requiredTestEntry(history.history, 'MAE').length).toEqual(3);
+    expect(tf.test_util.requiredTestEntry(history.history, 'val_MAE').length).toEqual(3);
 
     const trainFileSize1 =
         fs.statSync(path.join(trainLogDir, tf.test_util.requiredTestElement(trainFiles, 0))).size;

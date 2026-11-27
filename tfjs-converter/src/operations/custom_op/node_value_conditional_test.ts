@@ -22,6 +22,7 @@ import {getExecutionSubgraph, getNodesInTopologicalOrder, getNodeLiveUntilMap} f
 import {GraphExecutor} from '../../executor/graph_executor';
 
 import {NodeValueImpl} from './node_value_impl';
+import {getPadding, parseNodeName} from '../executors/utils';
 
 describe('custom node attribute conditional dispatch', () => {
   it('preserves scalar/list precedence and all list representations', () => {
@@ -91,5 +92,27 @@ describe('graph analysis traversal and lifetime contracts', () => {
     expect(ordered.map(node => node.name)).toEqual(['first', 'second']);
     const release = getNodeLiveUntilMap(ordered);
     expect(release.get('second')).toEqual([input, output]);
+  });
+});
+
+describe('converter indexed metadata contracts', () => {
+  it('preserves node names, optional output labels and numeric conversion', () => {
+    expect(parseNodeName('')).toEqual(['', 0, undefined]);
+    expect(parseNodeName('op')).toEqual(['op', 0, undefined]);
+    expect(parseNodeName('op:2')).toEqual(['op', 2, undefined]);
+    expect(parseNodeName('op:output:3')).toEqual(['op', 3, 'output']);
+    expect(parseNodeName('op:a:b:4')).toEqual(['op', 4, undefined]);
+    expect(parseNodeName(':0')).toEqual(['', 0, undefined]);
+    expect(Number.isNaN(parseNodeName('op:invalid')[1])).toBe(true);
+  });
+  it('preserves explicit padding order and zeroes and rejects missing entries', () => {
+    const node: Node = {name: 'padding', op: 'Conv2D', category: 'convolution',
+      inputNames: [], inputs: [], inputParams: {}, children: [],
+      attrParams: {pad: {value: 'explicit', type: 'string'},
+        explicitPaddings: {value: [0, 0, 1, 2, 3, 4, 0, 0], type: 'number[]'}}};
+    const context = new ExecutionContext({}, {}, {});
+    expect(getPadding(node, {}, context)).toEqual([[0, 0], [1, 2], [3, 4], [0, 0]]);
+    node.attrParams.explicitPaddings = {value: [0, 0], type: 'number[]'};
+    expect(() => getPadding(node, {}, context)).toThrowError(/explicit padding/);
   });
 });

@@ -21,6 +21,7 @@ import {TensorOrArrayOrMap} from '../types';
 import {requiredElement, singletonOrArray, toList} from '../utils/generic_utils';
 
 import {Dataset, LazyIterator} from './dataset_stub';
+import type {LayersModel} from './training';
 import {ClassWeight, ClassWeightMap, standardizeClassWeights, standardizeWeights} from './training_utils';
 
 /**
@@ -200,10 +201,7 @@ const DEFAULT_VALIDATION_BATCH_SIZE = 32;
  *   and `outputNames` of the model.
  */
 function standardizeDataIteratorOutput(
-    // Type `model` as `any` here to avoid circular dependency w/
-    // training.ts.
-    // tslint:disable-next-line:no-any
-    model: any, iteratorOut: {}): {xs: tfc.Tensor[], ys: tfc.Tensor[]} {
+    model: LayersModel, iteratorOut: {}): {xs: tfc.Tensor[], ys: tfc.Tensor[]} {
   let xs: TensorOrArrayOrMap;
   let ys: TensorOrArrayOrMap;
 
@@ -296,15 +294,22 @@ function standardizeTensorValidationData<T>(
     throw new NotImplementedError(
         'Validation with sample weights is not implemented yet.');
   }
-  return {xs: data[0], ys: data[1]};
+  return {xs: requiredElement(data, 0), ys: requiredElement(data, 1)};
+}
+
+/** Internal access to the training state owned by LayersModel. */
+interface DatasetFitState {
+  getIsTraining(): boolean;
+  setIsTraining(value: boolean): void;
+  makeTrainFunction(): (data: tfc.Tensor[]) => tfc.Scalar[];
+  getDedupedMetricsNames(): string[];
+  getStopTraining(): boolean;
+  setStopTraining(value: boolean): void;
 }
 
 export async function fitDataset<T>(
-    // Type `model` as `any` here to avoid circular dependency w/
-    // training.ts.
-    // tslint:disable-next-line:no-any
-    model: any, dataset: Dataset<T>,
-    args: ModelFitDatasetArgs<T>): Promise<History> {
+    model: LayersModel, dataset: Dataset<T>,
+    args: ModelFitDatasetArgs<T>, state: DatasetFitState): Promise<History> {
   const hasBatchesPerEpoch = args.batchesPerEpoch != null;
   tfc.util.assert(
       model.optimizer != null,
@@ -325,16 +330,15 @@ export async function fitDataset<T>(
       () => `For fitDataset(), config.batchesPerEpoch is expected to be a ` +
           `positive integer if specified, but got ${args.batchesPerEpoch}`);
   tfc.util.assert(
-      // tslint:disable-next-line:no-any
-      (args as any)['validationSplit'] == null,
+      (!('validationSplit' in args) || args.validationSplit == null),
       () => '`validationSplit` is not supported by `fitDataset()`. ' +
           'Use validationData instead.');
 
-  if (model.isTraining) {
+  if (state.getIsTraining()) {
     throw new Error(
         'Cannot start training because another fit() call is ongoing.');
   }
-  model.isTraining = true;
+  state.setIsTraining(true);
 
   try {
     const doValidation = args.validationData != null;
@@ -360,8 +364,8 @@ export async function fitDataset<T>(
     }
 
     const trainFunction: (data: tfc.Tensor[]) => tfc.Scalar[] =
-        model.makeTrainFunction();
-    const outLabels = model.getDedupedMetricsNames() as string[];
+        state.makeTrainFunction();
+    const outLabels = state.getDedupedMetricsNames();
 
     let callbackMetrics: string[];
     if (doValidation) {
@@ -382,7 +386,7 @@ export async function fitDataset<T>(
     model.history = history;
 
     await callbackList.onTrainBegin();
-    model.stopTraining_ = false;
+    state.setStopTraining(false);
     let epoch = args.initialEpoch == null ? 0 : args.initialEpoch;
 
     let dataIterator = await dataset.iterator();
@@ -461,7 +465,7 @@ export async function fitDataset<T>(
               }));
             }
             for (let i = 0; i < model.metricsNames.length; ++i) {
-              epochLogs[`val_${model.metricsNames[i]}`] = requiredElement(valOuts, i);
+              epochLogs[`val_${requiredElement(model.metricsNames, i)}`] = requiredElement(valOuts, i);
             }
           }
           // Call `break` to exit one epoch lopp after validation is done. If
@@ -472,13 +476,13 @@ export async function fitDataset<T>(
           break;
         }
 
-        if (model.stopTraining_) {
+        if (state.getStopTraining()) {
           break;
         }
       }
       await callbackList.onEpochEnd(epoch, epochLogs);
       epoch++;
-      if (model.stopTraining_) {
+      if (state.getStopTraining()) {
         break;
       }
     }
@@ -486,7 +490,7 @@ export async function fitDataset<T>(
     await model.history.syncData();
     return model.history;
   } finally {
-    model.isTraining = false;
+    state.setIsTraining(false);
   }
 }
 
@@ -507,7 +511,7 @@ function isDatasetObject<T>(
         [
           TensorOrArrayOrMap, TensorOrArrayOrMap
         ]|[TensorOrArrayOrMap, TensorOrArrayOrMap, TensorOrArrayOrMap]|
-    Dataset<T>): boolean {
+    Dataset<T>): dataset is Dataset<T> {
   return (typeof (dataset as Dataset<T>).iterator === 'function');
 }
 
@@ -519,14 +523,11 @@ function isLazyIteratorObject<T>(iterator: Dataset<T>|
 }
 
 export async function evaluateDataset<T>(
-    // Type `model` as `any` here to avoid circular dependency w/
-    // training.ts.
-    // tslint:disable-next-line:no-any
-    model: any, dataset: Dataset<T>|LazyIterator<T>,
-    args: ModelEvaluateDatasetArgs): Promise<tfc.Scalar|tfc.Scalar[]> {
+    model: LayersModel, dataset: Dataset<T>|LazyIterator<T>,
+    args: ModelEvaluateDatasetArgs,
+    f: (data: tfc.Tensor[]) => tfc.Scalar[]): Promise<tfc.Scalar|tfc.Scalar[]> {
   args = args || {};
   const hasBatches = args.batches != null;
-  const f: (data: tfc.Tensor[]) => tfc.Scalar[] = model.testFunction;
   let outs: tfc.Scalar[] = [];
   if (args.verbose > 0) {
     throw new NotImplementedError('Verbose mode is not implemented yet.');

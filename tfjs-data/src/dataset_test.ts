@@ -35,7 +35,7 @@ class TestObjectIterator extends LazyIterator<{}> {
     if (this.currentIndex >= 100) {
       return {value: null, done: true};
     }
-    const elementNumber = this.data[this.currentIndex];
+    const elementNumber = tf.test_util.requiredTestElement(this.data, this.currentIndex);
     const result = {
       'number': elementNumber,
       'numberArray': [elementNumber, elementNumber ** 2, elementNumber ** 3],
@@ -67,13 +67,29 @@ export class TestDataset extends tfd.Dataset<TensorContainerObject> {
   }
 }
 
-// tslint:disable-next-line:no-any
-function complexifyExampleAsDict(simple: any): {} {
-  const v = simple['number'];
-  const w = simple['numberArray'];
-  const x = simple['Tensor'];
-  const y = simple['Tensor2'];
-  const z = simple['string'];
+function fixtureField(value: tf.TensorContainer, key: string): tf.TensorContainer {
+  if (value == null || typeof value !== 'object' || !(key in value)) {
+    throw new Error(`Missing fixture field ${key}.`);
+  }
+  return tf.test_util.requiredTestEntry(value as TensorContainerObject, key);
+}
+
+function fixtureTensorAt(value: tf.TensorContainer, path: string[]): tf.Tensor {
+  for (const key of path) {
+    value = fixtureField(value, key);
+  }
+  if (!(value instanceof tf.Tensor)) {
+    throw new Error(`Expected tensor at ${path.join('.')}.`);
+  }
+  return value;
+}
+
+function complexifyExampleAsDict(simple: tf.TensorContainer): TensorContainerObject {
+  const v = fixtureField(simple, 'number');
+  const w = fixtureField(simple, 'numberArray');
+  const x = fixtureField(simple, 'Tensor');
+  const y = fixtureField(simple, 'Tensor2');
+  const z = fixtureField(simple, 'string');
   return {
     a: {v, w, q: {aa: {x, y, z}, ab: {v, w, x}}},
     b: {
@@ -86,6 +102,12 @@ function complexifyExampleAsDict(simple: any): {} {
 }
 
 describeAllEnvs('Dataset', () => {
+  it('checks nested fixtures without discarding falsy values', () => {
+    expect(fixtureField({count: 0}, 'count')).toBe(0);
+    expect(fixtureField({flag: false}, 'flag')).toBe(false);
+    expect(() => fixtureField({}, 'missing')).toThrowError(/Missing fixture/);
+    expect(() => fixtureTensorAt({count: 0}, ['count'])).toThrowError(/Expected tensor/);
+  });
   it('can be concatenated', async () => {
     const a = tfd.array([{'item': 1}, {'item': 2}, {'item': 3}]);
     const b = tfd.array([{'item': 4}, {'item': 5}, {'item': 6}]);
@@ -302,12 +324,11 @@ describeAllEnvs('Dataset', () => {
 
     expect(result.length).toEqual(13);
     result.slice(0, 12).forEach(batch => {
-      const b = batch as TensorContainerObject;
-      expect((b['number'] as tf.Tensor).shape).toEqual([8]);
-      expect((b['numberArray'] as tf.Tensor).shape).toEqual([8, 3]);
-      expect((b['Tensor'] as tf.Tensor).shape).toEqual([8, 3]);
-      expect((b['Tensor2'] as tf.Tensor).shape).toEqual([8, 2, 2]);
-      expect((b['string'] as tf.Tensor).shape).toEqual([8]);
+      expect(fixtureTensorAt(batch, ['number']).shape).toEqual([8]);
+      expect(fixtureTensorAt(batch, ['numberArray']).shape).toEqual([8, 3]);
+      expect(fixtureTensorAt(batch, ['Tensor']).shape).toEqual([8, 3]);
+      expect(fixtureTensorAt(batch, ['Tensor2']).shape).toEqual([8, 2, 2]);
+      expect(fixtureTensorAt(batch, ['string']).shape).toEqual([8]);
     });
     tf.dispose(result);
     expect(tf.memory().numTensors).toBe(0);
@@ -354,29 +375,15 @@ describeAllEnvs('Dataset', () => {
        const result = await (await compareDataset.iterator()).toArrayForTest();
 
        expect(result.length).toEqual(13);
-       // tslint:disable-next-line:no-any
-       result.slice(0, 12).forEach((compare: any) => {
-         // TODO(soergel): could use deepMap to implement deep compare.
-         // For now, just spot-check a few deep entries.
-         expect(compare.complexThenBatch.a.v.shape)
-             .toEqual(compare.batchThenComplex.a.v.shape);
-         expect(compare.complexThenBatch.a.v.dataSync())
-             .toEqual(compare.batchThenComplex.a.v.dataSync());
-
-         expect(compare.complexThenBatch.a.q.ab.x.shape)
-             .toEqual(compare.batchThenComplex.a.q.ab.x.shape);
-         expect(compare.complexThenBatch.a.q.ab.x.dataSync())
-             .toEqual(compare.batchThenComplex.a.q.ab.x.dataSync());
-
-         expect(compare.complexThenBatch.b.bb.bbb.shape)
-             .toEqual(compare.batchThenComplex.b.bb.bbb.shape);
-         expect(compare.complexThenBatch.b.bb.bbb.dataSync())
-             .toEqual(compare.batchThenComplex.b.bb.bbb.dataSync());
-
-         expect(compare.complexThenBatch.c.ca.x.shape)
-             .toEqual(compare.batchThenComplex.c.ca.x.shape);
-         expect(compare.complexThenBatch.c.ca.x.dataSync())
-             .toEqual(compare.batchThenComplex.c.ca.x.dataSync());
+       result.slice(0, 12).forEach(compare => {
+         // Spot-check the same four paths, in the same order.
+         for (const suffix of [['a', 'v'], ['a', 'q', 'ab', 'x'],
+                              ['b', 'bb', 'bbb'], ['c', 'ca', 'x']]) {
+           const left = fixtureTensorAt(compare, ['complexThenBatch', ...suffix]);
+           const right = fixtureTensorAt(compare, ['batchThenComplex', ...suffix]);
+           expect(left.shape).toEqual(right.shape);
+           expect(left.dataSync()).toEqual(right.dataSync());
+         }
        });
        tf.dispose(result);
        expect(tf.memory().numTensors).toBe(0);
@@ -398,13 +405,13 @@ describeAllEnvs('Dataset', () => {
     const result = await (await dataset.iterator()).toArrayForTest();
     expect(result.length).toEqual(13);
 
-    // tslint:disable-next-line:no-any
-    result.slice(0, 12).forEach((e: any) => {
-      expect(e.foo instanceof tf.Tensor).toBeTruthy();
-      expect(e.foo.shape).toEqual([8, 2, 3, 2]);
+    result.slice(0, 12).forEach(e => {
+      const foo = fixtureTensorAt(e, ['foo']);
+      expect(foo instanceof tf.Tensor).toBeTruthy();
+      expect(foo.shape).toEqual([8, 2, 3, 2]);
     });
-    // tslint:disable-next-line:no-any
-    expect((tf.test_util.requiredTestElement(result, 12) as any).foo.shape).toEqual([4, 2, 3, 2]);
+    expect(fixtureTensorAt(tf.test_util.requiredTestElement(result, 12), ['foo']).shape)
+        .toEqual([4, 2, 3, 2]);
 
     tf.dispose(result);
     expect(tf.memory().numTensors).toBe(0);

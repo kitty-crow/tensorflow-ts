@@ -172,7 +172,7 @@ class EngineState {
 
   dispose() {
     for (const variableName in this.registeredVariables) {
-      this.registeredVariables[variableName].dispose();
+      util.requiredNamedEntry(this.registeredVariables, variableName).dispose();
     }
   }
 }
@@ -206,8 +206,7 @@ export class Engine implements TensorTracker, DataMover {
     }
     const sortedBackends = this.getSortedBackends();
 
-    for (let i = 0; i < sortedBackends.length; i++) {
-      const backendName = sortedBackends[i];
+    for (const backendName of sortedBackends) {
       const success = await this.initializeBackend(backendName).success;
       if (success) {
         await this.setBackend(backendName);
@@ -408,8 +407,8 @@ export class Engine implements TensorTracker, DataMover {
     }
     return Object.keys(this.registryFactory).sort((a: string, b: string) => {
       // Highest priority comes first.
-      return this.registryFactory[b].priority -
-          this.registryFactory[a].priority;
+      return util.requiredNamedEntry(this.registryFactory, b).priority -
+          util.requiredNamedEntry(this.registryFactory, a).priority;
     });
   }
 
@@ -417,8 +416,7 @@ export class Engine implements TensorTracker, DataMover {
       {name: string, asyncInit: boolean} {
     const sortedBackends = this.getSortedBackends();
 
-    for (let i = 0; i < sortedBackends.length; i++) {
-      const backendName = sortedBackends[i];
+    for (const backendName of sortedBackends) {
       const {success, asyncInit} = this.initializeBackend(backendName);
       if (asyncInit || success) {
         return {name: backendName, asyncInit};
@@ -741,8 +739,8 @@ export class Engine implements TensorTracker, DataMover {
         totalBytesSnapshot: this.state.numBytes,
         tensorsAdded: this.state.numTensors - startingNumTensors,
         totalTensorsSnapshot: this.state.numTensors,
-        inputShapes: Object.keys(inputs).map(
-            key => inputs[key] != null ? inputs[key].shape : null),
+        inputShapes: Object.values(inputs).map(
+            input => input != null ? input.shape : null),
         outputShapes: outputs.map(item => item.shape),
         kernelTimeMs: kernelProfile.timeMs,
         extraInfo: kernelProfile.extraInfo
@@ -792,7 +790,7 @@ export class Engine implements TensorTracker, DataMover {
           Array.isArray(inputs),
           () => 'saveAllInputs is true, expected inputs to be an array.');
 
-      inputTensorsToSave = Object.keys(inputs).map((key) => inputs[key]);
+      inputTensorsToSave = Object.values(inputs);
     } else {
       inputTensorsToSave = inputsToSave.map((inputName) => inputs[inputName]);
     }
@@ -952,7 +950,7 @@ export class Engine implements TensorTracker, DataMover {
 
   disposeVariables(): void {
     for (const varName in this.state.registeredVariables) {
-      const v = this.state.registeredVariables[varName];
+      const v = util.requiredNamedEntry(this.state.registeredVariables, varName);
       this.disposeVariable(v);
     }
   }
@@ -1025,6 +1023,9 @@ export class Engine implements TensorTracker, DataMover {
         dys = dys.map((dy, i) => {
           if (dy == null) {
             const output = outputs[i];
+            if (output == null) {
+              throw new Error(`Missing gradient output at index ${i}.`);
+            }
             const vals = util.makeZerosTypedArray(output.size, output.dtype);
             return this.makeTensor(vals, output.shape, output.dtype);
           }
