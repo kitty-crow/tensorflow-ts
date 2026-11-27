@@ -214,7 +214,14 @@ export class TFSavedModel implements InferenceModel {
         const result = this.backend.runSavedModel(
             this.sessionId, inputTensors, Object.values(this.signature.inputs),
             Object.values(this.outputNodeNames));
-        return result.length > 1 ? result : util.requiredNumericEntry(result, 0);
+        if (result.length > 1) {
+          return result;
+        }
+        const output = result[0];
+        if (output == null) {
+          throw new Error('SavedModel inference returned no output tensor.');
+        }
+        return output;
       }
       if (Array.isArray(inputs)) {
         inputTensors = inputs;

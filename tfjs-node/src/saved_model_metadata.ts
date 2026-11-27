@@ -63,7 +63,7 @@ function readNumber(value: unknown, label: string): number {
 }
 
 function readMap<T>(message: unknown, readValue: (value: unknown) => T,
-                    skip = ''): Record<string, T> {
+                    skip: string|null = null): Record<string, T> {
   const iterator = readMethod(message, 'keys');
   const entries: Array<[string, T]> = [];
   // jspb's map keys() has a next() method, but is not necessarily an iterable.

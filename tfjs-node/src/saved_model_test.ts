@@ -70,7 +70,7 @@ describe('SavedModel', () => {
     // Validate the SavedModel has signatureDef serving_default
     const signatureDefMapMessage =
         modelMessage.getMetaGraphsList()[0].getSignatureDefMap();
-    expect(signatureDefMapMessage.has('serving_default'));
+    expect(signatureDefMapMessage.has('serving_default')).toBe(true);
 
     // The input op of signature serving_default is serving_default_x, DataType
     // is DT_FLOAT
