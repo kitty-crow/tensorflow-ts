@@ -25,7 +25,8 @@ describe('URLChunkIterator', () => {
   const fetchFunc = (path: string) => {
     const buf = new ArrayBuffer(TEST_STRING.length);
     const bufView = new Uint8Array(buf);
-    for (let i = 0, strLen = TEST_STRING.length; i < strLen; i++) {
+    const strLen = TEST_STRING.length;
+    for (let i = 0; i < strLen; i++) {
       bufView[i] = TEST_STRING.charCodeAt(i);
     }
 

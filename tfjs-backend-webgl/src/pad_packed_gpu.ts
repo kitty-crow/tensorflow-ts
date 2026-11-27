@@ -59,7 +59,8 @@ export class PadPackedProgram implements GPGPUProgram {
         'rc < start || rc >= end' :
         'any(lessThan(rc, start)) || any(greaterThanEqual(rc, end))';
     let mainLoop = '';
-    for (let i = 0, j = rank === 1 ? 2 : 4; i < j; i++) {
+    const componentCount = rank === 1 ? 2 : 4;
+    for (let i = 0; i < componentCount; i++) {
       mainLoop += `
         ${shaderEntry(componentSetup, i)}
         if (${paddingArea}) {

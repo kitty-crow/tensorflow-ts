@@ -391,8 +391,8 @@ function getTopologicalSortAndRecipientCounts(
       fetches != null && fetches.length > 0,
       () => `Expected at least one fetch, got none`);
 
-  let finalSorted: SymbolicTensor[] = [];
-  let finalRecipientMap: RecipientMap = {};
+  const finalSorted: SymbolicTensor[] = [];
+  const finalRecipientMap: RecipientMap = {};
   if (fetches.length === 1) {
     // Special-case a single fetch for efficiency.
     const out =

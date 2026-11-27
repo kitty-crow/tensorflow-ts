@@ -456,7 +456,7 @@ export function getTextureShapeFromLogicalShape(
     logShape = squeezeResult.newShape;
   }
 
-  let size = util.sizeFromShape(logShape);
+  const size = util.sizeFromShape(logShape);
   let textureShape = preferredTextureShape(logShape, size, maxTexSize);
 
   // true if one edge length is 1 (1 or 2, if packed), while another edge

@@ -30,6 +30,8 @@ import {batchNorm} from './kernels/BatchNorm';
 import {select} from './kernels/Select';
 import {concatImpl} from './kernels/Concat_impl';
 import {createSimpleBinaryKernelImpl} from './utils/binary_impl';
+import {addComplexImpl} from './kernels/Add';
+import {equal} from './kernels/Equal';
 import {cumsum} from './kernels/Cumsum';
 import {cumprod} from './kernels/Cumprod';
 import {mirrorPad} from './kernels/MirrorPad';
@@ -787,5 +789,47 @@ describe('CPU reduction and checked numeric traversal', () => {
         .toEqual([new Float32Array([-1, 1]), [2]]);
     expect(subtract([0], [1], new Float32Array(0), new Float32Array([1]), 'float32'))
         .toEqual([new Float32Array(0), [0]]);
+  });
+});
+
+describe('CPU binary payload and complex broadcasting', () => {
+  it('repeats complex scalar components across a leading dimension', () => {
+    const [real, imag, shape] = addComplexImpl(
+        [], [3], new Float32Array([2]), new Float32Array([-1]),
+        new Float32Array([0, 1, 2]), new Float32Array([3, 4, 5]));
+    expect(shape).toEqual([3]);
+    expect(real).toEqual(new Float32Array([2, 3, 4]));
+    expect(imag).toEqual(new Float32Array([2, 3, 4]));
+  });
+
+  it('retains non-leading broadcast dimensions and empty output', () => {
+    const [real, imag, shape] = addComplexImpl(
+        [2, 1], [1, 2], new Float32Array([0, 3]),
+        new Float32Array([1, 2]), new Float32Array([4, 5]),
+        new Float32Array([6, 7]));
+    expect(shape).toEqual([2, 2]);
+    expect(real).toEqual(new Float32Array([4, 5, 7, 8]));
+    expect(imag).toEqual(new Float32Array([7, 8, 8, 9]));
+    expect(addComplexImpl([0], [1], new Float32Array(0),
+        new Float32Array(0), new Float32Array([1]),
+        new Float32Array([2]))).toEqual(
+        [new Float32Array(0), new Float32Array(0), [0]]);
+  });
+
+  it('retains numeric and UTF-8 string equality semantics', () => {
+    const backend = new MathBackendCPU();
+    const a = backend.makeTensorInfo([2], 'string', ['é', '']);
+    const b = backend.makeTensorInfo([2], 'string', ['é', 'x']);
+    const c = backend.makeTensorInfo([2], 'float32', new Float32Array([0, 2]));
+    const d = backend.makeTensorInfo([2], 'float32', new Float32Array([0, 3]));
+    const strings = equal({inputs: {a, b}, backend});
+    const numbers = equal({inputs: {a: c, b: d}, backend});
+    if (Array.isArray(strings) || Array.isArray(numbers)) {
+      throw new Error('Equality must return one tensor.');
+    }
+    expect(backend.readSync(strings.dataId)).toEqual(new Uint8Array([1, 0]));
+    expect(backend.readSync(numbers.dataId)).toEqual(new Uint8Array([1, 0]));
+    [a, b, c, d, strings, numbers].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
   });
 });

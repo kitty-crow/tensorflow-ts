@@ -396,7 +396,7 @@ async function main() {
     while (toPublish.length > 0) {
       // Using a while loop instead of .map since a stale OTP will require
       // a retry.
-      let pkg = toPublish[0];
+      const pkg = toPublish[0];
       if (args.no_otp) {
         await publish(pkg, args.registry, '', false);
         toPublish.shift(); // Remove the published package from 'toPublish'.

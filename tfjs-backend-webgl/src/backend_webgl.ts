@@ -1206,12 +1206,8 @@ export class MathBackendWebGL extends KernelBackend {
     } else {
       for (const [, binary] of Object.entries(this.binaryCache)) {
         const p: Promise<boolean> = new Promise((resolve) => {
-          try {
-            this.checkCompletion_(binary);
-            resolve(true);
-          } catch (error) {
-            throw error;
-          }
+          this.checkCompletion_(binary);
+          resolve(true);
         });
         ps.push(p);
       }

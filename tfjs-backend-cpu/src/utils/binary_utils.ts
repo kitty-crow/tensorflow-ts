@@ -24,6 +24,18 @@ import {complex} from '../kernels/Complex';
 
 import {ComplexBinaryKernelImpl, ComplexBinaryOperation, SimpleBinaryKernelImpl} from './binary_types';
 
+/** Read the stored representation required by the binary operation. */
+function binaryInputValues(values: backend_util.BackendValues, stringInput: boolean):
+    TypedArray|string[] {
+  if (stringInput && Array.isArray(values)) {
+    return backend_util.fromUint8ToStringArray(values);
+  }
+  if (!stringInput && !Array.isArray(values)) {
+    return values;
+  }
+  throw new Error('CPU binary operation has incompatible input storage.');
+}
+
 /**
  * Template that creates a `KernelFunc` for binary ops.
  * @param name Kernel name.
@@ -45,17 +57,11 @@ export function binaryKernelFunc(
 
       assertNotComplex([a, b], name);
 
-      const aVals = cpuBackend.requireValues(a.dataId) as TypedArray;
-      const bVals = cpuBackend.requireValues(b.dataId) as TypedArray;
-
-      const decodedAVals = a.dtype === 'string' ?
-          // tslint:disable-next-line: no-any
-          backend_util.fromUint8ToStringArray(aVals as any as Uint8Array[]) :
-          aVals;
-      const decodedBVals = a.dtype === 'string' ?
-          // tslint:disable-next-line: no-any
-          backend_util.fromUint8ToStringArray(bVals as any as Uint8Array[]) :
-          bVals;
+      const stringInput = a.dtype === 'string';
+      const decodedAVals = binaryInputValues(
+          cpuBackend.requireValues(a.dataId), stringInput);
+      const decodedBVals = binaryInputValues(
+          cpuBackend.requireValues(b.dataId), stringInput);
       const $dtype = dtype || a.dtype;
 
       const [resultData, resultShape] =
@@ -159,12 +165,16 @@ export function createComplexBinaryKernelImpl(op: ComplexBinaryOperation):
 
     if (aBroadcastDims.length + bBroadcastDims.length === 0) {
       for (let i = 0; i < resultRealVals.length; i++) {
-        const aIdx = i % aVals.length;
-        const bIdx = i % bVals.length;
+        // The interleaved arrays have two entries per logical element.
+        // Leading-rank broadcasting repeats logical elements, not components.
+        const aIdx = i % aRealVals.length;
+        const bIdx = i % bRealVals.length;
 
         const result =
-            op(aVals[aIdx * 2], aVals[aIdx * 2 + 1], bVals[bIdx * 2],
-               bVals[bIdx * 2 + 1]);
+            op(util.requiredNumericEntry(aVals, aIdx * 2),
+               util.requiredNumericEntry(aVals, aIdx * 2 + 1),
+               util.requiredNumericEntry(bVals, bIdx * 2),
+               util.requiredNumericEntry(bVals, bIdx * 2 + 1));
 
         resultRealVals[i] = result.real;
         resultImagVals[i] = result.imag;
@@ -182,8 +192,10 @@ export function createComplexBinaryKernelImpl(op: ComplexBinaryOperation):
         const bIndex = util.locToIndex(bLoc, bRank, bStrides);
 
         const opResult =
-            op(aVals[aIndex * 2], aVals[aIndex * 2 + 1], bVals[bIndex * 2],
-               bVals[bIndex * 2 + 1]);
+            op(util.requiredNumericEntry(aVals, aIndex * 2),
+               util.requiredNumericEntry(aVals, aIndex * 2 + 1),
+               util.requiredNumericEntry(bVals, bIndex * 2),
+               util.requiredNumericEntry(bVals, bIndex * 2 + 1));
 
         resultRealVals[i] = opResult.real;
         resultImagVals[i] = opResult.imag;
