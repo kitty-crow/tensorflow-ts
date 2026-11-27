@@ -15,14 +15,14 @@
  * =============================================================================
  */
 
-import {KernelConfig, StaticRegexReplace, StaticRegexReplaceAttrs} from '@tensorflow/tfjs-core';
+import {KernelAttributes, KernelConfig, StaticRegexReplace, StaticRegexReplaceAttrs} from '@tensorflow/tfjs-core';
 import {createSimpleUnaryImpl} from '../utils/unary_impl';
 import {unaryKernelFuncFromImpl} from '../utils/unary_utils';
 
 export const staticRegexReplaceImpl = createSimpleUnaryImpl<string,
   string>((x: string, attrs) => {
     const {pattern, replaceGlobal, rewrite} =
-      attrs as unknown as StaticRegexReplaceAttrs;
+      attrs as KernelAttributes<StaticRegexReplaceAttrs>;
     // TODO(mattSoulanille): Don't create a regex each time.
     return x.replace(new RegExp(pattern, replaceGlobal ? 'g' : ''), rewrite);
 });

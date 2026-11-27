@@ -17,6 +17,7 @@
 
 import {util} from '@tensorflow/tfjs-core';
 
+import {requiredCpuEntry} from '../cpu_util';
 import {SimpleUnaryImpl, SimpleUnaryOperation} from './unary_types';
 
 /**
@@ -29,7 +30,7 @@ export function createSimpleUnaryImpl<I extends number | string = number,
     const newValues =
         util.getArrayFromDType(dtype, values.length);
     for (let i = 0; i < values.length; ++i) {
-      newValues[i] = op(values[i], attrs);
+      newValues[i] = op(requiredCpuEntry(values, i), attrs);
     }
     return newValues;
   };

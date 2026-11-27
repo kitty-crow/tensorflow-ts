@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Bincount, BincountAttrs, BincountInputs, KernelConfig, scalar} from '@tensorflow/tfjs';
+import {Bincount, BincountAttrs, BincountInputs, KernelAttributes, KernelConfig, scalar} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -24,7 +24,7 @@ export const bincountConfig: KernelConfig = {
   backendName: 'tensorflow',
   kernelFunc: ({inputs, backend, attrs}) => {
     const {x, weights} = inputs as BincountInputs;
-    const {size} = attrs as unknown as BincountAttrs;
+    const {size} = attrs as KernelAttributes<BincountAttrs>;
     const nodeBackend = backend as NodeJSKernelBackend;
 
     const $size = scalar(size, 'int32');

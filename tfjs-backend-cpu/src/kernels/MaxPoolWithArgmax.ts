@@ -16,7 +16,7 @@
  */
 
 import {MaxPoolWithArgmax, MaxPoolWithArgmaxAttrs, MaxPoolWithArgmaxInputs} from '@tensorflow/tfjs-core';
-import {backend_util, KernelConfig, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, KernelAttributes, KernelConfig, TypedArray} from '@tensorflow/tfjs-core';
 import {MathBackendCPU} from '../backend_cpu';
 import {assertNotComplex} from '../cpu_util';
 
@@ -28,7 +28,7 @@ export const maxPoolWithArgmaxConfig: KernelConfig = {
   kernelFunc: ({inputs, attrs, backend}) => {
     const {x} = inputs as MaxPoolWithArgmaxInputs;
     const {filterSize, strides, pad, includeBatchInIndex} =
-        attrs as unknown as MaxPoolWithArgmaxAttrs;
+        attrs as KernelAttributes<MaxPoolWithArgmaxAttrs>;
     const cpuBackend = backend as MathBackendCPU;
     assertNotComplex(x, 'MaxPoolWithArgmax');
 

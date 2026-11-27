@@ -16,7 +16,7 @@
  */
 
 import {MaxPoolWithArgmax, MaxPoolWithArgmaxAttrs, MaxPoolWithArgmaxInputs} from '@tensorflow/tfjs-core';
-import {backend_util, KernelConfig, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelAttributes, KernelConfig, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 
@@ -28,7 +28,7 @@ export const maxPoolWithArgmaxConfig: KernelConfig = {
   kernelFunc: ({inputs, attrs, backend}) => {
     const {x} = inputs as MaxPoolWithArgmaxInputs;
     const {filterSize, strides, pad, includeBatchInIndex} =
-        attrs as unknown as MaxPoolWithArgmaxAttrs;
+        attrs as KernelAttributes<MaxPoolWithArgmaxAttrs>;
     const webglBackend = backend as MathBackendWebGL;
 
     util.assert(

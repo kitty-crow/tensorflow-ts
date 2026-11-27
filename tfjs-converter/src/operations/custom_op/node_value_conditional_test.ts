@@ -25,6 +25,7 @@ import {GraphExecutor} from '../../executor/graph_executor';
 import {getNumericArrayParam, OperationMapper, parseStringParam} from '../operation_mapper';
 
 import {NodeValueImpl} from './node_value_impl';
+import {spyOnAllFunctions} from '../executors/spy_ops';
 import {getPadding, parseNodeName} from '../executors/utils';
 
 describe('custom node attribute conditional dispatch', () => {
@@ -218,5 +219,20 @@ describe('converter legacy attribute fallback', () => {
     expect(axis('modern')).toEqual([0]);
     expect(axis('empty')).toEqual([]);
     expect(axis('absent')).toBeUndefined();
+  });
+});
+
+
+describe('converter spy module entries', () => {
+  it('retains the exempt constructor and calls through nested spies', () => {
+    class CompositeArrayBuffer {
+      constructor(readonly size: number) {}
+    }
+    const source = {CompositeArrayBuffer, nested: {add: (a: number, b: number) => a + b}};
+    const spies = spyOnAllFunctions(source);
+    expect(spies.CompositeArrayBuffer).toBe(CompositeArrayBuffer);
+    expect(new spies.CompositeArrayBuffer(3).size).toBe(3);
+    expect(spies.nested.add(2, 3)).toBe(5);
+    expect(spies.nested.add).toHaveBeenCalledWith(2, 3);
   });
 });

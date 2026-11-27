@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Concat, ConcatAttrs, ConcatInputs, KernelConfig, scalar, Tensor} from '@tensorflow/tfjs';
+import {Concat, ConcatAttrs, ConcatInputs, KernelAttributes, KernelConfig, scalar, Tensor} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -25,7 +25,7 @@ export const concatConfig: KernelConfig = {
   kernelFunc: (args) => {
     const tensors = args.inputs as unknown as ConcatInputs;
     const backend = args.backend as NodeJSKernelBackend;
-    const {axis} = args.attrs as unknown as ConcatAttrs;
+    const {axis} = args.attrs as KernelAttributes<ConcatAttrs>;
 
     const opAttrs = [
       {name: 'N', type: backend.binding.TF_ATTR_INT, value: tensors.length}, {

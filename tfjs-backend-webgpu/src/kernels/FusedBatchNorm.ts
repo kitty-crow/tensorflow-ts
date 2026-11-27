@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelConfig, Tensor} from '@tensorflow/tfjs-core';
+import {FusedBatchNorm, FusedBatchNormAttrs, FusedBatchNormInputs, KernelAttributes, KernelConfig, Tensor} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
@@ -26,7 +26,7 @@ export const fusedBatchNormConfig: KernelConfig = {
   backendName: 'webgpu',
   kernelFunc: ({inputs, attrs, backend}) => {
     const {x, scale, offset, mean, variance} = inputs as FusedBatchNormInputs;
-    const {varianceEpsilon} = attrs as unknown as FusedBatchNormAttrs;
+    const {varianceEpsilon} = attrs as KernelAttributes<FusedBatchNormAttrs>;
     const webGPUBackend = backend as WebGPUBackend;
     const batchNormInputs = [x as Tensor, mean as Tensor, variance as Tensor];
     let offsetShape = null;

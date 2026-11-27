@@ -30,7 +30,7 @@ export function spyOnAllFunctions<T>(obj: T): RecursiveSpy<T> {
   return Object.fromEntries(Object.entries(obj).map(([key, val]) => {
     // TODO(mattSoulanille): Do not hard code this
     if (key === 'CompositeArrayBuffer') {
-      return val;
+      return [key, val];
     }
     if (val instanceof Function) {
       return [key, jasmine.createSpy(`${key} spy`, val).and.callThrough()];

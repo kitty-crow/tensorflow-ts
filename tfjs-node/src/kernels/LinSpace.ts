@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, LinSpace, LinSpaceAttrs, scalar, tidy} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, LinSpace, LinSpaceAttrs, scalar, tidy} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -24,7 +24,7 @@ export const linSpaceConfig: KernelConfig = {
   backendName: 'tensorflow',
   kernelFunc: (args) => {
     const backend = args.backend as NodeJSKernelBackend;
-    const {start, stop, num} = args.attrs as unknown as LinSpaceAttrs;
+    const {start, stop, num} = args.attrs as KernelAttributes<LinSpaceAttrs>;
 
     const opAttrs = [
       createTensorsTypeOpAttr('T', 'float32'),

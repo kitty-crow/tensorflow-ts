@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, MirrorPad, MirrorPadAttrs, MirrorPadInputs, tensor2d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, MirrorPad, MirrorPadAttrs, MirrorPadInputs, tensor2d} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -24,7 +24,7 @@ export const mirrorPadConfig: KernelConfig = {
   backendName: 'tensorflow',
   kernelFunc: ({inputs, backend, attrs}) => {
     const {x} = inputs as MirrorPadInputs;
-    const {paddings, mode} = attrs as unknown as MirrorPadAttrs;
+    const {paddings, mode} = attrs as KernelAttributes<MirrorPadAttrs>;
 
     const nodeBackend = backend as NodeJSKernelBackend;
 

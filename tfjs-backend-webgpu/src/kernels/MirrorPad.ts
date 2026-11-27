@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, MirrorPad, MirrorPadAttrs, MirrorPadInputs} from '@tensorflow/tfjs-core';
+import {KernelAttributes, KernelConfig, MirrorPad, MirrorPadAttrs, MirrorPadInputs} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 
@@ -26,7 +26,7 @@ export const mirrorPadConfig: KernelConfig = {
   backendName: 'webgpu',
   kernelFunc: ({inputs, attrs, backend}) => {
     const {x} = inputs as MirrorPadInputs;
-    const {paddings, mode} = attrs as unknown as MirrorPadAttrs;
+    const {paddings, mode} = attrs as KernelAttributes<MirrorPadAttrs>;
     const webGPUBackend = backend as WebGPUBackend;
 
     const uniformData = paddings.map(p => {

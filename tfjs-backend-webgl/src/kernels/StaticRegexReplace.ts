@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, KernelAttributes, NamedAttrMap, StaticRegexReplace, StaticRegexReplaceAttrs, StaticRegexReplaceInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, StaticRegexReplace, StaticRegexReplaceAttrs, StaticRegexReplaceInputs, TensorInfo} from '@tensorflow/tfjs-core';
 import {MathBackendWebGL} from '../backend_webgl';
 import {staticRegexReplaceImplCPU} from '../kernel_utils/shared';
 
@@ -35,7 +35,7 @@ export function staticRegexReplace(args: {
 
   const stringInput = backend_util.fromUint8ToStringArray($x);
   const output = staticRegexReplaceImplCPU(stringInput, 'string',
-                                           attrs as unknown as NamedAttrMap);
+                                           attrs);
 
   return backend.makeTensorInfo(x.shape, 'string', output);
 }

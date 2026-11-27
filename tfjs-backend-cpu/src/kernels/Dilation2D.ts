@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, Dilation2D, Dilation2DAttrs, Dilation2DInputs, KernelConfig, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, Dilation2D, Dilation2DAttrs, Dilation2DInputs, KernelAttributes, KernelConfig, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
 import {requiredCpuEntry} from '../cpu_util';
@@ -26,7 +26,7 @@ export const dilation2DConfig: KernelConfig = {
   backendName: 'cpu',
   kernelFunc: ({inputs, backend, attrs}) => {
     const {x, filter} = inputs as Dilation2DInputs;
-    const {strides, pad, dilations} = attrs as unknown as Dilation2DAttrs;
+    const {strides, pad, dilations} = attrs as KernelAttributes<Dilation2DAttrs>;
     const cpuBackend = backend as MathBackendCPU;
 
     const xVals = cpuBackend.requireValues(x.dataId) as TypedArray;

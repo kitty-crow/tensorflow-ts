@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, Mean, MeanAttrs, MeanInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelAttributes, KernelConfig, Mean, MeanAttrs, MeanInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 
@@ -27,7 +27,7 @@ export const meanConfig: KernelConfig = {
   backendName: 'webgl',
   kernelFunc: ({inputs, attrs, backend}) => {
     const {x} = inputs as MeanInputs;
-    const {keepDims, axis} = attrs as unknown as MeanAttrs;
+    const {keepDims, axis} = attrs as KernelAttributes<MeanAttrs>;
     const webglBackend = backend as MathBackendWebGL;
 
     const xRank = x.shape.length;

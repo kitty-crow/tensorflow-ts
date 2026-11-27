@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, KernelConfig, Tensor4D, util} from '@tensorflow/tfjs-core';
+import {backend_util, KernelAttributes, KernelConfig, Tensor4D, util} from '@tensorflow/tfjs-core';
 import {RotateWithOffset, RotateWithOffsetAttrs, RotateWithOffsetInputs} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
@@ -27,7 +27,7 @@ export const rotateWithOffsetConfig: KernelConfig = {
     kernelFunc: ({inputs, attrs, backend}) => {
       const {image} = inputs as RotateWithOffsetInputs;
       const {radians, fillValue, center} =
-          attrs as unknown as RotateWithOffsetAttrs;
+          attrs as KernelAttributes<RotateWithOffsetAttrs>;
       const webgpuBackend = backend as WebGPUBackend;
 
       const program = new RotateProgram((image as Tensor4D).shape, fillValue);

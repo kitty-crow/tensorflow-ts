@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, Range, RangeAttrs, scalar, zeros} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, Range, RangeAttrs, scalar, zeros} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 
@@ -24,8 +24,9 @@ export const rangeConfig: KernelConfig = {
   backendName: 'tensorflow',
   kernelFunc: (args) => {
     const backend = args.backend as NodeJSKernelBackend;
-    const {start, stop, dtype} = args.attrs as unknown as RangeAttrs;
-    let {step} = args.attrs as unknown as RangeAttrs;
+    const attrs = args.attrs as KernelAttributes<RangeAttrs>;
+    const {start, stop, dtype} = attrs;
+    let {step} = attrs;
 
     // TensorFlow.js specific allowances
     const sameStartStop = start === stop;

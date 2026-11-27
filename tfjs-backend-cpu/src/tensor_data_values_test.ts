@@ -29,6 +29,8 @@ import {max} from './kernels/Max';
 import {batchNorm} from './kernels/BatchNorm';
 import {select} from './kernels/Select';
 import {concatImpl} from './kernels/Concat_impl';
+import {createSimpleUnaryImpl} from './utils/unary_impl';
+import {staticRegexReplaceImpl} from './kernels/StaticRegexReplace';
 import {createSimpleBinaryKernelImpl} from './utils/binary_impl';
 import {addComplexImpl} from './kernels/Add';
 import {equal} from './kernels/Equal';
@@ -895,5 +897,28 @@ describe('checked CPU arithmetic and sequence entries', () => {
     expect(linSpaceImpl(3, 5, 1)).toEqual(new Float32Array([3]));
     expect(rangeImpl(3, 0, 1, 'int32')).toEqual(new Int32Array([3, 2, 1]));
     expect(rangeImpl(0, 0, 1, 'int32')).toEqual(new Int32Array(0));
+  });
+});
+
+
+describe('checked unary entries and regex attributes', () => {
+  it('preserves zero, negative values, NaN and empty payloads', () => {
+    const twice = createSimpleUnaryImpl((x: number) => x * 2);
+    expect(twice(new Float32Array([0, -2, NaN]), 'float32'))
+        .toEqual(new Float32Array([0, -4, NaN]));
+    expect(twice(new Float32Array(0), 'float32'))
+        .toEqual(new Float32Array(0));
+    expect(() => twice(new Array<number>(1), 'float32'))
+        .toThrowError(/Missing CPU metadata entry/);
+  });
+
+  it('retains empty strings and distinguishes global and first replacement', () => {
+    const values = ['', 'aba', 'aa'];
+    expect(staticRegexReplaceImpl(values, 'string',
+        {pattern: 'a', rewrite: 'x', replaceGlobal: true}))
+        .toEqual(['', 'xbx', 'xx']);
+    expect(staticRegexReplaceImpl(values, 'string',
+        {pattern: 'a', rewrite: 'x', replaceGlobal: false}))
+        .toEqual(['', 'xba', 'xa']);
   });
 });
