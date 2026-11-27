@@ -23,6 +23,8 @@ import {argMinGradConfig} from './gradients/ArgMin_grad';
 import {getShapeForBatchMatMul} from './ops/conv_util';
 import {maximumGradConfig} from './gradients/Maximum_grad';
 import {Tensor} from './tensor';
+import {getFilteredNodesXToY, TapeNode} from './tape';
+import {getFloat16Decoder} from './io/io_utils';
 import {TensorInfo} from './tensor_info';
 import {Rank} from './types';
 import {sparseReshape} from './ops/sparse/sparse_reshape';
@@ -248,5 +250,30 @@ describe('checked rejection fixtures', () => {
     expect(testFailureDescription({message: 'message'})).toBe('message');
     expect(testFailureDescription('network failure')).toBe('network failure');
     expect(testFailureDescription(null)).toBe('null');
+  });
+});
+
+
+describe('checked gradient tape and encoded weights', () => {
+  it('keeps ordered paths and prunes an input unrelated to x', () => {
+    const x = new Tensor<Rank.R1>([1], 'float32', {}, 71);
+    const middle = new Tensor<Rank.R1>([1], 'float32', {}, 72);
+    const orphan = new Tensor<Rank.R1>([1], 'float32', {}, 73);
+    const y = new Tensor<Rank.R1>([1], 'float32', {}, 74);
+    const tape: TapeNode[] = [
+      {id: 1, kernelName: 'first', inputs: {x}, outputs: [middle]},
+      {id: 2, kernelName: 'second', inputs: {middle, orphan}, outputs: [y]}
+    ];
+    const filtered = getFilteredNodesXToY(tape, [x], y);
+    expect(filtered.map(node => node.id)).toEqual([1, 2]);
+    expect(requiredTestElement(filtered, 1).inputs).toEqual({middle});
+    expect(requiredTestElement(tape, 1).inputs).toEqual({middle, orphan});
+  });
+  it('preserves half-float signs, special values and empty buffers', () => {
+    const decode = getFloat16Decoder();
+    const decoded = decode(new Uint16Array([0, 0x8000, 0x3c00, 0xc000, 0x7c00, 0x7e00]));
+    expect(Object.is(requiredTestElement(decoded, 1), -0)).toBeTrue();
+    expect(Array.from(decoded)).toEqual([0, -0, 1, -2, Infinity, NaN]);
+    expect(decode(new Uint16Array(0)).length).toBe(0);
   });
 });

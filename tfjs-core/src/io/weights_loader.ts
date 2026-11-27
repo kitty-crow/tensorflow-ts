@@ -19,6 +19,7 @@ import {env} from '../environment';
 
 import {NamedTensorMap} from '../tensor_types';
 import * as util from '../util';
+import {requiredKernelEntry} from '../ops/shape_dimension';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 import {decodeWeights} from './io_utils';
 import {monitorPromisesProgress} from './progress';
@@ -82,7 +83,7 @@ export function streamWeights(fetchURLs: string[], loadOptions: LoadOptions): Re
     pull: async (controller) => {
       while (fetchIndex < fetchURLs.length) {
         if (!chunkReader) {
-          const body = (await fetchFunc(fetchURLs[fetchIndex],
+          const body = (await fetchFunc(requiredKernelEntry(fetchURLs, fetchIndex),
                                          loadOptions.requestInit,
                                          {isBinary: true})).body;
 
@@ -166,7 +167,7 @@ export function weightsLoaderFactory(
     // fetched.
     const groupIndicesToFetchMap = manifest.map(() => false);
     const groupWeightsToFetch: {
-      [group: number]: Array<{
+      [group: string]: Array<{
         manifestEntry: WeightsManifestEntry; groupOffset: number;
         sizeBytes: number;
       }>
@@ -234,7 +235,7 @@ export function weightsLoaderFactory(
 
     const fetchUrls: string[] = [];
     groupIndicesToFetch.forEach(i => {
-      manifest[i].paths.forEach(filepath => {
+      requiredKernelEntry(manifest, i).paths.forEach(filepath => {
         const fetchUrl = filePathPrefix +
           (!filePathPrefix.endsWith('/') ? '/' : '') + filepath;
         fetchUrls.push(fetchUrl);
@@ -245,12 +246,12 @@ export function weightsLoaderFactory(
     const weightsTensorMap: NamedTensorMap = {};
     let bufferIndexOffset = 0;
     groupIndicesToFetch.forEach(i => {
-      const numBuffers = manifest[i].paths.length;
+      const numBuffers = requiredKernelEntry(manifest, i).paths.length;
 
       const weightsBuffer = new CompositeArrayBuffer(
         buffers.slice(bufferIndexOffset, bufferIndexOffset + numBuffers));
 
-      const weightsEntries = groupWeightsToFetch[i];
+      const weightsEntries = util.requiredNamedEntry(groupWeightsToFetch, String(i));
 
       weightsEntries.forEach(weightsEntry => {
         const byteBuffer = weightsBuffer.slice(
@@ -259,7 +260,7 @@ export function weightsLoaderFactory(
         const nameToTensorMap =
           decodeWeights(byteBuffer, [weightsEntry.manifestEntry]);
         for (const name in nameToTensorMap) {
-          weightsTensorMap[name] = nameToTensorMap[name];
+          weightsTensorMap[name] = util.requiredNamedEntry(nameToTensorMap, name);
         }
       });
 

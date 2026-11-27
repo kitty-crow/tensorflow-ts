@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 import * as selu_util from './selu_util';
 
@@ -88,10 +88,10 @@ describeWithFlags('selu', ALL_ENVS, () => {
 
     const expected = [];
     for (let i = 0; i < a.size; i++) {
-      if (aValues[i] > 0) {
-        expected[i] = dyValues[i] * scale;
+      if (requiredTestElement(aValues, i) > 0) {
+        expected[i] = requiredTestElement(dyValues, i) * scale;
       } else {
-        expected[i] = dyValues[i] * scaleAlpha * Math.exp(aValues[i]);
+        expected[i] = requiredTestElement(dyValues, i) * scaleAlpha * Math.exp(requiredTestElement(aValues, i));
       }
     }
 
@@ -110,10 +110,10 @@ describeWithFlags('selu', ALL_ENVS, () => {
 
     const expected = [];
     for (let i = 0; i < a.size; i++) {
-      if (aValues[i] > 0) {
-        expected[i] = dyValues[i] * scale;
+      if (requiredTestElement(aValues, i) > 0) {
+        expected[i] = requiredTestElement(dyValues, i) * scale;
       } else {
-        expected[i] = dyValues[i] * scaleAlpha * Math.exp(aValues[i]);
+        expected[i] = requiredTestElement(dyValues, i) * scaleAlpha * Math.exp(requiredTestElement(aValues, i));
       }
     }
 

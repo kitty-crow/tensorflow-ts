@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {requiredKernelEntry} from '../ops/shape_dimension';
+import {requiredNamedEntry} from '../util_base';
 import {ENGINE} from '../engine';
 import {dispose, tidy} from '../globals';
 import {abs} from '../ops/abs';
@@ -72,7 +74,7 @@ export class AdamaxOptimizer extends Optimizer {
           div(-this.learningRate, add(mul(this.iteration, this.decay), 1));
 
       variableNames.forEach((name, i) => {
-        const value = ENGINE.registeredVariables[name];
+        const value = requiredNamedEntry(ENGINE.registeredVariables, name);
         const trainable = false;
         if (this.accumulatedFirstMoment[i] == null) {
           this.accumulatedFirstMoment[i] = {
@@ -88,14 +90,14 @@ export class AdamaxOptimizer extends Optimizer {
         }
 
         const gradient = Array.isArray(variableGradients) ?
-            variableGradients[i].tensor :
+            requiredKernelEntry(variableGradients, i).tensor :
             variableGradients[name];
         if (gradient == null) {
           return;
         }
 
-        const firstMoment = this.accumulatedFirstMoment[i].variable;
-        const weightedInfNorm = this.accumulatedWeightedInfNorm[i].variable;
+        const firstMoment = requiredKernelEntry(this.accumulatedFirstMoment, i).variable;
+        const weightedInfNorm = requiredKernelEntry(this.accumulatedWeightedInfNorm, i).variable;
 
         const newFirstMoment =
             add(mul(firstMoment, this.beta1), mul(gradient, 1 - this.beta1));

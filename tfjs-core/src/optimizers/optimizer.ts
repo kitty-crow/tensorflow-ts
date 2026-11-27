@@ -18,6 +18,8 @@
 import {dispose} from '../globals';
 import {variableGrads} from '../gradients';
 import {scalar} from '../ops/ops';
+import {requiredKernelEntry} from '../ops/shape_dimension';
+import {requiredNumericEntry} from '../util_base';
 import {Serializable} from '../serialization';
 import {Scalar, Variable} from '../tensor';
 import {NamedTensor, NamedTensorMap} from '../tensor_types';
@@ -160,7 +162,8 @@ export abstract class Optimizer extends Serializable {
    */
   protected async extractIterations(weightValues: NamedTensor[]):
       Promise<NamedTensor[]> {
-    this.iterations_ = (await weightValues[0].tensor.data())[0];
+    const iteration = requiredKernelEntry(weightValues, 0);
+    this.iterations_ = requiredNumericEntry(await iteration.tensor.data(), 0);
     return weightValues.slice(1);
   }
 }

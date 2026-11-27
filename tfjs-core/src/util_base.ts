@@ -859,3 +859,12 @@ export function requiredNumericEntry(values: ArrayLike<number>, index: number): 
   }
   return value;
 }
+
+/** Reads a required named entry while preserving falsy values. */
+export function requiredNamedEntry<T>(values: {[key: string]: T}, key: string): T {
+  const value = values[key];
+  if (value == null) {
+    throw new Error(`Missing required entry: ${key}.`);
+  }
+  return value;
+}

@@ -136,7 +136,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
     const weights2 = model2.getWeights();
     expect(weights2.length).toEqual(weights1.length);
     for (let i = 0; i < weights1.length; ++i) {
-      expectTensorsClose(weights1[i], weights2[i]);
+      expectTensorsClose(requiredTestElement(weights1, i), requiredTestElement(weights2, i));
     }
   });
 
@@ -168,7 +168,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
     const weights2 = model2.getWeights();
     expect(weights2.length).toEqual(weights1.length);
     for (let i = 0; i < weights1.length; ++i) {
-      expectTensorsClose(weights1[i], weights2[i]);
+      expectTensorsClose(requiredTestElement(weights1, i), requiredTestElement(weights2, i));
     }
   });
 
@@ -194,7 +194,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
     const weights2 = model2.getWeights();
     expect(weights2.length).toEqual(weights1.length);
     for (let i = 0; i < weights1.length; ++i) {
-      expectTensorsClose(weights1[i], weights2[i]);
+      expectTensorsClose(requiredTestElement(weights1, i), requiredTestElement(weights2, i));
     }
   });
 
@@ -322,7 +322,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
     const weightsPrime = modelPrime.getWeights();
     expect(weightsPrime.length).toEqual(weights.length);
     for (let i = 0; i < weights.length; ++i) {
-      expectTensorsClose(weightsPrime[i], weights[i]);
+      expectTensorsClose(requiredTestElement(weightsPrime, i), requiredTestElement(weights, i));
     }
   });
 
@@ -345,7 +345,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
     const weightsPrime = modelPrime.getWeights();
     expect(weightsPrime.length).toEqual(weights.length);
     for (let i = 0; i < weights.length; ++i) {
-      expectTensorsClose(weightsPrime[i], weights[i]);
+      expectTensorsClose(requiredTestElement(weightsPrime, i), requiredTestElement(weights, i));
     }
   });
 
@@ -373,7 +373,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
     const weightsPrime = modelPrime.getWeights();
     expect(weightsPrime.length).toEqual(weights.length);
     for (let i = 0; i < weights.length; ++i) {
-      expectTensorsClose(weightsPrime[i], weights[i]);
+      expectTensorsClose(requiredTestElement(weightsPrime, i), requiredTestElement(weights, i));
     }
   });
 
@@ -403,7 +403,7 @@ describeMathCPUAndWebGL2('Save-load round trips', () => {
     const weightsPrime = modelPrime.getWeights();
     expect(weightsPrime.length).toEqual(weights.length);
     for (let i = 0; i < weights.length; ++i) {
-      expectTensorsClose(weightsPrime[i], weights[i]);
+      expectTensorsClose(requiredTestElement(weightsPrime, i), requiredTestElement(weights, i));
     }
   });
 

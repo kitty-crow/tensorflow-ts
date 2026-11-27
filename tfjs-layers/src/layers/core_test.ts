@@ -73,33 +73,33 @@ describeMathCPUAndGPU('Dropout Layer', () => {
               for (let i = 0; i < requiredTestElement(x.shape, 0); ++i) {
                 for (let j = 0; j < requiredTestElement(x.shape, 1); ++j) {
                   const maskedValue =
-                      yValue[i * requiredTestElement(x.shape, 1) * requiredTestElement(x.shape, 2) + j * requiredTestElement(x.shape, 2)];
+                      requiredTestElement(yValue, i * requiredTestElement(x.shape, 1) * requiredTestElement(x.shape, 2) + j * requiredTestElement(x.shape, 2));
                   for (let k = 0; k < requiredTestElement(x.shape, 2); ++k) {
                     const indice =
                         i * requiredTestElement(x.shape, 1) * requiredTestElement(x.shape, 2) + j * requiredTestElement(x.shape, 2) + k;
                     if (training) {
                       if (maskedValue === 0) {
-                        expect(yValue[indice]).toEqual(0);
+                        expect(requiredTestElement(yValue, indice)).toEqual(0);
                       } else {
                         nKept++;
-                        expect(yValue[indice]).toBeCloseTo(1 / (1 - rate));
+                        expect(requiredTestElement(yValue, indice)).toBeCloseTo(1 / (1 - rate));
                       }
                     } else {
                       nKept++;
-                      expect(yValue[indice]).toEqual(1);
+                      expect(requiredTestElement(yValue, indice)).toEqual(1);
                     }
                   }
                 }
               }
             } else {  // default noiseShape
               for (let i = 0; i < xValue.length; ++i) {
-                if (!(yValue[i] !== 0)) continue;
+                if (!(requiredTestElement(yValue, i) !== 0)) continue;
                 {
                   nKept++;
                   if (training) {
-                    expect(yValue[i]).toBeCloseTo(1 / (1 - rate));
+                    expect(requiredTestElement(yValue, i)).toBeCloseTo(1 / (1 - rate));
                   } else {
-                    expect(yValue[i]).toBeCloseTo(1);
+                    expect(requiredTestElement(yValue, i)).toBeCloseTo(1);
                   }
                 }
               }

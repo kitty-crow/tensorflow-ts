@@ -185,8 +185,8 @@ describe('SavedModel', () => {
     const signature = getSignatureDefEntryFromMetaGraphInfo(
         modelInfo, ['serve'], 'serving_default');
     expect(Object.keys(signature).length).toBe(2);
-    expect(signature.inputs['x'].name).toBe('serving_default_x:0');
-    expect(signature.outputs['output_0'].name)
+    expect(test_util.requiredTestEntry(signature.inputs, 'x').name).toBe('serving_default_x:0');
+    expect(test_util.requiredTestEntry(signature.outputs, 'output_0').name)
         .toBe('StatefulPartitionedCall:0');
   });
 
@@ -344,7 +344,7 @@ describe('SavedModel', () => {
         'serving_default');
     const input = tf.tensor1d([1.0, 2, 3]);
     const outputMap = model.predict({'x': input}) as NamedTensorMap;
-    const output = outputMap['output_0'];
+    const output = test_util.requiredTestEntry(outputMap, 'output_0');
     expect(output.shape).toEqual(input.shape);
     expect(output.dtype).toBe(input.dtype);
     expect(output.dtype).toBe('float32');
@@ -460,8 +460,8 @@ describe('SavedModel', () => {
     const input2 = tf.tensor1d([1, 2, 3], 'int32');
     const output =
         model.predict({'x': input1, 'y': input2}) as tf.NamedTensorMap;
-    const output1 = output['output_0'];
-    const output2 = output['output_1'];
+    const output1 = test_util.requiredTestEntry(output, 'output_0');
+    const output2 = test_util.requiredTestEntry(output, 'output_1');
     expect(output1.shape).toEqual(input1.shape);
     expect(output1.dtype).toBe(input1.dtype);
     expect(output2.shape).toEqual(input2.shape);

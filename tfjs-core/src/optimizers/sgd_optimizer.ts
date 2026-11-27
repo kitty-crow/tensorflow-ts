@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {requiredKernelEntry} from '../ops/shape_dimension';
+import {requiredNamedEntry} from '../util_base';
 import {ENGINE} from '../engine';
 import {keep, tidy} from '../globals';
 import {add} from '../ops/add';
@@ -48,12 +50,12 @@ export class SGDOptimizer extends Optimizer {
         Object.keys(variableGradients);
     varNames.forEach((name, i) => {
       const gradient = Array.isArray(variableGradients) ?
-          variableGradients[i].tensor :
+          requiredKernelEntry(variableGradients, i).tensor :
           variableGradients[name];
       if (gradient == null) {
         return;
       }
-      const value = ENGINE.registeredVariables[name];
+      const value = requiredNamedEntry(ENGINE.registeredVariables, name);
       tidy(() => {
         const newValue = add(mul(this.c, gradient), value);
         value.assign(newValue);

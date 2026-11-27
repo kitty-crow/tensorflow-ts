@@ -17,7 +17,7 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, requiredTestElement} from '../test_util';
 
 import {tensor1d, tensor2d} from './ops';
 
@@ -40,8 +40,8 @@ describeWithFlags('dropout', ALL_ENVS, () => {
     const xValues = await x.data();
     const outputValues = await output.data();
     for (let i = 0; i < xValues.length; i++) {
-      if (outputValues[i] !== 0) {
-        expect(outputValues[i]).toBeCloseTo(1 / (1 - rate) * xValues[i]);
+      if (requiredTestElement(outputValues, i) !== 0) {
+        expect(requiredTestElement(outputValues, i)).toBeCloseTo(1 / (1 - rate) * requiredTestElement(xValues, i));
       }
     }
   });
@@ -64,8 +64,8 @@ describeWithFlags('dropout', ALL_ENVS, () => {
     const xValues = await x.data();
     const outputValues = await output.data();
     for (let i = 0; i < xValues.length; i++) {
-      if (outputValues[i] !== 0) {
-        expect(outputValues[i]).toBeCloseTo(1 / (1 - rate) * xValues[i]);
+      if (requiredTestElement(outputValues, i) !== 0) {
+        expect(requiredTestElement(outputValues, i)).toBeCloseTo(1 / (1 - rate) * requiredTestElement(xValues, i));
       }
     }
   });
@@ -82,10 +82,10 @@ describeWithFlags('dropout', ALL_ENVS, () => {
     const maskedOutput = tf.test_util.requiredTestElement(outputValues, 0);
     for (let i = 0; i < xValues.length; i++) {
       if (maskedOutput === 0) {
-        expect(outputValues[i]).toBe(maskedOutput);
+        expect(requiredTestElement(outputValues, i)).toBe(maskedOutput);
       }
-      if (outputValues[i] !== 0) {
-        expect(outputValues[i]).toBeCloseTo(1 / (1 - rate) * xValues[i]);
+      if (requiredTestElement(outputValues, i) !== 0) {
+        expect(requiredTestElement(outputValues, i)).toBeCloseTo(1 / (1 - rate) * requiredTestElement(xValues, i));
       }
     }
   });
@@ -100,13 +100,13 @@ describeWithFlags('dropout', ALL_ENVS, () => {
     const xValues = await x.data();
     const outputValues = await output.data();
     for (let i = 0; i < x.shape[0]; i++) {
-      const maskedOutput = outputValues[i * x.shape[1]];
+      const maskedOutput = requiredTestElement(outputValues, i * requiredTestElement(x.shape, 1));
       if (maskedOutput !== 0) {
         expect(maskedOutput)
-            .toBeCloseTo(1 / (1 - rate) * xValues[i * x.shape[1]]);
+            .toBeCloseTo(1 / (1 - rate) * requiredTestElement(xValues, i * requiredTestElement(x.shape, 1)));
       } else {
-        for (let j = 0; j < x.shape[1]; j++) {
-          expect(outputValues[i * x.shape[1] + j]).toBe(maskedOutput);
+        for (let j = 0; j < requiredTestElement(x.shape, 1); j++) {
+          expect(requiredTestElement(outputValues, i * requiredTestElement(x.shape, 1) + j)).toBe(maskedOutput);
         }
       }
     }
@@ -123,13 +123,13 @@ describeWithFlags('dropout', ALL_ENVS, () => {
     const xValues = await x.data();
     const outputValues = await output.data();
     for (let i = 0; i < x.shape[0]; i++) {
-      const maskedOutput = outputValues[i * x.shape[1]];
+      const maskedOutput = requiredTestElement(outputValues, i * requiredTestElement(x.shape, 1));
       if (maskedOutput !== 0) {
         expect(maskedOutput)
-            .toBeCloseTo(1 / (1 - rate) * xValues[i * x.shape[1]]);
+            .toBeCloseTo(1 / (1 - rate) * requiredTestElement(xValues, i * requiredTestElement(x.shape, 1)));
       } else {
-        for (let j = 0; j < x.shape[1]; j++) {
-          expect(outputValues[i * x.shape[1] + j]).toBe(maskedOutput);
+        for (let j = 0; j < requiredTestElement(x.shape, 1); j++) {
+          expect(requiredTestElement(outputValues, i * requiredTestElement(x.shape, 1) + j)).toBe(maskedOutput);
         }
       }
     }
@@ -145,8 +145,8 @@ describeWithFlags('dropout', ALL_ENVS, () => {
     const xValues = await x.data();
     const outputValues = await output.data();
     for (let i = 0; i < xValues.length; i++) {
-      if (outputValues[i] !== 0) {
-        expect(outputValues[i]).toBeCloseTo(1 / (1 - rate) * xValues[i]);
+      if (requiredTestElement(outputValues, i) !== 0) {
+        expect(requiredTestElement(outputValues, i)).toBeCloseTo(1 / (1 - rate) * requiredTestElement(xValues, i));
       }
     }
   });

@@ -17,7 +17,7 @@ import {DataType, scalar, tensor1d, tensor2d, tensor3d, tensor4d, tensor5d, tens
 
 import {SymbolicTensor} from '../engine/topology';
 import {range} from '../utils/math_utils';
-import {describeMathCPU, describeMathCPUAndGPU, expectNoLeakedTensors, expectTensorsClose} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, expectNoLeakedTensors, expectTensorsClose, requiredTestElement} from '../utils/test_utils';
 import {LayerVariable} from '../variables';
 
 import * as K from './tfjs_backend';
@@ -741,9 +741,9 @@ describeMathCPUAndGPU('dropout', () => {
       const yValue = y.dataSync();
       let nKept = 0;
       for (let i = 0; i < xValue.length; ++i) {
-        if (yValue[i] !== 0) {
+        if (requiredTestElement(yValue, i) !== 0) {
           nKept++;
-          expect(yValue[i]).toBeCloseTo(1 / (1 - dropoutLevel) * xValue[i]);
+          expect(requiredTestElement(yValue, i)).toBeCloseTo(1 / (1 - dropoutLevel) * requiredTestElement(xValue, i));
         }
       }
       const numel = K.countParams(x);
@@ -766,14 +766,14 @@ describeMathCPUAndGPU('dropout', () => {
     const yValue = y.dataSync();
     let nKept = 0;
     for (let i = 0; i < x.shape[0]; i++) {
-      const maskedValue = yValue[i * x.shape[1]];
-      for (let j = 0; j < x.shape[1]; j++) {
-        const indice = i * x.shape[1] + j;
+      const maskedValue = requiredTestElement(yValue, i * requiredTestElement(x.shape, 1));
+      for (let j = 0; j < requiredTestElement(x.shape, 1); j++) {
+        const indice = i * requiredTestElement(x.shape, 1) + j;
         if (maskedValue !== 0) {
           nKept++;
-          expect(yValue[indice]).toBeCloseTo(1 / (1 - level) * xValue[indice]);
+          expect(requiredTestElement(yValue, indice)).toBeCloseTo(1 / (1 - level) * requiredTestElement(xValue, indice));
         } else {
-          expect(yValue[indice]).toEqual(0);
+          expect(requiredTestElement(yValue, indice)).toEqual(0);
         }
       }
     }

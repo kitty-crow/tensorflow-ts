@@ -26,13 +26,13 @@ describeAllEnvs('makeDatasetStatistics', () => {
      async () => {
        const ds = new TestDataset().skip(55) as Dataset<TabularRecord>;
        const stats = await computeDatasetStatistics(ds);
-       expect(stats['number'].min).toEqual(55);
-       expect(stats['number'].max).toEqual(99);
+       expect(tf.test_util.requiredTestEntry(stats, 'number').min).toEqual(55);
+       expect(tf.test_util.requiredTestEntry(stats, 'number').max).toEqual(99);
        // The TestDataset includes cubes of the indices
-       expect(stats['numberArray'].min).toEqual(55);
-       expect(stats['numberArray'].max).toEqual(99 * 99 * 99);
-       expect(stats['Tensor'].min).toEqual(55);
-       expect(stats['Tensor'].max).toEqual(99 * 99 * 99);
+       expect(tf.test_util.requiredTestEntry(stats, 'numberArray').min).toEqual(55);
+       expect(tf.test_util.requiredTestEntry(stats, 'numberArray').max).toEqual(99 * 99 * 99);
+       expect(tf.test_util.requiredTestEntry(stats, 'Tensor').min).toEqual(55);
+       expect(tf.test_util.requiredTestEntry(stats, 'Tensor').max).toEqual(99 * 99 * 99);
      });
 
   it('computes numeric mean and variance over numbers, arrays, and Tensors',
@@ -41,39 +41,39 @@ describeAllEnvs('makeDatasetStatistics', () => {
        // for mean and variance will use small numbers.
        const ds = new TestDataset().take(10) as Dataset<TabularRecord>;
        const stats = await computeDatasetStatistics(ds);
-       expect(stats['number'].min).toEqual(0);
-       expect(stats['number'].max).toEqual(9);
-       expect(stats['number'].mean).toEqual(4.5);
-       expect(stats['number'].variance).toEqual(8.25);
-       expect(stats['number'].stddev).toEqual(2.8722813232690143);
+       expect(tf.test_util.requiredTestEntry(stats, 'number').min).toEqual(0);
+       expect(tf.test_util.requiredTestEntry(stats, 'number').max).toEqual(9);
+       expect(tf.test_util.requiredTestEntry(stats, 'number').mean).toEqual(4.5);
+       expect(tf.test_util.requiredTestEntry(stats, 'number').variance).toEqual(8.25);
+       expect(tf.test_util.requiredTestEntry(stats, 'number').stddev).toEqual(2.8722813232690143);
 
        // The TestDataset includes cubes of the indices
-       expect(stats['numberArray'].min).toEqual(0);
-       expect(stats['numberArray'].max).toEqual(729);
+       expect(tf.test_util.requiredTestEntry(stats, 'numberArray').min).toEqual(0);
+       expect(tf.test_util.requiredTestEntry(stats, 'numberArray').max).toEqual(729);
        tf.test_util.expectNumbersClose(
-           stats['numberArray'].mean, 78.50000066757202);
+           tf.test_util.requiredTestEntry(stats, 'numberArray').mean, 78.50000066757202);
        tf.test_util.expectNumbersClose(
-           stats['numberArray'].variance, 26971.849851671857, 0.1);
+           tf.test_util.requiredTestEntry(stats, 'numberArray').variance, 26971.849851671857, 0.1);
        tf.test_util.expectNumbersClose(
-           stats['numberArray'].stddev, 164.2310867396056);
+           tf.test_util.requiredTestEntry(stats, 'numberArray').stddev, 164.2310867396056);
 
-       expect(stats['Tensor'].min).toEqual(0);
-       expect(stats['Tensor'].max).toEqual(729);
-       tf.test_util.expectNumbersClose(stats['Tensor'].mean, 78.50000066757202);
+       expect(tf.test_util.requiredTestEntry(stats, 'Tensor').min).toEqual(0);
+       expect(tf.test_util.requiredTestEntry(stats, 'Tensor').max).toEqual(729);
+       tf.test_util.expectNumbersClose(tf.test_util.requiredTestEntry(stats, 'Tensor').mean, 78.50000066757202);
        tf.test_util.expectNumbersClose(
-           stats['Tensor'].variance, 26971.849851671857, 0.1);
+           tf.test_util.requiredTestEntry(stats, 'Tensor').variance, 26971.849851671857, 0.1);
        tf.test_util.expectNumbersClose(
-           stats['Tensor'].stddev, 164.2310867396056);
+           tf.test_util.requiredTestEntry(stats, 'Tensor').stddev, 164.2310867396056);
      });
 
   it('variance should be NaN if there is only one element', async () => {
     const ds = new TestDataset().take(1) as Dataset<TabularRecord>;
     const stats = await computeDatasetStatistics(ds);
-    expect(stats['number'].min).toEqual(0);
-    expect(stats['number'].max).toEqual(0);
-    expect(stats['number'].mean).toEqual(0);
-    expect(stats['number'].variance).toEqual(NaN);
-    expect(stats['number'].stddev).toEqual(NaN);
+    expect(tf.test_util.requiredTestEntry(stats, 'number').min).toEqual(0);
+    expect(tf.test_util.requiredTestEntry(stats, 'number').max).toEqual(0);
+    expect(tf.test_util.requiredTestEntry(stats, 'number').mean).toEqual(0);
+    expect(tf.test_util.requiredTestEntry(stats, 'number').variance).toEqual(NaN);
+    expect(tf.test_util.requiredTestEntry(stats, 'number').stddev).toEqual(NaN);
   });
 });
 
@@ -84,7 +84,7 @@ describeAllEnvs('scaleTo01', () => {
     const scaledDataset = ds.map(x => ({'Tensor': scaleFn(x['Tensor'])}));
 
     const stats = await computeDatasetStatistics(scaledDataset);
-    expect(stats['Tensor'].min).toBeCloseTo(0);
-    expect(stats['Tensor'].max).toBeCloseTo(1);
+    expect(tf.test_util.requiredTestEntry(stats, 'Tensor').min).toBeCloseTo(0);
+    expect(tf.test_util.requiredTestEntry(stats, 'Tensor').max).toBeCloseTo(1);
   });
 });

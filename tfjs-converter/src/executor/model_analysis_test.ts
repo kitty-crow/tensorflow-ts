@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {NamedTensorMap, scalar} from '@tensorflow/tfjs-core';
+import {NamedTensorMap, scalar, test_util} from '@tensorflow/tfjs-core';
 
 import {IGraphDef} from '../data/compiled_api';
 import {OperationMapper} from '../operations/operation_mapper';
@@ -39,7 +39,7 @@ describe('getExecutionInfo', () => {
 
     // input --> output
     let inputs: NamedTensorMap = {'input': scalar(0)};
-    let outputs = [graph.nodes['output']];
+    let outputs = [test_util.requiredTestEntry(graph.nodes, 'output')];
     let executionInfo = getExecutionSubgraph(inputs, outputs, weightMap);
     expect(executionInfo.inputs).toBe(inputs);
     expect(executionInfo.outputs).toBe(outputs);
@@ -53,7 +53,7 @@ describe('getExecutionInfo', () => {
 
     // input --> intermediate
     inputs = {'input': scalar(0)};
-    outputs = [graph.nodes['intermediate']];
+    outputs = [test_util.requiredTestEntry(graph.nodes, 'intermediate')];
     executionInfo = getExecutionSubgraph(inputs, outputs, weightMap);
     expect(executionInfo.inputs).toBe(inputs);
     expect(executionInfo.outputs).toBe(outputs);
@@ -66,7 +66,7 @@ describe('getExecutionInfo', () => {
 
     // input2 --> output2
     inputs = {'input2': scalar(0)};
-    outputs = [graph.nodes['output2']];
+    outputs = [test_util.requiredTestEntry(graph.nodes, 'output2')];
     executionInfo = getExecutionSubgraph(inputs, outputs, weightMap);
     expect(executionInfo.inputs).toBe(inputs);
     expect(executionInfo.outputs).toBe(outputs);
@@ -79,7 +79,7 @@ describe('getExecutionInfo', () => {
 
     // input --> output2 is disconnected.
     inputs = {'input': scalar(0)};
-    outputs = [graph.nodes['output2']];
+    outputs = [test_util.requiredTestEntry(graph.nodes, 'output2')];
     executionInfo = getExecutionSubgraph(inputs, outputs, weightMap);
     expect(executionInfo.inputs).toBe(inputs);
     expect(executionInfo.outputs).toBe(outputs);
@@ -92,7 +92,7 @@ describe('getExecutionInfo', () => {
 
     // input2 --> output is disconnected.
     inputs = {'input2': scalar(0)};
-    outputs = [graph.nodes['output']];
+    outputs = [test_util.requiredTestEntry(graph.nodes, 'output')];
     executionInfo = getExecutionSubgraph(inputs, outputs, weightMap);
     expect(executionInfo.inputs).toBe(inputs);
     expect(executionInfo.outputs).toBe(outputs);
@@ -120,11 +120,11 @@ describe('getExecutionInfo', () => {
 
     // input --> output
     const inputs: NamedTensorMap = {'input': scalar(0)};
-    const outputs = [graph.nodes['output']];
+    const outputs = [test_util.requiredTestEntry(graph.nodes, 'output')];
     const executionInfo = getExecutionSubgraph(inputs, outputs, weightMap);
     expect(executionInfo.inputs).toBe(inputs);
     expect(executionInfo.outputs).toBe(outputs);
-    expect(executionInfo.dynamicNode).toBe(graph.nodes['intermediate']);
+    expect(executionInfo.dynamicNode).toBe(test_util.requiredTestEntry(graph.nodes, 'intermediate'));
     expect(executionInfo.missingInputs).toEqual([]);
     expect(executionInfo.syncInputs).toEqual(['intermediate2']);
     expect(executionInfo.usedNodes).toContain('input');

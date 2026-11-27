@@ -16,6 +16,7 @@
  */
 
 import {Tensor} from '@tensorflow/tfjs-core';
+import {requiredKernelEntry} from '@tensorflow/tfjs-core/dist/ops/shape_dimension';
 // tslint:disable-next-line: no-imports-from-dist
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 
@@ -158,7 +159,7 @@ export const executeOp: InternalOpExecutor =
           return [ops.relu6(
               getParamValue('x', node, tensorMap, context) as Tensor)];
         case 'Rsqrt':
-          return [ops.rsqrt(getTensor(node.inputNames[0], tensorMap, context))];
+          return [ops.rsqrt(getTensor(requiredKernelEntry(node.inputNames, 0), tensorMap, context))];
         case 'LeakyRelu':
           return [ops.leakyRelu(
               getParamValue('x', node, tensorMap, context) as Tensor,
@@ -168,12 +169,12 @@ export const executeOp: InternalOpExecutor =
               getParamValue('x', node, tensorMap, context) as Tensor,
               getParamValue('alpha', node, tensorMap, context) as Tensor)];
         case 'IsNan':
-          return [ops.isNaN(getTensor(node.inputNames[0], tensorMap, context))];
+          return [ops.isNaN(getTensor(requiredKernelEntry(node.inputNames, 0), tensorMap, context))];
         case 'IsInf':
-          return [ops.isInf(getTensor(node.inputNames[0], tensorMap, context))];
+          return [ops.isInf(getTensor(requiredKernelEntry(node.inputNames, 0), tensorMap, context))];
         case 'IsFinite':
           return [ops.isFinite(
-              getTensor(node.inputNames[0], tensorMap, context))];
+              getTensor(requiredKernelEntry(node.inputNames, 0), tensorMap, context))];
         default:
           throw TypeError(`Node type ${node.op} is not implemented`);
       }

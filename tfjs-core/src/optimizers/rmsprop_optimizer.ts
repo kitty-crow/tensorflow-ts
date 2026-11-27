@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {requiredKernelEntry} from '../ops/shape_dimension';
+import {requiredNamedEntry} from '../util_base';
 import {ENGINE} from '../engine';
 import {dispose, tidy} from '../globals';
 import {add} from '../ops/add';
@@ -66,7 +68,7 @@ export class RMSPropOptimizer extends Optimizer {
         Object.keys(variableGradients);
 
     variableNames.forEach((name, i) => {
-      const value = ENGINE.registeredVariables[name];
+      const value = requiredNamedEntry(ENGINE.registeredVariables, name);
       const trainable = false;
       if (this.accumulatedMeanSquares[i] == null) {
         this.accumulatedMeanSquares[i] = {
@@ -88,21 +90,21 @@ export class RMSPropOptimizer extends Optimizer {
       }
 
       const gradient = Array.isArray(variableGradients) ?
-          variableGradients[i].tensor :
+          requiredKernelEntry(variableGradients, i).tensor :
           variableGradients[name];
       if (gradient == null) {
         return;
       }
 
-      const accumulatedMeanSquare = this.accumulatedMeanSquares[i].variable;
-      const accumulatedMoments = this.accumulatedMoments[i].variable;
+      const accumulatedMeanSquare = requiredKernelEntry(this.accumulatedMeanSquares, i).variable;
+      const accumulatedMoments = requiredKernelEntry(this.accumulatedMoments, i).variable;
       tidy(() => {
         const newAccumulatedMeanSquare =
             add(mul(accumulatedMeanSquare, this.decay),
                 mul(square(gradient), 1 - this.decay));
 
         if (this.centered) {
-          const accumulatedMeanGrad = this.accumulatedMeanGrads[i].variable;
+          const accumulatedMeanGrad = requiredKernelEntry(this.accumulatedMeanGrads, i).variable;
           // Centered gradient
           const newAccumulatedMeanGrad =
               add(mul(accumulatedMeanGrad, this.decay),

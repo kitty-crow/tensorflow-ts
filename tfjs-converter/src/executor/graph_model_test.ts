@@ -26,7 +26,7 @@ import {GraphModel, loadGraphModel, loadGraphModelSync} from './graph_model';
 import {HASH_TABLE_MODEL_V2} from './test_data/hash_table_v2_model_loader';
 import {STRUCTURED_OUTPUTS_MODEL} from './test_data/structured_outputs_model_loader';
 // tslint:disable-next-line: no-imports-from-dist
-import {expectArrayBuffersEqual, requiredTestValue, requiredTestErrorMessage} from '@tensorflow/tfjs-core/dist/test_util';
+import {expectArrayBuffersEqual, requiredTestValue, requiredTestErrorMessage, requiredTestEntry, requiredTestElement} from '@tensorflow/tfjs-core/dist/test_util';
 
 const HOST = 'http://example.org';
 const MODEL_URL = `${HOST}/model.json`;
@@ -442,7 +442,7 @@ describe('loadGraphModel', () => {
     };
     const model = await loadGraphModel(customLoader);
     expect(model).toBeDefined();
-    const bias = model.weights['Const'][0];
+    const bias = requiredTestElement(requiredTestEntry(model.weights, 'Const'), 0);
     expect(bias.dtype).toBe('int32');
     expect(bias.dataSync()).toEqual(new Int32Array([5]));
   });
@@ -468,7 +468,7 @@ describe('loadGraphModel', () => {
 describe('loadGraphModelSync', () => {
   function checkModel(model: GraphModel<unknown>) {
     expect(model).toBeDefined();
-    const bias = model.weights['Const'][0];
+    const bias = requiredTestElement(requiredTestEntry(model.weights, 'Const'), 0);
     expect(bias.dtype).toBe('int32');
     expect(bias.dataSync()).toEqual(new Int32Array([5]));
   }
@@ -806,7 +806,7 @@ describe('Model', () => {
       const model = await loadGraphModel(MODEL_URL, {streamWeights: true},
                                          spyIo);
       expect(model).toBeDefined();
-      expectArrayBuffersEqual(model.weights['Const'][0].dataSync(),
+      expectArrayBuffersEqual(requiredTestElement(requiredTestEntry(model.weights, 'Const'), 0).dataSync(),
                               bias.dataSync());
     });
 

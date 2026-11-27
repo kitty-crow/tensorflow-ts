@@ -16,7 +16,7 @@
  */
 
 import {requiredTestEntry} from './test_util';
-import {assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
+import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
 
 describe('shape utility regression coverage', () => {
   it('infers a missing dimension without mutating the input', () => {
@@ -106,5 +106,19 @@ describe('checked coordinate conversion', () => {
   it('rejects missing stride data rather than producing NaN', () => {
     expect(() => indexToLoc(17, 3, [12])).toThrowError();
     expect(() => locToIndex([1, 1, 1], 3, [12])).toThrowError();
+  });
+});
+
+
+describe('required runtime named entry', () => {
+  it('preserves zero, false and object identity', () => {
+    const object = {value: 1};
+    expect(requiredNamedEntry({zero: 0}, 'zero')).toBe(0);
+    expect(requiredNamedEntry({flag: false}, 'flag')).toBe(false);
+    expect(requiredNamedEntry({object}, 'object')).toBe(object);
+  });
+  it('rejects absent or null entries', () => {
+    expect(() => requiredNamedEntry({}, 'missing')).toThrowError(/Missing required entry/);
+    expect(() => requiredNamedEntry({missing: null}, 'missing')).toThrowError(/Missing required entry/);
   });
 });

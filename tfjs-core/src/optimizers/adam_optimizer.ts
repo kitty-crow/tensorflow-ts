@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {requiredKernelEntry} from '../ops/shape_dimension';
+import {requiredNamedEntry} from '../util_base';
 import {ENGINE} from '../engine';
 import {dispose, tidy} from '../globals';
 import {add} from '../ops/add';
@@ -70,7 +72,7 @@ export class AdamOptimizer extends Optimizer {
       const oneMinusAccBeta2 = sub(1, this.accBeta2);
 
       varNames.forEach((name, i) => {
-        const value = ENGINE.registeredVariables[name];
+        const value = requiredNamedEntry(ENGINE.registeredVariables, name);
         const trainable = false;
         if (this.accumulatedFirstMoment[i] == null) {
           this.accumulatedFirstMoment[i] = {
@@ -86,14 +88,14 @@ export class AdamOptimizer extends Optimizer {
         }
 
         const gradient = Array.isArray(variableGradients) ?
-            variableGradients[i].tensor :
+            requiredKernelEntry(variableGradients, i).tensor :
             variableGradients[name];
         if (gradient == null) {
           return;
         }
 
-        const firstMoment = this.accumulatedFirstMoment[i].variable;
-        const secondMoment = this.accumulatedSecondMoment[i].variable;
+        const firstMoment = requiredKernelEntry(this.accumulatedFirstMoment, i).variable;
+        const secondMoment = requiredKernelEntry(this.accumulatedSecondMoment, i).variable;
 
         const newFirstMoment =
             add(mul(firstMoment, this.beta1), mul(gradient, 1 - this.beta1));

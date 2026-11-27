@@ -46,3 +46,12 @@ describe('conditional branch regression coverage', () => {
         .toThrowError();
   });
 });
+
+
+describe('checked split dimensions', () => {
+  it('preserves a zero-sized axis and rejects missing dimensions', () => {
+    const empty: TensorInfo = {dataId: {}, shape: [0, 3], dtype: 'float32'};
+    expect(prepareSplitSize(empty, 2, 0)).toEqual([0, 0]);
+    expect(() => prepareSplitSize(empty, 2, 2)).toThrowError(/Missing dimension/);
+  });
+});

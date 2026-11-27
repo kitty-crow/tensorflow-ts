@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {requiredKernelEntry} from '../ops/shape_dimension';
+import {requiredNamedEntry} from '../util_base';
 import {ENGINE} from '../engine';
 import {dispose, tidy} from '../globals';
 import {add} from '../ops/add';
@@ -54,7 +56,7 @@ export class MomentumOptimizer extends SGDOptimizer {
         Object.keys(variableGradients);
 
     variableNames.forEach((name, i) => {
-      const value = ENGINE.registeredVariables[name];
+      const value = requiredNamedEntry(ENGINE.registeredVariables, name);
       if (this.accumulations[i] == null) {
         const trainable = false;
         this.accumulations[i] = {
@@ -63,9 +65,9 @@ export class MomentumOptimizer extends SGDOptimizer {
         };
       }
 
-      const accumulation = this.accumulations[i].variable;
+      const accumulation = requiredKernelEntry(this.accumulations, i).variable;
       const gradient = Array.isArray(variableGradients) ?
-          variableGradients[i].tensor :
+          requiredKernelEntry(variableGradients, i).tensor :
           variableGradients[name];
       if (gradient == null) {
         return;

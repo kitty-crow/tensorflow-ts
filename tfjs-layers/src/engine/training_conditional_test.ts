@@ -31,11 +31,11 @@ describe('training conditional regression coverage', () => {
   it('retains shared metric arrays and dictionary output order', () => {
     const shared = ['accuracy'];
     const result = collectMetrics(shared, ['first', 'second']);
-    expect(result[0]).toBe(shared);
-    expect(result[1]).toBe(shared);
+    expect(requiredElement(result, 0)).toBe(shared);
+    expect(requiredElement(result, 1)).toBe(shared);
     const single = collectMetrics('accuracy', ['first', 'second']);
-    expect(single[0]).toBe(single[1]);
-    expect(single[0]).toEqual(['accuracy']);
+    expect(requiredElement(single, 0)).toBe(requiredElement(single, 1));
+    expect(requiredElement(single, 0)).toEqual(['accuracy']);
     expect(collectMetrics({second: 'mse'}, ['first', 'second']))
         .toEqual([[], ['mse']]);
   });

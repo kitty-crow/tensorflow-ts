@@ -733,7 +733,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
     // 100 is the default number of epochs.
     expect(history.epoch.length).toEqual(10);
     for (let i = 0; i < 10; ++i) {
-      expect(history.epoch[i]).toEqual(i);
+      expect(requiredTestElement(history.epoch, i)).toEqual(i);
     }
   });
 
@@ -1087,8 +1087,8 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
             // The 2nd dense layer is never frozen. So its kernel should
             // be updated in every training epoch.
             // TODO(cais): Use `expectArraysNotClose()` when available.
-            expect(tensor1d(layer2KernelValues[epoch])
-                       .sub(tensor1d(layer2KernelValues[epoch - 1]))
+            expect(tensor1d(requiredTestElement(layer2KernelValues, epoch))
+                       .sub(tensor1d(requiredTestElement(layer2KernelValues, epoch - 1)))
                        .abs()
                        .max()
                        .dataSync()[0])
@@ -1099,15 +1099,15 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
           // So its kernel value should not change between epoch === 1 and epoch
           // === 2.
           if (epoch === 2) {
-            expect(tensor1d(layer1KernelValues[epoch])
-                       .sub(tensor1d(layer1KernelValues[epoch - 1]))
+            expect(tensor1d(requiredTestElement(layer1KernelValues, epoch))
+                       .sub(tensor1d(requiredTestElement(layer1KernelValues, epoch - 1)))
                        .abs()
                        .max()
                        .dataSync()[0])
                 .toEqual(0);
           } else if (epoch > 0) {
-            expect(tensor1d(layer1KernelValues[epoch])
-                       .sub(tensor1d(layer1KernelValues[epoch - 1]))
+            expect(tensor1d(requiredTestElement(layer1KernelValues, epoch))
+                       .sub(tensor1d(requiredTestElement(layer1KernelValues, epoch - 1)))
                        .abs()
                        .max()
                        .dataSync()[0])
@@ -1304,7 +1304,7 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
         // assert monotonic assert monotonic decrease in loss value.
         expect(batchEndLosses.length).toEqual(6);
         for (let i = 1; i < batchEndLosses.length; ++i) {
-          expect(batchEndLosses[i]).toBeLessThan(batchEndLosses[i - 1]);
+          expect(requiredTestElement(batchEndLosses, i)).toBeLessThan(requiredTestElement(batchEndLosses, i - 1));
         }
         expect(epochEndLosses.length).toEqual(2);
         expect(requiredTestElement(epochEndLosses, 1)).toBeLessThan(requiredTestElement(epochEndLosses, 0));

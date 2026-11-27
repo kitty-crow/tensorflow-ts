@@ -62,7 +62,7 @@ describe('LazyIterator', () => {
     const result = await readIterator.toArrayForTest();
     expect(result.length).toEqual(100);
     for (let i = 0; i < 100; i++) {
-      expect(result[i]).toEqual(i);
+      expect(fixtureTestUtil.requiredTestElement(result, i)).toEqual(i);
     }
   });
 
@@ -71,7 +71,7 @@ describe('LazyIterator', () => {
     const result = await readIterator.toArrayForTest();
     expect(result.length).toEqual(50);
     for (let i = 0; i < 50; i++) {
-      expect(result[i]).toEqual(2 * i);
+      expect(fixtureTestUtil.requiredTestElement(result, i)).toEqual(2 * i);
     }
   });
 
@@ -80,7 +80,7 @@ describe('LazyIterator', () => {
     const result = await readIterator.toArrayForTest();
     expect(result.length).toEqual(100);
     for (let i = 0; i < 100; i++) {
-      expect(result[i]).toEqual(`item ${i}`);
+      expect(fixtureTestUtil.requiredTestElement(result, i)).toEqual(`item ${i}`);
     }
   });
 
@@ -101,7 +101,7 @@ describe('LazyIterator', () => {
     const result = await readIterator.prefetch(200).toArray();
     expect(result.length).toEqual(100);
     for (let i = 0; i < 100; i++) {
-      expect(result[i]).toEqual(`item ${i}`);
+      expect(fixtureTestUtil.requiredTestElement(result, i)).toEqual(`item ${i}`);
     }
   });
 
@@ -111,9 +111,9 @@ describe('LazyIterator', () => {
     const result = await readStream.toArrayForTest();
     expect(result.length).toEqual(300);
     for (let i = 0; i < 100; i++) {
-      expect(result[3 * i + 0]).toEqual(`item ${i} A`);
-      expect(result[3 * i + 1]).toEqual(`item ${i} B`);
-      expect(result[3 * i + 2]).toEqual(`item ${i} C`);
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 0)).toEqual(`item ${i} A`);
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 1)).toEqual(`item ${i} B`);
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 2)).toEqual(`item ${i} C`);
     }
   });
 
@@ -127,9 +127,9 @@ describe('LazyIterator', () => {
     const result = await readStream.toArrayForTest();
     expect(result.length).toEqual(300);
     for (let i = 0; i < 100; i++) {
-      expect(result[3 * i + 0]).toEqual({foo: `foo ${i} A`, bar: `bar ${i} A`});
-      expect(result[3 * i + 1]).toEqual({foo: `foo ${i} B`, bar: `bar ${i} B`});
-      expect(result[3 * i + 2]).toEqual({foo: `foo ${i} C`, bar: `bar ${i} C`});
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 0)).toEqual({foo: `foo ${i} A`, bar: `bar ${i} A`});
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 1)).toEqual({foo: `foo ${i} B`, bar: `bar ${i} B`});
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 2)).toEqual({foo: `foo ${i} C`, bar: `bar ${i} C`});
     }
   });
 
@@ -143,9 +143,9 @@ describe('LazyIterator', () => {
     const result = await readStream.toArrayForTest();
     expect(result.length).toEqual(300);
     for (let i = 0; i < 100; i++) {
-      expect(result[3 * i + 0]).toEqual([`foo ${i} A`, `bar ${i} A`]);
-      expect(result[3 * i + 1]).toEqual([`foo ${i} B`, `bar ${i} B`]);
-      expect(result[3 * i + 2]).toEqual([`foo ${i} C`, `bar ${i} C`]);
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 0)).toEqual([`foo ${i} A`, `bar ${i} A`]);
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 1)).toEqual([`foo ${i} B`, `bar ${i} B`]);
+      expect(fixtureTestUtil.requiredTestElement(result, 3 * i + 2)).toEqual([`foo ${i} C`, `bar ${i} C`]);
     }
   });
 
@@ -154,7 +154,7 @@ describe('LazyIterator', () => {
     const result = await readIterator.toArrayForTest();
     expect(result.length).toEqual(13);
     for (let i = 0; i < 12; i++) {
-      expect(result[i]).toEqual(Array.from({length: 8}, (v, k) => (i * 8) + k));
+      expect(fixtureTestUtil.requiredTestElement(result, i)).toEqual(Array.from({length: 8}, (v, k) => (i * 8) + k));
     }
     expect(fixtureTestUtil.requiredTestElement(result, 12)).toEqual([96, 97, 98, 99]);
   });
@@ -164,7 +164,7 @@ describe('LazyIterator', () => {
     const result = await readIterator.toArrayForTest();
     expect(result.length).toEqual(13);
     for (let i = 0; i < 12; i++) {
-      expect(result[i]).toEqual(Array.from({length: 8}, (v, k) => (i * 8) + k));
+      expect(fixtureTestUtil.requiredTestElement(result, i)).toEqual(Array.from({length: 8}, (v, k) => (i * 8) + k));
     }
     expect(fixtureTestUtil.requiredTestElement(result, 12)).toEqual([96, 97, 98, 99]);
   });

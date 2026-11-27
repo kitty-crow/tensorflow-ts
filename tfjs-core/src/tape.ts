@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {requiredKernelEntry} from './ops/shape_dimension';
 import {Tensor} from './tensor';
 import {NamedTensorMap} from './tensor_types';
 import * as util from './util';
@@ -48,14 +49,14 @@ export function getFilteredNodesXToY(
   const tensorsFromX: {[tensorId: number]: boolean} = {};
   const nodesFromX: {[nodeId: number]: boolean} = {};
   for (let i = 0; i < xs.length; i++) {
-    tensorsFromX[xs[i].id] = true;
+    tensorsFromX[requiredKernelEntry(xs, i).id] = true;
   }
 
   for (let i = 0; i < tape.length; i++) {
-    const node = tape[i];
+    const node = requiredKernelEntry(tape, i);
     const nodeInputs = node.inputs;
     for (const inputName in nodeInputs) {
-      const input = nodeInputs[inputName];
+      const input = util.requiredNamedEntry(nodeInputs, inputName);
 
       let anyInputFromX = false;
       for (let j = 0; j < xs.length; j++) {
@@ -79,14 +80,14 @@ export function getFilteredNodesXToY(
   const nodesToY: {[nodeId: number]: boolean} = {};
 
   for (let i = tape.length - 1; i >= 0; i--) {
-    const node = tape[i];
+    const node = requiredKernelEntry(tape, i);
     const nodeInputs = node.inputs;
 
     // If any of the outputs lead to y, mark all of the inputs as leading to y.
     for (let j = 0; j < node.outputs.length; j++) {
-      if (tensorsLeadToY[node.outputs[j].id]) {
+      if (tensorsLeadToY[requiredKernelEntry(node.outputs, j).id]) {
         for (const inputName in nodeInputs) {
-          tensorsLeadToY[nodeInputs[inputName].id] = true;
+          tensorsLeadToY[util.requiredNamedEntry(nodeInputs, inputName).id] = true;
           nodesToY[node.id] = true;
         }
         break;
@@ -97,14 +98,14 @@ export function getFilteredNodesXToY(
   // Return the paths that come from x and lead to y.
   const filteredTape: TapeNode[] = [];
   for (let i = 0; i < tape.length; i++) {
-    const node = tape[i];
+    const node = requiredKernelEntry(tape, i);
 
     if (!(nodesFromX[node.id] && nodesToY[node.id])) continue;
     {
       // Prune the inputs from the node that aren't a function of x.
       const prunedInputs: {[inputName: string]: Tensor} = {};
       for (const inputName in node.inputs) {
-        const nodeInput = node.inputs[inputName];
+        const nodeInput = util.requiredNamedEntry(node.inputs, inputName);
         if (tensorsFromX[nodeInput.id]) {
           prunedInputs[inputName] = nodeInput;
         }
@@ -135,7 +136,7 @@ export function backpropagateGradients(
     add: (a: Tensor, b: Tensor) => Tensor) {
   // Walk the tape backward and keep a map of Tensor to its gradient.
   for (let i = filteredTape.length - 1; i >= 0; i--) {
-    const node = filteredTape[i];
+    const node = requiredKernelEntry(filteredTape, i);
 
     const dys: Tensor[] = [];
     node.outputs.forEach(o => {
@@ -166,14 +167,15 @@ export function backpropagateGradients(
       }
 
       // Call the gradient function.
-      const dx = tidy(() => inputGradients[inputName]());
+      const gradient = util.requiredNamedEntry(inputGradients, inputName);
+      const dx = tidy(() => gradient.call(inputGradients));
       if (dx.dtype !== 'float32') {
         throw new Error(
             `Error in gradient for op ${
                 node.kernelName}. The gradient of input ` +
             `${inputName} must have 'float32' dtype, but has '${dx.dtype}'`);
       }
-      const x = node.inputs[inputName];
+      const x = util.requiredNamedEntry(node.inputs, inputName);
       if (!util.arraysEqual(dx.shape, x.shape)) {
         throw new Error(
             `Error in gradient for op ${
@@ -182,10 +184,10 @@ export function backpropagateGradients(
             `the shape of the input '${x.shape}'`);
       }
 
-      if (tensorAccumulatedGradientMap[x.id] == null) {
+      const curGradient = tensorAccumulatedGradientMap[x.id];
+      if (curGradient == null) {
         tensorAccumulatedGradientMap[x.id] = dx;
       } else {
-        const curGradient = tensorAccumulatedGradientMap[x.id];
         tensorAccumulatedGradientMap[x.id] = add(curGradient, dx);
         curGradient.dispose();
       }

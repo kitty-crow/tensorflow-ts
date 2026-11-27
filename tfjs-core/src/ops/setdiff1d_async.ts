@@ -18,6 +18,7 @@ import {Tensor, TensorBuffer} from '../tensor';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
+import {requiredKernelEntry} from './shape_dimension';
 
 /**
  * Computes the difference between two lists of numbers.
@@ -70,7 +71,7 @@ async function setdiff1dAsync_(
 
   let outputSize = 0;
   for (let i = 0; i < xVals.length; i++) {
-    if (!ySet.has(xVals[i])) {
+    if (!ySet.has(requiredKernelEntry(xVals, i))) {
       outputSize++;
     }
   }
@@ -78,8 +79,8 @@ async function setdiff1dAsync_(
   const buffer = new TensorBuffer([outputSize], $x.dtype);
   const indices = new TensorBuffer([outputSize], 'int32');
   for (let i = 0, p = 0; i < xVals.length; i++) {
-    if (!ySet.has(xVals[i])) {
-      buffer.values[p] = xVals[i];
+    if (!ySet.has(requiredKernelEntry(xVals, i))) {
+      buffer.values[p] = requiredKernelEntry(xVals, i);
       indices.values[p] = i;
       p++;
     }

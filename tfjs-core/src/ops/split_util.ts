@@ -17,6 +17,7 @@
 import { TensorInfo } from '../tensor_info';
 import {Tensor} from '../tensor';
 import {assert} from '../util';
+import {requiredDimension} from './shape_dimension';
 
 /**
  * Prepare the split size array. When the input is a number, the axis is evenly
@@ -28,10 +29,10 @@ export function prepareSplitSize(
     axis = 0): number[] {
   if (typeof numOrSizeSplits === 'number') {
     assert(
-        x.shape[axis] % numOrSizeSplits === 0,
+        requiredDimension(x.shape, axis) % numOrSizeSplits === 0,
         () => 'Number of splits must evenly divide the axis.');
     return new Array<number>(numOrSizeSplits)
-        .fill(x.shape[axis] / numOrSizeSplits);
+        .fill(requiredDimension(x.shape, axis) / numOrSizeSplits);
   }
 
   const numOfNegs = numOrSizeSplits.reduce((count, value) => {
@@ -48,10 +49,10 @@ export function prepareSplitSize(
   // of dimension is allocated to that split.
   if (negIndex !== -1) {
     const total = numOrSizeSplits.reduce((a, b) => b > 0 ? a + b : a);
-    numOrSizeSplits[negIndex] = x.shape[axis] - total;
+    numOrSizeSplits[negIndex] = requiredDimension(x.shape, axis) - total;
   }
   assert(
-      x.shape[axis] === numOrSizeSplits.reduce((a, b) => a + b),
+      requiredDimension(x.shape, axis) === numOrSizeSplits.reduce((a, b) => a + b),
       () => 'The sum of sizes must match the size of the axis dimension.');
   return numOrSizeSplits;
 }

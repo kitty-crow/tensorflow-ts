@@ -19,6 +19,7 @@ import * as seedrandom from 'seedrandom';
 
 import {expectNumbersClose, testEpsilon} from '../test_util';
 import {TypedArray} from '../types';
+import {requiredNumericEntry} from '../util_base';
 
 export interface RandomBase {
   nextValue(): number;
@@ -245,7 +246,7 @@ export function expectArrayInMeanStdRange(
 function mean(values: TypedArray|number[]) {
   let sum = 0;
   for (let i = 0; i < values.length; i++) {
-    sum += values[i];
+    sum += requiredNumericEntry(values, i);
   }
   return sum / values.length;
 }
@@ -253,7 +254,7 @@ function mean(values: TypedArray|number[]) {
 function standardDeviation(values: TypedArray|number[], mean: number) {
   let squareDiffSum = 0;
   for (let i = 0; i < values.length; i++) {
-    const diff = values[i] - mean;
+    const diff = requiredNumericEntry(values, i) - mean;
     squareDiffSum += diff * diff;
   }
   return Math.sqrt(squareDiffSum / values.length);
@@ -266,7 +267,7 @@ function kurtosis(values: TypedArray|number[]) {
   let sum2 = 0;
   let sum4 = 0;
   for (let i = 0; i < n; i++) {
-    const v = values[i] - valuesMean;
+    const v = requiredNumericEntry(values, i) - valuesMean;
     sum2 += Math.pow(v, 2);
     sum4 += Math.pow(v, 4);
   }
@@ -280,7 +281,7 @@ function skewness(values: TypedArray|number[]) {
   let sum2 = 0;
   let sum3 = 0;
   for (let i = 0; i < n; i++) {
-    const v = values[i] - valuesMean;
+    const v = requiredNumericEntry(values, i) - valuesMean;
     sum2 += Math.pow(v, 2);
     sum3 += Math.pow(v, 3);
   }

@@ -432,16 +432,16 @@ describeAllEnvs('Dataset', () => {
     const bds = ds.batch(8);
     const batchIterator = await bds.iterator();
     const result = await batchIterator.toArrayForTest();
-    const lastBatch = result[result.length - 1] as TensorContainerObject;
-    expect((lastBatch['number'] as tf.Tensor).shape).toEqual([4]);
-    expect((lastBatch['numberArray'] as tf.Tensor).shape).toEqual([4, 3]);
-    expect((lastBatch['Tensor'] as tf.Tensor).shape).toEqual([4, 3]);
-    expect((lastBatch['Tensor2'] as tf.Tensor).shape).toEqual([4, 2, 2]);
-    expect((lastBatch['string'] as tf.Tensor).shape).toEqual([4]);
+    const lastBatch = tf.test_util.requiredTestElement(result, result.length - 1) as TensorContainerObject;
+    expect((tf.test_util.requiredTestEntry(lastBatch, 'number') as tf.Tensor).shape).toEqual([4]);
+    expect((tf.test_util.requiredTestEntry(lastBatch, 'numberArray') as tf.Tensor).shape).toEqual([4, 3]);
+    expect((tf.test_util.requiredTestEntry(lastBatch, 'Tensor') as tf.Tensor).shape).toEqual([4, 3]);
+    expect((tf.test_util.requiredTestEntry(lastBatch, 'Tensor2') as tf.Tensor).shape).toEqual([4, 2, 2]);
+    expect((tf.test_util.requiredTestEntry(lastBatch, 'string') as tf.Tensor).shape).toEqual([4]);
 
     const expectedNumberLastBatch = tf.tensor1d([96, 97, 98, 99]);
     tf.test_util.expectArraysClose(
-        await (lastBatch['number'] as tf.Tensor).array(),
+        await (tf.test_util.requiredTestEntry(lastBatch, 'number') as tf.Tensor).array(),
         await expectedNumberLastBatch.array());
 
     const expectedNumberArrayLastBatch = tf.tensor2d(
@@ -451,7 +451,7 @@ describeAllEnvs('Dataset', () => {
         ],
         [4, 3]);
     tf.test_util.expectArraysClose(
-        await (lastBatch['numberArray'] as tf.Tensor).array(),
+        await (tf.test_util.requiredTestEntry(lastBatch, 'numberArray') as tf.Tensor).array(),
         await expectedNumberArrayLastBatch.array());
 
     const expectedTensorLastBatch = tf.tensor2d(
@@ -461,7 +461,7 @@ describeAllEnvs('Dataset', () => {
         ],
         [4, 3]);
     tf.test_util.expectArraysClose(
-        await (lastBatch['Tensor'] as tf.Tensor).array(),
+        await (tf.test_util.requiredTestEntry(lastBatch, 'Tensor') as tf.Tensor).array(),
         await expectedTensorLastBatch.array());
 
     const expectedTensor2LastBatch = tf.tensor3d(
@@ -473,13 +473,13 @@ describeAllEnvs('Dataset', () => {
         ],
         [4, 2, 2]);
     tf.test_util.expectArraysClose(
-        await (lastBatch['Tensor2'] as tf.Tensor).array(),
+        await (tf.test_util.requiredTestEntry(lastBatch, 'Tensor2') as tf.Tensor).array(),
         await expectedTensor2LastBatch.array());
 
     const expectedStringLastBatch =
         tf.tensor1d(['Item 96', 'Item 97', 'Item 98', 'Item 99']);
     tf.test_util.expectArraysEqual(
-        await (lastBatch['string'] as tf.Tensor).array(),
+        await (tf.test_util.requiredTestEntry(lastBatch, 'string') as tf.Tensor).array(),
         await expectedStringLastBatch.array());
 
     tf.dispose(result);

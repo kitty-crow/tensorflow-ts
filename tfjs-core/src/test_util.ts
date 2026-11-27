@@ -120,8 +120,8 @@ function expectArraysPredicate(
         `Expected: ${expectedFlat}.`);
   }
   for (let i = 0; i < expectedFlat.length; ++i) {
-    const a = actualFlat[i];
-    const e = expectedFlat[i];
+    const a = requiredTestElement(actualFlat, i);
+    const e = requiredTestElement(expectedFlat, i);
 
     if (!predicate(a, e)) {
       throw new Error(
@@ -186,9 +186,10 @@ function areClose(a: number, e: number, epsilon: number): boolean {
 export function expectValuesInRange(
     actual: TypedArray|number[], low: number, high: number) {
   for (let i = 0; i < actual.length; i++) {
-    if (actual[i] < low || actual[i] > high) {
+    const value = requiredTestElement(actual, i);
+    if (value < low || value > high) {
       throw new Error(
-          `Value out of range:${actual[i]} low: ${low}, high: ${high}`);
+          `Value out of range:${value} low: ${low}, high: ${high}`);
     }
   }
 }
@@ -206,10 +207,12 @@ export function expectArrayBuffersEqual(
   }
 
   for (let i = 0; i < expectedArray.length; i++) {
-    if (actualArray[i] !== expectedArray[i]) {
+    const actualValue = requiredTestElement(actualArray, i);
+    const expectedValue = requiredTestElement(expectedArray, i);
+    if (actualValue !== expectedValue) {
       throw new Error(
           `Expected ArrayBuffer value at ${i} to be ` +
-          `${expectedArray[i]} but got ${actualArray[i]} instead`);
+          `${expectedValue} but got ${actualValue} instead`);
     }
   }
 }

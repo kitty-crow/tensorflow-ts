@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {requiredKernelEntry} from '../ops/shape_dimension';
+import {requiredNamedEntry} from '../util_base';
 import {ENGINE} from '../engine';
 import {dispose, tidy} from '../globals';
 import {add} from '../ops/add';
@@ -51,7 +53,7 @@ export class AdagradOptimizer extends Optimizer {
         Object.keys(variableGradients);
 
     variableNames.forEach((name, i) => {
-      const value = ENGINE.registeredVariables[name];
+      const value = requiredNamedEntry(ENGINE.registeredVariables, name);
       if (this.accumulatedGrads[i] == null) {
         const trainable = false;
         this.accumulatedGrads[i] = {
@@ -63,13 +65,13 @@ export class AdagradOptimizer extends Optimizer {
       }
 
       const gradient = Array.isArray(variableGradients) ?
-          variableGradients[i].tensor :
+          requiredKernelEntry(variableGradients, i).tensor :
           variableGradients[name];
       if (gradient == null) {
         return;
       }
 
-      const accumulatedGrad = this.accumulatedGrads[i].variable;
+      const accumulatedGrad = requiredKernelEntry(this.accumulatedGrads, i).variable;
 
       tidy(() => {
         const newAccumulatedGrad = add(accumulatedGrad, square(gradient));

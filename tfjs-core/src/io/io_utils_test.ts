@@ -19,7 +19,7 @@ import * as tf from '../index';
 import {ALL_ENVS, BROWSER_ENVS, describeWithFlags} from '../jasmine_util';
 import {scalar, tensor1d, tensor2d} from '../ops/ops';
 import {NamedTensor, NamedTensorMap} from '../tensor_types';
-import {expectArraysEqual} from '../test_util';
+import {expectArraysEqual, requiredTestEntry} from '../test_util';
 import {expectArraysClose} from '../test_util';
 import {encodeString} from '../util';
 
@@ -560,12 +560,12 @@ describeWithFlags('decodeWeights', {}, () => {
         ];
         const data = new Uint8Array([0, 48, 255, 0, 48, 255]);
         const decoded = await decode(data.buffer, manifestSpecs);
-        const weight0 = decoded['weight0'];
+        const weight0 = requiredTestEntry(decoded, 'weight0');
         expectArraysClose(await weight0.data(), [-1, 3.8, 24.5]);
         expect(weight0.shape).toEqual([3]);
         expect(weight0.dtype).toEqual('float32');
 
-        const weight1 = decoded['weight1'];
+        const weight1 = requiredTestEntry(decoded, 'weight1');
         expectArraysEqual(await weight1.data(), [-1, 4, 25]);
         expect(weight1.shape).toEqual([3]);
         expect(weight1.dtype).toEqual('int32');
@@ -588,12 +588,12 @@ describeWithFlags('decodeWeights', {}, () => {
         ];
         const data = new Uint16Array([0, 48, 255, 0, 48, 255]);
         const decoded = await decode(data.buffer, manifestSpecs);
-        const weight0 = decoded['weight0'];
+        const weight0 = requiredTestEntry(decoded, 'weight0');
         expectArraysClose(await weight0.data(), [-1, 3.8, 24.5]);
         expect(weight0.shape).toEqual([3]);
         expect(weight0.dtype).toEqual('float32');
 
-        const weight1 = decoded['weight1'];
+        const weight1 = requiredTestEntry(decoded, 'weight1');
         expectArraysEqual(await weight1.data(), [-1, 4, 25]);
         expect(weight1.shape).toEqual([3]);
         expect(weight1.dtype).toEqual('int32');
@@ -609,7 +609,7 @@ describeWithFlags('decodeWeights', {}, () => {
         ];
         const data = new Uint16Array([13312, 14336, 14848]);
         const decoded = await decode(data.buffer, manifestSpecs);
-        const weight0 = decoded['weight0'];
+        const weight0 = requiredTestEntry(decoded, 'weight0');
         expectArraysClose(await weight0.data(), [0.25, 0.5, 0.75]);
         expect(weight0.shape).toEqual([3]);
         expect(weight0.dtype).toEqual('float32');

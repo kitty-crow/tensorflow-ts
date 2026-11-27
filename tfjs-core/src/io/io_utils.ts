@@ -19,7 +19,7 @@ import {complex} from '../ops/complex';
 import {tensor} from '../ops/tensor';
 import {NamedTensor, NamedTensorMap} from '../tensor_types';
 import {TypedArray} from '../types';
-import {sizeFromShape} from '../util';
+import {requiredNumericEntry, sizeFromShape} from '../util';
 
 import {DTYPE_VALUE_SIZE_MAP, ModelArtifacts, ModelArtifactsInfo, ModelJSON, WeightData, WeightGroup, WeightsManifestConfig, WeightsManifestEntry} from './types';
 import {CompositeArrayBuffer} from './composite_array_buffer';
@@ -215,7 +215,7 @@ function decodeWeight(
         if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
           values = new Float32Array(quantizedArray.length);
           for (let i = 0; i < quantizedArray.length; i++) {
-            const v = quantizedArray[i];
+            const v = requiredNumericEntry(quantizedArray, i);
             values[i] = v * quantization.scale + quantization.min;
           }
         } else if (quantization.dtype === 'float16') {
@@ -237,7 +237,7 @@ function decodeWeight(
         }
         values = new Int32Array(quantizedArray.length);
         for (let i = 0; i < quantizedArray.length; i++) {
-          const v = quantizedArray[i];
+          const v = requiredNumericEntry(quantizedArray, i);
           values[i] = Math.round(v * quantization.scale + quantization.min);
         }
         break;
@@ -279,8 +279,8 @@ function decodeWeight(
         const real = new Float32Array(values.length / 2);
         const image = new Float32Array(values.length / 2);
         for (let i = 0; i < real.length; i++) {
-          real[i] = values[i * 2];
-          image[i] = values[i * 2 + 1];
+          real[i] = requiredNumericEntry(values, i * 2);
+          image[i] = requiredNumericEntry(values, i * 2 + 1);
         }
         const realTensor = tensor(real, shape, 'float32');
         const imageTensor = tensor(image, shape, 'float32');
@@ -436,7 +436,7 @@ export function arrayBufferToBase64String(buffer: ArrayBuffer): string {
   const buf = new Uint8Array(buffer);
   let s = '';
   for (let i = 0, l = buf.length; i < l; i++) {
-    s += String.fromCharCode(buf[i]);
+    s += String.fromCharCode(requiredNumericEntry(buf, i));
   }
   return btoa(s);
 }
@@ -739,10 +739,11 @@ export function getFloat16Decoder(): (buffer: Uint16Array) => Float32Array {
     const buffer = new ArrayBuffer(4 * quantizedArray.length);
     const bufferUint32View = new Uint32Array(buffer);
     for (let index = 0; index < quantizedArray.length; index++) {
-      const float16Bits = quantizedArray[index];
+      const float16Bits = requiredNumericEntry(quantizedArray, index);
       const float32Bits =
-          mantisaTable[offsetTable[float16Bits >> 10] + (float16Bits & 0x3ff)] +
-          exponentTable[float16Bits >> 10];
+          requiredNumericEntry(mantisaTable,
+              requiredNumericEntry(offsetTable, float16Bits >> 10) + (float16Bits & 0x3ff)) +
+          requiredNumericEntry(exponentTable, float16Bits >> 10);
       bufferUint32View[index] = float32Bits;
     }
     return new Float32Array(buffer);

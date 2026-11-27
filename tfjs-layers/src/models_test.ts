@@ -1373,7 +1373,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     expect(optimizer2Weights.length).toEqual(optimizer1Weights.length);
     for (let i = 0; i < optimizer1Weights.length; ++i) {
       expectTensorsClose(
-          optimizer2Weights[i].tensor, optimizer1Weights[i].tensor);
+          requiredTestElement(optimizer2Weights, i).tensor, requiredTestElement(optimizer1Weights, i).tensor);
     }
 
     // Call fit() on the loaded model and assert that the effect is the
@@ -1434,7 +1434,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     expect(optimizer2Weights.length).toEqual(optimizer1Weights.length);
     for (let i = 0; i < optimizer1Weights.length; ++i) {
       expectTensorsClose(
-          optimizer2Weights[i].tensor, optimizer1Weights[i].tensor);
+          requiredTestElement(optimizer2Weights, i).tensor, requiredTestElement(optimizer1Weights, i).tensor);
     }
 
     // Call fit() on the loaded model and assert that the effect is the
@@ -1493,7 +1493,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     expect(optimizer2Weights.length).toEqual(optimizer1Weights.length);
     for (let i = 0; i < optimizer1Weights.length; ++i) {
       expectTensorsClose(
-          optimizer2Weights[i].tensor, optimizer1Weights[i].tensor);
+          requiredTestElement(optimizer2Weights, i).tensor, requiredTestElement(optimizer1Weights, i).tensor);
     }
 
     // Call fit() on the loaded model and assert that the effect is the
@@ -1553,7 +1553,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     expect(optimizer2Weights.length).toEqual(optimizer1Weights.length);
     for (let i = 0; i < optimizer1Weights.length; ++i) {
       expectTensorsClose(
-          optimizer2Weights[i].tensor, optimizer1Weights[i].tensor);
+          requiredTestElement(optimizer2Weights, i).tensor, requiredTestElement(optimizer1Weights, i).tensor);
     }
 
     // Call fit() on the loaded model and assert that the effect is the
@@ -1616,7 +1616,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     expect(optimizer2Weights.length).toEqual(optimizer1Weights.length);
     for (let i = 0; i < optimizer1Weights.length; ++i) {
       expectTensorsClose(
-          optimizer2Weights[i].tensor, optimizer1Weights[i].tensor);
+          requiredTestElement(optimizer2Weights, i).tensor, requiredTestElement(optimizer1Weights, i).tensor);
     }
 
     // Call fit() on the loaded model and assert that the effect is the
@@ -1673,7 +1673,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     expect(optimizer2Weights.length).toEqual(optimizer1Weights.length);
     for (let i = 0; i < optimizer1Weights.length; ++i) {
       expectTensorsClose(
-          optimizer2Weights[i].tensor, optimizer1Weights[i].tensor);
+          requiredTestElement(optimizer2Weights, i).tensor, requiredTestElement(optimizer1Weights, i).tensor);
     }
 
     // Call fit() on the loaded model and assert that the effect is the
@@ -1731,7 +1731,7 @@ describeMathCPUAndWebGL2('Saving+loading model with optimizer', () => {
     expect(optimizer2Weights.length).toEqual(optimizer1Weights.length);
     for (let i = 0; i < optimizer1Weights.length; ++i) {
       expectTensorsClose(
-          optimizer2Weights[i].tensor, optimizer1Weights[i].tensor);
+          requiredTestElement(optimizer2Weights, i).tensor, requiredTestElement(optimizer1Weights, i).tensor);
     }
 
     // Call fit() on the loaded model and assert that the effect is the

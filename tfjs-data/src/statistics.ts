@@ -155,19 +155,19 @@ export async function computeDatasetStatistics(
       let combinedVariance = 0;
 
       if (value instanceof tf.Tensor) {
-        recordMin = min(value).dataSync()[0];
-        recordMax = max(value).dataSync()[0];
+        recordMin = tf.util.requiredNumericEntry(min(value).dataSync(), 0);
+        recordMax = tf.util.requiredNumericEntry(max(value).dataSync(), 0);
         const valueMoment = tf.moments(value);
-        valueMean = valueMoment.mean.dataSync()[0];
-        valueVariance = valueMoment.variance.dataSync()[0];
+        valueMean = tf.util.requiredNumericEntry(valueMoment.mean.dataSync(), 0);
+        valueVariance = tf.util.requiredNumericEntry(valueMoment.variance.dataSync(), 0);
         valueLength = value.size;
 
       } else if (value instanceof Array) {
         recordMin = value.reduce((a, b) => Math.min(a, b));
         recordMax = value.reduce((a, b) => Math.max(a, b));
         const valueMoment = tf.moments(value);
-        valueMean = valueMoment.mean.dataSync()[0];
-        valueVariance = valueMoment.variance.dataSync()[0];
+        valueMean = tf.util.requiredNumericEntry(valueMoment.mean.dataSync(), 0);
+        valueVariance = tf.util.requiredNumericEntry(valueMoment.variance.dataSync(), 0);
         valueLength = value.length;
 
       } else if (!isNaN(value) && isFinite(value)) {
@@ -200,7 +200,7 @@ export async function computeDatasetStatistics(
   });
   // Variance and stddev should be NaN for the case of a single element.
   for (const key in result) {
-    const stat: NumericColumnStatistics = result[key];
+    const stat = tf.util.requiredNamedEntry(result, key);
     if (stat.length === 1) {
       stat.variance = NaN;
       stat.stddev = NaN;

@@ -20,7 +20,7 @@ import * as tf from './index';
 import {ALL_ENVS, describeWithFlags} from './jasmine_util';
 import {zerosLike} from './ops/ops';
 import {backpropagateGradients, getFilteredNodesXToY, TapeNode} from './tape';
-import {expectArraysClose, requiredTestElement} from './test_util';
+import {expectArraysClose, requiredTestElement, requiredTestEntry} from './test_util';
 
 describeWithFlags('getFilteredNodesXToY', ALL_ENVS, () => {
   it('no paths from x to y', () => {
@@ -256,7 +256,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
 
     const dy = tf.scalar(1);
 
-    const accumulatedGradientsMap: {[tensorId: number]: tf.Tensor} = {};
+    const accumulatedGradientsMap: {[tensorId: string]: tf.Tensor} = {};
     accumulatedGradientsMap[y.id] = dy;
 
     const tape: TapeNode[] = [
@@ -276,7 +276,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
 
     const dy = tf.scalar(1);
 
-    const accumulatedGradientsMap: {[tensorId: number]: tf.Tensor} = {};
+    const accumulatedGradientsMap: {[tensorId: string]: tf.Tensor} = {};
     accumulatedGradientsMap[y.id] = dy;
 
     const tape: TapeNode[] = [{
@@ -293,7 +293,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
         accumulatedGradientsMap, tape, f => tf.tidy(f as ScopeFn<tf.Tensor>),
         add);
 
-    expectArraysClose(await accumulatedGradientsMap[x.id].data(), [2]);
+    expectArraysClose(await requiredTestEntry(accumulatedGradientsMap, String(x.id)).data(), [2]);
   });
 
   it('basic backprop with 2 nodes', async () => {
@@ -303,7 +303,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
 
     const dy = tf.scalar(1);
 
-    const accumulatedGradientsMap: {[tensorId: number]: tf.Tensor} = {};
+    const accumulatedGradientsMap: {[tensorId: string]: tf.Tensor} = {};
     accumulatedGradientsMap[y.id] = dy;
 
     const tape: TapeNode[] = [
@@ -332,7 +332,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
         add);
 
     // dx = dy + 1 + 1
-    expectArraysClose(await accumulatedGradientsMap[x.id].data(), [3]);
+    expectArraysClose(await requiredTestEntry(accumulatedGradientsMap, String(x.id)).data(), [3]);
   });
 
   it('basic backprop with a split node accumulates gradients', async () => {
@@ -343,7 +343,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
 
     const dy = tf.scalar(1);
 
-    const accumulatedGradientsMap: {[tensorId: number]: tf.Tensor} = {};
+    const accumulatedGradientsMap: {[tensorId: string]: tf.Tensor} = {};
     accumulatedGradientsMap[y.id] = dy;
 
     const tape: TapeNode[] = [
@@ -385,7 +385,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
 
     // dx = dy + 1 + 1 + 1 + 1 + 1
     expectArraysClose(
-        await accumulatedGradientsMap[x.id].data(), [(await dy.data())[0] + 5]);
+        await requiredTestEntry(accumulatedGradientsMap, String(x.id)).data(), [(await dy.data())[0] + 5]);
   });
 
   it('backprop over 1 node with 3 outputs, w.r.t to the 2nd output',
@@ -395,7 +395,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
        const y2 = tf.scalar(1);
        const y3 = tf.scalar(1);
 
-       const accumulatedGradientsMap: {[tensorId: number]: tf.Tensor} = {};
+       const accumulatedGradientsMap: {[tensorId: string]: tf.Tensor} = {};
        // Backproping through the 2nd output.
        const dy2 = tf.scalar(5);
        accumulatedGradientsMap[y2.id] = dy2;
@@ -415,7 +415,7 @@ describeWithFlags('backpropagateGradients', ALL_ENVS, () => {
        backpropagateGradients(
            accumulatedGradientsMap, tape, f => tf.tidy(f as ScopeFn<tf.Tensor>),
            add);
-       expectArraysClose(await accumulatedGradientsMap[x.id].data(), [0, 5, 0]);
+       expectArraysClose(await requiredTestEntry(accumulatedGradientsMap, String(x.id)).data(), [0, 5, 0]);
        expectArraysClose(await requiredTestElement(dys, 0).data(), [0]);
        expectArraysClose(await requiredTestElement(dys, 1).data(), [5]);
        expectArraysClose(await requiredTestElement(dys, 2).data(), [0]);
