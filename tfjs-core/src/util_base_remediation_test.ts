@@ -20,7 +20,7 @@ import './base_side_effects';
 
 import {flatten} from './util';
 import {env} from './environment';
-import {concatenateTypedArrays, decodeWeights} from './io/io_utils';
+import {basename, concatenateTypedArrays, decodeWeights} from './io/io_utils';
 import {requiredTestEntry, requiredTestValue} from './test_util';
 import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
 
@@ -197,5 +197,20 @@ describe('weight byte and metadata validation', () => {
       name: 'missingScale', shape: [1], dtype: 'int32',
       quantization: {dtype: 'uint16', min: 0, scale: undefined}
     }])).toThrowError(/min and scale/);
+  });
+});
+
+
+describe('weight framing and basename regressions', () => {
+  it('rejects a missing string length prefix before decoding a tensor', () => {
+    expect(() => decodeWeights(new ArrayBuffer(0), [{
+      name: 'missingLength', shape: [1], dtype: 'string'
+    }])).toThrowError();
+  });
+  it('retains path trimming, root and trailing separator behavior', () => {
+    expect(basename(' /a/b/// ')).toBe('b');
+    expect(basename('/')).toBe('');
+    expect(basename('')).toBe('');
+    expect(basename('plain')).toBe('plain');
   });
 });

@@ -12,6 +12,7 @@ import {Rank, Tensor} from '@tensorflow/tfjs-core';
 import {BaseLogger, History} from '../base_callbacks';
 import {getSourceInputs} from './topology';
 import {disposeTensorsInLogs, resolveScalarsInLogs, UnresolvedLogs} from '../logs';
+import {analyzeEinsumString} from '../layers/nlp/einsum_dense';
 import {BytePairTokenizerCache, StaticHashTable} from '../layers/nlp/tokenizers_utils';
 import '@tensorflow/tfjs-core/dist/public/chained_ops/register_all_chained_ops';
 import '../flags_layers';
@@ -328,5 +329,21 @@ describe('checked training log and source graph contracts', () => {
     const output = requiredElement(model.outputs, 0);
     expect(getSourceInputs(output)).toEqual([input]);
     expect(getSourceInputs(input)).toEqual([input]);
+  });
+});
+
+
+describe('einsum shape indexing', () => {
+  it('preserves symbolic dimensions and leading or trailing ellipses', () => {
+    expect(analyzeEinsumString('...b,bc->...c', 'c', [null, null, 32], [64]))
+        .toEqual([[32, 64], [64], [null, null, 64]]);
+    expect(analyzeEinsumString('bc...,cde->bde...', 'e', [null, 1, 2], [3, 4]))
+        .toEqual([[1, 3, 4], [4, 1], [null, 3, 4, 2]]);
+    expect(analyzeEinsumString('ab,bc->ac', null, [null, 0], [4]))
+        .toEqual([[0, 4], null, [null, 4]]);
+  });
+  it('rejects a required missing input dimension', () => {
+    expect(() => analyzeEinsumString('ab,bc->ac', null, [null], [4]))
+        .toThrowError(/Missing einsum dimension/);
   });
 });

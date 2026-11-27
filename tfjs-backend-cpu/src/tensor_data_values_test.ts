@@ -56,6 +56,9 @@ import {resizeNearestNeighborGrad} from './kernels/ResizeNearestNeighborGrad';
 import {nonMaxSuppressionV3} from './kernels/NonMaxSuppressionV3';
 import {nonMaxSuppressionV4} from './kernels/NonMaxSuppressionV4';
 import {nonMaxSuppressionV5} from './kernels/NonMaxSuppressionV5';
+import {dilation2DConfig} from './kernels/Dilation2D';
+import {dilation2DBackpropInputConfig} from './kernels/Dilation2DBackpropInput';
+import {dilation2DBackpropFilterConfig} from './kernels/Dilation2DBackpropFilter';
 
 import {stringNGramsImpl} from './kernels/StringNGrams_impl';
 import {stringSplitImpl} from './kernels/StringSplit_impl';
@@ -637,4 +640,50 @@ describe('typed CPU reduction result paths', () => {
     backend.disposeData(x.dataId);
     expect(backend.numDataIds()).toBe(0);
   });
+});
+
+describe('shared CPU dilation maximum and gradient dispatch', () => {
+  const cases = [
+    {
+      name: 'retains the first tied maximum',
+      inputShape: [1, 2, 2, 1], input: [2, 2, 1, 0],
+      filterShape: [2, 2, 1], filter: [0, 0, 0, 0],
+      outputShape: [1, 1, 1, 1], dy: [3], pad: 'valid',
+      output: [2], dx: [3, 0, 0, 0], df: [3, 0, 0, 0]
+    },
+    {
+      name: 'accumulates repeated maxima with asymmetric padding',
+      inputShape: [1, 1, 3, 1], input: [1, 3, 2],
+      filterShape: [1, 2, 1], filter: [0, 0],
+      outputShape: [1, 1, 3, 1], dy: [1, 2, 3], pad: 'same',
+      output: [3, 3, 2], dx: [0, 3, 3], df: [5, 1]
+    }
+  ];
+  for (const testCase of cases) {
+    it(testCase.name, () => {
+      const backend = new MathBackendCPU();
+      const x = backend.makeTensorInfo(testCase.inputShape, 'float32',
+          new Float32Array(testCase.input));
+      const filter = backend.makeTensorInfo(testCase.filterShape, 'float32',
+          new Float32Array(testCase.filter));
+      const dy = backend.makeTensorInfo(testCase.outputShape, 'float32',
+          new Float32Array(testCase.dy));
+      const attrs = {strides: 1, pad: testCase.pad, dilations: 1};
+      const forward = dilation2DConfig.kernelFunc({inputs: {x, filter}, backend, attrs});
+      const inputs = {x, filter, dy: {...dy, rank: 4}};
+      const dx = dilation2DBackpropInputConfig.kernelFunc({inputs, backend, attrs});
+      const df = dilation2DBackpropFilterConfig.kernelFunc({inputs, backend, attrs});
+      if (Array.isArray(forward) || Array.isArray(dx) || Array.isArray(df)) {
+        throw new Error('Dilation kernels must return a single tensor.');
+      }
+      expect(forward.shape).toEqual(testCase.outputShape);
+      expect(dx.shape).toEqual(x.shape);
+      expect(df.shape).toEqual(filter.shape);
+      expect(backend.readSync(forward.dataId)).toEqual(new Float32Array(testCase.output));
+      expect(backend.readSync(dx.dataId)).toEqual(new Float32Array(testCase.dx));
+      expect(backend.readSync(df.dataId)).toEqual(new Float32Array(testCase.df));
+      [x, filter, dy, forward, dx, df].forEach(t => backend.disposeData(t.dataId));
+      expect(backend.numDataIds()).toBe(0);
+    });
+  }
 });

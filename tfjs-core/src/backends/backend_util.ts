@@ -65,3 +65,5 @@ export function fromStringArrayToUint8(strings: string[]) {
 }
 
 export {requiredDimension, matrixDimensions, imageDimensions, depthToSpaceOutputShape, requiredKernelEntry, permutedShape, unpackShape} from '../ops/shape_dimension';
+
+export {pixelBytes, pixelGeometry} from '../ops/pixel_util';

@@ -16,6 +16,7 @@
  */
 
 import * as axis from './axis_util';
+import {pixelBytes, pixelGeometry} from './pixel_util';
 import * as complexUtil from '../backends/complex_util';
 import {nonMaxSuppressionV3Impl, nonMaxSuppressionV5Impl} from '../backends/non_max_suppression_impl';
 import {fingerPrint64, hexToLong} from '../hash_util';
@@ -220,5 +221,31 @@ describe('shared backend shape transformations', () => {
     expect(requiredKernelEntry([0, NaN], 0)).toBe(0);
     expect(Number.isNaN(requiredKernelEntry([0, NaN], 1))).toBe(true);
     expect(() => requiredKernelEntry([], 0)).toThrowError();
+  });
+});
+
+describe('shared tensor pixel conversion', () => {
+  it('preserves grayscale, RGB, RGBA, default alpha and byte rounding', () => {
+    expect(pixelGeometry([1, 2])).toEqual([1, 2, 1]);
+    expect(pixelGeometry([2, 3, 4])).toEqual([2, 3, 4]);
+    expect(pixelBytes(new Float32Array([0, 0.5]), 1, 2, 1, 'float32', 255))
+        .toEqual(new Uint8ClampedArray([0, 0, 0, 255, 128, 128, 128, 255]));
+    expect(pixelBytes(new Int32Array([0, 12, 255]), 1, 1, 3, 'int32', 127.5))
+        .toEqual(new Uint8ClampedArray([0, 12, 255, 128]));
+    expect(pixelBytes(new Int32Array([0, 12, 255, 0]), 1, 1, 4, 'int32', 255))
+        .toEqual(new Uint8ClampedArray([0, 12, 255, 0]));
+  });
+  it('preserves empty images and NaN coercion and rejects invalid storage', () => {
+    expect(pixelGeometry([0, 2, 3])).toEqual([0, 2, 3]);
+    expect(pixelBytes(new Float32Array(0), 0, 2, 3, 'float32', 255))
+        .toEqual(new Uint8ClampedArray(0));
+    expect(pixelBytes(new Float32Array([NaN]), 1, 1, 1, 'float32', 255))
+        .toEqual(new Uint8ClampedArray([0, 0, 0, 255]));
+    expect(() => pixelBytes(new Int32Array([256]), 1, 1, 1, 'int32', 255))
+        .toThrowError(/range \[0 - 255\]/);
+    expect(() => pixelBytes(new Float32Array([-0.1]), 1, 1, 1, 'float32', 255))
+        .toThrowError(/range \[0 - 1\]/);
+    expect(() => pixelBytes(new Float32Array(0), 1, 1, 1, 'float32', 255))
+        .toThrowError(/Missing kernel entry/);
   });
 });

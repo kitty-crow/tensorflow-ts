@@ -18,6 +18,8 @@
 import {backend_util, Dilation2D, Dilation2DAttrs, Dilation2DInputs, KernelConfig, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
+import {requiredCpuEntry} from '../cpu_util';
+import {dilation2DWindow} from './Dilation2D_impl';
 
 export const dilation2DConfig: KernelConfig = {
   kernelName: Dilation2D,
@@ -33,29 +35,21 @@ export const dilation2DConfig: KernelConfig = {
     const filterVals = cpuBackend.requireValues(filter.dataId) as TypedArray;
     const filterRank = filter.shape.length;
 
+    const info = backend_util.computeDilation2DInfo(
+        x.shape as [number, number, number, number],
+        filter.shape as [number, number, number], strides, pad,
+        'NHWC' /* dataFormat */, dilations);
+
     const {
-      batchSize,
-      inHeight,
-      inWidth,
-      inChannels,
-      outHeight,
-      outWidth,
-      padInfo,
-      strideHeight,
-      strideWidth,
-      filterHeight,
-      filterWidth,
-      dilationHeight,
-      dilationWidth,
-      outShape
-    } =
-        backend_util.computeDilation2DInfo(
-            x.shape as [number, number, number, number],
-            filter.shape as [number, number, number], strides, pad,
-            'NHWC' /* dataFormat */, dilations);
+      batchSize, inChannels, outHeight, outWidth, padInfo,
+      strideHeight, strideWidth, outShape
+    } = info;
 
     const outSize = util.sizeFromShape(outShape);
     const outRank = outShape.length;
+    const xStrides = util.computeStrides(x.shape);
+    const filterStrides = util.computeStrides(filter.shape);
+    const outStrides = util.computeStrides(outShape);
     const outputVals = util.getArrayFromDType(x.dtype, outSize);
 
     // Upsampling the input by fill in `dilation size - 1` values between each
@@ -68,31 +62,18 @@ export const dilation2DConfig: KernelConfig = {
         for (let wOut = 0; wOut < outWidth; ++wOut) {
           const wBeg = wOut * strideWidth - padInfo.left;
           for (let d = 0; d < inChannels; ++d) {
-            let curVal = Number.MIN_SAFE_INTEGER;
-            for (let h = 0; h < filterHeight; ++h) {
-              const hIn = hBeg + h * dilationHeight;
-              if (!(hIn >= 0 && hIn < inHeight)) continue;
-              {
-                for (let w = 0; w < filterWidth; ++w) {
-                  const wIn = wBeg + w * dilationWidth;
-                  if (!(wIn >= 0 && wIn < inWidth)) continue;
-                  {
-                    const xIndex = util.locToIndex(
-                        [b, hIn, wIn, d], xRank, util.computeStrides(x.shape));
-                    const filterIndex = util.locToIndex(
-                        [h, w, d], filterRank,
-                        util.computeStrides(filter.shape));
-                    const val = xVals[xIndex] + filterVals[filterIndex];
-                    if (val > curVal) {
-                      curVal = val;
-                    }
-                  }
-                }
-              }
-            }
+            const maximum = dilation2DWindow(info, hBeg, wBeg,
+                (hIn, wIn, h, w) => {
+                  const xIndex = util.locToIndex(
+                      [b, hIn, wIn, d], xRank, xStrides);
+                  const filterIndex = util.locToIndex(
+                      [h, w, d], filterRank, filterStrides);
+                  return requiredCpuEntry(xVals, xIndex) +
+                      requiredCpuEntry(filterVals, filterIndex);
+                });
             const outputIndex = util.locToIndex(
-                [b, hOut, wOut, d], outRank, util.computeStrides(outShape));
-            outputVals[outputIndex] = curVal;
+                [b, hOut, wOut, d], outRank, outStrides);
+            outputVals[outputIndex] = maximum.value;
           }
         }
       }

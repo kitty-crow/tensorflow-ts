@@ -26,24 +26,11 @@ import {DrawOptions, ImageOptions, PixelData, TensorLike} from '../types';
 
 import {cast} from './cast';
 import {op} from './operation';
+import {pixelBytes, pixelGeometry} from './pixel_util';
 import {tensor3d} from './tensor3d';
 
 let fromPixels2DContext: CanvasRenderingContext2D;
 let hasToPixelsWarned = false;
-
-/** Validate the native pixel range for the Tensor's element type. */
-function validatePixelComponent(dtype: string, value: number): void {
-  if (dtype === 'float32' && (value < 0 || value > 1)) {
-    throw new Error(
-        `Tensor values for a float32 Tensor must be in the ` +
-        `range [0 - 1] but encountered ${value}.`);
-  }
-  if (dtype === 'int32' && (value < 0 || value > 255)) {
-    throw new Error(
-        `Tensor values for a int32 Tensor must be in the ` +
-        `range [0 - 255] but encountered ${value}.`);
-  }
-}
 
 /** Emit the canvas drawing performance warning once when a Draw kernel exists. */
 function warnAboutCanvasDrawing(): void {
@@ -322,7 +309,7 @@ function validateImgTensor(img: Tensor2D|Tensor3D) {
     throw new Error(
         `toPixels only supports rank 2 or 3 tensors, got rank ${img.rank}.`);
   }
-  const depth = img.rank === 2 ? 1 : img.shape[2];
+  const [, , depth] = pixelGeometry(img.shape);
 
   if (depth > 4 || depth === 2) {
     throw new Error(
@@ -376,35 +363,9 @@ export async function toPixels(
   }
   validateImgTensor($img);
 
-  const [height, width] = $img.shape.slice(0, 2);
-  const depth = $img.rank === 2 ? 1 : $img.shape[2];
+  const [height, width, depth] = pixelGeometry($img.shape);
   const data = await $img.data();
-  const multiplier = $img.dtype === 'float32' ? 255 : 1;
-  const bytes = new Uint8ClampedArray(width * height * 4);
-
-  for (let i = 0; i < height * width; ++i) {
-    const rgba = [0, 0, 0, 255];
-
-    for (let d = 0; d < depth; d++) {
-      const value = data[i * depth + d];
-
-      validatePixelComponent($img.dtype, value);
-
-      if (depth === 1) {
-        rgba[0] = value * multiplier;
-        rgba[1] = value * multiplier;
-        rgba[2] = value * multiplier;
-      } else {
-        rgba[d] = value * multiplier;
-      }
-    }
-
-    const j = i * 4;
-    bytes[j + 0] = Math.round(rgba[0]);
-    bytes[j + 1] = Math.round(rgba[1]);
-    bytes[j + 2] = Math.round(rgba[2]);
-    bytes[j + 3] = Math.round(rgba[3]);
-  }
+  const bytes = pixelBytes(data, height, width, depth, $img.dtype, 255);
 
   if (canvas != null) {
     warnAboutCanvasDrawing();

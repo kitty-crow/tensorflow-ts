@@ -74,6 +74,24 @@ export function analyzeEinsumString(
   );
 }
 
+/** Read an established axis index without confusing zero with absence. */
+function axisIndex(map: Map<string, number>, axis: string): number {
+  const index = map.get(axis);
+  if (index === undefined) {
+    throw new ValueError(`Missing einsum axis '${axis}'`);
+  }
+  return index;
+}
+
+/** Null denotes a symbolic dimension; only an absent entry is invalid. */
+function axisDimension(shape: Shape, index: number): number|null {
+  const dimension = shape[index];
+  if (dimension === undefined) {
+    throw new ValueError(`Missing einsum dimension at index ${index}`);
+  }
+  return dimension;
+}
+
 /**
  * Analyze an pre-split einsum string to find the weight shape.
  */
@@ -84,30 +102,32 @@ export function analyzeSplitString(
   outputShape: Shape|number,
   leftElided = false
 ): [Shape, Shape, Shape] {
-  const inputSpec = splitString[1];
-  const weightSpec = splitString[2];
-  const outputSpec = splitString[3];
+  const [, inputSpec, weightSpec, outputSpec] = splitString;
+  if (inputSpec == null || weightSpec == null || outputSpec == null) {
+    throw new ValueError('Missing einsum equation components');
+  }
   const elided = inputShape.length - inputSpec.length;
 
   const newOutputShape: Shape = Array.isArray(outputShape) ?
     outputShape.slice() : [outputShape];
-  newOutputShape.unshift(inputShape[0]);
+  newOutputShape.unshift(axisDimension(inputShape, 0));
 
   if (elided > 0 && leftElided) {
     for(let i = 1; i < elided; i++) {
       // We already inserted the 0th input dimension at dim 0, so we need
       // to start at location 1 here.
-      newOutputShape.splice(1, 0, inputShape[i]);
+      newOutputShape.splice(1, 0, axisDimension(inputShape, i));
     }
   } else if (elided > 0 && !leftElided) {
     for(let i = inputShape.length - elided; i < inputShape.length; i++) {
-      newOutputShape.push(inputShape[i]);
+      newOutputShape.push(axisDimension(inputShape, i));
     }
   }
 
   const inputSpecArr = Array.from(inputSpec);
   const outputSpecArr = Array.from(outputSpec);
-  let inputDimMap, outputDimMap;
+  let inputDimMap: Map<string, number>;
+  let outputDimMap: Map<string, number>;
 
   if (leftElided) {
     // If we have beginning dimensions elided, we need to use negative
@@ -137,10 +157,10 @@ export function analyzeSplitString(
   }
 
   for (const dim of inputSpec) {
-    const inputShapeAtDim = inputShape[inputDimMap.get(dim)];
+    const inputShapeAtDim = axisDimension(inputShape, axisIndex(inputDimMap, dim));
     if (!(outputDimMap.has(dim))) continue;
     {
-      const outputShapeAtDim = newOutputShape[outputDimMap.get(dim)];
+      const outputShapeAtDim = axisDimension(newOutputShape, axisIndex(outputDimMap, dim));
       if (outputShapeAtDim !== null && outputShapeAtDim !== inputShapeAtDim) {
         throw new ValueError(
           `Input shape and output shape do not match at shared dimension `+
@@ -164,9 +184,9 @@ export function analyzeSplitString(
   const weightShape: Shape = [];
   for (const dim of weightSpec) {
     if (inputDimMap.has(dim)) {
-      weightShape.push(inputShape[inputDimMap.get(dim)]);
+      weightShape.push(axisDimension(inputShape, axisIndex(inputDimMap, dim)));
     } else if (outputDimMap.has(dim)) {
-      weightShape.push(newOutputShape[outputDimMap.get(dim)]);
+      weightShape.push(axisDimension(newOutputShape, axisIndex(outputDimMap, dim)));
     } else {
       throw new ValueError(
         `Weight dimension '${dim}' did not have a match in either the ` +
@@ -179,10 +199,10 @@ export function analyzeSplitString(
   let biasShape: Shape;
   if (biasAxes != null) {
     const numLeftElided = leftElided ? elided : 0;
-    const idxMap: { [char: string]: number } = {};
-    for (let i = 0; i < outputSpec.length; i++) {
-      idxMap[outputSpec[i]] = newOutputShape[i + numLeftElided];
-    }
+    const idxMap = new Map<string, number>();
+    Array.from(outputSpec).forEach((char, i) => {
+      idxMap.set(char, i + numLeftElided);
+    });
 
     for (const char of biasAxes) {
       if (!outputSpec.includes(char)) {
@@ -199,7 +219,8 @@ export function analyzeSplitString(
     const biasOutputSpec = outputSpec.slice(firstBiasLocation);
 
     biasShape = biasOutputSpec.split('').map(char =>
-      biasAxes.includes(char) ? idxMap[char] : 1
+      biasAxes.includes(char) ?
+        axisDimension(newOutputShape, axisIndex(idxMap, char)) : 1
     );
 
     if (!leftElided) {

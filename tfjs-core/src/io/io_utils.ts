@@ -138,8 +138,8 @@ function getWeightBytelength(spec: WeightsManifestEntry,
     // Can not statically determine string length.
     let byteLength = 0;
     for (let i = 0; i < size; i++) {
-      byteLength += NUM_BYTES_STRING_LENGTH + new Uint32Array(
-        slice(byteLength, byteLength + NUM_BYTES_STRING_LENGTH))[0];
+      byteLength += NUM_BYTES_STRING_LENGTH + requiredNumericEntry(new Uint32Array(
+        slice(byteLength, byteLength + NUM_BYTES_STRING_LENGTH)), 0);
     }
     return byteLength;
   }
@@ -158,8 +158,8 @@ async function getWeightBytelengthAsync(
     // Can not statically determine string length.
     let byteLength = 0;
     for (let i = 0; i < size; i++) {
-      byteLength += NUM_BYTES_STRING_LENGTH + new Uint32Array(
-        await slice(byteLength, byteLength + NUM_BYTES_STRING_LENGTH))[0];
+      byteLength += NUM_BYTES_STRING_LENGTH + requiredNumericEntry(new Uint32Array(
+        await slice(byteLength, byteLength + NUM_BYTES_STRING_LENGTH)), 0);
     }
     return byteLength;
   }
@@ -260,8 +260,8 @@ function decodeWeight(
     const size = sizeFromShape(spec.shape);
     values = [];
     for (let i = 0; i < size; i++) {
-      const byteLength = new Uint32Array(
-        byteBuffer.slice(offset, offset + NUM_BYTES_STRING_LENGTH))[0];
+      const byteLength = requiredNumericEntry(new Uint32Array(
+        byteBuffer.slice(offset, offset + NUM_BYTES_STRING_LENGTH)), 0);
       offset += NUM_BYTES_STRING_LENGTH;
       const bytes = new Uint8Array(
         byteBuffer.slice(offset, offset + byteLength));
@@ -317,6 +317,10 @@ async function readToLength(reader: ReadableStreamDefaultReader<ArrayBuffer>,
     if (done && value == null) {
       const missing  = length - data.byteLength;
       throw new Error(`Reader is done but ${missing} bytes are still expected`);
+    }
+
+    if (value == null) {
+      throw new Error('Reader returned no data before completion');
     }
 
     // TODO: Don't create a new array every loop.
@@ -433,7 +437,7 @@ export function arrayBufferToBase64String(buffer: ArrayBuffer): string {
   }
   const buf = new Uint8Array(buffer);
   let s = '';
-  for (let i = 0, l = buf.length; i < l; i++) {
+  for (let i = 0; i < buf.length; i++) {
     s += String.fromCharCode(requiredNumericEntry(buf, i));
   }
   return btoa(s);
@@ -485,8 +489,7 @@ export function basename(path: string): string {
   while (path.endsWith(SEPARATOR)) {
     path = path.slice(0, path.length - 1);
   }
-  const items = path.split(SEPARATOR);
-  return items[items.length - 1];
+  return path.slice(path.lastIndexOf(SEPARATOR) + 1);
 }
 
 /**

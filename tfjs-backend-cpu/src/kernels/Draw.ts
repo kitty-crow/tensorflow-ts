@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Draw, DrawAttrs, DrawInputs, KernelConfig, KernelFunc, TypedArray} from '@tensorflow/tfjs-core';
+import {backend_util, Draw, DrawAttrs, DrawInputs, KernelConfig, KernelFunc, TypedArray} from '@tensorflow/tfjs-core';
 import {TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
@@ -40,44 +40,10 @@ export function draw(
     throw new Error(`Could not get the context with ${contextType} type.`);
   }
 
-  const [height, width] = image.shape.slice(0, 2);
-  const depth = image.shape.length === 2 ? 1 : image.shape[2];
+  const [height, width, depth] = backend_util.pixelGeometry(image.shape);
   const data = backend.requireValues(image.dataId) as TypedArray;
-  const multiplier = image.dtype === 'float32' ? 255 : 1;
-  const bytes = new Uint8ClampedArray(width * height * 4);
-
-  for (let i = 0; i < height * width; ++i) {
-    const rgba = [0, 0, 0, 255 * alpha];
-
-    for (let d = 0; d < depth; d++) {
-      const value = data[i * depth + d];
-
-      if (image.dtype === 'float32' && (value < 0 || value > 1)) {
-        throw new Error(
-            `Tensor values for a float32 Tensor must be in the ` +
-            `range [0 - 1] but encountered ${value}.`);
-      }
-      if (image.dtype === 'int32' && (value < 0 || value > 255)) {
-        throw new Error(
-            `Tensor values for a int32 Tensor must be in the ` +
-            `range [0 - 255] but encountered ${value}.`);
-      }
-
-      if (depth === 1) {
-        rgba[0] = value * multiplier;
-        rgba[1] = value * multiplier;
-        rgba[2] = value * multiplier;
-      } else {
-        rgba[d] = value * multiplier;
-      }
-    }
-
-    const j = i * 4;
-    bytes[j + 0] = Math.round(rgba[0]);
-    bytes[j + 1] = Math.round(rgba[1]);
-    bytes[j + 2] = Math.round(rgba[2]);
-    bytes[j + 3] = Math.round(rgba[3]);
-  }
+  const bytes = backend_util.pixelBytes(
+      data, height, width, depth, image.dtype, 255 * alpha);
 
   canvas.width = width;
   canvas.height = height;
