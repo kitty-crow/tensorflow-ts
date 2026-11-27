@@ -398,7 +398,7 @@ export async function fitDataset<T>(
     }
 
     const callbacks = standardizeCallbacks(args.callbacks, args.yieldEvery);
-    const verbose = args.verbose == null ? 1 : args.verbose;
+    const verbose = args.verbose ?? 1;
     const {callbackList, history} = configureCallbacks(
         callbacks, verbose, args.epochs, null, null,
         getStepsPerEpoch(dataset, args),
@@ -409,7 +409,7 @@ export async function fitDataset<T>(
 
     await callbackList.onTrainBegin();
     state.setStopTraining(false);
-    let epoch = args.initialEpoch == null ? 0 : args.initialEpoch;
+    let epoch = args.initialEpoch ?? 0;
 
     let dataIterator = await dataset.iterator();
     while (epoch < args.epochs) {
@@ -480,9 +480,7 @@ export async function fitDataset<T>(
                   args.validationData, {batches: args.validationBatches}));
             } else {
               valOuts = toList(model.evaluate(valXs, valYs, {
-                batchSize: args.validationBatchSize == null ?
-                    DEFAULT_VALIDATION_BATCH_SIZE :
-                    args.validationBatchSize,
+                batchSize: args.validationBatchSize ?? DEFAULT_VALIDATION_BATCH_SIZE,
                 verbose: 0
               }));
             }

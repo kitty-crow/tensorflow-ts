@@ -412,11 +412,11 @@ export class RNN extends Layer {
     }
     this.cell = cell;
     this.returnSequences =
-        args.returnSequences == null ? false : args.returnSequences;
-    this.returnState = args.returnState == null ? false : args.returnState;
-    this.goBackwards = args.goBackwards == null ? false : args.goBackwards;
-    this._stateful = args.stateful == null ? false : args.stateful;
-    this.unroll = args.unroll == null ? false : args.unroll;
+        args.returnSequences ?? false;
+    this.returnState = args.returnState ?? false;
+    this.goBackwards = args.goBackwards ?? false;
+    this._stateful = args.stateful ?? false;
+    this.unroll = args.unroll ?? false;
 
     this.supportsMasking = true;
     this.inputSpec = [new InputSpec({ndim: 3})];
@@ -1058,8 +1058,8 @@ export class SimpleRNNCell extends RNNCell {
     this.units = args.units;
     assertPositiveInteger(this.units, `units`);
     this.activation = getActivation(
-        args.activation == null ? this.DEFAULT_ACTIVATION : args.activation);
-    this.useBias = args.useBias == null ? true : args.useBias;
+        args.activation ?? this.DEFAULT_ACTIVATION);
+    this.useBias = args.useBias ?? true;
 
     this.kernelInitializer = getInitializer(
         args.kernelInitializer || this.DEFAULT_KERNEL_INITIALIZER);
@@ -1078,11 +1078,11 @@ export class SimpleRNNCell extends RNNCell {
     this.biasConstraint = getConstraint(args.biasConstraint);
 
     this.dropout = math_utils.min(
-        [1, math_utils.max([0, args.dropout == null ? 0 : args.dropout])]);
+        [1, math_utils.max([0, args.dropout ?? 0])]);
     this.recurrentDropout = math_utils.min([
       1,
       math_utils.max(
-          [0, args.recurrentDropout == null ? 0 : args.recurrentDropout])
+          [0, args.recurrentDropout ?? 0])
     ]);
     this.dropoutFunc = args.dropoutFunc;
     this.stateSize = this.units;
@@ -1447,7 +1447,7 @@ export class GRUCell extends RNNCell {
         args.recurrentActivation === undefined ?
             this.DEFAULT_RECURRENT_ACTIVATION :
             args.recurrentActivation);
-    this.useBias = args.useBias == null ? true : args.useBias;
+    this.useBias = args.useBias ?? true;
 
     this.kernelInitializer = getInitializer(
         args.kernelInitializer || this.DEFAULT_KERNEL_INITIALIZER);
@@ -1466,11 +1466,11 @@ export class GRUCell extends RNNCell {
     this.biasConstraint = getConstraint(args.biasConstraint);
 
     this.dropout = math_utils.min(
-        [1, math_utils.max([0, args.dropout == null ? 0 : args.dropout])]);
+        [1, math_utils.max([0, args.dropout ?? 0])]);
     this.recurrentDropout = math_utils.min([
       1,
       math_utils.max(
-          [0, args.recurrentDropout == null ? 0 : args.recurrentDropout])
+          [0, args.recurrentDropout ?? 0])
     ]);
     this.dropoutFunc = args.dropoutFunc;
     this.implementation = args.implementation;
@@ -1779,7 +1779,7 @@ export class LSTMCell extends RNNCell {
         args.recurrentActivation === undefined ?
             this.DEFAULT_RECURRENT_ACTIVATION :
             args.recurrentActivation);
-    this.useBias = args.useBias == null ? true : args.useBias;
+    this.useBias = args.useBias ?? true;
 
     this.kernelInitializer = getInitializer(
         args.kernelInitializer || this.DEFAULT_KERNEL_INITIALIZER);
@@ -1799,11 +1799,11 @@ export class LSTMCell extends RNNCell {
     this.biasConstraint = getConstraint(args.biasConstraint);
 
     this.dropout = math_utils.min(
-        [1, math_utils.max([0, args.dropout == null ? 0 : args.dropout])]);
+        [1, math_utils.max([0, args.dropout ?? 0])]);
     this.recurrentDropout = math_utils.min([
       1,
       math_utils.max(
-          [0, args.recurrentDropout == null ? 0 : args.recurrentDropout])
+          [0, args.recurrentDropout ?? 0])
     ]);
     this.dropoutFunc = args.dropoutFunc;
     this.implementation = args.implementation;

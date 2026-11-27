@@ -453,21 +453,21 @@ export abstract class BaseConv extends Layer {
     }
     this.kernelSize = normalizeArray(args.kernelSize, rank, 'kernelSize');
     this.strides = normalizeArray(
-        args.strides == null ? 1 : args.strides, rank, 'strides');
-    this.padding = args.padding == null ? 'valid' : args.padding;
+        args.strides ?? 1, rank, 'strides');
+    this.padding = args.padding ?? 'valid';
     checkPaddingMode(this.padding);
     this.dataFormat =
-        args.dataFormat == null ? 'channelsLast' : args.dataFormat;
+        args.dataFormat ?? 'channelsLast';
     checkDataFormat(this.dataFormat);
     this.activation = getActivation(args.activation);
-    this.useBias = args.useBias == null ? true : args.useBias;
+    this.useBias = args.useBias ?? true;
     this.biasInitializer =
         getInitializer(args.biasInitializer || this.DEFAULT_BIAS_INITIALIZER);
     this.biasConstraint = getConstraint(args.biasConstraint);
     this.biasRegularizer = getRegularizer(args.biasRegularizer);
     this.activityRegularizer = getRegularizer(args.activityRegularizer);
     this.dilationRate = normalizeArray(
-        args.dilationRate == null ? 1 : args.dilationRate, rank,
+        args.dilationRate ?? 1, rank,
         'dilationRate');
     if (this.rank === 1 &&
         (Array.isArray(this.dilationRate) && this.dilationRate.length !== 1)) {
@@ -1120,7 +1120,7 @@ export class SeparableConv extends Conv {
     }
 
     this.depthMultiplier =
-        config.depthMultiplier == null ? 1 : config.depthMultiplier;
+        config.depthMultiplier ?? 1;
     this.depthwiseInitializer = getInitializer(
         config.depthwiseInitializer || this.DEFAULT_DEPTHWISE_INITIALIZER);
     this.depthwiseRegularizer = getRegularizer(config.depthwiseRegularizer);
@@ -1423,14 +1423,14 @@ export class UpSampling2D extends Layer {
   constructor(args: UpSampling2DLayerArgs) {
     super(args);
     this.inputSpec = [{ndim: 4}];
-    const size = args.size == null ? this.DEFAULT_SIZE : args.size;
+    const size = args.size ?? this.DEFAULT_SIZE;
     tfc.util.assertArrayLength(size, 2);
     this.size = size;
     this.dataFormat =
-        args.dataFormat == null ? 'channelsLast' : args.dataFormat;
+        args.dataFormat ?? 'channelsLast';
     checkDataFormat(this.dataFormat);
     this.interpolation =
-        args.interpolation == null ? 'nearest' : args.interpolation;
+        args.interpolation ?? 'nearest';
     checkInterpolationFormat(this.interpolation);
   }
 

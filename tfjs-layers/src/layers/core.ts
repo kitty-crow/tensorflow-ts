@@ -668,7 +668,7 @@ export class Masking extends Layer {
     super(args == null ? {} : args);
     this.supportsMasking = true;
     if (args != null) {
-      this.maskValue = args.maskValue == null ? 0 : args.maskValue;
+      this.maskValue = args.maskValue ?? 0;
     } else {
       this.maskValue = 0;
     }

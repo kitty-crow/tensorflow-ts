@@ -214,7 +214,7 @@ export class Identity extends Initializer {
   private gain: number;
   constructor(args: IdentityArgs) {
     super();
-    this.gain = args.gain != null ? args.gain : 1.0;
+    this.gain = args.gain ?? 1.0;
   }
 
   apply(shape: Shape, dtype?: DataType): Tensor {
@@ -315,11 +315,11 @@ export class VarianceScaling extends Initializer {
       throw new ValueError(
           `scale must be a positive float. Got: ${args.scale}`);
     }
-    this.scale = args.scale == null ? 1.0 : args.scale;
-    this.mode = args.mode == null ? 'fanIn' : args.mode;
+    this.scale = args.scale ?? 1.0;
+    this.mode = args.mode ?? 'fanIn';
     checkFanMode(this.mode);
     this.distribution =
-        args.distribution == null ? 'normal' : args.distribution;
+        args.distribution ?? 'normal';
     checkDistribution(this.distribution);
     this.seed = args.seed;
   }
@@ -532,7 +532,7 @@ export class Orthogonal extends Initializer {
 
   constructor(args?: OrthogonalArgs) {
     super();
-    this.gain = args.gain == null ? this.DEFAULT_GAIN : args.gain;
+    this.gain = args.gain ?? this.DEFAULT_GAIN;
     this.seed = args.seed;
   }
 

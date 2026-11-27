@@ -303,11 +303,11 @@ export class BatchNormalization extends Layer {
     super(args);
 
     this.supportsMasking = true;
-    this.axis = args.axis == null ? -1 : args.axis;
-    this.momentum = args.momentum == null ? 0.99 : args.momentum;
-    this.epsilon = args.epsilon == null ? 1e-3 : args.epsilon;
-    this.center = args.center == null ? true : args.center;
-    this.scale = args.scale == null ? true : args.scale;
+    this.axis = args.axis ?? -1;
+    this.momentum = args.momentum ?? 0.99;
+    this.epsilon = args.epsilon ?? 1e-3;
+    this.center = args.center ?? true;
+    this.scale = args.scale ?? true;
     this.betaInitializer = getInitializer(args.betaInitializer || 'zeros');
     this.gammaInitializer = getInitializer(args.gammaInitializer || 'ones');
     this.movingMeanInitializer =
@@ -533,7 +533,7 @@ export class LayerNormalization extends Layer {
     }
     super(args);
 
-    this.axis = args.axis == null ? -1 : args.axis;
+    this.axis = args.axis ?? -1;
     if (typeof this.axis === 'number') {
       if (!Number.isInteger(this.axis)) {
         throw new Error(
@@ -553,9 +553,9 @@ export class LayerNormalization extends Layer {
           `but received ${JSON.stringify(this.axis)}`);
     }
 
-    this.epsilon = args.epsilon == null ? 1e-3 : args.epsilon;
-    this.center = args.center == null ? true : args.center;
-    this.scale = args.scale == null ? true : args.scale;
+    this.epsilon = args.epsilon ?? 1e-3;
+    this.center = args.center ?? true;
+    this.scale = args.scale ?? true;
     this.betaInitializer = getInitializer(args.betaInitializer || 'zeros');
     this.gammaInitializer = getInitializer(args.gammaInitializer || 'ones');
     this.betaRegularizer = getRegularizer(args.betaRegularizer);

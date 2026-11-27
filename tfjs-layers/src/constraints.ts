@@ -72,8 +72,8 @@ export class MaxNorm extends Constraint {
   constructor(args: MaxNormArgs) {
     super();
     this.maxValue =
-        args.maxValue != null ? args.maxValue : this.defaultMaxValue;
-    this.axis = args.axis != null ? args.axis : this.defaultAxis;
+        args.maxValue ?? this.defaultMaxValue;
+    this.axis = args.axis ?? this.defaultAxis;
   }
 
   apply(w: Tensor): Tensor {
@@ -115,7 +115,7 @@ export class UnitNorm extends Constraint {
   private readonly defaultAxis = 0;
   constructor(args: UnitNormArgs) {
     super();
-    this.axis = args.axis != null ? args.axis : this.defaultAxis;
+    this.axis = args.axis ?? this.defaultAxis;
   }
 
   apply(w: Tensor): Tensor {
@@ -188,11 +188,11 @@ export class MinMaxNorm extends Constraint {
   constructor(args: MinMaxNormArgs) {
     super();
     this.minValue =
-        args.minValue != null ? args.minValue : this.defaultMinValue;
+        args.minValue ?? this.defaultMinValue;
     this.maxValue =
-        args.maxValue != null ? args.maxValue : this.defaultMaxValue;
-    this.rate = args.rate != null ? args.rate : this.defaultRate;
-    this.axis = args.axis != null ? args.axis : this.defaultAxis;
+        args.maxValue ?? this.defaultMaxValue;
+    this.rate = args.rate ?? this.defaultRate;
+    this.axis = args.axis ?? this.defaultAxis;
   }
 
   apply(w: Tensor): Tensor {

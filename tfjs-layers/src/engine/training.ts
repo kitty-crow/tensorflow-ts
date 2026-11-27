@@ -904,7 +904,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
   evaluate(
       x: Tensor|Tensor[], y: Tensor|Tensor[],
       args: ModelEvaluateArgs = {}): Scalar|Scalar[] {
-    const batchSize = args.batchSize == null ? 32 : args.batchSize;
+    const batchSize = args.batchSize ?? 32;
     checkBatchSize(batchSize);
 
     // TODO(cais): Standardize `config.sampleWeights` as well.
@@ -1173,7 +1173,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       //   if (this.stateful) ...
       // TODO(cais): Take care of the learning_phase boolean flag.
       //   if (this.useLearningPhase) ...
-      const batchSize = args.batchSize == null ? 32 : args.batchSize;
+      const batchSize = args.batchSize ?? 32;
       checkBatchSize(batchSize);
       return this.predictLoop(xsRank2OrHigher, batchSize);
     } finally {
@@ -1557,7 +1557,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     let valY: Tensor|Tensor[];
     let sampleWeights: Tensor[];
     try {
-      const batchSize = args.batchSize == null ? 32 : args.batchSize;
+      const batchSize = args.batchSize ?? 32;
       checkBatchSize(batchSize);
 
       // Validate user data.
