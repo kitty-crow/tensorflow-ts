@@ -372,14 +372,11 @@ describe('tensorBoard callback', () => {
     });
 
     const callback = tfn.node.tensorBoard(tmpLogDir, {updateFreq: 'epoch'});
-    // tslint:disable-next-line:no-any
-    (callback as any).ensureTrainWriterCreated();
-    // tslint:disable-next-line:no-any
-    (callback as any).ensureValWriterCreated();
-    // tslint:disable-next-line:no-any
-    const trainWriterScalarSpy = spyOn((callback as any).trainWriter, 'scalar');
-    // tslint:disable-next-line:no-any
-    const valWriterScalarSpy = spyOn((callback as any).valWriter, 'scalar');
+    // White-box fixture access retains the actual writer and scalar types.
+    callback['ensureTrainWriterCreated']();
+    callback['ensureValWriterCreated']();
+    const trainWriterScalarSpy = spyOn(callback['trainWriter'], 'scalar');
+    const valWriterScalarSpy = spyOn(callback['valWriter'], 'scalar');
 
     // Train for 2 more epochs, using initialEpoch and callback.
     await model.fit(xs, ys, {
@@ -392,24 +389,24 @@ describe('tensorBoard callback', () => {
     const trainCallArgs = trainWriterScalarSpy.calls.allArgs();
     // Assert that the epoch numbers used to log the epoch-end loss and metric
     // reflect initialEpoch.
-    expect(tf.test_util.requiredTestElement(trainCallArgs, 0)[0]).toEqual('epoch_loss');
-    expect(tf.test_util.requiredTestElement(trainCallArgs, 0)[2]).toEqual(3);
-    expect(tf.test_util.requiredTestElement(trainCallArgs, 1)[0]).toEqual('epoch_MAE');
-    expect(tf.test_util.requiredTestElement(trainCallArgs, 1)[2]).toEqual(3);
-    expect(tf.test_util.requiredTestElement(trainCallArgs, 2)[0]).toEqual('epoch_loss');
-    expect(tf.test_util.requiredTestElement(trainCallArgs, 2)[2]).toEqual(4);
-    expect(tf.test_util.requiredTestElement(trainCallArgs, 3)[0]).toEqual('epoch_MAE');
-    expect(tf.test_util.requiredTestElement(trainCallArgs, 3)[2]).toEqual(4);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 0), 0)).toEqual('epoch_loss');
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 0), 2)).toEqual(3);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 1), 0)).toEqual('epoch_MAE');
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 1), 2)).toEqual(3);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 2), 0)).toEqual('epoch_loss');
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 2), 2)).toEqual(4);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 3), 0)).toEqual('epoch_MAE');
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 3), 2)).toEqual(4);
     expect(valWriterScalarSpy).toHaveBeenCalledTimes(4);
     const valCallArgs = valWriterScalarSpy.calls.allArgs();
-    expect(tf.test_util.requiredTestElement(valCallArgs, 0)[0]).toEqual('epoch_loss');
-    expect(tf.test_util.requiredTestElement(valCallArgs, 0)[2]).toEqual(3);
-    expect(tf.test_util.requiredTestElement(valCallArgs, 1)[0]).toEqual('epoch_MAE');
-    expect(tf.test_util.requiredTestElement(valCallArgs, 1)[2]).toEqual(3);
-    expect(tf.test_util.requiredTestElement(valCallArgs, 2)[0]).toEqual('epoch_loss');
-    expect(tf.test_util.requiredTestElement(valCallArgs, 2)[2]).toEqual(4);
-    expect(tf.test_util.requiredTestElement(valCallArgs, 3)[0]).toEqual('epoch_MAE');
-    expect(tf.test_util.requiredTestElement(valCallArgs, 3)[2]).toEqual(4);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 0), 0)).toEqual('epoch_loss');
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 0), 2)).toEqual(3);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 1), 0)).toEqual('epoch_MAE');
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 1), 2)).toEqual(3);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 2), 0)).toEqual('epoch_loss');
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 2), 2)).toEqual(4);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 3), 0)).toEqual('epoch_MAE');
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 3), 2)).toEqual(4);
   });
 
   it('fit(): histogramFreq 2, with validation', async () => {

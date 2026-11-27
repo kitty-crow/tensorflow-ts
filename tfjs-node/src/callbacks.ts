@@ -128,7 +128,7 @@ export class ProgbarLogger extends CustomCallback {
     const keys = Object.keys(logs).sort();
     for (const key of keys) {
       if (this.isFieldRelevant(key)) {
-        const value = logs[key];
+        const value = util.requiredNamedEntry(logs, key);
         metricsContent += `${key}=${getSuccinctNumberDisplay(value)} `;
       }
     }
@@ -284,10 +284,10 @@ export class TensorBoardCallback extends CustomCallback {
       if (key.startsWith(VAL_PREFIX)) {
         this.ensureValWriterCreated();
         const scalarName = prefix + key.slice(VAL_PREFIX.length);
-        this.valWriter.scalar(scalarName, logs[key], step);
+        this.valWriter.scalar(scalarName, util.requiredNamedEntry(logs, key), step);
       } else {
         this.ensureTrainWriterCreated();
-        this.trainWriter.scalar(`${prefix}${key}`, logs[key], step);
+        this.trainWriter.scalar(`${prefix}${key}`, util.requiredNamedEntry(logs, key), step);
       }
     }
   }

@@ -37,7 +37,7 @@ export class TestIntegerIterator extends LazyIterator<number> {
     if (this.currentIndex >= this.length) {
       return {value: null, done: true};
     }
-    const result = this.data[this.currentIndex];
+    const result = fixtureTestUtil.requiredTestElement(this.data, this.currentIndex);
     this.currentIndex++;
     // Sleep for a millisecond every so often.
     // This purposely scrambles the order in which these promises are resolved,
@@ -384,8 +384,12 @@ describe('LazyIterator', () => {
 
     for (const e of result) {
       const ee = e as TensorContainerObject;
-      expect(ee['b']).toEqual(ee['a'] as number * 10);
-      expect(ee['c']).toEqual(`string ${ee['a']}`);
+      const aValue = fixtureTestUtil.requiredTestEntry(ee, 'a');
+      if (typeof aValue !== 'number') {
+        throw new Error('Expected a numeric value in the zipped stream.');
+      }
+      expect(fixtureTestUtil.requiredTestEntry(ee, 'b')).toEqual(aValue * 10);
+      expect(fixtureTestUtil.requiredTestEntry(ee, 'c')).toEqual(`string ${aValue}`);
     }
   });
 
@@ -410,12 +414,16 @@ describe('LazyIterator', () => {
       const aa = fixtureTestUtil.requiredTestElement(ee, 0) as TensorContainerObject;
       const bb = fixtureTestUtil.requiredTestElement(ee, 1) as TensorContainerObject;
       const cc = fixtureTestUtil.requiredTestElement(ee, 2) as TensorContainerObject;
-      expect(aa['constant']).toEqual(12);
-      expect(bb['b']).toEqual(aa['a'] as number * 10);
-      expect(bb['array']).toEqual([
-        aa['a'] as number * 100, aa['a'] as number * 200
+      const aValue = fixtureTestUtil.requiredTestEntry(aa, 'a');
+      if (typeof aValue !== 'number') {
+        throw new Error('Expected a numeric value in the nested stream.');
+      }
+      expect(fixtureTestUtil.requiredTestEntry(aa, 'constant')).toEqual(12);
+      expect(fixtureTestUtil.requiredTestEntry(bb, 'b')).toEqual(aValue * 10);
+      expect(fixtureTestUtil.requiredTestEntry(bb, 'array')).toEqual([
+        aValue * 100, aValue * 200
       ]);
-      expect(cc['c']).toEqual(`string ${aa['a']}`);
+      expect(fixtureTestUtil.requiredTestEntry(cc, 'c')).toEqual(`string ${aValue}`);
     }
   });
 
@@ -493,8 +501,12 @@ describe('LazyIterator', () => {
 
     for (const e of result) {
       const ee = e as TensorContainerObject;
-      expect(ee['b']).toEqual(ee['a'] as number * 10);
-      expect(ee['c']).toEqual(`string ${ee['a']}`);
+      const aValue = fixtureTestUtil.requiredTestEntry(ee, 'a');
+      if (typeof aValue !== 'number') {
+        throw new Error('Expected a numeric value in the zipped stream.');
+      }
+      expect(fixtureTestUtil.requiredTestEntry(ee, 'b')).toEqual(aValue * 10);
+      expect(fixtureTestUtil.requiredTestEntry(ee, 'c')).toEqual(`string ${aValue}`);
     }
   });
 });

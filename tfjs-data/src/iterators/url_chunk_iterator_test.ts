@@ -50,9 +50,9 @@ describe('URLChunkIterator', () => {
     const readIterator = await urlChunkIterator('', {chunkSize: 10}, fetchFunc);
 
     const result = await readIterator.toArrayForTest();
-    expect(fixtureTestUtil.requiredTestElement(result, 0)[0]).toEqual('a'.charCodeAt(0));
-    expect(fixtureTestUtil.requiredTestElement(result, 1)[0]).toEqual('k'.charCodeAt(0));
-    expect(fixtureTestUtil.requiredTestElement(result, 2)[0]).toEqual('u'.charCodeAt(0));
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 0), 0)).toEqual('a'.charCodeAt(0));
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 1), 0)).toEqual('k'.charCodeAt(0));
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 2), 0)).toEqual('u'.charCodeAt(0));
   });
 
   it('Reads chunks of expected sizes', async () => {

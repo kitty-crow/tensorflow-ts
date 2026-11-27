@@ -34,7 +34,7 @@ export function resizeNearestNeighborGrad(args: {
 
   const [imageBatchStride, imageRowStride, imageColStride] =
       rankFourStrides(util.computeStrides(images.shape));
-  const [, dyRowStride, dyColStride] =
+  const [dyBatchStride, dyRowStride, dyColStride] =
       rankFourStrides(util.computeStrides(dy.shape));
   const [batch, xHeight, xWidth, depth] = imageDimensions(images.shape);
   const [, yHeight, yWidth] = imageDimensions(dy.shape);
@@ -83,7 +83,7 @@ export function resizeNearestNeighborGrad(args: {
               continue;
             }
 
-            const dyROffset = batchOffset + dyR * dyRowStride;
+            const dyROffset = b * dyBatchStride + dyR * dyRowStride;
             const sourceFracRow = dyR * heightScale;
             const sourceNearestRow = nearestSourceIndex(sourceFracRow, xHeight, alignCorners);
             if (r !== sourceNearestRow) {
@@ -101,7 +101,7 @@ export function resizeNearestNeighborGrad(args: {
               const sourceNearestCol = nearestSourceIndex(sourceFracCol, xWidth, alignCorners);
 
               if (c === sourceNearestCol) {
-                accum += dyValues[dyCOffset + d];
+                accum += util.requiredNumericEntry(dyValues, dyCOffset + d);
               }
             }
           }

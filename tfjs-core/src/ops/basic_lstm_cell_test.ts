@@ -35,8 +35,8 @@ describeWithFlags('basicLSTMCell', ALL_ENVS, () => {
         forgetBias, lstmKernel, lstmBias, batchedData, batchedC, batchedH);
     const newCVals = await newC.array();
     const newHVals = await newH.array();
-    expect(tf.test_util.requiredTestElement(newCVals, 0)[0]).toEqual(tf.test_util.requiredTestElement(newCVals, 1)[0]);
-    expect(tf.test_util.requiredTestElement(newHVals, 0)[0]).toEqual(tf.test_util.requiredTestElement(newHVals, 1)[0]);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(newCVals, 0), 0)).toEqual(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(newCVals, 1), 0));
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(newHVals, 0), 0)).toEqual(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(newHVals, 1), 0));
   });
 
   it('basicLSTMCell accepts a tensor-like object', async () => {
@@ -54,8 +54,8 @@ describeWithFlags('basicLSTMCell', ALL_ENVS, () => {
         forgetBias, lstmKernel, lstmBias, batchedData, batchedC, batchedH);
     const newCVals = await newC.array();
     const newHVals = await newH.array();
-    expect(tf.test_util.requiredTestElement(newCVals, 0)[0]).toEqual(tf.test_util.requiredTestElement(newCVals, 1)[0]);
-    expect(tf.test_util.requiredTestElement(newHVals, 0)[0]).toEqual(tf.test_util.requiredTestElement(newHVals, 1)[0]);
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(newCVals, 0), 0)).toEqual(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(newCVals, 1), 0));
+    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(newHVals, 0), 0)).toEqual(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(newHVals, 1), 0));
   });
 });
 describeWithFlags('basicLSTMCell throws with non-tensor', ALL_ENVS, () => {

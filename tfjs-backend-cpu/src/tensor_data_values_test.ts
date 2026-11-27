@@ -948,3 +948,61 @@ describe('checked index kernels', () => {
     expect(backend.numDataIds()).toBe(0);
   });
 });
+
+describe('CPU resize gradient batch offsets', () => {
+  it('uses independent upstream strides for each resized batch', () => {
+    const backend = new MathBackendCPU();
+    const images = backend.makeTensorInfo([2, 1, 2, 1], 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const dy = backend.makeTensorInfo([2, 1, 4, 1], 'float32',
+        new Float32Array([1, 2, 3, 4, 10, 20, 30, 40]));
+    const size: [number, number] = [1, 4];
+    const attrs = {size, alignCorners: false, halfPixelCenters: false};
+    const dx = resizeNearestNeighborGrad({inputs: {images, dy}, backend, attrs});
+    expect(dx.shape).toEqual(images.shape);
+    expect(backend.readSync(dx.dataId)).toEqual(
+        new Float32Array([3, 7, 30, 70]));
+    [images, dy, dx].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+  it('keeps NaN gradients and accumulates repeated bilinear contributions', () => {
+    const backend = new MathBackendCPU();
+    const images = backend.makeTensorInfo([1, 1, 1, 1], 'float32',
+        new Float32Array([0]));
+    const dy = backend.makeTensorInfo([1, 2, 2, 1], 'float32',
+        new Float32Array([1, 2, 3, 4]));
+    const size: [number, number] = [2, 2];
+    const attrs = {size, alignCorners: true, halfPixelCenters: false};
+    const dx = resizeBilinearGrad({inputs: {images, dy}, backend, attrs});
+    expect(backend.readSync(dx.dataId)).toEqual(new Float32Array([10]));
+    const nanDy = backend.makeTensorInfo([1, 2, 2, 1], 'float32',
+        new Float32Array([NaN, 2, 3, 4]));
+    const nanDx = resizeBilinearGrad({
+      inputs: {images, dy: nanDy}, backend, attrs
+    });
+    expect(backend.readSync(nanDx.dataId)).toEqual(new Float32Array([NaN]));
+    [images, dy, dx, nanDy, nanDx].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+describe('CPU resize empty input behaviour', () => {
+  it('keeps NaN for non-empty outputs of an empty spatial dimension', () => {
+    const backend = new MathBackendCPU();
+    const images = backend.makeTensorInfo([1, 0, 2, 1], 'float32',
+        new Float32Array(0));
+    const size: [number, number] = [1, 2];
+    const attrs = {size, alignCorners: false, halfPixelCenters: false};
+    const args = {inputs: {images}, backend, attrs};
+    const bilinear = resizeBilinear(args);
+    const nearest = resizeNearestNeighbor(args);
+    expect(bilinear.shape).toEqual([1, 1, 2, 1]);
+    expect(nearest.shape).toEqual(bilinear.shape);
+    expect(backend.readSync(bilinear.dataId)).toEqual(
+        new Float32Array([NaN, NaN]));
+    expect(backend.readSync(nearest.dataId)).toEqual(
+        new Float32Array([NaN, NaN]));
+    [images, bilinear, nearest].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+});

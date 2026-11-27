@@ -15,7 +15,7 @@
 import {dispose, env, memory, ones, Tensor, tensor1d, tensor2d, tensor3d, zeros} from '@tensorflow/tfjs-core';
 
 import * as tfl from '../index';
-import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose, requiredTestElement} from '../utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, expectTensorsClose, requiredTestElement, requiredTestEntry} from '../utils/test_utils';
 
 import {cachedRecipientCounts, execute, ExecutionProbe, FeedDict, getTopologicalSortAndRecipientCountsForOneFetch} from './executor';
 
@@ -99,10 +99,10 @@ describeMathCPU('getTopologicalSortAndRecipientCountsForOneFetch', () => {
     const {sorted, recipientMap} =
         getTopologicalSortAndRecipientCountsForOneFetch(relu2, new FeedDict());
     expect(sorted).toEqual([input, f1, r1, c1, relu2]);
-    expect(recipientMap[input.name].size).toEqual(1);
-    expect(recipientMap[f1.name].size).toEqual(2);
-    expect(recipientMap[r1.name].size).toEqual(1);
-    expect(recipientMap[c1.name].size).toEqual(1);
+    expect(requiredTestEntry(recipientMap, input.name).size).toEqual(1);
+    expect(requiredTestEntry(recipientMap, f1.name).size).toEqual(2);
+    expect(requiredTestEntry(recipientMap, r1.name).size).toEqual(1);
+    expect(requiredTestEntry(recipientMap, c1.name).size).toEqual(1);
   });
 
   it('Double triangular topology', () => {
@@ -117,12 +117,12 @@ describeMathCPU('getTopologicalSortAndRecipientCountsForOneFetch', () => {
     const {sorted, recipientMap} =
         getTopologicalSortAndRecipientCountsForOneFetch(r3, new FeedDict());
     expect(sorted).toEqual([input, f1, r1, c1, r2, c2, r3]);
-    expect(recipientMap[input.name].size).toEqual(1);
-    expect(recipientMap[f1.name].size).toEqual(3);
-    expect(recipientMap[r1.name].size).toEqual(1);
-    expect(recipientMap[c1.name].size).toEqual(1);
-    expect(recipientMap[r2.name].size).toEqual(1);
-    expect(recipientMap[c2.name].size).toEqual(1);
+    expect(requiredTestEntry(recipientMap, input.name).size).toEqual(1);
+    expect(requiredTestEntry(recipientMap, f1.name).size).toEqual(3);
+    expect(requiredTestEntry(recipientMap, r1.name).size).toEqual(1);
+    expect(requiredTestEntry(recipientMap, c1.name).size).toEqual(1);
+    expect(requiredTestEntry(recipientMap, r2.name).size).toEqual(1);
+    expect(requiredTestEntry(recipientMap, c2.name).size).toEqual(1);
   });
 });
 

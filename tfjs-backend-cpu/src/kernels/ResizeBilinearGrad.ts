@@ -40,6 +40,11 @@ export function resizeBilinearGrad(args: {
 
   const output = new Float32Array(batch * xHeight * xWidth * depth);
 
+  if (output.length === 0) {
+    return backend.makeTensorInfo(
+        [batch, xWidth, xHeight, depth], 'float32', output);
+  }
+
   // In the backwards pass, we want to find the pixels that were generated
   // for each pixel in the input image the forward pass and add the
   // corresponding coefficient from dy to the gradient (with some
@@ -86,12 +91,19 @@ export function resizeBilinearGrad(args: {
         const dxRLerpTimesInverseDxCLerp = dxRLerp * inverseDxCLerp;
         const dxRLerpTimesDxCLerp = dxRLerp * dxCLerp;
         for (let d = 0; d < depth; d++) {
-          const dyVal = dyValues[offset++];
-          output[topLeftRCOffset + d] +=
+          const dyVal = util.requiredNumericEntry(dyValues, offset++);
+          output[topLeftRCOffset + d] =
+              util.requiredNumericEntry(output, topLeftRCOffset + d) +
               dyVal * inverseDxRLerpTimesInverseDxCLerp;
-          output[topRightRCOffset + d] += dyVal * inverseDxRLerpTimesDxCLerp;
-          output[bottomLeftRCOffset + d] += dyVal * dxRLerpTimesInverseDxCLerp;
-          output[bottomRightRCOffset + d] += dyVal * dxRLerpTimesDxCLerp;
+          output[topRightRCOffset + d] =
+              util.requiredNumericEntry(output, topRightRCOffset + d) +
+              dyVal * inverseDxRLerpTimesDxCLerp;
+          output[bottomLeftRCOffset + d] =
+              util.requiredNumericEntry(output, bottomLeftRCOffset + d) +
+              dyVal * dxRLerpTimesInverseDxCLerp;
+          output[bottomRightRCOffset + d] =
+              util.requiredNumericEntry(output, bottomRightRCOffset + d) +
+              dyVal * dxRLerpTimesDxCLerp;
         }
       }
     }

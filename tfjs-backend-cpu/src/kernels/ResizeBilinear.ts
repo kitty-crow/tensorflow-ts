@@ -41,6 +41,13 @@ export function resizeBilinear(args: {
   const result = new Float32Array(
       util.sizeFromShape([batch, newHeight, newWidth, numChannels]));
 
+  // Preserve the original NaN result for a non-empty resize of an empty image.
+  if (oldHeight === 0 || oldWidth === 0) {
+    result.fill(NaN);
+    return backend.makeTensorInfo(
+        [batch, newHeight, newWidth, numChannels], 'float32', result);
+  }
+
   let outputIdx = 0;
   const effectiveRowSizeRatio = resizeAxisScale(oldHeight, newHeight, alignCorners);
   const effectiveColSizeRatio = resizeAxisScale(oldWidth, newWidth, alignCorners);
@@ -78,10 +85,10 @@ export function resizeBilinear(args: {
           // Begin shader.
 
           // Compute the fractional index of the source.
-          const topLeft = xValues[topLeftOffest + d];
-          const bottomLeft = xValues[botLeftOffset + d];
-          const topRight = xValues[topRightOffset + d];
-          const bottomRight = xValues[botRightOffest + d];
+          const topLeft = util.requiredNumericEntry(xValues, topLeftOffest + d);
+          const bottomLeft = util.requiredNumericEntry(xValues, botLeftOffset + d);
+          const topRight = util.requiredNumericEntry(xValues, topRightOffset + d);
+          const bottomRight = util.requiredNumericEntry(xValues, botRightOffest + d);
 
           const top = topLeft + (topRight - topLeft) * colFrac;
           const bottom = bottomLeft + (bottomRight - bottomLeft) * colFrac;

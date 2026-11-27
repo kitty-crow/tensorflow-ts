@@ -39,12 +39,12 @@ describe('FileChunkIterator', () => {
   it('Reads chunks in order', async () => {
     const readIterator = new FileChunkIterator(testData, {chunkSize: 10});
     const result = await readIterator.toArrayForTest();
-    expect(fixtureTestUtil.requiredTestElement(result, 0)[0]).toEqual(0);
-    expect(fixtureTestUtil.requiredTestElement(result, 1)[0]).toEqual(10);
-    expect(fixtureTestUtil.requiredTestElement(result, 2)[0]).toEqual(20);
-    expect(fixtureTestUtil.requiredTestElement(result, 3)[0]).toEqual(30);
-    expect(fixtureTestUtil.requiredTestElement(result, 4)[0]).toEqual(40);
-    expect(fixtureTestUtil.requiredTestElement(result, 5)[0]).toEqual(50);
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 0), 0)).toEqual(0);
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 1), 0)).toEqual(10);
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 2), 0)).toEqual(20);
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 3), 0)).toEqual(30);
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 4), 0)).toEqual(40);
+    expect(fixtureTestUtil.requiredTestElement(fixtureTestUtil.requiredTestElement(result, 5), 0)).toEqual(50);
   });
 
   it('Reads chunks of expected sizes', async () => {

@@ -823,16 +823,16 @@ describeWithFlags('batchNorm2D', ALL_ENVS, () => {
 
     expectArraysClose(await result.data(), [
       offset[0] +
-          (tf.test_util.requiredTestElement(x, 0)[0] - mean[0]) * scale[0] /
+          (tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(x, 0), 0) - mean[0]) * scale[0] /
               Math.sqrt(variance[0] + varianceEpsilon),
       offset[1] +
-          (tf.test_util.requiredTestElement(x, 0)[1] - mean[1]) * scale[1] /
+          (tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(x, 0), 1) - mean[1]) * scale[1] /
               Math.sqrt(variance[1] + varianceEpsilon),
       offset[0] +
-          (tf.test_util.requiredTestElement(x, 1)[0] - mean[0]) * scale[0] /
+          (tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(x, 1), 0) - mean[0]) * scale[0] /
               Math.sqrt(variance[0] + varianceEpsilon),
       offset[1] +
-          (tf.test_util.requiredTestElement(x, 1)[1] - mean[1]) * scale[1] /
+          (tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(x, 1), 1) - mean[1]) * scale[1] /
               Math.sqrt(variance[1] + varianceEpsilon)
     ]);
   });

@@ -481,26 +481,26 @@ describeMathCPU('modelFromJSON', () => {
     // toJSON() returns a string by default.
     expect(typeof serializedModel).toEqual('string');
     const reparsedJson = parseTestJsonDict(serializedModel);
-    expect(reparsedJson['class_name'])
-        .toEqual(fakeRoundtripModel.modelTopology['class_name']);
+    expect(test_util.requiredTestEntry(reparsedJson, 'class_name'))
+        .toEqual(test_util.requiredTestEntry(fakeRoundtripModel.modelTopology, 'class_name'));
     // Intentionally skipping backend and keras_version fields.
-    expect(reparsedJson['config'])
-        .toEqual(fakeRoundtripModel.modelTopology['config']);
+    expect(test_util.requiredTestEntry(reparsedJson, 'config'))
+        .toEqual(test_util.requiredTestEntry(fakeRoundtripModel.modelTopology, 'config'));
   });
 
   it('toJSON with returnString = false', async () => {
     const model = await modelFromJSON(fakeRoundtripModel);
     const serializedModel = model.toJSON(null, false) as PyJsonDict;
-    expect(serializedModel['class_name'])
-        .toEqual(fakeRoundtripModel.modelTopology['class_name']);
-    expect(serializedModel['config'])
-        .toEqual(fakeRoundtripModel.modelTopology['config']);
+    expect(test_util.requiredTestEntry(serializedModel, 'class_name'))
+        .toEqual(test_util.requiredTestEntry(fakeRoundtripModel.modelTopology, 'class_name'));
+    expect(test_util.requiredTestEntry(serializedModel, 'config'))
+        .toEqual(test_util.requiredTestEntry(fakeRoundtripModel.modelTopology, 'config'));
   });
 
   it('toJSON return value includes correct versions', async () => {
     const model = await modelFromJSON(fakeRoundtripModel);
     const serializedModel = model.toJSON(null, false) as PyJsonDict;
-    expect(serializedModel['keras_version'])
+    expect(test_util.requiredTestEntry(serializedModel, 'keras_version'))
         .toEqual(`tfjs-layers ${layersVersion}`);
   });
 
@@ -558,7 +558,7 @@ describeMathCPU('loadLayersModel from URL', () => {
            {[filename: string]: Float32Array|Int32Array|ArrayBuffer}) => {
         spyOn(env().platform, 'fetch')
             .and.callFake((path: string) => new Promise(resolve => {
-                            resolve(new Response(fileBufferMap[path], {
+                            resolve(new Response(test_util.requiredTestEntry(fileBufferMap, path), {
                               'headers': {'Content-Type': OCTET_STREAM_TYPE}
                             }));
                           }));

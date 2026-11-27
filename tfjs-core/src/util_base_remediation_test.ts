@@ -21,7 +21,7 @@ import './base_side_effects';
 import {flatten} from './util';
 import {env} from './environment';
 import {basename, concatenateTypedArrays, decodeWeights} from './io/io_utils';
-import {requiredTestEntry, requiredTestValue} from './test_util';
+import {requiredTestElement, requiredTestEntry, requiredTestValue} from './test_util';
 import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, sizeFromShape, squeezeShape, sum, toNestedArray} from './util_base';
 
 describe('shape utility regression coverage', () => {
@@ -228,6 +228,24 @@ describe('required numeric reductions', () => {
     expect(() => sum(new Array<number>(1))).toThrowError();
     expect(() => sizeFromShape(new Array<number>(1))).toThrowError();
     expect(() => inferFromImplicitShape(new Array<number>(1), 1))
+        .toThrowError();
+  });
+});
+
+describe('required nested test fixtures', () => {
+  it('preserves present elements at every level', () => {
+    const rows = [[0, 2], [3, 4]];
+    expect(requiredTestElement(requiredTestElement(rows, 0), 0)).toBe(0);
+    expect(requiredTestElement(requiredTestElement(rows, 1), 1)).toBe(4);
+    const signatures = {default: {inputs: {x: {name: 'x:0'}}}};
+    const signature = requiredTestEntry(signatures, 'default');
+    expect(requiredTestEntry(signature.inputs, 'x').name).toBe('x:0');
+  });
+  it('rejects missing nested elements and named entries', () => {
+    const rows: number[][] = [[1], []];
+    expect(() => requiredTestElement(requiredTestElement(rows, 1), 0))
+        .toThrowError();
+    expect(() => requiredTestEntry({x: {name: 'x:0'}}, 'missing'))
         .toThrowError();
   });
 });

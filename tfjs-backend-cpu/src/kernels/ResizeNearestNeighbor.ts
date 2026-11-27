@@ -40,6 +40,13 @@ export function resizeNearestNeighbor(args: {
   const xValues = backend.requireValues(images.dataId) as TypedArray;
   const output = new Float32Array(batch * newHeight * newWidth * numChannels);
 
+  // Preserve the original NaN result for a non-empty resize of an empty image.
+  if (oldHeight === 0 || oldWidth === 0) {
+    output.fill(NaN);
+    return backend.makeTensorInfo(
+        [batch, newHeight, newWidth, numChannels], images.dtype, output);
+  }
+
   const effectiveRowSizeRatio = resizeAxisScale(oldHeight, newHeight, alignCorners);
   const effectiveColSizeRatio = resizeAxisScale(oldWidth, newWidth, alignCorners);
 
@@ -67,7 +74,7 @@ export function resizeNearestNeighbor(args: {
         for (let d = 0; d < numChannels; d++) {
           // Begin shader.
           // Compute the fractional index of the source.
-          const newVal = xValues[colOffset + d];
+          const newVal = util.requiredNumericEntry(xValues, colOffset + d);
           output[outputOffset++] = newVal;
         }
       }
