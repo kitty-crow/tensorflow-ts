@@ -18,7 +18,7 @@
 import {KernelConfig, KernelAttributes, MirrorPad, MirrorPadAttrs, MirrorPadInputs, NumericDataType, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
 
 export function mirrorPad(args: {
   inputs: MirrorPadInputs,
@@ -32,10 +32,10 @@ export function mirrorPad(args: {
   assertNotComplex(x, 'mirrorPad');
 
   const outShape = paddings.map(
-      (p, i) => p[0] /* beforePad */ + x.shape[i] + p[1] /* afterPad */);
+      (p, i) => p[0] /* beforePad */ + requiredCpuEntry(x.shape, i) + p[1] /* afterPad */);
 
   const start = paddings.map(p => p[0]);
-  const end = paddings.map((p, i) => p[0] + x.shape[i]);
+  const end = paddings.map((p, i) => p[0] + requiredCpuEntry(x.shape, i));
   const offset = mode === 'reflect' ? 0 : 1;
 
   const xVals = backend.requireValues(x.dataId) as TypedArray;
@@ -51,19 +51,22 @@ export function mirrorPad(args: {
   for (let i = 0; i < resultSize; i++) {
     let coords = util.indexToLoc(i, resultRank, resultStrides);
     for (let i = 0; i < resultRank; i++) {
-      if (coords[i] < start[i]) {
-        coords[i] = start[i] * 2 - coords[i] - offset;
+      const coordinate = requiredCpuEntry(coords, i);
+      const lower = requiredCpuEntry(start, i);
+      const upper = requiredCpuEntry(end, i);
+      if (coordinate < lower) {
+        coords[i] = lower * 2 - coordinate - offset;
         continue;
       }
-      if (coords[i] >= end[i]) {
-        coords[i] = (end[i] - 1) * 2 - coords[i] + offset;
+      if (coordinate >= upper) {
+        coords[i] = (upper - 1) * 2 - coordinate + offset;
       }
     }
-    coords = coords.map((c, i) => c - start[i]);
+    coords = coords.map((c, i) => c - requiredCpuEntry(start, i));
 
     const inIndex = util.locToIndex(coords, xRank, xStrides);
 
-    resVals[i] = xVals[inIndex];
+    resVals[i] = requiredCpuEntry(xVals, inIndex);
   }
 
   const outId = backend.write(resVals, outShape, x.dtype);

@@ -19,17 +19,18 @@ import {KernelConfig, NumericDataType, TypedArray} from '@tensorflow/tfjs-core';
 import {FlipLeftRight, FlipLeftRightInputs, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
+import {imageDimensions, requiredCpuEntry} from '../cpu_util';
 
 export const flipLeftRightConfig: KernelConfig = {
   kernelName: FlipLeftRight,
   backendName: 'cpu',
-  kernelFunc: ({inputs, attrs, backend}) => {
+  kernelFunc: ({inputs, backend}) => {
     const {image} = inputs as FlipLeftRightInputs;
     const cpuBackend = backend as MathBackendCPU;
 
     const output = util.getTypedArrayFromDType(
         image.dtype as NumericDataType, util.sizeFromShape(image.shape));
-    const [batch, imageHeight, imageWidth, numChannels] = image.shape;
+    const [batch, imageHeight, imageWidth, numChannels] = imageDimensions(image.shape);
 
     const imageVals = cpuBackend.requireValues(image.dataId) as TypedArray;
 
@@ -46,14 +47,14 @@ export const flipLeftRightConfig: KernelConfig = {
             const coordX = Math.round(imageWidth - col - 1);
             const outIdx = batchOffset + rowOffset + colOffset + channel;
 
-            let outputValue = imageVals[outIdx];
+            let outputValue = requiredCpuEntry(imageVals, outIdx);
             // If the coordinate position falls within the image boundaries...
             if (coordX >= 0 && coordX < imageWidth) {
               // set the output to the image value at the coordinate position.
               const rotatedColOffset = coordX * numChannels;
               const imageIdx =
                   batchOffset + rowOffset + rotatedColOffset + channel;
-              outputValue = imageVals[imageIdx];
+              outputValue = requiredCpuEntry(imageVals, imageIdx);
             }
             output[outIdx] = outputValue;
           }

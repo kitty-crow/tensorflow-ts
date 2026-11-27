@@ -22,6 +22,7 @@ import {TransposePackedProgram} from './transpose_packed_gpu';
 import {TransposeProgram} from './transpose_gpu';
 import {ReversePackedProgram} from './reverse_packed_gpu';
 import {shaderEntry} from './packing_util';
+import {shaderKeyShapeFlags} from './gpgpu_math';
 import {getLogicalCoordinatesFromFlatIndexByUniform} from './shader_compiler_util';
 import {getRowsCols, getShapeAs3D, isReshapeFree} from './webgl_util';
 import {TensorInfo} from '@tensorflow/tfjs-core';
@@ -265,5 +266,18 @@ describe('checked WebGL transpose, tile and concatenation geometry', () => {
     const concat = new ConcatProgram([[2, 3], [2, 0], [2, 4]]);
     expect(concat.outputShape).toEqual([2, 7]);
     expect(concat.userCode).toContain('getT2(yR, yC-3)');
+  });
+});
+
+
+describe('shader key shape discriminators', () => {
+  it('preserves packed rank one and unpacked rank two specialisations', () => {
+    expect(shaderKeyShapeFlags([5], [2, 4], true)).toEqual({rank1: 'false_true', rank2: '', rank34: ''});
+    expect(shaderKeyShapeFlags([1, 3], [1, 3], false)).toEqual({rank1: '', rank2: 'false_true', rank34: ''});
+  });
+  it('preserves rank three stride matching and scalar fallback', () => {
+    expect(shaderKeyShapeFlags([2, 3, 4], [2, 4], false)).toEqual({rank1: '', rank2: '', rank34: 'false_true'});
+    expect(shaderKeyShapeFlags([], [1, 1], false)).toEqual({rank1: '', rank2: '', rank34: ''});
+    expect(shaderKeyShapeFlags([2, 3, 4], [2, 4], true)).toEqual({rank1: '', rank2: '', rank34: ''});
   });
 });

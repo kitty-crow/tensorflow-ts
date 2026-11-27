@@ -18,6 +18,7 @@
 import {buffer, CropAndResize, CropAndResizeAttrs, CropAndResizeInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
+import {requiredCpuEntry} from '../cpu_util';
 
 export function cropAndResize(args: {
   inputs: CropAndResizeInputs,
@@ -54,12 +55,12 @@ export function cropAndResize(args: {
   // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/crop_and_resize_op.cc
   for (let b = 0; b < numBoxes; b++) {
     const startInd = b * 4;
-    const y1 = boxVals[startInd];
-    const x1 = boxVals[startInd + 1];
-    const y2 = boxVals[startInd + 2];
-    const x2 = boxVals[startInd + 3];
+    const y1 = requiredCpuEntry(boxVals, startInd);
+    const x1 = requiredCpuEntry(boxVals, startInd + 1);
+    const y2 = requiredCpuEntry(boxVals, startInd + 2);
+    const x2 = requiredCpuEntry(boxVals, startInd + 3);
 
-    const bInd: number = boxIndVals[b];
+    const bInd: number = requiredCpuEntry(boxIndVals, b);
     if (bInd >= batch) {
       continue;
     }

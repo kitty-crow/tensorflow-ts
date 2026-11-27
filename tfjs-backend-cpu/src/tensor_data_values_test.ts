@@ -17,6 +17,12 @@
 
 import {requireComplexTensorInfos, requireTensorDataValues} from './tensor_data_values';
 import {MathBackendCPU} from './backend_cpu';
+import {cumsum} from './kernels/Cumsum';
+import {cumprod} from './kernels/Cumprod';
+import {mirrorPad} from './kernels/MirrorPad';
+import {depthToSpace} from './kernels/DepthToSpace';
+import {concat} from './kernels/Concat';
+import {flipLeftRightConfig} from './kernels/FlipLeftRight';
 import {imageDimensions, matrixBatchStrides, matrixDimensions, rankFiveStrides, spatialStrides2D} from './cpu_util';
 import {batchMatMul} from './kernels/BatchMatMul';
 import {conv2D} from './kernels/Conv2D';
@@ -518,5 +524,56 @@ describe('checked CPU string and index kernels', () => {
         [3], 'float32', 2, true);
     expect(values.values).toEqual(new Float32Array([4, 4]));
     expect(indices.values).toEqual(new Int32Array([0, 2]));
+  });
+});
+
+
+describe('checked CPU cumulative and image geometry', () => {
+  it('preserves exclusive reverse accumulation and numeric identities', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2, 3], 'float32',
+        new Float32Array([1, 2, 3, 4, 0, 2]));
+    const args = {inputs: {x}, backend, attrs: {axis: 1, reverse: true, exclusive: true}};
+    const sum = cumsum(args);
+    const product = cumprod(args);
+    expect(backend.readSync(sum.dataId)).toEqual(new Float32Array([5, 3, 0, 2, 2, 0]));
+    expect(backend.readSync(product.dataId)).toEqual(new Float32Array([6, 3, 1, 0, 2, 1]));
+    [x, sum, product].forEach(t => backend.disposeData(t.dataId));
+  });
+
+  it('preserves reflected and symmetric edges, including zeros', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([3], 'float32', new Float32Array([0, 2, 4]));
+    const paddings: Array<[number, number]> = [[1, 1]];
+    const reflect = mirrorPad({inputs: {x}, backend, attrs: {paddings, mode: 'reflect'}});
+    const symmetric = mirrorPad({inputs: {x}, backend, attrs: {paddings, mode: 'symmetric'}});
+    expect(backend.readSync(reflect.dataId)).toEqual(new Float32Array([2, 0, 2, 4, 2]));
+    expect(backend.readSync(symmetric.dataId)).toEqual(new Float32Array([0, 0, 2, 4, 4]));
+    [x, reflect, symmetric].forEach(t => backend.disposeData(t.dataId));
+  });
+
+  it('maps NHWC depth and flips each row without changing channel order', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([1, 1, 1, 4], 'float32', new Float32Array([0, 1, 2, 3]));
+    const expanded = depthToSpace({inputs: {x}, backend, attrs: {blockSize: 2, dataFormat: 'NHWC'}});
+    expect(expanded.shape).toEqual([1, 2, 2, 1]);
+    expect(backend.readSync(expanded.dataId)).toEqual(new Float32Array([0, 1, 2, 3]));
+    const flipped = flipLeftRightConfig.kernelFunc({inputs: {image: expanded}, backend});
+    if (Array.isArray(flipped)) {
+      throw new Error('Expected one flipped image.');
+    }
+    expect(backend.readSync(flipped.dataId)).toEqual(new Float32Array([1, 0, 3, 2]));
+    [x, expanded, flipped].forEach(t => backend.disposeData(t.dataId));
+  });
+
+  it('concatenates nonempty matrices by rows while ignoring empty inputs', () => {
+    const backend = new MathBackendCPU();
+    const a = backend.makeTensorInfo([2, 1], 'float32', new Float32Array([0, 2]));
+    const b = backend.makeTensorInfo([2, 2], 'float32', new Float32Array([3, 4, 5, 6]));
+    const empty = backend.makeTensorInfo([2, 0], 'float32', new Float32Array());
+    const result = concat({inputs: [a, empty, b], backend, attrs: {axis: -1}});
+    expect(result.shape).toEqual([2, 3]);
+    expect(backend.readSync(result.dataId)).toEqual(new Float32Array([0, 3, 4, 2, 5, 6]));
+    [a, b, empty, result].forEach(t => backend.disposeData(t.dataId));
   });
 });

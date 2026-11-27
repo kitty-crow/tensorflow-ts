@@ -17,6 +17,8 @@
 
 import {backend_util, BackendValues, DataType, TypedArray, util} from '@tensorflow/tfjs-core';
 
+import {requiredCpuEntry} from '../cpu_util';
+
 export function concatImpl(
     inputs: Array<{vals: BackendValues, shape: number[]}>, outShape: number[],
     dtype: DataType, simplyConcat: boolean): TypedArray|string[] {
@@ -41,14 +43,14 @@ export function concatImpl(
 
       let tIdx = 0;
 
-      for (let row = 0; row < input.shape[0]; ++row) {
-        const resIdx = row * outShape[1] + colOffset;
-        for (let col = 0; col < input.shape[1]; ++col) {
+      for (let row = 0; row < requiredCpuEntry(input.shape, 0); ++row) {
+        const resIdx = row * requiredCpuEntry(outShape, 1) + colOffset;
+        for (let col = 0; col < requiredCpuEntry(input.shape, 1); ++col) {
           outVals[resIdx + col] = decodedData[tIdx++];
         }
       }
 
-      colOffset += input.shape[1];
+      colOffset += requiredCpuEntry(input.shape, 1);
     });
   }
 

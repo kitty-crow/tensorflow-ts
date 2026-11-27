@@ -18,6 +18,7 @@
 import {DepthToSpace, DepthToSpaceAttrs, DepthToSpaceInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
+import {imageDimensions, requiredCpuEntry} from '../cpu_util';
 
 export function depthToSpace(args: {
   inputs: DepthToSpaceInputs,
@@ -33,10 +34,8 @@ export function depthToSpace(args: {
       () => `Only NHWC dataFormat supported on CPU for depthToSpace. Got ${
           dataFormat}`);
 
-  const batchSize = x.shape[0];
-  const inputHeight = x.shape[1];
-  const inputWidth = x.shape[2];
-  const inputDepth = x.shape[3];
+  const [batchSize, inputHeight, inputWidth, inputDepth] =
+      imageDimensions(x.shape);
 
   const outputHeight = inputHeight * blockSize;
   const outputWidth = inputWidth * blockSize;
@@ -59,7 +58,7 @@ export function depthToSpace(args: {
           const inD = d + offsetD;
           const inputIdx =
               inD + inputDepth * (inW + inputWidth * (inH + inputHeight * b));
-          result[outputIdx++] = xValues[inputIdx];
+          result[outputIdx++] = requiredCpuEntry(xValues, inputIdx);
         }
       }
     }

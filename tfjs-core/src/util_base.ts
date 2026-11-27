@@ -849,3 +849,12 @@ export function roundUpToPow2(num: number): number {
   }
   return pow2;
 }
+
+/** Reads a required numeric entry, preserving valid zero and NaN values. */
+export function requiredNumericEntry(values: ArrayLike<number>, index: number): number {
+  const value = values[index];
+  if (value == null) {
+    throw new Error(`Missing numeric entry at index ${index}.`);
+  }
+  return value;
+}

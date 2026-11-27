@@ -18,6 +18,7 @@
 import {backend_util, Tensor, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
+import {requiredCpuEntry} from '../cpu_util';
 import {add} from '../kernels/Add';
 import {complex} from '../kernels/Complex';
 import {concat} from '../kernels/Concat';
@@ -37,8 +38,8 @@ export function fftBatch(
     input: TensorInfo, inverse: boolean,
     cpuBackend: MathBackendCPU): TensorInfo {
   const inputShape = input.shape;
-  const batch = inputShape[0];
-  const innerDim = inputShape[1];
+  const batch = requiredCpuEntry(inputShape, 0);
+  const innerDim = requiredCpuEntry(inputShape, 1);
 
   const inputParts = cpuBackend.requireComplexParts(input.dataId);
 
@@ -122,7 +123,7 @@ export function fftImpl(
     const result =
         fftRadix2(realVals, imagVals, inputSize, inverse, cpuBackend);
 
-    const resultShape = [input.shape[0], input.shape[1]];
+    const resultShape = [requiredCpuEntry(input.shape, 0), requiredCpuEntry(input.shape, 1)];
 
     if (inverse) {
       const realInfo: TensorInfo =
@@ -346,7 +347,7 @@ export function fftAlongLastAxis(
   const inputSize = util.sizeFromShape(input.shape);
 
   // Collapse all outer dimensions to a single batch dimension.
-  const innerDimensionSize = input.shape[input.shape.length - 1];
+  const innerDimensionSize = requiredCpuEntry(input.shape, input.shape.length - 1);
   const batch = inputSize / innerDimensionSize;
 
   const input2D = reshape({

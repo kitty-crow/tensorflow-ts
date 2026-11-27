@@ -66,8 +66,7 @@ export function min(array: number[]|Float32Array): number {
     return Number.NaN;
   }
   let min = Number.POSITIVE_INFINITY;
-  for (let i = 0; i < array.length; i++) {
-    const value = array[i];
+  for (const value of array) {
     if (value < min) {
       min = value;
     }
@@ -86,8 +85,7 @@ export function max(array: number[]|Float32Array): number {
     return Number.NaN;
   }
   let max = Number.NEGATIVE_INFINITY;
-  for (let i = 0; i < array.length; i++) {
-    const value = array[i];
+  for (const value of array) {
     if (value > max) {
       max = value;
     }
@@ -102,8 +100,7 @@ export function max(array: number[]|Float32Array): number {
  */
 export function sum(array: number[]|Float32Array): number {
   let sum = 0;
-  for (let i = 0; i < array.length; i++) {
-    const value = array[i];
+  for (const value of array) {
     sum += value;
   }
   return sum;
@@ -127,8 +124,7 @@ export function variance(array: number[]|Float32Array): number {
   const meanValue = mean(array);
   const demeaned = array.map((value: number) => value - meanValue);
   let sumSquare = 0;
-  for (let i = 0; i < demeaned.length; i++) {
-    const value = demeaned[i];
+  for (const value of demeaned) {
     sumSquare += value * value;
   }
   return sumSquare / array.length;

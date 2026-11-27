@@ -21,16 +21,14 @@ import {ArgMinMaxProgram} from '../argminmax_gpu';
 import {ArgMinMaxPackedProgram} from '../argminmax_packed_gpu';
 import {MathBackendWebGL} from '../backend_webgl';
 import {reshape} from '../kernels/Reshape';
+import {shaderEntry} from '../packing_util';
 
 function argReduce(
     backend: MathBackendWebGL, x: TensorInfo, reduceType: 'max'|'min',
     bestIndicesA: TensorInfo = null): TensorInfo {
-  let batchSize = x.shape[0];
-  let inSize = x.shape[1];
-  if (bestIndicesA != null) {
-    batchSize = bestIndicesA.shape[0];
-    inSize = bestIndicesA.shape[1];
-  }
+  const reductionShape = bestIndicesA == null ? x.shape : bestIndicesA.shape;
+  const batchSize = shaderEntry(reductionShape, 0);
+  const inSize = shaderEntry(reductionShape, 1);
   const windowSize = backend_util.computeOptimalWindowSize(inSize);
   const reduceInfo =
       {windowSize, inSize, batchSize, outSize: Math.ceil(inSize / windowSize)};
@@ -42,7 +40,7 @@ function argReduce(
   }
   const output = backend.runWebGLProgram(program, inputs, 'int32');
   // No need to run another GPGPU program.
-  if (output.shape[1] === 1) {
+  if (shaderEntry(output.shape, 1) === 1) {
     return output;
   }
   const result = argReduce(backend, x, reduceType, output);
@@ -54,7 +52,7 @@ function argReducePacked(
     backend: MathBackendWebGL, x: TensorInfo, reduceType: 'max'|'min',
     bestIndicesA: TensorInfo = null): TensorInfo {
   const inShape = bestIndicesA != null ? bestIndicesA.shape : x.shape;
-  const inSize = inShape[inShape.length - 1];
+  const inSize = shaderEntry(inShape, inShape.length - 1);
   const windowSize = backend_util.computeOptimalWindowSize(inSize);
   const program = new ArgMinMaxPackedProgram(
       inShape, windowSize, reduceType, bestIndicesA == null);

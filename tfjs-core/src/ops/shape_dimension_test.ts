@@ -16,6 +16,8 @@
  */
 
 import * as axis from './axis_util';
+import * as complexUtil from '../backends/complex_util';
+import {nonMaxSuppressionV3Impl, nonMaxSuppressionV5Impl} from '../backends/non_max_suppression_impl';
 import {fingerPrint64, hexToLong} from '../hash_util';
 import * as broadcast from './broadcast_util';
 import {decodeEinsumEquation, getEinsumComputePath, getEinsumPermutation} from '../backends/einsum_util';
@@ -171,5 +173,33 @@ describe('fixed-width fingerprint state', () => {
     expect(fingerPrint64(bytes, 0)).toEqual(hexToLong('9ae16a3b2f90404f'));
     expect(fingerPrint64(bytes, 67)).toEqual(hexToLong('0ced753b45740875'));
     expect(fingerPrint64(bytes, 132)).toEqual(hexToLong('f2e4c5b6db6c154a'));
+  });
+});
+
+
+describe('checked numeric kernel metadata', () => {
+  it('interleaves and separates complex components including zero and NaN', () => {
+    const real = new Float32Array([0, -2, NaN]);
+    const imag = new Float32Array([3, 0, 4]);
+    const combined = complexUtil.mergeRealAndImagArrays(real, imag);
+    const split = complexUtil.splitRealAndImagArrays(combined);
+    expect(split.real).toEqual(real);
+    expect(split.imag).toEqual(imag);
+    expect(complexUtil.getComplexWithIndex(combined, 1)).toEqual({real: -2, imag: 0});
+    expect(complexUtil.complexWithEvenIndex(combined).imag).toEqual(new Float32Array([3, 4]));
+    expect(complexUtil.complexWithOddIndex(combined).real).toEqual(new Float32Array([-2]));
+    expect(() => complexUtil.getComplexWithIndex(combined, 3)).toThrowError(/Missing numeric entry/);
+  });
+  it('preserves legacy incomplete-pair extraction semantics', () => {
+    const incomplete = new Float32Array([1, 2, 3]);
+    expect(complexUtil.splitRealAndImagArrays(incomplete)).toEqual({real: new Float32Array([1]), imag: new Float32Array([2])});
+    expect(complexUtil.complexWithOddIndex(incomplete).real).toEqual(new Float32Array());
+    expect(complexUtil.complexWithEvenIndex(new Float32Array([1])).imag).toEqual(new Float32Array([NaN]));
+  });
+  it('keeps tied non-max suppression candidates in original index order', () => {
+    const boxes = new Float32Array([0, 0, 1, 1, 0, 0, 1, 1, 3, 3, 4, 4]);
+    const scores = new Float32Array([1, 1, 0.5]);
+    expect(nonMaxSuppressionV3Impl(boxes, scores, 3, 0.5, 0).selectedIndices).toEqual([0, 2]);
+    expect(nonMaxSuppressionV5Impl(boxes, scores, 3, 0.5, 0, 0).selectedIndices).toEqual([0, 2]);
   });
 });

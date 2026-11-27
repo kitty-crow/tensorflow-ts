@@ -18,7 +18,7 @@
 import {backend_util, Cumprod, CumprodAttrs, CumprodInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
 import {transpose} from './Transpose';
 
 export function cumprod(
@@ -48,7 +48,7 @@ export function cumprod(
                    util.sizeFromShape($x.shape), resultDtype) as TypedArray;
 
   const aVals = backend.requireValues($x.dataId) as TypedArray;
-  const finalDim = $x.shape[$x.shape.length - 1];
+  const finalDim = requiredCpuEntry($x.shape, $x.shape.length - 1);
   const indexAdjuster = reverse ?
       (i: number, j: number) => i + finalDim - j - 1 :
       (i: number, j: number) => i + j;
@@ -56,11 +56,11 @@ export function cumprod(
     for (let j = 0; j < finalDim; j++) {
       const idx = indexAdjuster(i, j);
       if (j === 0) {
-        vals[idx] = exclusive ? 1 : aVals[idx];
+        vals[idx] = exclusive ? 1 : requiredCpuEntry(aVals, idx);
       } else {
         const prevIdx = indexAdjuster(i, j - 1);
-        vals[idx] = exclusive ? aVals[prevIdx] * vals[prevIdx] :
-                                aVals[idx] * vals[prevIdx];
+        vals[idx] = exclusive ? requiredCpuEntry(aVals, prevIdx) * requiredCpuEntry(vals, prevIdx) :
+                                requiredCpuEntry(aVals, idx) * requiredCpuEntry(vals, prevIdx);
       }
     }
   }

@@ -19,6 +19,7 @@ import {KernelConfig, NumericDataType, TypedArray} from '@tensorflow/tfjs-core';
 import {backend_util, RotateWithOffset, RotateWithOffsetAttrs, RotateWithOffsetInputs, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
+import {imageDimensions, requiredCpuEntry} from '../cpu_util';
 
 export const rotateWithOffsetConfig: KernelConfig = {
   kernelName: RotateWithOffset,
@@ -31,7 +32,7 @@ export const rotateWithOffsetConfig: KernelConfig = {
 
     const output = util.getTypedArrayFromDType(
         image.dtype as NumericDataType, util.sizeFromShape(image.shape));
-    const [batch, imageHeight, imageWidth, numChannels] = image.shape;
+    const [batch, imageHeight, imageWidth, numChannels] = imageDimensions(image.shape);
 
     const [centerX, centerY] =
         backend_util.getImageCenter(center, imageHeight, imageWidth);
@@ -51,10 +52,8 @@ export const rotateWithOffsetConfig: KernelConfig = {
           const colOffset = col * numChannels;
 
           for (let channel = 0; channel < numChannels; channel++) {
-            const coords = [batch, row, col, channel];
-
-            const x = coords[2];
-            const y = coords[1];
+            const x = col;
+            const y = row;
 
             // coordX/coordY are the result of rotating and translating x/y.
             let coordX = (x - centerX) * cosFactor - (y - centerY) * sinFactor;
@@ -75,7 +74,7 @@ export const rotateWithOffsetConfig: KernelConfig = {
               const rotatedColOffset = coordX * numChannels;
               const imageIdx =
                   batchOffset + rotatedRowOffset + rotatedColOffset + channel;
-              outputValue = imageVals[imageIdx];
+              outputValue = requiredCpuEntry(imageVals, imageIdx);
             }
 
             const outIdx = batchOffset + rowOffset + colOffset + channel;

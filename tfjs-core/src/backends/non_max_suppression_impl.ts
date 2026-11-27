@@ -16,6 +16,7 @@
  */
 
 import {TypedArray} from '../types';
+import {requiredNumericEntry} from '../util_base';
 import {binaryInsert} from './non_max_suppression_util';
 
 /**
@@ -68,11 +69,12 @@ function nonMaxSuppressionImpl_(
     returnValidOutputs = false): NonMaxSuppressionResult {
   // The list is sorted in ascending order, so that we can always pop the
   // candidate with the largest score in O(1) time.
-  const candidates = [];
+  const candidates: Candidate[] = [];
 
   for (let i = 0; i < scores.length; i++) {
-    if (scores[i] > scoreThreshold) {
-      candidates.push({score: scores[i], boxIndex: i, suppressBeginIndex: 0});
+    const score = requiredNumericEntry(scores, i);
+    if (score > scoreThreshold) {
+      candidates.push({score, boxIndex: i, suppressBeginIndex: 0});
     }
   }
 
@@ -87,6 +89,9 @@ function nonMaxSuppressionImpl_(
 
   while (selectedIndices.length < maxOutputSize && candidates.length > 0) {
     const candidate = candidates.pop();
+    if (candidate == null) {
+      throw new Error('Missing non-max suppression candidate.');
+    }
     const {score: originalScore, boxIndex, suppressBeginIndex} = candidate;
 
     if (originalScore < scoreThreshold) {
@@ -101,7 +106,7 @@ function nonMaxSuppressionImpl_(
     // iouThreshold, we simply ignore the candidate.
     let ignoreCandidate = false;
     for (let j = selectedIndices.length - 1; j >= suppressBeginIndex; --j) {
-      const iou = intersectionOverUnion(boxes, boxIndex, selectedIndices[j]);
+      const iou = intersectionOverUnion(boxes, boxIndex, requiredNumericEntry(selectedIndices, j));
 
       if (iou >= iouThreshold) {
         ignoreCandidate = true;
@@ -125,18 +130,18 @@ function nonMaxSuppressionImpl_(
     // threshold, we will not add it back to the candidates list.
     candidate.suppressBeginIndex = selectedIndices.length;
 
-    if (!(!ignoreCandidate)) continue;
-    {
-      // Candidate has passed all the tests, and is not suppressed, so
-      // select the candidate.
-      if (candidate.score === originalScore) {
-        selectedIndices.push(boxIndex);
-        selectedScores.push(candidate.score);
-      } else if (candidate.score > scoreThreshold) {
-        // Candidate's score is suppressed but is still high enough to be
-        // considered, so add back to the candidates list.
-        binaryInsert(candidates, candidate, ascendingComparator);
-      }
+    if (ignoreCandidate) {
+      continue;
+    }
+    // An unchanged score passes all suppression checks.
+    if (candidate.score === originalScore) {
+      selectedIndices.push(boxIndex);
+      selectedScores.push(candidate.score);
+      continue;
+    }
+    // A reduced score may still qualify after another comparison.
+    if (candidate.score > scoreThreshold) {
+      binaryInsert(candidates, candidate, ascendingComparator);
     }
   }
 
@@ -145,8 +150,8 @@ function nonMaxSuppressionImpl_(
   const elemsToPad = maxOutputSize - validOutputs;
 
   if (padToMaxOutputSize && elemsToPad > 0) {
-    selectedIndices.push(...new Array(elemsToPad).fill(0));
-    selectedScores.push(...new Array(elemsToPad).fill(0.0));
+    selectedIndices.push(...new Array<number>(elemsToPad).fill(0));
+    selectedScores.push(...new Array<number>(elemsToPad).fill(0.0));
   }
 
   const result: NonMaxSuppressionResult = {selectedIndices};
@@ -165,14 +170,14 @@ function nonMaxSuppressionImpl_(
 function intersectionOverUnion(boxes: TypedArray, i: number, j: number) {
   const iCoord = boxes.subarray(i * 4, i * 4 + 4);
   const jCoord = boxes.subarray(j * 4, j * 4 + 4);
-  const yminI = Math.min(iCoord[0], iCoord[2]);
-  const xminI = Math.min(iCoord[1], iCoord[3]);
-  const ymaxI = Math.max(iCoord[0], iCoord[2]);
-  const xmaxI = Math.max(iCoord[1], iCoord[3]);
-  const yminJ = Math.min(jCoord[0], jCoord[2]);
-  const xminJ = Math.min(jCoord[1], jCoord[3]);
-  const ymaxJ = Math.max(jCoord[0], jCoord[2]);
-  const xmaxJ = Math.max(jCoord[1], jCoord[3]);
+  const yminI = Math.min(requiredNumericEntry(iCoord, 0), requiredNumericEntry(iCoord, 2));
+  const xminI = Math.min(requiredNumericEntry(iCoord, 1), requiredNumericEntry(iCoord, 3));
+  const ymaxI = Math.max(requiredNumericEntry(iCoord, 0), requiredNumericEntry(iCoord, 2));
+  const xmaxI = Math.max(requiredNumericEntry(iCoord, 1), requiredNumericEntry(iCoord, 3));
+  const yminJ = Math.min(requiredNumericEntry(jCoord, 0), requiredNumericEntry(jCoord, 2));
+  const xminJ = Math.min(requiredNumericEntry(jCoord, 1), requiredNumericEntry(jCoord, 3));
+  const ymaxJ = Math.max(requiredNumericEntry(jCoord, 0), requiredNumericEntry(jCoord, 2));
+  const xmaxJ = Math.max(requiredNumericEntry(jCoord, 1), requiredNumericEntry(jCoord, 3));
   const areaI = (ymaxI - yminI) * (xmaxI - xminI);
   const areaJ = (ymaxJ - yminJ) * (xmaxJ - xminJ);
   if (areaI <= 0 || areaJ <= 0) {

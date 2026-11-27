@@ -17,6 +17,8 @@
 
 import {buffer, DataType, Rank, TensorBuffer} from '@tensorflow/tfjs-core';
 
+import {requiredCpuEntry} from '../cpu_util';
+
 export function gatherV2Impl<R extends Rank, D extends DataType>(
     xBuf: TensorBuffer<R, D>, indicesBuf: TensorBuffer<R, D>,
     flattenOutputShape: number[]): TensorBuffer<R, D> {
@@ -25,8 +27,8 @@ export function gatherV2Impl<R extends Rank, D extends DataType>(
     const newLoc = outBuf.indexToLoc(i);
 
     const originalLoc: number[] = newLoc.slice();
-    const batchIdx = originalLoc[0];
-    const indicesIdx = originalLoc[2];
+    const batchIdx = requiredCpuEntry(originalLoc, 0);
+    const indicesIdx = requiredCpuEntry(originalLoc, 2);
     const indicesIndex = indicesBuf.locToIndex([batchIdx, indicesIdx]);
     originalLoc[2] = indicesBuf.values[indicesIndex] as number;
 

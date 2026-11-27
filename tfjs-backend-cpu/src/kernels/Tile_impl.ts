@@ -17,6 +17,8 @@
 
 import {buffer, DataType, Rank, TensorBuffer} from '@tensorflow/tfjs-core';
 
+import {requiredCpuEntry} from '../cpu_util';
+
 /**
  * An implementation of the tile kernel shared between webgl and cpu for string
  * tensors only.
@@ -25,17 +27,17 @@ import {buffer, DataType, Rank, TensorBuffer} from '@tensorflow/tfjs-core';
 export function tileImpl<R extends Rank>(
     xBuf: TensorBuffer<R, DataType>,
     reps: number[]): TensorBuffer<R, DataType> {
-  const newShape: number[] = new Array(xBuf.rank);
+  const newShape: number[] = new Array<number>(xBuf.rank);
   for (let i = 0; i < newShape.length; i++) {
-    newShape[i] = xBuf.shape[i] * reps[i];
+    newShape[i] = requiredCpuEntry(xBuf.shape, i) * requiredCpuEntry(reps, i);
   }
   const result = buffer(newShape, xBuf.dtype);
   for (let i = 0; i < result.values.length; ++i) {
     const newLoc = result.indexToLoc(i);
 
-    const originalLoc: number[] = new Array(xBuf.rank);
+    const originalLoc: number[] = new Array<number>(xBuf.rank);
     for (let j = 0; j < originalLoc.length; j++) {
-      originalLoc[j] = newLoc[j] % xBuf.shape[j];
+      originalLoc[j] = requiredCpuEntry(newLoc, j) % requiredCpuEntry(xBuf.shape, j);
     }
 
     const originalIndex = xBuf.locToIndex(originalLoc);

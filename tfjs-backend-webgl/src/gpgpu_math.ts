@@ -18,6 +18,7 @@
 import {backend_util, env, Tensor, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {GPGPUContext, GPGPUContextProgram} from './gpgpu_context';
+import {shaderEntry} from './packing_util';
 import * as shader_compiler from './shader_compiler';
 import {InputInfo, ShapeInfo, UniformType} from './shader_compiler';
 import {PackingScheme, TextureData, TextureUsage} from './tex_util';
@@ -96,7 +97,7 @@ export function compileProgram<T extends Tensor, K extends Tensor>(
         input.texData.slice.flatOffset > 0) {
       shapeInfo.flatOffset = input.texData.slice.flatOffset;
     }
-    return {name: program.variableNames[i], shapeInfo};
+    return {name: shaderEntry(program.variableNames, i), shapeInfo};
   });
   const inShapeInfos = inputInfos.map(x => x.shapeInfo);
   const outShapeInfo: ShapeInfo = {
@@ -213,7 +214,7 @@ function validateBinaryAndProgram(
 
   shapeInfos.forEach((s, i) => {
     const shapeA = s.logicalShape;
-    const input = inputs[i];
+    const input = shaderEntry(inputs, i);
     const shapeB = input.shape;
 
     if (!util.arraysEqual(shapeA, shapeB)) {
@@ -266,13 +267,13 @@ export function runProgram<T extends Tensor, K extends Tensor>(
 
   // Set user-defined inputs
   for (let i = 0; i < inputs.length; ++i) {
-    const input = inputs[i];
+    const input = shaderEntry(inputs, i);
     const {
       uniform: varLoc,
       offset: varOffsetLoc,
       shape: varShapeLoc,
       texShape: varTexShapeLoc,
-    } = binary.variablesLocations[i];
+    } = shaderEntry(binary.variablesLocations, i);
 
     if (varShapeLoc) {
       const {uniformShape} = shader_compiler.getUniformInfoFromShape(
@@ -373,9 +374,9 @@ export function runProgram<T extends Tensor, K extends Tensor>(
 
   if (binary.program.customUniforms && customUniformValues) {
     for (let i = 0; i < binary.program.customUniforms.length; ++i) {
-      const d = binary.program.customUniforms[i];
+      const d = shaderEntry(binary.program.customUniforms, i);
       const customLoc = binary.customUniformLocations[i];
-      const customValue = customUniformValues[i];
+      const customValue = shaderEntry(customUniformValues, i);
       switch (d.type) {
         case 'float':
           gpgpu.gl.uniform1fv(customLoc, customValue);
@@ -409,6 +410,29 @@ export function runProgram<T extends Tensor, K extends Tensor>(
   gpgpu.executeProgram();
 }
 
+/** Rank-specific shader cache discriminators; keep geometry separate from key assembly. */
+export function shaderKeyShapeFlags(
+    uniformShape: number[], texShape: [number, number], packed: boolean):
+    {rank1: string, rank2: string, rank34: string} {
+  if (uniformShape.length === 1 && packed) {
+    const rows = Math.ceil(texShape[0] / 2);
+    const columns = Math.ceil(texShape[1] / 2);
+    return {rank1: `${rows > 1}_${columns > 1}`, rank2: '', rank34: ''};
+  }
+  if (uniformShape.length === 2 && !packed) {
+    const rows = shaderEntry(uniformShape, 0);
+    const columns = shaderEntry(uniformShape, 1);
+    return {rank1: '', rank2: `${rows > 1}_${columns > 1}`, rank34: ''};
+  }
+  if (uniformShape.length > 2 && !packed) {
+    const strides = util.computeStrides(uniformShape);
+    const first = shaderEntry(strides, 0);
+    const last = shaderEntry(strides, strides.length - 1);
+    return {rank1: '', rank2: '', rank34: `${first === texShape[1]}_${last === texShape[1]}`};
+  }
+  return {rank1: '', rank2: '', rank34: ''};
+}
+
 export function makeShaderKey(
     program: GPGPUProgram, inputs: TensorData[], output: TensorData): string {
   let keyInputs = '';
@@ -421,18 +445,8 @@ export function makeShaderKey(
       const {useSqueezeShape, uniformShape, keptDims} =
           shader_compiler.getUniformInfoFromShape(
               program.packedInputs, x.shape, xTexShape);
-      let rank1 = '', rank2 = '', rank34 = '';
-      if (uniformShape.length === 1 && program.packedInputs) {
-        const packedTexShape =
-            [Math.ceil(xTexShape[0] / 2), Math.ceil(xTexShape[1] / 2)];
-        rank1 = `${packedTexShape[0] > 1}_${packedTexShape[1] > 1}`;
-      } else if (uniformShape.length === 2 && !program.packedInputs) {
-        rank2 = `${uniformShape[0] > 1}_${uniformShape[1] > 1}`;
-      } else if (uniformShape.length > 2 && !program.packedInputs) {
-        const strides = util.computeStrides(uniformShape);
-        rank34 = `${strides[0] === xTexShape[1]}_${
-            strides[strides.length - 1] === xTexShape[1]}`;
-      }
+      const {rank1, rank2, rank34} = shaderKeyShapeFlags(
+          uniformShape, xTexShape, !!program.packedInputs);
       const xRank = x.shape.length;
       const isLogicalShapTexShapeEqual =
           uniformShape.length === 2 && util.arraysEqual(x.shape, xTexShape);

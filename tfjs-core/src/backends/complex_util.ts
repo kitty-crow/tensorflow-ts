@@ -16,6 +16,7 @@
  */
 
 import {TypedArray} from '../types';
+import {requiredNumericEntry} from '../util_base';
 /**
  * Merges real and imaginary Float32Arrays into a single complex Float32Array.
  *
@@ -39,8 +40,8 @@ export function mergeRealAndImagArrays(
   }
   const result = new Float32Array(real.length * 2);
   for (let i = 0; i < result.length; i += 2) {
-    result[i] = real[i / 2];
-    result[i + 1] = imag[i / 2];
+    result[i] = requiredNumericEntry(real, i / 2);
+    result[i + 1] = requiredNumericEntry(imag, i / 2);
   }
   return result;
 }
@@ -63,9 +64,9 @@ export function splitRealAndImagArrays(complex: Float32Array):
     {real: Float32Array, imag: Float32Array} {
   const real = new Float32Array(complex.length / 2);
   const imag = new Float32Array(complex.length / 2);
-  for (let i = 0; i < complex.length; i += 2) {
-    real[i / 2] = complex[i];
-    imag[i / 2] = complex[i + 1];
+  for (let i = 0; i + 1 < complex.length; i += 2) {
+    real[i / 2] = requiredNumericEntry(complex, i);
+    imag[i / 2] = requiredNumericEntry(complex, i + 1);
   }
   return {real, imag};
 }
@@ -80,8 +81,10 @@ export function complexWithEvenIndex(complex: Float32Array):
   const real = new Float32Array(len);
   const imag = new Float32Array(len);
   for (let i = 0; i < complex.length; i += 4) {
-    real[Math.floor(i / 4)] = complex[i];
-    imag[Math.floor(i / 4)] = complex[i + 1];
+    real[Math.floor(i / 4)] = requiredNumericEntry(complex, i);
+    // Preserve typed-array NaN coercion for a trailing incomplete even pair.
+    imag[Math.floor(i / 4)] = i + 1 < complex.length ?
+        requiredNumericEntry(complex, i + 1) : NaN;
   }
   return {real, imag};
 }
@@ -95,9 +98,9 @@ export function complexWithOddIndex(complex: Float32Array):
   const len = Math.floor(complex.length / 4);
   const real = new Float32Array(len);
   const imag = new Float32Array(len);
-  for (let i = 2; i < complex.length; i += 4) {
-    real[Math.floor(i / 4)] = complex[i];
-    imag[Math.floor(i / 4)] = complex[i + 1];
+  for (let i = 2; i + 1 < complex.length; i += 4) {
+    real[Math.floor(i / 4)] = requiredNumericEntry(complex, i);
+    imag[Math.floor(i / 4)] = requiredNumericEntry(complex, i + 1);
   }
   return {real, imag};
 }
@@ -109,8 +112,8 @@ export function complexWithOddIndex(complex: Float32Array):
  */
 export function getComplexWithIndex(
     complex: Float32Array, index: number): {real: number, imag: number} {
-  const real = complex[index * 2];
-  const imag = complex[index * 2 + 1];
+  const real = requiredNumericEntry(complex, index * 2);
+  const imag = requiredNumericEntry(complex, index * 2 + 1);
   return {real, imag};
 }
 

@@ -1189,13 +1189,13 @@ export abstract class Container extends Layer {
       if (!(layer.name in unprocessedNodes)) {
         unprocessedNodes[layer.name] = [nodeData];
       } else {
-        unprocessedNodes[layer.name].push(nodeData);
+        generic_utils.requiredEntry(unprocessedNodes, layer.name).push(nodeData);
       }
     }
 
     function processNode(layer: Layer, nodeData: TensorKeyWithArgsArray[]) {
       const inputTensors: SymbolicTensor[] = [];
-      let kwargs;
+      let kwargs: serialization.ConfigDict = {};
       for (const inputData of nodeData) {
         const inboundLayerName = inputData[0];
         const inboundNodeIndex = inputData[1];
@@ -1208,13 +1208,13 @@ export abstract class Container extends Layer {
           addUnprocessedNode(layer, nodeData);
           return;
         }
-        const inboundLayer = createdLayers[inboundLayerName];
+        const inboundLayer = generic_utils.requiredEntry(createdLayers, inboundLayerName);
         if (inboundLayer.inboundNodes.length <= inboundNodeIndex) {
           addUnprocessedNode(layer, nodeData);
           return;
         }
-        const inboundNode = inboundLayer.inboundNodes[inboundNodeIndex];
-        inputTensors.push(inboundNode.outputTensors[inboundTensorIndex]);
+        const inboundNode = generic_utils.requiredElement(inboundLayer.inboundNodes, inboundNodeIndex);
+        inputTensors.push(generic_utils.requiredElement(inboundNode.outputTensors, inboundTensorIndex));
       }
       // Call layer on its inputs, thus creating the node
       // and building the layer if needed.
@@ -1273,9 +1273,9 @@ export abstract class Container extends Layer {
     // is repeated until all nodes are processed.
     while (!generic_utils.isObjectEmpty(unprocessedNodes)) {
       for (const layerData of layersFromConfig) {
-        const layer = createdLayers[layerData['name'] as string];
+        const layer = generic_utils.requiredEntry(createdLayers, layerData['name'] as string);
         if (layer.name in unprocessedNodes) {
-          const currentUnprocessedNodesForLayer = unprocessedNodes[layer.name];
+          const currentUnprocessedNodesForLayer = generic_utils.requiredEntry(unprocessedNodes, layer.name);
           delete unprocessedNodes[layer.name];
           for (const nodeData of currentUnprocessedNodesForLayer) {
             processNode(layer, nodeData);
@@ -1293,9 +1293,9 @@ export abstract class Container extends Layer {
       const nodeIndex = layerData[1] as number;
       const tensorIndex = layerData[2] as number;
       generic_utils.assert(layerName in createdLayers);
-      const layer = createdLayers[layerName];
-      const layerOutputTensors = layer.inboundNodes[nodeIndex].outputTensors;
-      inputTensors.push(layerOutputTensors[tensorIndex]);
+      const layer = generic_utils.requiredEntry(createdLayers, layerName);
+      const layerOutputTensors = generic_utils.requiredElement(layer.inboundNodes, nodeIndex).outputTensors;
+      inputTensors.push(generic_utils.requiredElement(layerOutputTensors, tensorIndex));
     }
     const outputLayersFromConfig =
         config['outputLayers'] as serialization.ConfigDict[];
@@ -1304,9 +1304,9 @@ export abstract class Container extends Layer {
       const nodeIndex = layerData[1] as number;
       const tensorIndex = layerData[2] as number;
       generic_utils.assert(layerName in createdLayers);
-      const layer = createdLayers[layerName];
-      const layerOutputTensors = layer.inboundNodes[nodeIndex].outputTensors;
-      outputTensors.push(layerOutputTensors[tensorIndex]);
+      const layer = generic_utils.requiredEntry(createdLayers, layerName);
+      const layerOutputTensors = generic_utils.requiredElement(layer.inboundNodes, nodeIndex).outputTensors;
+      outputTensors.push(generic_utils.requiredElement(layerOutputTensors, tensorIndex));
     }
     return new cls({inputs: inputTensors, outputs: outputTensors, name});
   }

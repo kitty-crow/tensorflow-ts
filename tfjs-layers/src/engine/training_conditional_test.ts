@@ -20,10 +20,11 @@ import {ReLU} from '../layers/advanced_activations';
 import {LayerNormalization} from '../layers/normalization';
 import {LSTMCell, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
 import {requiredElement, requiredEntry} from '../utils/generic_utils';
+import {min, max, sum, variance} from '../utils/math_utils';
 import {Conv2D} from '../layers/convolutional';
 import {DepthwiseConv2D} from '../layers/convolutional_depthwise';
 import {Sequential} from '../models';
-import {collectMetrics, standardizeInputData} from './training';
+import {collectMetrics, LayersModel, standardizeInputData} from './training';
 import {disposeNewTensors, ensureTensorsRank2OrHigher} from './training_tensors';
 
 describe('training conditional regression coverage', () => {
@@ -218,5 +219,52 @@ describe('checked training history entries', () => {
     await history.syncData();
     expect(history.epoch).toEqual([0, 1]);
     expect(history.history).toEqual({loss: [0, 2], accuracy: [1, 0]});
+  });
+});
+
+
+describe('numeric layer statistics', () => {
+  it('preserves empty, zero and NaN cases for typed and ordinary arrays', () => {
+    expect(Number.isNaN(min([]))).toBe(true);
+    expect(Number.isNaN(max(new Float32Array()))).toBe(true);
+    expect(sum([])).toBe(0);
+    const values = new Float32Array([-2, 0, 2]);
+    expect(min(values)).toBe(-2);
+    expect(max(values)).toBe(2);
+    expect(sum(values)).toBe(0);
+    expect(variance(values)).toBeCloseTo(8 / 3);
+    expect(min([NaN, 0])).toBe(0);
+    expect(Number.isNaN(sum([NaN, 0]))).toBe(true);
+  });
+});
+
+describe('checked model graph reconstruction', () => {
+  it('reconstructs a weightless symbolic graph and checks required output indices', () => {
+    const config = {
+      name: 'checked_graph',
+      inputLayers: [['checked_input', 0, 0]],
+      outputLayers: [['checked_relu', 0, 0]],
+      layers: [
+        {
+          className: 'InputLayer',
+          config: {batchInputShape: [null, 2], dtype: 'float32', name: 'checked_input', sparse: false},
+          name: 'checked_input',
+          inboundNodes: [] as string[][]
+        },
+        {
+          className: 'ReLU',
+          config: {name: 'checked_relu'},
+          name: 'checked_relu',
+          inboundNodes: [[['checked_input', 0, 0, {}]]]
+        }
+      ]
+    };
+    const model = LayersModel.fromConfig(LayersModel, config);
+    expect(model.name).toBe('checked_graph');
+    expect(requiredElement(model.inputs, 0).shape).toEqual([null, 2]);
+    expect(requiredElement(model.outputs, 0).shape).toEqual([null, 2]);
+    expect(() => LayersModel.fromConfig(LayersModel, {
+      ...config, outputLayers: [['checked_relu', 0, 1]]
+    })).toThrowError(/Missing required element/);
   });
 });
