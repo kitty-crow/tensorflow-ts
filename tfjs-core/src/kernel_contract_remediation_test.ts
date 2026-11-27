@@ -14,6 +14,8 @@
  * limitations under the License.
  * =============================================================================
  */
+import {KernelBackend} from './backends/backend';
+import {IOHandler, ModelArtifacts, WeightsManifestEntry} from './io/types';
 import {ArgMax, ArgMin, Max, MaxAttrs, Reshape, Sum} from './kernel_names';
 import {ENGINE} from './engine';
 import {reduceBroadcastGradient, sumBroadcastGradient} from './gradients/broadcast_grad_util';
@@ -297,5 +299,40 @@ describe('complex component storage contracts', () => {
     expect(real.shape).toEqual([6]);
     expect(imag.shape).toEqual([6]);
     expect(() => requiredComplexParts({})).toThrowError('Missing complex tensor components.');
+  });
+});
+
+describe('optional backend and I/O extension contracts', () => {
+  it('permits partial backends and rejects unsupported operations', () => {
+    class PartialBackend extends KernelBackend {
+      override refCount(): number {
+        return 0;
+      }
+    }
+    const backend: KernelBackend = new PartialBackend();
+    expect(backend.refCount({})).toBe(0);
+    expect(() => backend.readSync({})).toThrowError(/not yet implemented/);
+    expect(() => backend.disposeData({})).toThrowError(/not yet implemented/);
+  });
+
+  it('preserves independent handler capabilities and float16 metadata', () => {
+    const loadOnly = {
+      load: async (): Promise<ModelArtifacts> => ({})
+    } satisfies IOHandler;
+    const saveOnly = {
+      save: async () => ({modelArtifactsInfo: {
+        dateSaved: new Date(0), modelTopologyType: 'JSON' as const
+      }})
+    } satisfies IOHandler;
+    expect(Object.keys(loadOnly)).toEqual(['load']);
+    expect(Object.keys(saveOnly)).toEqual(['save']);
+    const spec: WeightsManifestEntry = {
+      name: 'half', shape: [1], dtype: 'float32',
+      quantization: {dtype: 'float16'}
+    };
+    expect(spec).toEqual({
+      name: 'half', shape: [1], dtype: 'float32',
+      quantization: {dtype: 'float16'}
+    });
   });
 });

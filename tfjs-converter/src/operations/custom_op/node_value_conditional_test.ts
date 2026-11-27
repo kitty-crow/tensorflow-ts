@@ -263,3 +263,19 @@ describe('graph signature tensor names', () => {
         .toThrowError(/Missing signature tensor name for output 'result'/);
   });
 });
+
+describe('protobuf JSON presence contracts', () => {
+  it('preserves absent wire fields and explicitly false attributes', () => {
+    const empty: tensorflow.ITensor = {};
+    const partial: tensorflow.ITensor = {
+      dtype: tensorflow.DataType.DT_FLOAT,
+      tensorShape: {dim: [{size: 2}]}
+    };
+    expect(JSON.stringify(empty)).toBe('{}');
+    expect(Object.keys(partial)).toEqual(['dtype', 'tensorShape']);
+    expect('floatVal' in partial).toBe(false);
+    const raw: tensorflow.IAttrValue = {b: false};
+    expect(raw).toEqual({b: false});
+    expect('i' in raw).toBe(false);
+  });
+});

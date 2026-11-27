@@ -460,3 +460,24 @@ describe('optimizer name dispatch', () => {
     }
   });
 });
+
+describe('omitted public layer configuration', () => {
+  it('retains defaults and explicit false or zero overrides', () => {
+    const recurrent = new SimpleRNNCell({units: 2}).getConfig();
+    expect(requiredEntry(recurrent, 'useBias')).toBe(true);
+    expect(requiredEntry(recurrent, 'dropout')).toBe(0);
+    expect(requiredEntry(recurrent, 'recurrentDropout')).toBe(0);
+    const explicit =
+        new SimpleRNNCell({units: 2, useBias: false, dropout: 0}).getConfig();
+    expect(requiredEntry(explicit, 'useBias')).toBe(false);
+    const convolution = new Conv2D({filters: 2, kernelSize: 3}).getConfig();
+    expect(requiredEntry(convolution, 'strides')).toEqual([1, 1]);
+    expect(requiredEntry(convolution, 'padding')).toBe('valid');
+    expect(requiredEntry(convolution, 'dataFormat')).toBe('channelsLast');
+    const normalization =
+        new LayerNormalization({center: false, scale: false}).getConfig();
+    expect(requiredEntry(normalization, 'center')).toBe(false);
+    expect(requiredEntry(normalization, 'scale')).toBe(false);
+    expect(requiredEntry(normalization, 'epsilon')).toBe(0.001);
+  });
+});
