@@ -122,10 +122,19 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     const artifactsInfo = saveResult.modelArtifactsInfo;
     expect(artifactsInfo.dateSaved.getTime())
         .toBeGreaterThanOrEqual(testStartDate.getTime());
+    // CG305: modelTopologyBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
         .toEqual(JSON.stringify(modelTopology1).length);
+    // CG305: weightSpecsBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
         .toEqual(JSON.stringify(weightSpecs1).length);
+    // CG305: weightDataBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(16);
 
     const jsonAnchor = requiredTestElement(fakeAnchors, 0);
@@ -137,10 +146,25 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     const jsonContent = await fetch(jsonAnchor.href);
     const modelJSON = JSON.parse(await jsonContent.text()) as tf.io.ModelJSON;
     expect(modelJSON.modelTopology).toEqual(modelTopology1);
+    // CG305: format is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelJSON.format, 'format')).toEqual('layers-model');
+    // CG305: generatedBy is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelJSON.generatedBy, 'generatedBy')).toEqual('TensorFlow.js v0.0.0');
+    // CG305: convertedBy is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelJSON.convertedBy, 'convertedBy')).toEqual(null);
+    // CG305: modelInitializer is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelJSON.modelInitializer, 'modelInitializer')).toEqual({});
+    // CG305: trainingConfig is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelJSON.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
 
     const weightsManifest = modelJSON.weightsManifest;
@@ -166,10 +190,19 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     const artifactsInfo = saveResult.modelArtifactsInfo;
     expect(artifactsInfo.dateSaved.getTime())
         .toBeGreaterThanOrEqual(testStartDate.getTime());
+    // CG305: modelTopologyBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
         .toEqual(JSON.stringify(modelTopology1).length);
+    // CG305: weightSpecsBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
         .toEqual(JSON.stringify(weightSpecs1).length);
+    // CG305: weightDataBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(16);
 
     const jsonAnchor = requiredTestElement(fakeAnchors, 0);
@@ -207,10 +240,19 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     const artifactsInfo = saveResult.modelArtifactsInfo;
     expect(artifactsInfo.dateSaved.getTime())
         .toBeGreaterThanOrEqual(testStartDate.getTime());
+    // CG305: modelTopologyBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
         .toEqual(JSON.stringify(modelTopology1).length);
+    // CG305: weightSpecsBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
         .toEqual(JSON.stringify(weightSpecs1).length);
+    // CG305: weightDataBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(16);
 
     const jsonAnchor = requiredTestElement(fakeAnchors, 0);
@@ -249,9 +291,18 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     const artifactsInfo = saveResult.modelArtifactsInfo;
     expect(artifactsInfo.dateSaved.getTime())
         .toBeGreaterThanOrEqual(testStartDate.getTime());
+    // CG305: modelTopologyBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
         .toEqual(JSON.stringify(modelTopology1).length);
+    // CG305: weightSpecsBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes')).toEqual(0);
+    // CG305: weightDataBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(0);
 
     const jsonAnchor = requiredTestElement(fakeAnchors, 0);
@@ -304,14 +355,38 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
 
     const filesHandler = tf.io.browserFiles([jsonFile, weightsFile]);
     const modelArtifacts = await filesHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: format is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.format, 'format')).toEqual('layers-model');
+    // CG305: generatedBy is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.generatedBy, 'generatedBy')).toEqual('TensorFlow.js v0.0.0');
+    // CG305: convertedBy is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.convertedBy, 'convertedBy')).toEqual('1.13.1');
+    // CG305: modelInitializer is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelInitializer, 'modelInitializer')).toEqual({});
+    // CG305: trainingConfig is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
 
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(new Uint8Array(CompositeArrayBuffer.join(requiredTestValue(modelArtifacts.weightData, 'weightData'))))
         .toEqual(new Uint8Array(weightData1));
   });
@@ -351,8 +426,17 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
     const filesHandler =
         tf.io.browserFiles([jsonFile, weightsFile1, weightsFile2]);
     const modelArtifacts = await filesHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(new Uint8Array(CompositeArrayBuffer.join(requiredTestValue(modelArtifacts.weightData, 'weightData'))))
         .toEqual(new Uint8Array([
             1, 2, 3, 4, 10, 20, 30, 40
@@ -418,9 +502,18 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
     const filesHandler = tf.io.browserFiles(
         [jsonFile, weightsFile1, weightsFile2, weightsFile3, weightsFile4]);
     const modelArtifacts = await filesHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs'))
         .toEqual(weightSpecs1.concat(weightSpecs2));
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(new Uint8Array(CompositeArrayBuffer.join(requiredTestValue(modelArtifacts.weightData, 'weightData'))))
         .toEqual(new Uint8Array([
             1, 3, 5, 7, 10, 30, 50, 70, 2, 4, 6, 8, 20, 40, 60, 80
@@ -486,9 +579,18 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
     const filesHandler = tf.io.browserFiles(
         [jsonFile, weightsFile4, weightsFile3, weightsFile2, weightsFile1]);
     const modelArtifacts = await filesHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs'))
         .toEqual(weightSpecs1.concat(weightSpecs2));
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(new Uint8Array(CompositeArrayBuffer.join(requiredTestValue(modelArtifacts.weightData, 'weightData'))))
         .toEqual(new Uint8Array([
             1, 3, 5, 7, 10, 30, 50, 70, 2, 4, 6, 8, 20, 40, 60, 80
@@ -511,6 +613,9 @@ describeWithFlags('browserFiles', BROWSER_ENVS, () => {
     // Select only a JSON file.
     const filesHandler = tf.io.browserFiles([jsonFile]);
     const modelArtifacts = await filesHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
   });

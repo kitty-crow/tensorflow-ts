@@ -102,14 +102,32 @@ describeWithFlags('Passthrough Saver', BROWSER_ENVS, () => {
     const artifactsInfo = saveResult.modelArtifactsInfo;
     expect(artifactsInfo.dateSaved.getTime())
         .toBeGreaterThanOrEqual(testStartDate.getTime());
+    // CG305: modelTopologyBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
         .toEqual(JSON.stringify(modelTopology1).length);
+    // CG305: weightSpecsBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
         .toEqual(JSON.stringify(weightSpecs1).length);
+    // CG305: weightDataBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(16);
 
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(savedArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(savedArtifacts.weightData, 'weightData')).toEqual(weightData1);
   });
 });
@@ -140,14 +158,32 @@ describeWithFlags('Passthrough Saver Sync', BROWSER_ENVS, () => {
     const artifactsInfo = saveResult.modelArtifactsInfo;
     expect(artifactsInfo.dateSaved.getTime())
         .toBeGreaterThanOrEqual(testStartDate.getTime());
+    // CG305: modelTopologyBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.modelTopologyBytes, 'modelTopologyBytes'))
         .toEqual(JSON.stringify(modelTopology1).length);
+    // CG305: weightSpecsBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightSpecsBytes, 'weightSpecsBytes'))
         .toEqual(JSON.stringify(weightSpecs1).length);
+    // CG305: weightDataBytes is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(saveResult.modelArtifactsInfo.weightDataBytes, 'weightDataBytes')).toEqual(16);
 
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(savedArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(savedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(savedArtifacts.weightData, 'weightData')).toEqual(weightData1);
   });
 });
@@ -157,8 +193,17 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
     const passthroughHandler =
         tf.io.fromMemory(modelTopology1, weightSpecs1, weightData1);
     const modelArtifacts = await passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
   });
@@ -170,8 +215,17 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
       weightData: weightData1
     });
     const modelArtifacts = await passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
   });
@@ -179,6 +233,9 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
   it('load model topology only: legacy signature', async () => {
     const passthroughHandler = tf.io.fromMemory(modelTopology1);
     const modelArtifacts = await passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
     expect(modelArtifacts.weightData).toEqual(undefined);
@@ -189,6 +246,9 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
     const passthroughHandler =
         tf.io.fromMemory({modelTopology: modelTopology1});
     const modelArtifacts = await passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
     expect(modelArtifacts.weightData).toEqual(undefined);
@@ -204,9 +264,21 @@ describeWithFlags('Passthrough Loader', BROWSER_ENVS, () => {
       userDefinedMetadata
     });
     const modelArtifacts = await passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
+    // CG305: userDefinedMetadata is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.userDefinedMetadata, 'userDefinedMetadata')).toEqual(userDefinedMetadata);
   });
 });
@@ -216,8 +288,17 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
     const passthroughHandler =
         tf.io.fromMemorySync(modelTopology1, weightSpecs1, weightData1);
     const modelArtifacts = passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
   });
@@ -229,8 +310,17 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
       weightData: weightData1
     });
     const modelArtifacts = passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
     expect(modelArtifacts.userDefinedMetadata).toEqual(undefined);
   });
@@ -238,6 +328,9 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
   it('load model topology only: legacy signature', () => {
     const passthroughHandler = tf.io.fromMemorySync(modelTopology1);
     const modelArtifacts = passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
     expect(modelArtifacts.weightData).toEqual(undefined);
@@ -248,6 +341,9 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
     const passthroughHandler =
         tf.io.fromMemorySync({modelTopology: modelTopology1});
     const modelArtifacts = passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
     expect(modelArtifacts.weightSpecs).toEqual(undefined);
     expect(modelArtifacts.weightData).toEqual(undefined);
@@ -263,9 +359,21 @@ describeWithFlags('Passthrough Loader Sync', BROWSER_ENVS, () => {
       userDefinedMetadata
     });
     const modelArtifacts = passthroughHandler.load();
+    // CG305: modelTopology is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.modelTopology, 'modelTopology')).toEqual(modelTopology1);
+    // CG305: weightSpecs is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightSpecs1);
+    // CG305: weightData is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.weightData, 'weightData')).toEqual(weightData1);
+    // CG305: userDefinedMetadata is optional in the public IO contract;
+    // requiredTestValue rejects its absence before the assertion.
+    //@cg-expect-error
     expect(requiredTestValue(modelArtifacts.userDefinedMetadata, 'userDefinedMetadata')).toEqual(userDefinedMetadata);
   });
 });
