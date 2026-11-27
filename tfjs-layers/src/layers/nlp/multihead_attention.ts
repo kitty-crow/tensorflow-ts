@@ -20,6 +20,7 @@
  */
 
 /* Original source: keras/layers/attention/multi_head_attention.py */
+import {requiredElement} from '../../utils/generic_utils';
 import { Tensor, einsum, linalg, logicalAnd, mul, ones, serialization, tidy, util } from '@tensorflow/tfjs-core';
 
 import { cast, expandDims } from '../../backend/tfjs_backend';
@@ -73,17 +74,17 @@ function buildAttentionEquation(
   let sourceNotation = '';
   for (let i = 0; i < rank; i++) {
     if (batchDims.includes(i) || i === rank - 1) {
-      sourceNotation += targetNotationArr[i];
+      sourceNotation += requiredElement(targetNotationArr, i);
     } else {
-      sourceNotation += _CHR_IDX[letterOffset];
+      sourceNotation += requiredElement(_CHR_IDX, letterOffset);
       letterOffset++;
     }
   }
 
   const productNotation =
-    batchDims.map(i => targetNotationArr[i]).concat(
-    attnAxes.map(i => targetNotationArr[i]),
-    attnAxes.map(i => sourceNotation[i]),
+    batchDims.map(i => requiredElement(targetNotationArr, i)).concat(
+    attnAxes.map(i => requiredElement(targetNotationArr, i)),
+    attnAxes.map(i => requiredElement(sourceNotation, i)),
   ).join('');
   const targetNotation = targetNotationArr.join('');
 
@@ -109,21 +110,21 @@ function buildProjectionEquation(
   let letterOffset = 0;
 
   for (let i = 0; i < freeDims; i++) {
-    const char = _CHR_IDX[i + letterOffset];
+    const char = requiredElement(_CHR_IDX, i + letterOffset);
     inputStr += char;
     outputStr += char;
   }
 
   letterOffset += freeDims;
   for (let i = 0; i < boundDims; i++) {
-    const char = _CHR_IDX[i + letterOffset];
+    const char = requiredElement(_CHR_IDX, i + letterOffset);
     inputStr += char;
     kernelStr += char;
   }
 
   letterOffset += boundDims;
   for (let i = 0; i < outputDims; i++) {
-    const char = _CHR_IDX[i + letterOffset];
+    const char = requiredElement(_CHR_IDX, i + letterOffset);
     kernelStr += char;
     outputStr += char;
     biasAxes += char;
@@ -572,7 +573,7 @@ export class MultiHeadAttention extends Layer {
         outputShape = this._outputShape;
       }
     } else {
-      outputShape = [this.queryShape[this.queryShape.length - 1]];
+      outputShape = [requiredElement(this.queryShape, this.queryShape.length - 1)];
     }
 
     const [einsumEquation, biasAxes, outputRank] =
@@ -855,8 +856,8 @@ export class MultiHeadAttention extends Layer {
    */
   private computeCausalMask(query: Tensor, value?: Tensor): Tensor {
     return tidy(() => {
-      const qSeqLength = query.shape[1];
-      const vSeqLength = value ? value.shape[1] : qSeqLength;
+      const qSeqLength = requiredElement(query.shape, 1);
+      const vSeqLength = value ? requiredElement(value.shape, 1) : qSeqLength;
       // Create a lower triangular matrix.
       return linalg.bandPart(ones([1, qSeqLength, vSeqLength], 'bool'), -1, 0);
     });

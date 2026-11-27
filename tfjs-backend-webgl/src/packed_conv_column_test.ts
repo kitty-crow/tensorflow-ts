@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {getRowsCols, getShapeAs3D, isReshapeFree} from './webgl_util';
 import {TensorInfo} from '@tensorflow/tfjs-core';
 import {makeSelectedIndices, readNonMaxSuppressionInputs} from './kernels/non_max_suppression_util';
 import {selectActivationSource} from './activation_source';
@@ -184,5 +185,24 @@ describe('WebGL NMS readback and output contract', () => {
     }, [2, 0]);
     expect(result.shape).toEqual([2]);
     expect(result.dtype).toBe('int32');
+  });
+});
+
+describe('checked WebGL texture dimensions', () => {
+  it('preserves vector, matrix, scalar and zero dimensions', () => {
+    expect(getRowsCols([0])).toEqual([1, 0]);
+    expect(getRowsCols([2, 3, 5])).toEqual([3, 5]);
+    expect(getShapeAs3D([])).toEqual([1, 1, 1]);
+    expect(getShapeAs3D([2, 3, 5])).toEqual([2, 3, 5]);
+    expect(() => getRowsCols([])).toThrowError();
+  });
+  it('preserves packed reshape decisions for vectors and matrices', () => {
+    expect(isReshapeFree([6], [2, 3])).toBe(false);
+    expect(isReshapeFree([4], [1, 4])).toBe(true);
+    expect(isReshapeFree([4], [6])).toBe(true);
+    expect(isReshapeFree([3], [5])).toBe(false);
+    expect(isReshapeFree([2, 3], [4, 3])).toBe(true);
+    expect(isReshapeFree([2, 3], [2, 4])).toBe(false);
+    expect(isReshapeFree([0, 3], [1, 2])).toBe(true);
   });
 });

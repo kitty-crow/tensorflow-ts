@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {env, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, env, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {getWebGLContext} from './canvas_util';
 import {getTextureConfig} from './tex_util';
@@ -356,13 +356,14 @@ export function getRowsCols(shape: number[]): [number, number] {
   }
 
   return [
-    shape.length > 1 ? shape[shape.length - 2] : 1, shape[shape.length - 1]
+    shape.length > 1 ? backend_util.requiredDimension(shape, shape.length - 2) : 1,
+    backend_util.requiredDimension(shape, shape.length - 1)
   ];
 }
 
 export function getShapeAs3D(shape: number[]): [number, number, number] {
   let shapeAs3D: [number, number, number] = [1, 1, 1];
-  const isScalar = shape.length === 0 || (shape.length === 1 && shape[0] === 1);
+  const isScalar = shape.length === 0 || (shape.length === 1 && backend_util.requiredDimension(shape, 0) === 1);
   if (!isScalar) {
     shapeAs3D =
         [getBatchDim(shape), ...getRowsCols(shape)] as [number, number, number];
@@ -387,26 +388,34 @@ function preferredTextureShape(
   if (shape.length <= 1 && size <= maxTexSize) {
     return [1, size];
   }
-  if (shape.length === 2 && shape[0] <= maxTexSize &&
-      shape[1] <= maxTexSize) {
-    return shape as [number, number];
+  if (shape.length === 2) {
+    util.assertArrayLength(shape, 2);
+    const [rows, cols] = shape;
+    return rows <= maxTexSize && cols <= maxTexSize ? shape : null;
   }
-  if (shape.length === 3 && shape[0] * shape[1] <= maxTexSize &&
-      shape[2] <= maxTexSize) {
-    return [shape[0] * shape[1], shape[2]];
+  if (shape.length === 3) {
+    util.assertArrayLength(shape, 3);
+    const [d0, d1, d2] = shape;
+    return firstFittingTextureShape(d0 * d1, d2, d0, d1 * d2, maxTexSize);
   }
-  if (shape.length === 3 && shape[0] <= maxTexSize &&
-      shape[1] * shape[2] <= maxTexSize) {
-    return [shape[0], shape[1] * shape[2]];
+  if (shape.length === 4) {
+    util.assertArrayLength(shape, 4);
+    const [d0, d1, d2, d3] = shape;
+    return firstFittingTextureShape(
+        d0 * d1 * d2, d3, d0, d1 * d2 * d3, maxTexSize);
   }
-  if (shape.length === 4 &&
-      shape[0] * shape[1] * shape[2] <= maxTexSize &&
-      shape[3] <= maxTexSize) {
-    return [shape[0] * shape[1] * shape[2], shape[3]];
+  return null;
+}
+
+/** Preserve the original flattening priority when both candidates fit. */
+function firstFittingTextureShape(
+    rows: number, cols: number, alternateRows: number, alternateCols: number,
+    maxTexSize: number): [number, number]|null {
+  if (rows <= maxTexSize && cols <= maxTexSize) {
+    return [rows, cols];
   }
-  if (shape.length === 4 && shape[0] <= maxTexSize &&
-      shape[1] * shape[2] * shape[3] <= maxTexSize) {
-    return [shape[0], shape[1] * shape[2] * shape[3]];
+  if (alternateRows <= maxTexSize && alternateCols <= maxTexSize) {
+    return [alternateRows, alternateCols];
   }
   return null;
 }
@@ -432,14 +441,13 @@ export function getTextureShapeFromLogicalShape(
     // fact that the texels containing the third row are half empty.
     logShape = logShape.map(
         (d, i) => i >= logShape.length - 2 ?
-            util.nearestLargerEven(logShape[i]) :
-            logShape[i]);
+            util.nearestLargerEven(d) : d);
 
   }
 
   // Packed texture height is at least two channels per texel.
   if (isPacked && logShape.length === 1) {
-    logShape = [2, logShape[0]];
+    logShape = [2, backend_util.requiredDimension(logShape, 0)];
   }
 
   // If logical shape is 2, we don't squeeze, since we want to match physical.
@@ -487,22 +495,25 @@ export function isReshapeFree(shape1: number[], shape2: number[]): boolean {
     return true;
   }
 
-  if (shape1[0] === 0 || shape1[1] === 0 || shape2[0] === 0 ||
-      shape2[1] === 0) {
+  if (shape1.includes(0) || shape2.includes(0)) {
     return true;
   }
 
   // A vector-to-matrix reshape is free when the last dimensions agree,
   // or the packed dimensions both have an even width.
-  const shape1Cols = shape1[shape1.length - 1];
-  const shape2Cols = shape2[shape2.length - 1];
+  const shape1Cols = backend_util.requiredDimension(shape1, shape1.length - 1);
+  const shape2Cols = backend_util.requiredDimension(shape2, shape2.length - 1);
+  const first1 = backend_util.requiredDimension(shape1, 0);
+  const first2 = backend_util.requiredDimension(shape2, 0);
   if (shape1.length !== shape2.length &&
       (shape1Cols === shape2Cols ||
        (isEven(shape1Cols) && isEven(shape2Cols) &&
-        (shape1[0] === 1 || shape2[0] === 1)))) {
+        (first1 === 1 || first2 === 1)))) {
     return true;
   }
-  return shape1[1] === shape2[1] && isEven(shape1[0]) && isEven(shape2[0]);
+  const sameSecondDimension = shape1.length === shape2.length &&
+      (shape1.length === 1 || shape1Cols === shape2Cols);
+  return sameSecondDimension && isEven(first1) && isEven(first2);
 }
 
 // We cache webgl params because the environment gets reset between

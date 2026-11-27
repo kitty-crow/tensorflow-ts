@@ -87,8 +87,8 @@ export abstract class Merge extends Layer {
     }
     const outputShape: Shape = shape1.slice(0, shape1.length - shape2.length);
     for (let k = 0; k < shape2.length; ++k) {
-      const i = shape1[shape1.length - shape2.length + k];
-      const j = shape2[k];
+      const i = generic_utils.requiredElement(shape1, shape1.length - shape2.length + k);
+      const j = generic_utils.requiredElement(shape2, k);
       outputShape.push(broadcastDimension(i, j, shape1, shape2));
     }
     return outputShape;
@@ -111,8 +111,12 @@ export abstract class Merge extends Layer {
     // shapes.
     let batchSizes: number[] = [];
     for (const shape of inputShape) {
-      if (shape != null && shape[0] !== null) {
-        batchSizes.push(shape[0]);
+      if (shape == null) {
+        continue;
+      }
+      const batchSize = shape[0];
+      if (batchSize !== null) {
+        batchSizes.push(batchSize);
       }
     }
     batchSizes = generic_utils.unique(batchSizes);
@@ -195,7 +199,7 @@ export abstract class Merge extends Layer {
         if (yNDim == null) {
           const yShape = y.shape;
           const rank = yShape.length;
-          const batchSize = yShape[rank - 1];
+          const batchSize = generic_utils.requiredElement(yShape, rank - 1);
           const newShape = [batchSize].concat(yShape.slice(0, rank - 1));
           return tfc.reshape(
               tfc.transpose(tfc.reshape(y, [-1, batchSize]), [1, 0]),
@@ -225,8 +229,12 @@ export abstract class Merge extends Layer {
 
     let batchSizes: number[] = [];
     for (const shape of inputShape) {
-      if (shape != null && shape[0] !== null) {
-        batchSizes.push(shape[0]);
+      if (shape == null) {
+        continue;
+      }
+      const batchSize = shape[0];
+      if (batchSize !== null) {
+        batchSizes.push(batchSize);
       }
     }
     batchSizes = generic_utils.unique(batchSizes);
@@ -278,9 +286,9 @@ export class Add extends Merge {
 
   protected override mergeFunction(inputs: Tensor[]): Tensor {
     return tidy(() => {
-      let output = inputs[0].clone();
+      let output = generic_utils.requiredElement(inputs, 0).clone();
       for (let i = 1; i < inputs.length; ++i) {
-        output = tfc.add(output, inputs[i]);
+        output = tfc.add(output, generic_utils.requiredElement(inputs, i));
       }
       return output;
     });
@@ -353,9 +361,9 @@ export class Multiply extends Merge {
 
   protected override mergeFunction(inputs: Tensor[]): Tensor {
     return tidy(() => {
-      let output = inputs[0].clone();
+      let output = generic_utils.requiredElement(inputs, 0).clone();
       for (let i = 1; i < inputs.length; ++i) {
-        output = tfc.mul(output, inputs[i]);
+        output = tfc.mul(output, generic_utils.requiredElement(inputs, i));
       }
       return output;
     });
@@ -428,9 +436,9 @@ export class Average extends Merge {
 
   protected override mergeFunction(inputs: Tensor[]): Tensor {
     return tidy(() => {
-      let output = inputs[0].clone();
+      let output = generic_utils.requiredElement(inputs, 0).clone();
       for (let i = 1; i < inputs.length; ++i) {
-        output = tfc.add(output, inputs[i]);
+        output = tfc.add(output, generic_utils.requiredElement(inputs, i));
       }
       return tfc.mul(1 / inputs.length, output);
     });
@@ -504,9 +512,9 @@ export class Maximum extends Merge {
 
   protected override mergeFunction(inputs: Tensor[]): Tensor {
     return tidy(() => {
-      let output = inputs[0];
+      let output = generic_utils.requiredElement(inputs, 0);
       for (let i = 1; i < inputs.length; ++i) {
-        output = tfc.maximum(output, inputs[i]);
+        output = tfc.maximum(output, generic_utils.requiredElement(inputs, i));
       }
       return output;
     });
@@ -579,9 +587,9 @@ export class Minimum extends Merge {
 
   protected override mergeFunction(inputs: Tensor[]): Tensor {
     return tidy(() => {
-      let output = inputs[0];
+      let output = generic_utils.requiredElement(inputs, 0);
       for (let i = 1; i < inputs.length; ++i) {
-        output = tfc.minimum(output, inputs[i]);
+        output = tfc.minimum(output, generic_utils.requiredElement(inputs, i));
       }
       return output;
     });
@@ -691,7 +699,7 @@ export class Concatenate extends Merge {
 
     const shapeSet: Shape[] = [];
     for (let i = 0; i < inputShape.length; ++i) {
-      const shapeWithoutConcatAxis = inputShape[i].slice();
+      const shapeWithoutConcatAxis = generic_utils.requiredElement(inputShape, i).slice();
       shapeWithoutConcatAxis.splice(this.axis, 1);
       let exists = false;
       for (const shape of shapeSet) {
@@ -724,16 +732,18 @@ export class Concatenate extends Merge {
           'A `Concatenate` layer should be called on a list of inputs.');
     }
     const inputShapes = inputShape as Shape[];
-    const outputShape = inputShapes[0].slice();
+    const outputShape = generic_utils.requiredElement(inputShapes, 0).slice();
     const axis = this.axis < 0 ? outputShape.length + this.axis : this.axis;
     // Porting Note: the line above is because TypeScript doesn't support
     //   negative indices.
     for (const shape of inputShapes.slice(1)) {
-      if (outputShape[axis] == null || shape[axis] == null) {
+      const currentDim = outputShape[axis];
+      const nextDim = shape[axis];
+      if (currentDim == null || nextDim == null) {
         outputShape[axis] = null;
         break;
       }
-      outputShape[axis] += shape[axis];
+      outputShape[axis] = currentDim + nextDim;
     }
     return outputShape;
   }
@@ -767,17 +777,18 @@ export class Concatenate extends Merge {
       }
       const outputMasks: Tensor[] = [];
       for (let i = 0; i < inputs.length; ++i) {
-        if (mask[i] == null) {
+        const currentMask = mask[i];
+        if (currentMask == null) {
           // Input is unmasked. Append all 1's to masks.
-          outputMasks.push(tfc.cast(tfc.onesLike(inputs[i]), 'bool'));
+          outputMasks.push(tfc.cast(tfc.onesLike(generic_utils.requiredElement(inputs, i)), 'bool'));
           continue;
         }
-        if (mask[i].rank < inputs[i].rank) {
+        if (currentMask.rank < generic_utils.requiredElement(inputs, i).rank) {
           // Mask is smaller than the input, expand it.
-          outputMasks.push(tfc.expandDims(mask[i], -1));
+          outputMasks.push(tfc.expandDims(currentMask, -1));
           continue;
         }
-        outputMasks.push(mask[i]);
+        outputMasks.push(currentMask);
       }
       const concatenatedMasks = tfc.concat(outputMasks, this.axis);
       return tfc.all(concatenatedMasks, -1, false);
@@ -995,8 +1006,8 @@ export class Dot extends Merge {
           `but received ${inputs.length} input(s).`);
     }
 
-    let x1 = inputs[0];
-    let x2 = inputs[1];
+    let x1 = generic_utils.requiredElement(inputs, 0);
+    let x2 = generic_utils.requiredElement(inputs, 1);
     let axes: [number, number];
     if (!Array.isArray(this.axes)) {
       axes = [
@@ -1006,7 +1017,7 @@ export class Dot extends Merge {
     } else {
       axes = this.axes.map(
                  (axis, i) => interpretAxis(
-                     axis, inputs[i].shape.length)) as [number, number];
+                     axis, generic_utils.requiredElement(inputs, i).shape.length)) as [number, number];
     }
     if (this.normalize) {
       x1 = l2Normalize(x1, axes[0]);
@@ -1043,8 +1054,8 @@ export class Dot extends Merge {
     }
 
     const axes = this.interpretAxes(shape1, shape2);
-    shape1.splice(axes[0], 1);
-    shape2.splice(axes[1], 1);
+    shape1.splice(generic_utils.requiredElement(axes, 0), 1);
+    shape2.splice(generic_utils.requiredElement(axes, 1), 1);
     shape2.splice(0, 1);
     const outputShape = shape1.concat(shape2);
     if (outputShape.length === 1) {

@@ -17,7 +17,8 @@
 
 import * as tensorflow from '../../data/compiled_api';
 import {ExecutionContext} from '../../executor/execution_context';
-import {Node} from '../types';
+import {Graph, Node} from '../types';
+import {GraphExecutor} from '../../executor/graph_executor';
 
 import {NodeValueImpl} from './node_value_impl';
 
@@ -48,5 +49,28 @@ describe('custom node attribute conditional dispatch', () => {
     expect(result.attrs['types']).toEqual(['int32']);
     expect(result.attrs['empty']).toBeUndefined();
     expect(result.attrs['emptyList']).toBeUndefined();
+  });
+});
+
+describe('graph executor map contracts', () => {
+  it('retains function signatures and ordered input/output names', () => {
+    const input: Node = {name: 'first', op: 'Placeholder', category: 'graph',
+      inputNames: [], inputs: [], inputParams: {}, attrParams: {}, children: [],
+      signatureKey: 'feature'};
+    const output: Node = {...input, name: 'second', signatureKey: 'result',
+      defaultOutput: 1};
+    const signature = {inputs: {}, outputs: {}};
+    const functionGraph: Graph = {nodes: {}, placeholders: [], inputs: [],
+      outputs: [], weights: [], signature};
+    const graph: Graph = {nodes: {first: input, second: output},
+      placeholders: [input], inputs: [input], outputs: [output], weights: [],
+      functions: {inner: functionGraph}};
+    const executor = new GraphExecutor(graph);
+    expect(executor.inputNodes).toEqual(['feature']);
+    expect(executor.outputNodes).toEqual(['result:1']);
+    expect(executor.functions).toEqual({inner: signature});
+    executor.weightMap = {};
+    expect(executor.weightIds).toEqual([]);
+    expect(() => executor.dispose()).not.toThrow();
   });
 });

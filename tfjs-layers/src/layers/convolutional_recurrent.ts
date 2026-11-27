@@ -22,7 +22,7 @@ import {DataFormat, DataType, PaddingMode, Shape} from '../keras_format/common';
 import {Regularizer} from '../regularizers';
 import {Kwargs, trainingMode} from '../types';
 import {convOutputLength, normalizeArray} from '../utils/conv_utils';
-import {assertPositiveInteger} from '../utils/generic_utils';
+import {assertPositiveInteger, requiredElement} from '../utils/generic_utils';
 import {getExactlyOneShape} from '../utils/types_utils';
 
 import {BaseRNNLayerArgs, generateDropoutMask, LSTMCell, LSTMCellLayerArgs, LSTMLayerArgs, RNN, RNNCell, RNNLayerArgs, SimpleRNNCellLayerArgs} from './recurrent';
@@ -167,12 +167,12 @@ class ConvRNN2D extends RNN {
     let outShape: Shape = this.computeSingleOutputShape(inputShape);
 
     if (!this.returnSequences) {
-      outShape = [outShape[0], ...outShape.slice(2)];
+      outShape = [requiredElement(outShape, 0), ...outShape.slice(2)];
     }
 
     if (this.returnState) {
-      outShape =
-          [outShape, ...Array(2).fill([inputShape[0], ...outShape.slice(-3)])];
+      const stateShape = [requiredElement(inputShape, 0), ...outShape.slice(-3)];
+      return [outShape, stateShape, stateShape];
     }
 
     return outShape;
@@ -186,7 +186,7 @@ class ConvRNN2D extends RNN {
 
       const outputShape = this.computeSingleOutputShape(inputShape);
 
-      const stateShape = [outputShape[0], ...outputShape.slice(2)];
+      const stateShape = [requiredElement(outputShape, 0), ...outputShape.slice(2)];
 
       const initialState = tfc.zeros(stateShape);
 
@@ -205,13 +205,13 @@ class ConvRNN2D extends RNN {
             'Cannot call resetStates() on an RNN Layer that is not stateful.');
       }
 
-      const inputShape = this.inputSpec[0].shape;
+      const inputShape = requiredElement(this.inputSpec, 0).shape;
 
       const outputShape = this.computeSingleOutputShape(inputShape);
 
-      const stateShape = [outputShape[0], ...outputShape.slice(2)];
+      const stateShape = [requiredElement(outputShape, 0), ...outputShape.slice(2)];
 
-      const batchSize = inputShape[0];
+      const batchSize = requiredElement(inputShape, 0);
 
       if (batchSize == null) {
         throw new ValueError(
@@ -237,13 +237,13 @@ class ConvRNN2D extends RNN {
 
     const isChannelsFirst = dataFormat === 'channelsFirst';
 
-    const h = inputShape[isChannelsFirst ? 3 : 2];
-    const w = inputShape[isChannelsFirst ? 4 : 3];
+    const h = requiredElement(inputShape, isChannelsFirst ? 3 : 2);
+    const w = requiredElement(inputShape, isChannelsFirst ? 4 : 3);
 
     const hOut = convOutputLength(
-        h, kernelSize[0], padding, strides[0], dilationRate[0]);
+        h, requiredElement(kernelSize, 0), padding, requiredElement(strides, 0), requiredElement(dilationRate, 0));
     const wOut = convOutputLength(
-        w, kernelSize[1], padding, strides[1], dilationRate[1]);
+        w, requiredElement(kernelSize, 1), padding, requiredElement(strides, 1), requiredElement(dilationRate, 1));
 
     const outShape: Shape = [
       ...inputShape.slice(0, 2),
@@ -372,9 +372,9 @@ export class ConvLSTM2DCell extends LSTMCell implements ConvRNN2DCell {
 
       const training = trainingMode(kwargs);
 
-      const x = inputs[0];         // Current input
-      const hTMinus1 = inputs[1];  // Previous memory state.
-      const cTMinus1 = inputs[2];  // Previous carry state.
+      const x = requiredElement(inputs, 0);         // Current input
+      const hTMinus1 = requiredElement(inputs, 1);  // Previous memory state.
+      const cTMinus1 = requiredElement(inputs, 2);  // Previous carry state.
 
       const numOfKernels = 4;
 

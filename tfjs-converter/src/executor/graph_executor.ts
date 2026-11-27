@@ -63,8 +63,8 @@ export class GraphExecutor implements FunctionExecutor {
   }
 
   set weightMap(weightMap: NamedTensorsMap) {
-    const weightIds = Object.keys(weightMap).map(
-        key => weightMap[key].map(tensor => tensor.id));
+    const weightIds = Object.values(weightMap).map(
+        tensors => tensors.map(tensor => tensor.id));
     this._weightIds = [].concat(...weightIds);
     this._weightMap = weightMap;
   }
@@ -117,8 +117,8 @@ export class GraphExecutor implements FunctionExecutor {
   }
 
   get functions(): {[key: string]: ISignatureDef} {
-    return Object.keys(this._functions).reduce((map, key) => {
-      map[key] = this._functions[key].signature;
+    return Object.entries(this._functions).reduce((map, [key, graph]) => {
+      map[key] = graph.signature;
       return map;
     }, {} as {[key: string]: ISignatureDef});
   }
@@ -139,9 +139,9 @@ export class GraphExecutor implements FunctionExecutor {
     this._functions = graph.functions;
     // create sub-graph executors
     if (graph.functions != null) {
-      Object.keys(graph.functions).forEach(name => {
+      Object.entries(graph.functions).forEach(([name, functionGraph]) => {
         this._functionExecutorMap[name] =
-            new GraphExecutor(graph.functions[name], this);
+            new GraphExecutor(functionGraph, this);
       });
     }
   }
@@ -238,10 +238,10 @@ export class GraphExecutor implements FunctionExecutor {
     outputs = this.mapOutputs(outputs);
     this.checkOutputs(outputs);
     const inputNodes =
-        names.map(name => this.graph.nodes[parseNodeName(name)[0]]);
+        names.map(name => this.requireGraphNode(parseNodeName(name)[0]));
     const outputNodeNames = outputs.map(name => parseNodeName(name)[0]);
     const outputNodeNameSet = new Set(outputNodeNames);
-    let outputNodes = outputNodeNames.map(name => this.graph.nodes[name]);
+    let outputNodes = outputNodeNames.map(name => this.requireGraphNode(name));
     // If no outputs are specified, then use the default outputs of the model.
     if (outputNodes.length === 0) {
       outputNodes = this._outputs;
@@ -275,10 +275,10 @@ export class GraphExecutor implements FunctionExecutor {
         this.clonedTensorsMap = this.cloneTensorMap(this.weightMap);
       }
 
-      Object.keys(inputs).forEach(name => {
+      Object.entries(inputs).forEach(([name, input]) => {
         const [nodeName, index] = parseNodeName(name, context);
         const tensors: Tensor[] = [];
-        tensors[index] = inputs[name];
+        tensors[index] = input;
         tensorsMap[nodeName] = tensors;
         if (this.keepIntermediateTensors) {
           this.clonedTensorsMap[nodeName] = this.cloneTensorList(tensors);
@@ -320,8 +320,7 @@ export class GraphExecutor implements FunctionExecutor {
   private getFrozenTensorIds(tensorMap: NamedTensorsMap): Set<number> {
     const ids = [].concat.apply(
         [],
-        Object.keys(tensorMap)
-            .map(key => tensorMap[key])
+        Object.values(tensorMap)
             .map(tensors => tensors.map(tensor => tensor.id)));
     return new Set(ids);
   }
@@ -337,7 +336,11 @@ export class GraphExecutor implements FunctionExecutor {
       return;
     }
 
-    for (const tensor of tensorMap[nodeName]) {
+    const nodeTensors = tensorMap[nodeName];
+    if (nodeTensors == null) {
+      throw new Error(`Missing tensors for executed node '${nodeName}'`);
+    }
+    for (const tensor of nodeTensors) {
       if (tensor == null) {
         continue;
       }
@@ -375,7 +378,7 @@ export class GraphExecutor implements FunctionExecutor {
           continue;
         }
         if (count != null) {
-          intermediateTensorConsumerCount[tensor.id]--;
+          intermediateTensorConsumerCount[tensor.id] = count - 1;
         }
       }
     }
@@ -496,7 +499,7 @@ export class GraphExecutor implements FunctionExecutor {
 
     // dispose all the intermediate tensors
     const outputIds = results.map(t => t.id);
-    const inputIds = Object.keys(inputs).map(name => inputs[name].id);
+    const inputIds = Object.values(inputs).map(input => input.id);
     const keepIds =
         new Set<number>([...outputIds, ...inputIds, ...this.weightIds]);
 
@@ -520,7 +523,11 @@ export class GraphExecutor implements FunctionExecutor {
       inputs: Tensor[], tensorArrayMap: TensorArrayMap,
       tensorListMap: TensorListMap): Promise<Tensor[]> {
     const mappedInputs = inputs.reduce((map, tensor, index) => {
-      map[this.inputs[index].name] = tensor;
+      const input = this.inputs[index];
+      if (input == null) {
+        throw new Error(`Missing function input at index ${index}`);
+      }
+      map[input.name] = tensor;
       return map;
     }, {} as NamedTensorMap);
 
@@ -544,10 +551,10 @@ export class GraphExecutor implements FunctionExecutor {
       isFunctionExecution?: boolean): Promise<NamedTensorsMap> {
     const names = Object.keys(inputs);
     const inputNodes =
-        names.map(name => this.graph.nodes[parseNodeName(name)[0]]);
+        names.map(name => this.requireGraphNode(parseNodeName(name)[0]));
     const outputNodeNames = outputNames.map(name => parseNodeName(name)[0]);
     const outputNodeNameSet = new Set(outputNodeNames);
-    let outputNodes = outputNodeNames.map(name => this.graph.nodes[name]);
+    let outputNodes = outputNodeNames.map(name => this.requireGraphNode(name));
 
     // If no outputs are specified, then use the default outputs of the model.
     if (outputNodes.length === 0) {
@@ -565,10 +572,10 @@ export class GraphExecutor implements FunctionExecutor {
       return {node, contexts: context.currentContext};
     });
     const tensorsMap: NamedTensorsMap = {...this.weightMap};
-    Object.keys(inputs).forEach(name => {
+    Object.entries(inputs).forEach(([name, input]) => {
       const [nodeName, index] = parseNodeName(name);
       const tensors: Tensor[] = [];
-      tensors[index] = inputs[name];
+      tensors[index] = input;
       tensorsMap[nodeName] = tensors;
     });
     const intermediateTensorConsumerCount: {[key: number]: number} = {};
@@ -612,6 +619,9 @@ export class GraphExecutor implements FunctionExecutor {
     const promises: Array<Promise<Tensor[]>> = [];
     while (stack.length > 0) {
       const item = stack.pop();
+      if (item == null) {
+        throw new Error('Missing pending graph node');
+      }
       context.currentContext = item.contexts;
       let nodeName = '';
       // The tensor of the Enter op with isConstant set should be set
@@ -689,33 +699,36 @@ export class GraphExecutor implements FunctionExecutor {
    * Releases the memory used by the weight tensors.
    */
   dispose() {
-    Object.keys(this.weightMap)
-        .forEach(
-            key => this.weightMap[key].forEach(tensor => tensor.dispose()));
+    Object.values(this.weightMap)
+        .forEach(tensors => tensors.forEach(tensor => tensor.dispose()));
   }
 
   private checkInputShapeAndType(inputs: NamedTensorMap) {
-    Object.keys(inputs).forEach(name => {
-      const input = inputs[name];
+    Object.entries(inputs).forEach(([name, input]) => {
       const [nodeName, ] = parseNodeName(name);
-      const node = this.graph.nodes[nodeName];
-      if (node.attrParams['shape'] && node.attrParams['shape'].value) {
-        const shape = node.attrParams['shape'].value as number[];
+      const node = this.requireGraphNode(nodeName);
+      const shapeParam = node.attrParams['shape'];
+      if (shapeParam && shapeParam.value) {
+        const shape = shapeParam.value as number[];
         const match = shape.length === input.shape.length &&
             input.shape.every(
-                (dim, index) => shape[index] === -1 || shape[index] === dim);
+                (dim, index) => {
+                  const expected = shape[index];
+                  return expected === -1 || expected === dim;
+                });
         util.assert(
             match,
             () => `The shape of dict['${node.name}'] provided in ` +
                 `model.execute(dict) must be [${shape}], but was ` +
                 `[${input.shape}]`);
       }
-      if (node.attrParams['dtype'] && node.attrParams['dtype'].value) {
+      const dtypeParam = node.attrParams['dtype'];
+      if (dtypeParam && dtypeParam.value) {
         util.assert(
-            input.dtype === node.attrParams['dtype'].value as string,
+            input.dtype === dtypeParam.value as string,
             () => `The dtype of dict['${node.name}'] provided in ` +
                 `model.execute(dict) must be ` +
-                `${node.attrParams['dtype'].value}, but was ${input.dtype}`);
+                `${dtypeParam.value}, but was ${input.dtype}`);
       }
     });
   }
@@ -723,14 +736,26 @@ export class GraphExecutor implements FunctionExecutor {
   private mapInputs(inputs: NamedTensorMap) {
     const result: NamedTensorMap = {};
     for (const inputName in inputs) {
+      const input = inputs[inputName];
+      if (input == null) {
+        throw new Error(`Missing tensor for input '${inputName}'`);
+      }
       const tensor = this._signature ?.inputs ?.[inputName];
       if (tensor != null) {
-        result[tensor.name] = inputs[inputName];
+        result[tensor.name] = input;
       } else {
-        result[inputName] = inputs[inputName];
+        result[inputName] = input;
       }
     }
     return result;
+  }
+
+  private requireGraphNode(name: string): Node {
+    const node = this.graph.nodes[name];
+    if (node == null) {
+      throw new Error(`Missing graph node '${name}'`);
+    }
+    return node;
   }
 
   private checkInputs(inputs: NamedTensorMap) {

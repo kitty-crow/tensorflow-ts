@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {FFTProgram} from '../fft_webgpu';
@@ -29,7 +29,7 @@ export function fftImpl(
 
   const inputSize = util.sizeFromShape(x.shape);
   // Collapse all outer dimensions to a single batch dimension.
-  const innerDimensionSize = x.shape[x.shape.length - 1];
+  const innerDimensionSize = backend_util.requiredDimension(x.shape, x.shape.length - 1);
   const batch = inputSize / innerDimensionSize;
 
   const toDispose: TensorInfo[] = [];

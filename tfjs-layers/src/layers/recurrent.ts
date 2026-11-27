@@ -27,7 +27,7 @@ import {ActivationIdentifier} from '../keras_format/activation_config';
 import {Shape} from '../keras_format/common';
 import {getRegularizer, Regularizer, RegularizerIdentifier, serializeRegularizer} from '../regularizers';
 import {Kwargs, RnnStepFunction, trainingMode} from '../types';
-import {assertPositiveInteger} from '../utils/generic_utils';
+import {assertPositiveInteger, requiredElement} from '../utils/generic_utils';
 import * as math_utils from '../utils/math_utils';
 import {getExactlyOneShape, getExactlyOneTensor, isArrayOfShapes} from '../utils/types_utils';
 import {batchGetValue, batchSetValue, LayerVariable} from '../variables';
@@ -217,7 +217,7 @@ export function rnn(
     }
 
     for (let t = 0; t < timeSteps; ++t) {
-      const currentInput = perStepInputs[t];
+      const currentInput = requiredElement(perStepInputs, t);
       const stepOutputs = tfc.tidy(() => stepFunction(currentInput, states));
 
       if (mask == null) {
@@ -225,15 +225,15 @@ export function rnn(
         states = stepOutputs[1];
       } else {
         const maskedOutputs = tfc.tidy(() => {
-          const stepMask = perStepMasks[t];
+          const stepMask = requiredElement(perStepMasks, t);
           const negStepMask = tfc.sub(tfc.onesLike(stepMask), stepMask);
           // TODO(cais): Would tfc.where() be better for performance?
           const output = tfc.add(
               tfc.mul(stepOutputs[0], stepMask),
-              tfc.mul(states[0], negStepMask));
+              tfc.mul(requiredElement(states, 0), negStepMask));
           const newStates = states.map((state, i) => {
             return tfc.add(
-                tfc.mul(stepOutputs[1][i], stepMask),
+                tfc.mul(requiredElement(stepOutputs[1], i), stepMask),
                 tfc.mul(state, negStepMask));
           });
           return {output, newStates};
@@ -434,7 +434,7 @@ export class RNN extends Layer {
 
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
     if (isArrayOfShapes(inputShape)) {
-      inputShape = (inputShape as Shape[])[0];
+      inputShape = requiredElement((inputShape as Shape[]), 0);
     }
     inputShape = inputShape as Shape;
 
@@ -443,18 +443,18 @@ export class RNN extends Layer {
     if (!Array.isArray(stateSize)) {
       stateSize = [stateSize];
     }
-    const outputDim = stateSize[0];
+    const outputDim = requiredElement(stateSize, 0);
     let outputShape: Shape|Shape[];
     if (this.returnSequences) {
-      outputShape = [inputShape[0], inputShape[1], outputDim];
+      outputShape = [requiredElement(inputShape, 0), requiredElement(inputShape, 1), outputDim];
     } else {
-      outputShape = [inputShape[0], outputDim];
+      outputShape = [requiredElement(inputShape, 0), outputDim];
     }
 
     if (this.returnState) {
       const stateShape: Shape[] = [];
       for (const dim of stateSize) {
-        stateShape.push([inputShape[0], dim]);
+        stateShape.push([requiredElement(inputShape, 0), dim]);
       }
       return [outputShape].concat(stateShape);
     } else {
@@ -513,17 +513,17 @@ export class RNN extends Layer {
     }
 
     if (isArrayOfShapes(inputShape)) {
-      inputShape = (inputShape as Shape[])[0];
+      inputShape = requiredElement((inputShape as Shape[]), 0);
     }
     inputShape = inputShape as Shape;
 
-    const batchSize: number = this.stateful ? inputShape[0] : null;
+    const batchSize: number = this.stateful ? requiredElement(inputShape, 0) : null;
     const inputDim = inputShape.slice(2);
     this.inputSpec[0] = new InputSpec({shape: [batchSize, null, ...inputDim]});
 
     // Allow cell (if RNNCell Layer) to build before we set or validate
     // stateSpec.
-    const stepInputShape = [inputShape[0]].concat(inputShape.slice(2));
+    const stepInputShape = [requiredElement(inputShape, 0)].concat(inputShape.slice(2));
     if (constantShape != null) {
       throw new NotImplementedError(
           'Constants support is not implemented in RNN yet.');
@@ -580,7 +580,7 @@ export class RNN extends Layer {
         throw new AttributeError(
             'Cannot call resetStates() on an RNN Layer that is not stateful.');
       }
-      const batchSize = this.inputSpec[0].shape[0];
+      const batchSize = requiredElement(this.inputSpec, 0).shape[0];
       if (batchSize == null) {
         throw new ValueError(
             'If an RNN is stateful, it needs to know its batch size. Specify ' +
@@ -594,7 +594,7 @@ export class RNN extends Layer {
           states, training === true, this.states_ == null,
           dim => [batchSize, dim],
           index => [batchSize, Array.isArray(this.cell.stateSize) ?
-              this.cell.stateSize[index] : this.cell.stateSize]);
+              requiredElement(this.cell.stateSize, index) : this.cell.stateSize]);
       this.states_ = this.states_.map(state => tfc.keep(state.clone()));
     });
   }
@@ -630,7 +630,7 @@ export class RNN extends Layer {
       tfc.dispose(this.states_);
     }
     for (let index = 0; index < this.states_.length; ++index) {
-      const value = values[index];
+      const value = requiredElement(values, index);
       const expectedShape = expectedStateShape(index);
       if (!util.arraysEqual(value.shape, expectedShape)) {
         throw new ValueError(
@@ -761,7 +761,7 @@ export class RNN extends Layer {
         const outputs =
             this.cell.call([inputs].concat(states), cellCallKwargs) as Tensor[];
         // Marshall the return value into output and new states.
-        return [outputs[0], outputs.slice(1)] as [Tensor, Tensor[]];
+        return [requiredElement(outputs, 0), outputs.slice(1)] as [Tensor, Tensor[]];
       };
 
       // TODO(cais): Add support for constants.
@@ -1050,7 +1050,7 @@ export class SimpleRNNCell extends RNNCell {
     inputShape = getExactlyOneShape(inputShape);
     // TODO(cais): Use regularizer.
     this.kernel = this.addWeight(
-        'kernel', [inputShape[inputShape.length - 1], this.units], null,
+        'kernel', [requiredElement(inputShape, inputShape.length - 1), this.units], null,
         this.kernelInitializer, this.kernelRegularizer, true,
         this.kernelConstraint);
     this.recurrentKernel = this.addWeight(
@@ -1080,8 +1080,8 @@ export class SimpleRNNCell extends RNNCell {
         throw new ValueError(
             `SimpleRNNCell expects 2 input Tensors, got ${inputs.length}.`);
       }
-      let prevOutput = inputs[1];
-      inputs = inputs[0];
+      let prevOutput = requiredElement(inputs, 1);
+      inputs = requiredElement(inputs, 0);
       const training = trainingMode(kwargs);
 
       if (0 < this.dropout && this.dropout < 1 && this.dropoutMask == null) {
@@ -1403,7 +1403,7 @@ export class GRUCell extends RNNCell {
 
   public override build(inputShape: Shape|Shape[]): void {
     inputShape = getExactlyOneShape(inputShape);
-    const inputDim = inputShape[inputShape.length - 1];
+    const inputDim = requiredElement(inputShape, inputShape.length - 1);
     this.kernel = this.addWeight(
         'kernel', [inputDim, this.units * 3], null, this.kernelInitializer,
         this.kernelRegularizer, true, this.kernelConstraint);
@@ -1433,8 +1433,8 @@ export class GRUCell extends RNNCell {
       }
 
       const training = trainingMode(kwargs);
-      let hTMinus1 = inputs[1];  // Previous memory state.
-      inputs = inputs[0];
+      let hTMinus1 = requiredElement(inputs, 1);  // Previous memory state.
+      inputs = requiredElement(inputs, 0);
 
       // Note: For superior performance, TensorFlow.js always uses
       // implementation 2, regardless of the actual value of
@@ -1476,14 +1476,19 @@ export class GRUCell extends RNNCell {
       }
 
       const recurrentKernelValue = this.recurrentKernel.read();
-      const [rk1, rk2] = tfc.split(
+      const kernelParts = tfc.split(
           recurrentKernelValue, [2 * this.units, this.units],
           recurrentKernelValue.rank - 1);
+      tfc.util.assertArrayLength(kernelParts, 2);
+      const [rk1, rk2] = kernelParts;
       const matrixInner = K.dot(hTMinus1, rk1);
 
-      const [xZ, xR, xH] = tfc.split(matrixX, 3, matrixX.rank - 1);
-      const [recurrentZ, recurrentR] =
-          tfc.split(matrixInner, 2, matrixInner.rank - 1);
+      const inputParts = tfc.split(matrixX, 3, matrixX.rank - 1);
+      tfc.util.assertArrayLength(inputParts, 3);
+      const [xZ, xR, xH] = inputParts;
+      const recurrentParts = tfc.split(matrixInner, 2, matrixInner.rank - 1);
+      tfc.util.assertArrayLength(recurrentParts, 2);
+      const [recurrentZ, recurrentR] = recurrentParts;
       z = this.recurrentActivation.apply(tfc.add(xZ, recurrentZ));
       r = this.recurrentActivation.apply(tfc.add(xR, recurrentR));
 
@@ -1721,7 +1726,7 @@ export class LSTMCell extends RNNCell {
 
   public override build(inputShape: Shape|Shape[]): void {
     inputShape = getExactlyOneShape(inputShape);
-    const inputDim = inputShape[inputShape.length - 1];
+    const inputDim = requiredElement(inputShape, inputShape.length - 1);
     this.kernel = this.addWeight(
         'kernel', [inputDim, this.units * 4], null, this.kernelInitializer,
         this.kernelRegularizer, true, this.kernelConstraint);
@@ -1770,9 +1775,9 @@ export class LSTMCell extends RNNCell {
             `LSTMCell expects 3 input Tensors (inputs, h, c), got ` +
             `${inputs.length}.`);
       }
-      let hTMinus1 = inputs[1];    // Previous memory state.
-      const cTMinus1 = inputs[2];  // Previous carry state.
-      inputs = inputs[0];
+      let hTMinus1 = requiredElement(inputs, 1);    // Previous memory state.
+      const cTMinus1 = requiredElement(inputs, 2);  // Previous carry state.
+      inputs = requiredElement(inputs, 0);
       if (0 < this.dropout && this.dropout < 1 && this.dropoutMask == null) {
         this.dropoutMask = generateDropoutMask({
                              ones: () => tfc.onesLike(inputs as Tensor),
@@ -1815,7 +1820,9 @@ export class LSTMCell extends RNNCell {
         z = K.biasAdd(z, this.bias.read());
       }
 
-      const [z0, z1, z2, z3] = tfc.split(z, 4, z.rank - 1);
+      const gateParts = tfc.split(z, 4, z.rank - 1);
+      tfc.util.assertArrayLength(gateParts, 4);
+      const [z0, z1, z2, z3] = gateParts;
 
       i = this.recurrentActivation.apply(z0);
       f = this.recurrentActivation.apply(z1);
@@ -1989,13 +1996,13 @@ export class StackedRNNCells extends RNNCell {
       const newNestedStates: Tensor[][] = [];
       let callInputs: Tensor[];
       for (let i = 0; i < this.cells.length; ++i) {
-        const cell = this.cells[i];
-        states = nestedStates[i];
+        const cell = requiredElement(this.cells, i);
+        states = requiredElement(nestedStates, i);
         // TODO(cais): Take care of constants.
         if (i === 0) {
-          callInputs = [inputs[0]].concat(states);
+          callInputs = [requiredElement(inputs, 0)].concat(states);
         } else {
-          callInputs = [callInputs[0]].concat(states);
+          callInputs = [requiredElement(callInputs, 0)].concat(states);
         }
         callInputs = cell.call(callInputs, kwargs) as Tensor[];
         newNestedStates.push(callInputs.slice(1));
@@ -2006,7 +2013,7 @@ export class StackedRNNCells extends RNNCell {
       for (const cellStates of newNestedStates.slice().reverse()) {
         states.push(...cellStates);
       }
-      return [callInputs[0]].concat(states);
+      return [requiredElement(callInputs, 0)].concat(states);
     });
   }
 
@@ -2014,7 +2021,7 @@ export class StackedRNNCells extends RNNCell {
     if (isArrayOfShapes(inputShape)) {
       // TODO(cais): Take care of input constants.
       // const constantShape = inputShape.slice(1);
-      inputShape = (inputShape as Shape[])[0];
+      inputShape = requiredElement((inputShape as Shape[]), 0);
     }
     inputShape = inputShape as Shape;
     let outputDim: number;
@@ -2024,11 +2031,11 @@ export class StackedRNNCells extends RNNCell {
 
         cell.build(inputShape);
         if (Array.isArray(cell.stateSize)) {
-          outputDim = cell.stateSize[0];
+          outputDim = requiredElement(cell.stateSize, 0);
         } else {
           outputDim = cell.stateSize;
         }
-        inputShape = [inputShape[0], outputDim] as Shape;
+        inputShape = [requiredElement(inputShape, 0), outputDim] as Shape;
       });
     });
     this.built = true;

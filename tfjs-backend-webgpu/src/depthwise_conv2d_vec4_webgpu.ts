@@ -40,11 +40,11 @@ export class DepthwiseConv2DVec4Program implements WebGPUProgram {
       convInfo: backend_util.Conv2DInfo, addBias = false,
       activation: backend_util.Activation = null, hasPreluActivation = false) {
     this.outputShape = convInfo.outShape;
-    this.virtualWidth = Math.ceil(this.outputShape[2] / this.workPerThread) *
+    this.virtualWidth = Math.ceil(backend_util.requiredDimension(this.outputShape, 2) / this.workPerThread) *
         this.workPerThread;
     const virtualOutputShape = [
-      this.outputShape[0], this.outputShape[1], this.virtualWidth,
-      this.outputShape[3]
+      backend_util.requiredDimension(this.outputShape, 0), backend_util.requiredDimension(this.outputShape, 1), this.virtualWidth,
+      backend_util.requiredDimension(this.outputShape, 3)
     ];
     this.dispatchLayout = flatDispatchLayout(virtualOutputShape);
 

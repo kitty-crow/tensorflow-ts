@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {DenseBincount, DenseBincountAttrs, DenseBincountInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {backend_util, DenseBincount, DenseBincountAttrs, DenseBincountInputs, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {BincountProgram} from '../bincount_webgpu';
@@ -36,9 +36,9 @@ export function denseBincount(args: {
   const hasWeights = weightsSize > 0;
   const dtype = weights.dtype;
   const xSize: [number]|[number, number] =
-      xRankOne ? [x.shape[0]] : [x.shape[0], x.shape[1]];
+      xRankOne ? [backend_util.requiredDimension(x.shape, 0)] : [backend_util.requiredDimension(x.shape, 0), backend_util.requiredDimension(x.shape, 1)];
   const outputSize: [number]|[number, number] =
-      xRankOne ? [size] : [x.shape[0], size];
+      xRankOne ? [size] : [backend_util.requiredDimension(x.shape, 0), size];
 
   const output = fill({backend, attrs: {shape: outputSize, value: 0, dtype}});
   const program = new BincountProgram(xSize, hasWeights, binaryOutput);

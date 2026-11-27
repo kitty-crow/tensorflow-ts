@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {backend_util} from '@tensorflow/tfjs-core';
+
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
 import {FlatDispatchProgram} from './flat_dispatch_program';
 
@@ -45,7 +47,7 @@ export class CumProgram extends FlatDispatchProgram implements WebGPUProgram {
     const initVal = this.op === CumOpType.Prod ? '1.0' : '0.0';
     const val = this.exclusive ? initVal :
                                  `getX(${getCoords(rank, 'coords', this.op)})`;
-    const length = this.outputShape[this.outputShape.length - 1];
+    const length = backend_util.requiredDimension(this.outputShape, this.outputShape.length - 1);
     let condition = '';
     let idxString = '';
     // When exclusive is set, the cum op becomes roll op that copies the

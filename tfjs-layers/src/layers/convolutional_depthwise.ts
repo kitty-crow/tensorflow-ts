@@ -12,6 +12,7 @@
  * TensorFlow.js Layers: Depthwise Convolutional Layers
  */
 
+import {requiredElement} from '../utils/generic_utils';
 import * as tfc from '@tensorflow/tfjs-core';
 import {serialization, Tensor, Tensor4D, tidy} from '@tensorflow/tfjs-core';
 
@@ -134,14 +135,14 @@ export class DepthwiseConv2D extends BaseConv {
           `Received input shape: ${JSON.stringify(inputShape)}.`);
     }
     const channelAxis = this.dataFormat === 'channelsFirst' ? 1 : 3;
-    if (inputShape[channelAxis] == null || inputShape[channelAxis] < 0) {
+    const inputDim = inputShape[channelAxis];
+    if (inputDim == null || inputDim < 0) {
       throw new ValueError(
           'The channel dimension of the inputs to DepthwiseConv2D should ' +
-          `be defined, but is not (${inputShape[channelAxis]}).`);
+          `be defined, but is not (${inputDim}).`);
     }
-    const inputDim = inputShape[channelAxis];
     const depthwiseKernelShape: Shape = [
-      this.kernelSize[0], this.kernelSize[1], inputDim, this.depthMultiplier
+      requiredElement(this.kernelSize, 0), requiredElement(this.kernelSize, 1), inputDim, this.depthMultiplier
     ];
 
     this.depthwiseKernel = this.addWeight(
@@ -178,21 +179,21 @@ export class DepthwiseConv2D extends BaseConv {
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
     inputShape = getExactlyOneShape(inputShape);
     const rows =
-        this.dataFormat === 'channelsFirst' ? inputShape[2] : inputShape[1];
+        this.dataFormat === 'channelsFirst' ? requiredElement(inputShape, 2) : requiredElement(inputShape, 1);
     const cols =
-        this.dataFormat === 'channelsFirst' ? inputShape[3] : inputShape[2];
+        this.dataFormat === 'channelsFirst' ? requiredElement(inputShape, 3) : requiredElement(inputShape, 2);
     const outFilters = this.dataFormat === 'channelsFirst' ?
-        inputShape[1] * this.depthMultiplier :
-        inputShape[3] * this.depthMultiplier;
+        requiredElement(inputShape, 1) * this.depthMultiplier :
+        requiredElement(inputShape, 3) * this.depthMultiplier;
     const outRows = convOutputLength(
-        rows, this.kernelSize[0], this.padding, this.strides[0]);
+        rows, requiredElement(this.kernelSize, 0), this.padding, requiredElement(this.strides, 0));
     const outCols = convOutputLength(
-        cols, this.kernelSize[1], this.padding, this.strides[1]);
+        cols, requiredElement(this.kernelSize, 1), this.padding, requiredElement(this.strides, 1));
     if (this.dataFormat === 'channelsFirst') {
-      return [inputShape[0], outFilters, outRows, outCols];
+      return [requiredElement(inputShape, 0), outFilters, outRows, outCols];
     } else {
       // In this case, assume 'channelsLast'.
-      return [inputShape[0], outRows, outCols, outFilters];
+      return [requiredElement(inputShape, 0), outRows, outCols, outFilters];
     }
   }
 

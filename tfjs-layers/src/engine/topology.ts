@@ -526,7 +526,7 @@ export abstract class Layer extends serialization.Serializable {
           `Asked to get ${attrName} at node ${nodeIndex}, ` +
           `but the layer has only ${this.inboundNodes.length} inbound nodes.`);
     }
-    return this.inboundNodes[nodeIndex];
+    return generic_utils.requiredElement(this.inboundNodes, nodeIndex);
   }
 
   /**
@@ -733,7 +733,7 @@ export abstract class Layer extends serialization.Serializable {
           `Input received: ${inputs}`);
     }
     for (let inputIndex = 0; inputIndex < inputsList.length; inputIndex++) {
-      const x = inputsList[inputIndex];
+      const x = generic_utils.requiredElement(inputsList, inputIndex);
       const spec: InputSpec = inputSpec[inputIndex];
       if (spec == null) {
         continue;
@@ -766,9 +766,10 @@ export abstract class Layer extends serialization.Serializable {
 
       // Check specific shape axes, with no iteration for missing axes.
       const xShape = x.shape;
-      for (const key in spec.axes ?? {}) {
+      const axes = spec.axes ?? {};
+      for (const key in axes) {
         const axis = Number(key);
-        const value = spec.axes[key];
+        const value = axes[key];
         // Perform Python-style slicing in case axis < 0;
         // TODO(cais): Use https://github.com/alvivi/typescript-underscore to
         // ensure type safety through Underscore calls.
@@ -1108,10 +1109,10 @@ export abstract class Layer extends serialization.Serializable {
           `for the layer.`);
       // TODO(cais): Implement getOutputShapeAt().
     }
-    const outputShapes = this.inboundNodes[0].outputShapes;
+    const outputShapes = generic_utils.requiredElement(this.inboundNodes, 0).outputShapes;
     return Array.isArray(outputShapes) && Array.isArray(outputShapes[0]) &&
         outputShapes.length === 1 ?
-        (outputShapes as Shape[])[0] : outputShapes;
+        generic_utils.requiredElement((outputShapes as Shape[]), 0) : outputShapes;
   }
 
   /**
@@ -1193,9 +1194,9 @@ export abstract class Layer extends serialization.Serializable {
       const weightValueTuples: Array<[LayerVariable, Tensor]> = [];
       const paramValues = batchGetValue(params);
       for (let i = 0; i < paramValues.length; ++i) {
-        const pv = paramValues[i];
-        const p = params[i];
-        const w = weights[i];
+        const pv = generic_utils.requiredElement(paramValues, i);
+        const p = generic_utils.requiredElement(params, i);
+        const w = generic_utils.requiredElement(weights, i);
         if (!util.arraysEqual(pv.shape, w.shape)) {
           throw new ValueError(
               `Layer weight shape ${pv.shape} ` +
@@ -1351,7 +1352,7 @@ export abstract class Layer extends serialization.Serializable {
           `but ${outputsList.length} masks for those tensors`);
     }
     for (let i = 0; i < outputsList.length; i++) {
-      outputsList[i].kerasMask = outputMasksList[i];
+      generic_utils.requiredElement(outputsList, i).kerasMask = outputMasksList[i];
     }
   }
 
@@ -1416,9 +1417,9 @@ export abstract class Layer extends serialization.Serializable {
     // Update tensor history
     for (let i = 0; i < outputTensors.length; i++) {
       // TODO(michaelterry: _uses_learning_phase not tracked.
-      outputTensors[i].sourceLayer = this;
-      outputTensors[i].nodeIndex = this.inboundNodes.length - 1;
-      outputTensors[i].tensorIndex = i;
+      generic_utils.requiredElement(outputTensors, i).sourceLayer = this;
+      generic_utils.requiredElement(outputTensors, i).nodeIndex = this.inboundNodes.length - 1;
+      generic_utils.requiredElement(outputTensors, i).tensorIndex = i;
     }
   }
 

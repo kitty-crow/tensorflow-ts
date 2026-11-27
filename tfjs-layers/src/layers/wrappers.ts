@@ -163,7 +163,7 @@ export class TimeDistributed extends Wrapper {
           `input shape ${JSON.stringify(inputShape)}`);
     }
     this.inputSpec = [{shape: inputShape}];
-    const childInputShape = [inputShape[0]].concat(inputShape.slice(2));
+    const childInputShape = [generic_utils.requiredElement(inputShape, 0)].concat(inputShape.slice(2));
     if (!this.layer.built) {
       this.layer.build(childInputShape);
       this.layer.built = true;
@@ -173,11 +173,11 @@ export class TimeDistributed extends Wrapper {
 
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
     inputShape = getExactlyOneShape(inputShape);
-    const childInputShape = [inputShape[0]].concat(inputShape.slice(2));
+    const childInputShape = [generic_utils.requiredElement(inputShape, 0)].concat(inputShape.slice(2));
     const childOutputShape =
         this.layer.computeOutputShape(childInputShape) as Shape;
-    const timesteps = inputShape[1];
-    return [childOutputShape[0], timesteps].concat(childOutputShape.slice(1));
+    const timesteps = generic_utils.requiredElement(inputShape, 1);
+    return [generic_utils.requiredElement(childOutputShape, 0), timesteps].concat(childOutputShape.slice(1));
   }
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
@@ -328,9 +328,9 @@ export class Bidirectional extends Wrapper {
     let stateShape: Shape[];
     if (this.returnState) {
       stateShape = layerShapes.slice(1);
-      outputShape = layerShapes[0];
+      outputShape = generic_utils.requiredElement(layerShapes, 0);
     } else {
-      outputShape = layerShapes[0];
+      outputShape = generic_utils.requiredElement(layerShapes, 0);
     }
     outputShape = outputShape;
     if (this.mergeMode === 'concat') {
@@ -454,8 +454,8 @@ export class Bidirectional extends Wrapper {
           states = y.slice(1).concat((yRev as Tensor[]).slice(1));
         } else {
         }
-        y = (y as Tensor[])[0];
-        yRev = (yRev as Tensor[])[0];
+        y = generic_utils.requiredElement((y as Tensor[]), 0);
+        yRev = generic_utils.requiredElement((yRev as Tensor[]), 0);
       }
 
       if (this.returnSequences) {

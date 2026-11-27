@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {SoftmaxProgram} from './softmax_webgpu';
+import {CropAndResizeProgram} from './crop_and_resize_webgpu';
 import {backend_util, TensorInfo} from '@tensorflow/tfjs-core';
 import {pool2DBackpropUniforms, pool3DBackpropUniforms} from './kernels/pool_backprop_uniforms';
 import {makeSelectedIndices, readNonMaxSuppressionInputs} from './kernels/non_max_suppression_util';
@@ -202,5 +204,22 @@ describe('WebGPU pooling backprop uniform layout', () => {
     const maximum = pool3DBackpropUniforms(info);
     expect(maximum.length).toBe(6);
     expect(maximum[0]).toEqual({type: 'int32', data: [1, 1, 1]});
+  });
+});
+
+describe('checked WebGPU program dimensions', () => {
+  it('retains softmax dispatch and the workgroup threshold', () => {
+    const small = new SoftmaxProgram([0, 4095]);
+    expect(small.dispatch).toEqual([0, 1, 1]);
+    expect(small.workgroupSize).toEqual([64, 1, 1]);
+    expect(new SoftmaxProgram([3, 4096]).workgroupSize).toEqual([256, 1, 1]);
+    expect(() => new SoftmaxProgram([3])).toThrowError(/Missing dimension/);
+  });
+  it('retains crop geometry and singleton sampling flags', () => {
+    const program = new CropAndResizeProgram(3, [2, 4], [1, 5], 'bilinear');
+    expect(program.outputShape).toEqual([2, 1, 5, 3]);
+    expect(program.cropHeightBiggerThan1).toBe(false);
+    expect(program.cropWidthBiggerThan1).toBe(true);
+    expect(program.shaderKey).toBe('cropAndResize_1_false_true');
   });
 });

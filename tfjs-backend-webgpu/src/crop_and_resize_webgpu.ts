@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {backend_util} from '@tensorflow/tfjs-core';
+
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
 import {FlatDispatchProgram} from './flat_dispatch_program';
 
@@ -33,8 +35,8 @@ export class CropAndResizeProgram extends FlatDispatchProgram implements WebGPUP
         [numBoxes, cropSize[0], cropSize[1], channnel], [64, 1, 1], ['Image', 'Boxes', 'BoxInd']);
 
     this.methodId = method === 'bilinear' ? 1 : 0;
-    this.cropHeightBiggerThan1 = this.outputShape[1] > 1;
-    this.cropWidthBiggerThan1 = this.outputShape[2] > 1;
+    this.cropHeightBiggerThan1 = backend_util.requiredDimension(this.outputShape, 1) > 1;
+    this.cropWidthBiggerThan1 = backend_util.requiredDimension(this.outputShape, 2) > 1;
     this.shaderKey = `cropAndResize_${this.methodId}_${
         this.cropHeightBiggerThan1}_${this.cropWidthBiggerThan1}`;
   }

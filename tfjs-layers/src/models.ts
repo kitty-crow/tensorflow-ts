@@ -400,12 +400,12 @@ export class Sequential extends LayersModel {
   // Helper function to Sequential.add  Throws if the new output shape will be
   // invalid.
   private checkShape(layer: Layer) {
-    const shape = layer.inboundNodes[0].outputTensors[0].shape;
+    const shape = generic_utils.requiredElement(generic_utils.requiredElement(layer.inboundNodes, 0).outputTensors, 0).shape;
     if (shape.some(x => x < 0)) {
       throw new ValueError(
           'Negative dimension size caused by adding layer ' +
           `${layer.name} with input shape [` +
-          `${layer.inboundNodes[0].inputTensors[0].shape}]`);
+          `${generic_utils.requiredElement(generic_utils.requiredElement(layer.inboundNodes, 0).inputTensors, 0).shape}]`);
     }
   }
 
@@ -485,7 +485,7 @@ export class Sequential extends LayersModel {
               'connections.');
         }
 
-        if (layer.inboundNodes[0].outputTensors.length !== 1) {
+        if (generic_utils.requiredElement(layer.inboundNodes, 0).outputTensors.length !== 1) {
           throw new ValueError(
               'All layers in a Sequential model ' +
               'should have a single output tensor. ' +
@@ -493,8 +493,8 @@ export class Sequential extends LayersModel {
               'use the functional API.');
         }
         this.checkShape(layer);
-        this.outputs = [layer.inboundNodes[0].outputTensors[0]];
-        this.inputs = getSourceInputs(this.outputs[0]);
+        this.outputs = [generic_utils.requiredElement(generic_utils.requiredElement(layer.inboundNodes, 0).outputTensors, 0)];
+        this.inputs = getSourceInputs(generic_utils.requiredElement(this.outputs, 0));
       }
 
       this.inboundNodes = [];
@@ -513,10 +513,10 @@ export class Sequential extends LayersModel {
         inputMasks: generic_utils.pyListRepeat(null, this.inputs.length),
         outputMasks: [null],
         inputShapes: this.inputs.map(x => x.shape),
-        outputShapes: this.outputs[0].shape
+        outputShapes: generic_utils.requiredElement(this.outputs, 0).shape
       });
     } else {
-      const outputTensor = layer.apply(this.outputs[0]);
+      const outputTensor = layer.apply(generic_utils.requiredElement(this.outputs, 0));
       if (Array.isArray(outputTensor)) {
         throw new TypeError(
             'All layers in a Sequential model ' +
@@ -527,8 +527,8 @@ export class Sequential extends LayersModel {
       this.checkShape(layer);
       this.outputs = [outputTensor as SymbolicTensor];
       // update self.inbound_nodes
-      this.inboundNodes[0].outputTensors = this.outputs;
-      this.inboundNodes[0].outputShapes = [this.outputs[0].shape];
+      generic_utils.requiredElement(this.inboundNodes, 0).outputTensors = this.outputs;
+      generic_utils.requiredElement(this.inboundNodes, 0).outputShapes = [generic_utils.requiredElement(this.outputs, 0).shape];
     }
 
     this.layers.push(layer);
@@ -552,11 +552,11 @@ export class Sequential extends LayersModel {
       this.outboundNodes = [];
     } else {
       const lastLayerIndex = this.layers.length - 1;
-      this.layers[lastLayerIndex].outboundNodes = [];
-      this.outputs = [this.layers[lastLayerIndex].output as SymbolicTensor];
+      generic_utils.requiredElement(this.layers, lastLayerIndex).outboundNodes = [];
+      this.outputs = [generic_utils.requiredElement(this.layers, lastLayerIndex).output as SymbolicTensor];
       // update self.inbound_nodes
-      this.inboundNodes[0].outputTensors = this.outputs;
-      this.inboundNodes[0].outputShapes = [this.outputs[0].shape];
+      generic_utils.requiredElement(this.inboundNodes, 0).outputTensors = this.outputs;
+      generic_utils.requiredElement(this.inboundNodes, 0).outputShapes = [generic_utils.requiredElement(this.outputs, 0).shape];
     }
   }
 
@@ -580,7 +580,7 @@ export class Sequential extends LayersModel {
     // actually create the model
     this.model = new LayersModel({
       inputs: this.inputs,
-      outputs: this.outputs[0],
+      outputs: generic_utils.requiredElement(this.outputs, 0),
       name: this.name + '_model'
     });
     this.model.trainable = this.trainable;
@@ -1100,12 +1100,12 @@ function resolveLayersLoadHandler(url: string, options: io.LoadOptions): io.IOHa
   if (handlers.length === 0) {
     // For backward compatibility, treat unmatched paths as relative HTTP URLs.
     handlers.push(io.browserHTTPRequest(url, options));
-    return handlers[0];
+    return generic_utils.requiredElement(handlers, 0);
   }
   if (handlers.length > 1) {
     throw new ValueError(
         `Found more than one (${handlers.length}) load handlers for ` +
         `URL '${url}'`);
   }
-  return handlers[0];
+  return generic_utils.requiredElement(handlers, 0);
 }

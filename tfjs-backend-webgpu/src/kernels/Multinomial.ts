@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelAttributes, Multinomial, MultinomialAttrs, MultinomialInputs, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelAttributes, Multinomial, MultinomialAttrs, MultinomialInputs, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {MultinomialProgram} from '../multinomial_webgpu';
@@ -35,8 +35,8 @@ export function multinomial(args: {
       logits :
       softmax(
           {inputs: {logits}, backend, attrs: {dim: logits.shape.length - 1}});
-  const batchSize = probs.shape[0];
-  const numOutcomes = probs.shape[1];
+  const batchSize = backend_util.requiredDimension(probs.shape, 0);
+  const numOutcomes = backend_util.requiredDimension(probs.shape, 1);
   const program = new MultinomialProgram(batchSize, numSamples);
   const uniformData =
       [{type: 'float32', data: [seed]}, {type: 'int32', data: [numOutcomes]}];

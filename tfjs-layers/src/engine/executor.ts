@@ -17,7 +17,7 @@ import {cast, dispose, memory, Tensor, util} from '@tensorflow/tfjs-core';
 import {ValueError} from '../errors';
 import {Kwargs} from '../types';
 import {LruCache} from '../utils/executor_utils';
-import {toList} from '../utils/generic_utils';
+import {requiredElement, requiredEntry, toList} from '../utils/generic_utils';
 
 import {InputLayer} from './input_layer';
 import {SymbolicTensor} from './topology';
@@ -297,7 +297,7 @@ export function execute(
           numTensors : probe.minNumTensors;
     }
 
-    const symbolic = sorted[i];
+    const symbolic = requiredElement(sorted, i);
     const srcLayer = symbolic.sourceLayer;
     if (srcLayer instanceof InputLayer) {
       continue;
@@ -338,14 +338,14 @@ export function execute(
     const outputSymbolicTensors =
         Array.isArray(layerOutputs) ? layerOutputs : [layerOutputs];
     for (let i = 0; i < outputSymbolicTensors.length; ++i) {
-      if (!internalFeedDict.hasKey(outputSymbolicTensors[i])) {
+      if (!internalFeedDict.hasKey(requiredElement(outputSymbolicTensors, i))) {
         internalFeedDict.add(
-            outputSymbolicTensors[i], outputTensors[i],
+            requiredElement(outputSymbolicTensors, i), requiredElement(outputTensors, i),
             Array.isArray(outputMask) ? outputMask[0] : outputMask);
       }
-      const index = outputNames.indexOf(outputSymbolicTensors[i].name);
+      const index = outputNames.indexOf(requiredElement(outputSymbolicTensors, i).name);
       if (index !== -1) {
-        finalOutputs[index] = outputTensors[i];
+        finalOutputs[index] = requiredElement(outputTensors, i);
       }
     }
 
@@ -361,7 +361,7 @@ export function execute(
   // we can improve this in the future.
   internalFeedDict.disposeMasks();
 
-  return arrayFetches ? finalOutputs : finalOutputs[0];
+  return arrayFetches ? finalOutputs : requiredElement(finalOutputs, 0);
 }
 
 type RecipientCounts = {
@@ -395,7 +395,7 @@ function getTopologicalSortAndRecipientCounts(
   if (fetches.length === 1) {
     // Special-case a single fetch for efficiency.
     const out =
-        getTopologicalSortAndRecipientCountsForOneFetch(fetches[0], feedDict);
+        getTopologicalSortAndRecipientCountsForOneFetch(requiredElement(fetches, 0), feedDict);
     return {sorted: out.sorted, recipientCounts: recipientMap2Counts(out.recipientMap)};
   }
   const visited = new Set<string>();
@@ -416,8 +416,8 @@ function getTopologicalSortAndRecipientCounts(
       if (finalRecipientMap[name] == null) {
         finalRecipientMap[name] = new Set<string>();
       }
-      recipientMap[name].forEach(
-          recipient => finalRecipientMap[name].add(recipient));
+      requiredEntry(recipientMap, name).forEach(
+          recipient => requiredEntry(finalRecipientMap, name).add(recipient));
     }
   }
   return {
@@ -429,7 +429,7 @@ function getTopologicalSortAndRecipientCounts(
 function recipientMap2Counts(recipientMap: RecipientMap): RecipientCounts {
   const recipientCounts: RecipientCounts = {};
   for (const name in recipientMap) {
-    recipientCounts[name] = recipientMap[name].size;
+    recipientCounts[name] = requiredEntry(recipientMap, name).size;
   }
   return recipientCounts;
 }
@@ -466,7 +466,7 @@ export function getTopologicalSortAndRecipientCountsForOneFetch(
   stack.push(fetch);
 
   while (stack.length > 0) {
-    const top = stack[stack.length - 1];
+    const top = requiredElement(stack, stack.length - 1);
     if (visited.has(top.name)) {
       stack.pop();
       continue;
@@ -509,7 +509,7 @@ function getNodeOutputs(fetch: SymbolicTensor): SymbolicTensor|
   }
   let nodeIndex: number = null;
   for (let i = 0; i < fetch.sourceLayer.inboundNodes.length; ++i) {
-    const outputs = fetch.sourceLayer.inboundNodes[i].outputTensors;
+    const outputs = requiredElement(fetch.sourceLayer.inboundNodes, i).outputTensors;
     if (outputs.some(outputTensor => outputTensor.id === fetch.id)) {
       nodeIndex = i;
     }

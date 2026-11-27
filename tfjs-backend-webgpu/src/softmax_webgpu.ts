@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {backend_util} from '@tensorflow/tfjs-core';
+
 import {getMainHeaderString as main, WebGPUProgram} from './webgpu_program';
 import {flatDispatchLayout} from './webgpu_util';
 
@@ -29,8 +31,8 @@ export class SoftmaxProgram implements WebGPUProgram {
   constructor(outputShape: number[]) {
     this.outputShape = outputShape;  // [rows, cols]
     this.dispatchLayout = flatDispatchLayout(this.outputShape);
-    this.dispatch = [this.outputShape[0], 1, 1];
-    if (this.outputShape[1] >= 4096) {
+    this.dispatch = [backend_util.requiredDimension(this.outputShape, 0), 1, 1];
+    if (backend_util.requiredDimension(this.outputShape, 1) >= 4096) {
       this.workgroupSize = [256, 1, 1];
     } else {
       this.workgroupSize = [64, 1, 1];

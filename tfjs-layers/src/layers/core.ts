@@ -25,7 +25,7 @@ import {DataFormat, Shape} from '../keras_format/common';
 import {LayerConfig} from '../keras_format/topology_config';
 import {getRegularizer, Regularizer, RegularizerIdentifier, serializeRegularizer} from '../regularizers';
 import {Kwargs, trainingMode} from '../types';
-import {assertPositiveInteger, mapActivationToFusedKernel} from '../utils/generic_utils';
+import {assertPositiveInteger, mapActivationToFusedKernel, requiredElement} from '../utils/generic_utils';
 import {arrayProd, range} from '../utils/math_utils';
 import {getExactlyOneShape, getExactlyOneTensor} from '../utils/types_utils';
 import {LayerVariable} from '../variables';
@@ -180,7 +180,7 @@ export class SpatialDropout1D extends Dropout {
 
   protected override getNoiseShape(input: Tensor): Shape {
     const inputShape = input.shape;
-    return [inputShape[0], 1, inputShape[2]];
+    return [requiredElement(inputShape, 0), 1, requiredElement(inputShape, 2)];
   }
 }
 serialization.registerClass(SpatialDropout1D);
@@ -239,7 +239,7 @@ export class Dense extends Layer {
 
   public override build(inputShape: Shape|Shape[]): void {
     inputShape = getExactlyOneShape(inputShape);
-    const inputLastDim = inputShape[inputShape.length - 1];
+    const inputLastDim = requiredElement(inputShape, inputShape.length - 1);
     if (this.kernel == null) {
       this.kernel = this.addWeight(
           'kernel', [inputLastDim, this.units], null, this.kernelInitializer,
@@ -337,7 +337,7 @@ export class Flatten extends Layer {
             `layer in your model.`);
       }
     }
-    return [inputShape[0], arrayProd(inputShape, 1)];
+    return [requiredElement(inputShape, 0), arrayProd(inputShape, 1)];
   }
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
@@ -429,7 +429,7 @@ export class RepeatVector extends Layer {
   }
 
   override computeOutputShape(inputShape: Shape): Shape {
-    return [inputShape[0], this.n, inputShape[1]];
+    return [requiredElement(inputShape, 0), this.n, requiredElement(inputShape, 1)];
   }
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
@@ -601,7 +601,7 @@ export class Permute extends Layer {
     inputShape = getExactlyOneShape(inputShape);
     const outputShape = inputShape.slice();
     this.dims.forEach((dim: number, i: number) => {
-      outputShape[i + 1] = (inputShape as Shape)[dim];
+      outputShape[i + 1] = requiredElement((inputShape as Shape), dim);
     });
     return outputShape;
   }

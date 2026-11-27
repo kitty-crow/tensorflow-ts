@@ -14,6 +14,24 @@ import {DataType, fused, serialization, util} from '@tensorflow/tfjs-core';
 
 import {AssertionError, ValueError} from '../errors';
 
+/** Read a required aligned array entry. Null remains a valid symbolic dimension or mask. */
+export function requiredElement<T>(values: ArrayLike<T>, index: number): T {
+  const value = values[index];
+  if (typeof value === 'undefined') {
+    throw new ValueError(`Missing required element at index ${index}.`);
+  }
+  return value;
+}
+
+/** Read a required graph entry without treating zero or null as missing. */
+export function requiredEntry<T>(values: {[key: string]: T}, key: string|number): T {
+  const value = values[key];
+  if (typeof value === 'undefined') {
+    throw new ValueError(`Missing required entry for ${key}.`);
+  }
+  return value;
+}
+
 // tslint:enable
 
 /**

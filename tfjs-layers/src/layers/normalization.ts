@@ -127,7 +127,7 @@ function broadcastNormalizeBatchInTraining(
              if (reductionAxes.indexOf(axis) !== -1) {
                targetShape.push(1);
              } else {
-               targetShape.push(x.shape[axis]);
+               targetShape.push(generic_utils.requiredElement(x.shape, axis));
              }
            }
            const broadcastMean = reshape(mean, targetShape);
@@ -335,7 +335,7 @@ export class BatchNormalization extends Layer {
       const axis = this.axis >= 0 ? this.axis : (this.axis + ndim);
       reductionAxes.splice(axis, 1);
       const broadcastShape = generic_utils.pyListRepeat(1, ndim);
-      broadcastShape[axis] = inputShape[axis];
+      broadcastShape[axis] = generic_utils.requiredElement(inputShape, axis);
 
       const sortedReductionAxes = reductionAxes.slice();
       sortedReductionAxes.sort();
@@ -531,8 +531,9 @@ export class LayerNormalization extends Layer {
       this.axis = [this.axis];
     }
     for (let i = 0; i < this.axis.length; ++i) {
-      if (this.axis[i] < 0) {
-        this.axis[i] += nDims;
+      const axis = generic_utils.requiredElement(this.axis, i);
+      if (axis < 0) {
+        this.axis[i] = axis + nDims;
       }
     }
 
@@ -546,7 +547,7 @@ export class LayerNormalization extends Layer {
       throw new Error(`Found duplicate axes in: ${this.axis}`);
     }
 
-    const paramShape = this.axis.map(axis => inputShape[axis]) as number[];
+    const paramShape = this.axis.map(axis => generic_utils.requiredElement(inputShape, axis)) as number[];
 
     const trainable = true;
     if (this.scale) {
@@ -577,7 +578,7 @@ export class LayerNormalization extends Layer {
       let {mean, variance} = moments(input, this.axis, keepDims);
       const broadcastShape = generic_utils.pyListRepeat(1, nDims);
       for (const dim of this.axis as number[]) {
-        broadcastShape[dim] = inputShape[dim];
+        broadcastShape[dim] = generic_utils.requiredElement(inputShape, dim);
       }
 
       const broadcast = (v: Tensor) => {
@@ -601,11 +602,11 @@ export class LayerNormalization extends Layer {
       const scaleOffsetTiling: number[] = [];
       for (let i = 0; i < nDims; ++i) {
         if ((this.axis as number[]).indexOf(i) !== -1) {
-          momentsTiling.push(inputShape[i]);
+          momentsTiling.push(generic_utils.requiredElement(inputShape, i));
           scaleOffsetTiling.push(1);
         } else {
           momentsTiling.push(1);
-          scaleOffsetTiling.push(inputShape[i]);
+          scaleOffsetTiling.push(generic_utils.requiredElement(inputShape, i));
         }
       }
       mean = tfc.tile(mean, momentsTiling);

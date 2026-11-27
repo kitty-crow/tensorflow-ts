@@ -559,8 +559,8 @@ export abstract class Conv extends BaseConv {
       switch (this.rank) {
         case 1:
           outputs = conv1dWithBias(
-              inputs, this.kernel.read(), biasValue, this.strides[0],
-              this.padding, this.dataFormat, this.dilationRate[0]);
+              inputs, this.kernel.read(), biasValue, generic_utils.requiredElement(this.strides, 0),
+              this.padding, this.dataFormat, generic_utils.requiredElement(this.dilationRate, 0));
           break;
         case 2:
           // TODO(cais): Move up to constructor.
@@ -593,13 +593,13 @@ export abstract class Conv extends BaseConv {
         inputShape.slice(2);
     for (let i = 0; i < space.length; ++i) {
       const newDim = convOutputLength(
-          space[i], this.kernelSize[i], this.padding, this.strides[i],
+          generic_utils.requiredElement(space, i), generic_utils.requiredElement(this.kernelSize, i), this.padding, generic_utils.requiredElement(this.strides, i),
           typeof this.dilationRate === 'number' ? this.dilationRate :
-                                                  this.dilationRate[i]);
+                                                  generic_utils.requiredElement(this.dilationRate, i));
       newSpace.push(newDim);
     }
 
-    let outputShape = [inputShape[0]];
+    let outputShape = [generic_utils.requiredElement(inputShape, 0)];
     if (this.dataFormat === 'channelsLast') {
       outputShape = outputShape.concat(newSpace);
       outputShape.push(this.filters);
@@ -758,12 +758,12 @@ export class Conv2DTranspose extends Conv2D {
         wAxis = 2;
       }
 
-      const height = inputShape[hAxis];
-      const width = inputShape[wAxis];
-      const kernelH = this.kernelSize[0];
-      const kernelW = this.kernelSize[1];
-      const strideH = this.strides[0];
-      const strideW = this.strides[1];
+      const height = generic_utils.requiredElement(inputShape, hAxis);
+      const width = generic_utils.requiredElement(inputShape, wAxis);
+      const kernelH = generic_utils.requiredElement(this.kernelSize, 0);
+      const kernelW = generic_utils.requiredElement(this.kernelSize, 1);
+      const strideH = generic_utils.requiredElement(this.strides, 0);
+      const strideW = generic_utils.requiredElement(this.strides, 1);
 
       // Infer the dynamic output shape.
       const outHeight = deconvLength(height, strideH, kernelH, this.padding);
@@ -814,16 +814,16 @@ export class Conv2DTranspose extends Conv2D {
       widthAxis = 2;
     }
 
-    const kernelH = this.kernelSize[0];
-    const kernelW = this.kernelSize[1];
-    const strideH = this.strides[0];
-    const strideW = this.strides[1];
+    const kernelH = generic_utils.requiredElement(this.kernelSize, 0);
+    const kernelW = generic_utils.requiredElement(this.kernelSize, 1);
+    const strideH = generic_utils.requiredElement(this.strides, 0);
+    const strideW = generic_utils.requiredElement(this.strides, 1);
 
     outputShape[channelAxis] = this.filters;
     outputShape[heightAxis] =
-        deconvLength(outputShape[heightAxis], strideH, kernelH, this.padding);
+        deconvLength(generic_utils.requiredElement(outputShape, heightAxis), strideH, kernelH, this.padding);
     outputShape[widthAxis] =
-        deconvLength(outputShape[widthAxis], strideW, kernelW, this.padding);
+        deconvLength(generic_utils.requiredElement(outputShape, widthAxis), strideW, kernelW, this.padding);
     return outputShape;
   }
 
@@ -910,15 +910,15 @@ export class Conv3DTranspose extends Conv3D {
         wAxis = 3;
       }
 
-      const depth = inputShape[dAxis];
-      const height = inputShape[hAxis];
-      const width = inputShape[wAxis];
-      const kernelD = this.kernelSize[0];
-      const kernelH = this.kernelSize[1];
-      const kernelW = this.kernelSize[2];
-      const strideD = this.strides[0];
-      const strideH = this.strides[1];
-      const strideW = this.strides[2];
+      const depth = generic_utils.requiredElement(inputShape, dAxis);
+      const height = generic_utils.requiredElement(inputShape, hAxis);
+      const width = generic_utils.requiredElement(inputShape, wAxis);
+      const kernelD = generic_utils.requiredElement(this.kernelSize, 0);
+      const kernelH = generic_utils.requiredElement(this.kernelSize, 1);
+      const kernelW = generic_utils.requiredElement(this.kernelSize, 2);
+      const strideD = generic_utils.requiredElement(this.strides, 0);
+      const strideH = generic_utils.requiredElement(this.strides, 1);
+      const strideW = generic_utils.requiredElement(this.strides, 2);
 
       // Infer the dynamic output shape.
       const outDepth = deconvLength(depth, strideD, kernelD, this.padding);
@@ -970,20 +970,20 @@ export class Conv3DTranspose extends Conv3D {
       widthAxis = 3;
     }
 
-    const kernelD = this.kernelSize[0];
-    const kernelH = this.kernelSize[1];
-    const kernelW = this.kernelSize[2];
-    const strideD = this.strides[0];
-    const strideH = this.strides[1];
-    const strideW = this.strides[2];
+    const kernelD = generic_utils.requiredElement(this.kernelSize, 0);
+    const kernelH = generic_utils.requiredElement(this.kernelSize, 1);
+    const kernelW = generic_utils.requiredElement(this.kernelSize, 2);
+    const strideD = generic_utils.requiredElement(this.strides, 0);
+    const strideH = generic_utils.requiredElement(this.strides, 1);
+    const strideW = generic_utils.requiredElement(this.strides, 2);
 
     outputShape[channelAxis] = this.filters;
     outputShape[depthAxis] =
-        deconvLength(outputShape[depthAxis], strideD, kernelD, this.padding);
+        deconvLength(generic_utils.requiredElement(outputShape, depthAxis), strideD, kernelD, this.padding);
     outputShape[heightAxis] =
-        deconvLength(outputShape[heightAxis], strideH, kernelH, this.padding);
+        deconvLength(generic_utils.requiredElement(outputShape, heightAxis), strideH, kernelH, this.padding);
     outputShape[widthAxis] =
-        deconvLength(outputShape[widthAxis], strideW, kernelW, this.padding);
+        deconvLength(generic_utils.requiredElement(outputShape, widthAxis), strideW, kernelW, this.padding);
     return outputShape;
   }
 

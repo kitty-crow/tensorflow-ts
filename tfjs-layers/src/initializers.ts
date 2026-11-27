@@ -16,7 +16,7 @@ import {NotImplementedError, ValueError} from './errors';
 import {DataFormat, Shape} from './keras_format/common';
 import {Distribution, FanMode, VALID_DISTRIBUTION_VALUES, VALID_FAN_MODE_VALUES} from './keras_format/initializer_config';
 import type {OrthogonalConfig as OrthogonalArgs, RandomNormalConfig as RandomNormalArgs, RandomNormalConfig as TruncatedNormalArgs, RandomUniformConfig as RandomUniformArgs} from './keras_format/initializer_config';
-import {checkStringTypeUnionValue, deserializeKerasObject, serializeKerasObject} from './utils/generic_utils';
+import {checkStringTypeUnionValue, deserializeKerasObject, serializeKerasObject, requiredElement} from './utils/generic_utils';
 import {arrayProd} from './utils/math_utils';
 
 export function checkFanMode(value?: string): void {
@@ -222,7 +222,7 @@ export class Identity extends Initializer {
             'Identity matrix initializer can only be used for' +
             ' 2D square matrices.');
       } else {
-        return mul(this.gain, eye(shape[0]));
+        return mul(this.gain, eye(requiredElement(shape, 0)));
       }
     });
   }
@@ -247,20 +247,20 @@ function computeFans(
   let fanOut: number;
   checkDataFormat(dataFormat);
   if (shape.length === 2) {
-    fanIn = shape[0];
-    fanOut = shape[1];
+    fanIn = requiredElement(shape, 0);
+    fanOut = requiredElement(shape, 1);
   } else if ([3, 4, 5].indexOf(shape.length) !== -1) {
     switch (dataFormat) {
       case 'channelsFirst': {
         const receptiveFieldSize = arrayProd(shape, 2);
-        fanIn = shape[1] * receptiveFieldSize;
-        fanOut = shape[0] * receptiveFieldSize;
+        fanIn = requiredElement(shape, 1) * receptiveFieldSize;
+        fanOut = requiredElement(shape, 0) * receptiveFieldSize;
         break;
       }
       case 'channelsLast': {
         const receptiveFieldSize = arrayProd(shape, 0, shape.length - 2);
-        fanIn = shape[shape.length - 2] * receptiveFieldSize;
-        fanOut = shape[shape.length - 1] * receptiveFieldSize;
+        fanIn = requiredElement(shape, shape.length - 2) * receptiveFieldSize;
+        fanOut = requiredElement(shape, shape.length - 1) * receptiveFieldSize;
         break;
       }
     }
@@ -316,8 +316,8 @@ export class VarianceScaling extends Initializer {
 
   apply(shape: Shape, dtype?: DataType): Tensor {
     const fans = computeFans(shape);
-    const fanIn = fans[0];
-    const fanOut = fans[1];
+    const fanIn = requiredElement(fans, 0);
+    const fanOut = requiredElement(fans, 1);
     let scale = this.scale;
     switch (this.mode) {
       case 'fanIn':
@@ -537,7 +537,7 @@ export class Orthogonal extends Initializer {
       // flatten the input shape with the last dimension remaining its
       // original shape so it works for conv2d
       const numRows = util.sizeFromShape(shape.slice(0, -1));
-      const numCols = shape[shape.length - 1];
+      const numCols = requiredElement(shape, shape.length - 1);
       const numElements = numRows * numCols;
       if (numElements > this.ELEMENTS_WARN_SLOW) {
         console.warn(

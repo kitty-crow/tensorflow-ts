@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, KernelConfig, KernelFunc, TensorInfo} from '@tensorflow/tfjs-core';
 import {Draw, DrawAttrs, DrawInputs,} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
@@ -48,7 +48,7 @@ export function draw(
     canvasWebGPU = new OffscreenCanvas(width, height);
     gpuContext = canvasWebGPU.getContext(backendName);
   }
-  const numChannels = image.shape.length === 3 ? image.shape[2] : 1;
+  const numChannels = image.shape.length === 3 ? backend_util.requiredDimension(image.shape, 2) : 1;
   gpuContext.configure({
     device: backend.device,
     format,

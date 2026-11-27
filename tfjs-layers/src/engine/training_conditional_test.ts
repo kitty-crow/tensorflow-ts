@@ -16,6 +16,10 @@ import {ReLULayerConfig} from '../keras_format/layers/advanced_activation_serial
 import {LayerMetadata} from '../keras_format/topology_config';
 import {ReLU} from '../layers/advanced_activations';
 import {standardizeArgs} from '../layers/recurrent';
+import {requiredElement, requiredEntry} from '../utils/generic_utils';
+import {Conv2D} from '../layers/convolutional';
+import {DepthwiseConv2D} from '../layers/convolutional_depthwise';
+import {Sequential} from '../models';
 import {collectMetrics, standardizeInputData} from './training';
 import {disposeNewTensors, ensureTensorsRank2OrHigher} from './training_tensors';
 
@@ -107,5 +111,48 @@ describe('shared layer metadata contract', () => {
     const defaultLayer = new ReLU({...omitted, inputShape: [2]});
     expect(defaultLayer.dtype).toBe('float32');
     expect(defaultLayer.trainable).toBe(true);
+  });
+});
+
+
+describe('required layer entries', () => {
+  it('preserves symbolic null dimensions, zero values and identity', () => {
+    const shape = [null, 0, 3];
+    expect(requiredElement(shape, 0)).toBeNull();
+    expect(requiredElement(shape, 1)).toBe(0);
+    expect(requiredEntry({shape}, 'shape')).toBe(shape);
+    expect(requiredEntry({zero: 0}, 'zero')).toBe(0);
+    expect(() => requiredElement(shape, 3)).toThrowError(/Missing required element/);
+    expect(() => requiredEntry({shape}, 'other')).toThrowError(/Missing required entry/);
+  });
+  it('retains symbolic convolution shapes in both layouts', () => {
+    const last = new Conv2D({filters: 3, kernelSize: 3, padding: 'same'});
+    const first = new Conv2D({filters: 3, kernelSize: 3, padding: 'same', dataFormat: 'channelsFirst'});
+    expect(last.computeOutputShape([null, 5, null, 2])).toEqual([null, 5, null, 3]);
+    expect(first.computeOutputShape([null, 2, 5, null])).toEqual([null, 3, 5, null]);
+  });
+  it('retains unknown reference dimensions and rejects rank and size mismatches', () => {
+    const a = new Tensor([1, 2], 'float32', {}, 51);
+    expect(standardizeInputData([a], ['a'], [[null, 2]], false)).toEqual([a]);
+    expect(() => standardizeInputData([a], ['a'], [[null, 3]], false)).toThrowError();
+    expect(() => standardizeInputData([a], ['a'], [[null, 2, 1]], false)).toThrowError();
+  });
+});
+
+describe('checked symbolic model and depthwise shapes', () => {
+  it('keeps sequential graph outputs aligned when adding and removing layers', () => {
+    const model = new Sequential({layers: [new ReLU({inputShape: [2]})]});
+    const firstOutput = requiredElement(model.outputs, 0);
+    expect(firstOutput.shape).toEqual([null, 2]);
+    model.add(new ReLU({}));
+    expect(requiredElement(model.outputs, 0).shape).toEqual([null, 2]);
+    expect(model.layers.length).toBe(2);
+    model.pop();
+    expect(requiredElement(model.outputs, 0)).toBe(firstOutput);
+    expect(model.layers.length).toBe(1);
+  });
+  it('keeps unknown spatial dimensions through depthwise convolution', () => {
+    const layer = new DepthwiseConv2D({kernelSize: 3, depthMultiplier: 2, padding: 'same'});
+    expect(layer.computeOutputShape([null, 5, null, 2])).toEqual([null, 5, null, 4]);
   });
 });

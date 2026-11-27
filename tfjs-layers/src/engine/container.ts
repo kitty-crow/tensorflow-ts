@@ -266,7 +266,7 @@ export abstract class Container extends Layer {
             nodeIndex = tensor.nodeIndex;
             tensorIndex = tensor.tensorIndex;
           }
-          const node = layer.inboundNodes[nodeIndex];
+          const node = generic_utils.requiredElement(layer.inboundNodes, nodeIndex);
 
           // Prevent cycles.
           if (nodesInProgress.indexOf(node) !== -1) {
@@ -295,10 +295,10 @@ export abstract class Container extends Layer {
           // Propagate to all previous tensors connected to this node.
           const numInboundLayers = node.inboundLayers.length;
           for (let i = 0; i < numInboundLayers; i++) {
-            const x = node.inputTensors[i];
-            const layer = node.inboundLayers[i];
-            const nodeIndex = node.nodeIndices[i];
-            const tensorIndex = node.tensorIndices[i];
+            const x = generic_utils.requiredElement(node.inputTensors, i);
+            const layer = generic_utils.requiredElement(node.inboundLayers, i);
+            const nodeIndex = generic_utils.requiredElement(node.nodeIndices, i);
+            const tensorIndex = generic_utils.requiredElement(node.tensorIndices, i);
             buildMapOfGraph(
                 x, finishedNodes, nodesInProgress, layer, nodeIndex,
                 tensorIndex);
@@ -324,13 +324,10 @@ export abstract class Container extends Layer {
       if (!(node.id in nodesDepths)) {
         nodesDepths[node.id] = 0;
       }
-      let depth = nodesDepths[node.id];
+      let depth = generic_utils.requiredEntry(nodesDepths, node.id);
 
       // Update the depth of the corresponding layer
-      const previousDepth =
-          (layersDepths[node.outboundLayer.id] == null ?
-               0 :
-               layersDepths[node.outboundLayer.id]);
+      const previousDepth = layersDepths[node.outboundLayer.id] ?? 0;
 
       /*
         If we've seen this layer before at a higher depth, we should use that
@@ -344,12 +341,10 @@ export abstract class Container extends Layer {
 
       // Update the depth of inbound nodes.
       for (let i = 0; i < node.inboundLayers.length; i++) {
-        const inboundLayer = node.inboundLayers[i];
-        const nodeIndex = node.nodeIndices[i];
-        const inboundNode = inboundLayer.inboundNodes[nodeIndex];
-        const previousDepth =
-            (nodesDepths[inboundNode.id] == null ? 0 :
-                                                   nodesDepths[inboundNode.id]);
+        const inboundLayer = generic_utils.requiredElement(node.inboundLayers, i);
+        const nodeIndex = generic_utils.requiredElement(node.nodeIndices, i);
+        const inboundNode = generic_utils.requiredElement(inboundLayer.inboundNodes, nodeIndex);
+        const previousDepth = nodesDepths[inboundNode.id] ?? 0;
         nodesDepths[inboundNode.id] = Math.max(depth + 1, previousDepth);
         nodeIDToNode[inboundNode.id] = inboundNode;
       }
@@ -358,21 +353,21 @@ export abstract class Container extends Layer {
     // Build a dict {depth: list of nodes with this depth}
     const nodesByDepth: {[depth: string]: Node[]} = {};
     for (const nodeID in nodesDepths) {
-      const depth = nodesDepths[nodeID];
+      const depth = generic_utils.requiredEntry(nodesDepths, nodeID);
       if (!(depth in nodesByDepth)) {
         nodesByDepth[depth] = [];
       }
-      nodesByDepth[depth].push(nodeIDToNode[nodeID]);
+      generic_utils.requiredEntry(nodesByDepth, depth).push(generic_utils.requiredEntry(nodeIDToNode, nodeID));
     }
 
     // Build a dict {depth: list of layers with this depth}
     const layersByDepth: {[depth: string]: Layer[]} = {};
     for (const layerID in layersDepths) {
-      const depth = layersDepths[layerID];
+      const depth = generic_utils.requiredEntry(layersDepths, layerID);
       if (!(depth in layersByDepth)) {
         layersByDepth[depth] = [];
       }
-      layersByDepth[depth].push(layerIDToLayer[layerID]);
+      generic_utils.requiredEntry(layersByDepth, depth).push(generic_utils.requiredEntry(layerIDToLayer, layerID));
     }
 
     // Get sorted list of layer depths.
@@ -383,12 +378,12 @@ export abstract class Container extends Layer {
     // Set this.layers and this.layersByDepth.
     this.layers = [];
     for (const depth of depthKeys) {
-      const layersForDepth = layersByDepth[depth];
+      const layersForDepth = generic_utils.requiredEntry(layersByDepth, depth);
       // Container.layers needs to have a deterministic order:
       // here we order them by traversal order.
       layersForDepth.sort((a, b) => {
-        const aIndex = layerIndices[a.id];
-        const bIndex = layerIndices[b.id];
+        const aIndex = generic_utils.requiredEntry(layerIndices, a.id);
+        const bIndex = generic_utils.requiredEntry(layerIndices, b.id);
         if (aIndex < bIndex) {
           return -1;
         }
@@ -419,7 +414,7 @@ export abstract class Container extends Layer {
     // To provide a better error msg.
     const layersWithCompleteInput: string[] = [];
     for (const depth of depthKeys) {
-      for (const node of nodesByDepth[depth]) {
+      for (const node of generic_utils.requiredEntry(nodesByDepth, depth)) {
         const layer = node.outboundLayer;
         if (!(layer != null)) continue;
         {
@@ -784,8 +779,8 @@ export abstract class Container extends Layer {
     // TODO(michaelterry): Add caching
     const layersToOutputShapes: {[shapeKey: string]: Shape} = {};
     for (let i = 0; i < inputShapes.length; i++) {
-      const layer = this.inputLayers[i];
-      const inputShape = inputShapes[i];
+      const layer = generic_utils.requiredElement(this.inputLayers, i);
+      const inputShape = generic_utils.requiredElement(inputShapes, i);
       // It's an input layer: computeOutputShape is identity,
       // and there is only one node and one tensor output.
       const shapeKey = layer.name + '_0_0';
@@ -798,7 +793,7 @@ export abstract class Container extends Layer {
     // Iterate over nodes, by depth level.
     if (depthKeys.length > 1) {
       for (const depth of depthKeys) {
-        const nodes = this.nodesByDepth[depth];
+        const nodes = generic_utils.requiredEntry(this.nodesByDepth, depth);
         for (const node of nodes) {
           // This is always a single layer, never a list.
           const layer = node.outboundLayer;
@@ -809,11 +804,11 @@ export abstract class Container extends Layer {
           // Potentially redundant list, same size of node.inputTensors.
           const inputShapes: Shape[] = [];
           for (let j = 0; j < node.inboundLayers.length; j++) {
-            const inboundLayer = node.inboundLayers[j];
-            const nodeIndex = node.nodeIndices[j];
-            const tensorIndex = node.tensorIndices[j];
+            const inboundLayer = generic_utils.requiredElement(node.inboundLayers, j);
+            const nodeIndex = generic_utils.requiredElement(node.nodeIndices, j);
+            const tensorIndex = generic_utils.requiredElement(node.tensorIndices, j);
             const shapeKey = `${inboundLayer.name}_${nodeIndex}_${tensorIndex}`;
-            const inputShape = layersToOutputShapes[shapeKey];
+            const inputShape = generic_utils.requiredEntry(layersToOutputShapes, shapeKey);
             inputShapes.push(inputShape);
           }
 
@@ -824,7 +819,7 @@ export abstract class Container extends Layer {
           const nodeIndex = layer.inboundNodes.indexOf(node);
           for (let j = 0; j < outputShapes.length; j++) {
             const shapeKey = `${layer.name}_${nodeIndex}_${j}`;
-            layersToOutputShapes[shapeKey] = outputShapes[j];
+            layersToOutputShapes[shapeKey] = generic_utils.requiredElement(outputShapes, j);
           }
         }
       }
@@ -834,17 +829,17 @@ export abstract class Container extends Layer {
     const outputShapes: Shape[] = [];
     const outputShapeKeys: string[] = [];
     for (let i = 0; i < this.outputLayers.length; i++) {
-      const layer = this.outputLayers[i];
-      const nodeIndex = this.outputLayersNodeIndices[i];
-      const tensorIndex = this.outputLayersTensorIndices[i];
+      const layer = generic_utils.requiredElement(this.outputLayers, i);
+      const nodeIndex = generic_utils.requiredElement(this.outputLayersNodeIndices, i);
+      const tensorIndex = generic_utils.requiredElement(this.outputLayersTensorIndices, i);
       const shapeKey = `${layer.name}_${nodeIndex}_${tensorIndex}`;
       outputShapeKeys.push(shapeKey);
     }
 
     for (let i = 0; i < outputShapeKeys.length; i++) {
-      const key = outputShapeKeys[i];
+      const key = generic_utils.requiredElement(outputShapeKeys, i);
       generic_utils.assert(key in layersToOutputShapes);
-      outputShapes.push(layersToOutputShapes[key]);
+      outputShapes.push(generic_utils.requiredEntry(layersToOutputShapes, key));
     }
 
     // TODO(michaelterry): Update cache
@@ -874,8 +869,8 @@ export abstract class Container extends Layer {
     // does not return a list the same size as `call`
     const tensorMap: {[tensorID: string]: [Tensor, Tensor]} = {};
     for (let i = 0; i < this.inputs.length; ++i) {
-      const x = this.inputs[i];
-      const y = inputs[i];
+      const x = generic_utils.requiredElement(this.inputs, i);
+      const y = generic_utils.requiredElement(inputs, i);
       const mask = masks[i];
       tensorMap[x.id] = [y, mask];
     }
@@ -884,7 +879,7 @@ export abstract class Container extends Layer {
                           .map(x => parseInt(x, 10))
                           .sort(generic_utils.reverseNumberCompare);
     for (const depth of depthKeys) {
-      const nodes = this.nodesByDepth[depth];
+      const nodes = generic_utils.requiredEntry(this.nodesByDepth, depth);
       for (const node of nodes) {
         // This is always a single layer, never a list.
         const layer = node.outboundLayer;
@@ -897,7 +892,7 @@ export abstract class Container extends Layer {
         const computedData = new Array<[Tensor, Tensor]>();
         for (const x of referenceInputTensors) {
           if (x.id in tensorMap) {
-            computedData.push(tensorMap[x.id]);
+            computedData.push(generic_utils.requiredEntry(tensorMap, x.id));
           }
         }
         if (!(computedData.length === referenceInputTensors.length)) continue;
@@ -915,7 +910,7 @@ export abstract class Container extends Layer {
           const singleInput = computedData.length === 1;
           computedTensors = computedData.map(x => x[0]);
           computedMasks = computedData.map(x => x[1]);
-          const computedInput = singleInput ? computedTensors[0] : computedTensors;
+          const computedInput = singleInput ? generic_utils.requiredElement(computedTensors, 0) : computedTensors;
           const computedMask = singleInput ? computedMasks[0] : computedMasks;
           if (kwargs['mask'] == null) {
             kwargs['mask'] = computedMask;
@@ -933,8 +928,8 @@ export abstract class Container extends Layer {
 
           // Update tensor map.
           for (let i = 0; i < referenceOutputTensors.length; ++i) {
-            const x = referenceOutputTensors[i];
-            const y = outputTensors[i];
+            const x = generic_utils.requiredElement(referenceOutputTensors, i);
+            const y = generic_utils.requiredElement(outputTensors, i);
             const mask = outputMasks[i];
             tensorMap[x.id] = [y, mask];
           }
@@ -948,7 +943,7 @@ export abstract class Container extends Layer {
     for (const x of this.outputs) {
       generic_utils.assert(
           x.id in tensorMap, `Could not compute output ${x.name} : ${x.id}`);
-      const [tensor, mask] = tensorMap[x.id];
+      const [tensor, mask] = generic_utils.requiredEntry(tensorMap, x.id);
       outputShapes.push(tensor.shape);
       outputTensors.push(tensor);
       outputMasks.push(mask);
@@ -1078,7 +1073,7 @@ export abstract class Container extends Layer {
       const filteredInboundNodes = [];
       for (let originalNodeIndex = 0;
            originalNodeIndex < layer.inboundNodes.length; originalNodeIndex++) {
-        const node = layer.inboundNodes[originalNodeIndex];
+        const node = generic_utils.requiredElement(layer.inboundNodes, originalNodeIndex);
         const nodeKey = Container.nodeKey(layer, originalNodeIndex);
         let kwargs = {};
         if (!(this.containerNodes.has(nodeKey))) continue;
@@ -1102,9 +1097,9 @@ export abstract class Container extends Layer {
           if (node.inboundLayers.length > 0) {
             const nodeData = [];
             for (let i = 0; i < node.inboundLayers.length; i++) {
-              const inboundLayer = node.inboundLayers[i];
-              const nodeIndex = node.nodeIndices[i];
-              const tensorIndex = node.tensorIndices[i];
+              const inboundLayer = generic_utils.requiredElement(node.inboundLayers, i);
+              const nodeIndex = generic_utils.requiredElement(node.nodeIndices, i);
+              const tensorIndex = generic_utils.requiredElement(node.tensorIndices, i);
               const nodeKey = Container.nodeKey(inboundLayer, nodeIndex);
               const newNodeIndex = nodeConversionMap[nodeKey] ?? 0;
               nodeData.push(
@@ -1125,8 +1120,8 @@ export abstract class Container extends Layer {
     // Gather info about inputs and outputs
     const modelInputs = [];
     for (let i = 0; i < this.inputLayers.length; i++) {
-      const layer = this.inputLayers[i];
-      const nodeIndex = this.inputLayersNodeIndices[i];
+      const layer = generic_utils.requiredElement(this.inputLayers, i);
+      const nodeIndex = generic_utils.requiredElement(this.inputLayersNodeIndices, i);
 
       const nodeKey = Container.nodeKey(layer, nodeIndex);
       if (!this.containerNodes.has(nodeKey)) {
@@ -1136,15 +1131,15 @@ export abstract class Container extends Layer {
       if (newNodeIndex === null || newNodeIndex === undefined) {
         newNodeIndex = 0;
       }
-      const tensorIndex = this.inputLayersTensorIndices[i];
+      const tensorIndex = generic_utils.requiredElement(this.inputLayersTensorIndices, i);
       modelInputs.push([layer.name, newNodeIndex, tensorIndex]);
     }
     config['inputLayers'] = modelInputs;
 
     const modelOutputs = [];
     for (let i = 0; i < this.outputLayers.length; i++) {
-      const layer = this.outputLayers[i];
-      const nodeIndex = this.outputLayersNodeIndices[i];
+      const layer = generic_utils.requiredElement(this.outputLayers, i);
+      const nodeIndex = generic_utils.requiredElement(this.outputLayersNodeIndices, i);
 
       const nodeKey = Container.nodeKey(layer, nodeIndex);
       if (!this.containerNodes.has(nodeKey)) {
@@ -1154,7 +1149,7 @@ export abstract class Container extends Layer {
       if (newNodeIndex === null || newNodeIndex === undefined) {
         newNodeIndex = 0;
       }
-      const tensorIndex = this.outputLayersTensorIndices[i];
+      const tensorIndex = generic_utils.requiredElement(this.outputLayersTensorIndices, i);
       modelOutputs.push([layer.name, newNodeIndex, tensorIndex]);
     }
     config['outputLayers'] = modelOutputs;
