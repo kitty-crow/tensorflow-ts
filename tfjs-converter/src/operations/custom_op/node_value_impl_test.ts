@@ -71,45 +71,45 @@ describe('NodeValueImpl', () => {
   });
   describe('getInput', () => {
     it('should find tensor from tensormap', async () => {
-      const result = nodeValue.inputs[0];
+      const result = test_util.requiredTestElement(nodeValue.inputs, 0);
       test_util.expectArraysClose(await result.data(), [1]);
 
-      const result2 = nodeValue.inputs[1];
+      const result2 = test_util.requiredTestElement(nodeValue.inputs, 1);
       test_util.expectArraysClose(await result2.data(), [2]);
     });
   });
   describe('getAttr', () => {
     it('should parse number', () => {
-      expect(nodeValue.attrs['d']).toEqual(3);
-      expect(nodeValue.attrs['h']).toEqual(4.5);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'd')).toEqual(3);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'h')).toEqual(4.5);
     });
     it('should parse number[]', () => {
-      expect(nodeValue.attrs['i']).toEqual([3, 6, 0]);
-      expect(nodeValue.attrs['j']).toEqual([4.5, 5.5, 0.0]);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'i')).toEqual([3, 6, 0]);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'j')).toEqual([4.5, 5.5, 0.0]);
     });
     it('should parse string', () => {
-      expect(nodeValue.attrs['e']).toEqual('nhwc');
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'e')).toEqual('nhwc');
     });
     it('should parse string[]', () => {
-      expect(nodeValue.attrs['k']).toEqual(['nhwc', 'nhwc', '']);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'k')).toEqual(['nhwc', 'nhwc', '']);
     });
     it('should parse boolean', () => {
-      expect(nodeValue.attrs['g']).toEqual(true);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'g')).toEqual(true);
     });
     it('should parse boolean[]', () => {
-      expect(nodeValue.attrs['o']).toEqual([true, false]);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'o')).toEqual([true, false]);
     });
     it('should parse dtype', () => {
-      expect(nodeValue.attrs['f']).toEqual('float32');
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'f')).toEqual('float32');
     });
     it('should parse dtype[]', () => {
-      expect(nodeValue.attrs['l']).toEqual(['float32', 'int32']);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'l')).toEqual(['float32', 'int32']);
     });
     it('should parse tensor shape', () => {
-      expect(nodeValue.attrs['m']).toEqual([1, 2]);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'm')).toEqual([1, 2]);
     });
     it('should parse tensor shape[]', () => {
-      expect(nodeValue.attrs['n']).toEqual([[1, 2], [2, 3]]);
+      expect(test_util.requiredTestEntry(nodeValue.attrs, 'n')).toEqual([[1, 2], [2, 3]]);
     });
   });
 });

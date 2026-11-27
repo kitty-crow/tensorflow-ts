@@ -310,7 +310,7 @@ describe('completeness check', () => {
     convertedGraph = mapper.transformGraph(graph);
     expect(Object.keys(convertedGraph.nodes)).toEqual([name]);
     expect(nodeByName(name).op).toEqual(op);
-    expect(nodeByName(name).outputs).toEqual([
+    expect(test_util.requiredTestValue(nodeByName(name).outputs, 'outputs')).toEqual([
       'indices', 'values', 'shape'
     ]);
   });
@@ -388,8 +388,8 @@ describe('operationMapper without signature', () => {
             ]);
       });
       it('should convert signature', () => {
-        expect(functionByName('__inference_while_cond_10_49_frozen')
-                   .signature)
+        expect(test_util.requiredTestValue(functionByName('__inference_while_cond_10_49_frozen')
+                   .signature, 'signature'))
             .toEqual({
               methodName: '__inference_while_cond_10_49_frozen',
               inputs: {
@@ -428,55 +428,55 @@ describe('operationMapper without signature', () => {
 
       it('should map the input params', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'shape').inputIndexStart)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'shape').inputIndexStart, 'inputIndexStart'))
             .toEqual(0);
         expect(
-            test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'value').inputIndexStart)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'value').inputIndexStart, 'inputIndexStart'))
             .toEqual(1);
       });
 
       it('should map the attribute params', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'strides').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'strides').value, 'value'))
             .toEqual([1, 2, 2, 1]);
         expect(
-            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'pad').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'pad').value, 'value'))
             .toEqual('same');
         expect(
-            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'useCudnnOnGpu').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'useCudnnOnGpu').value, 'value'))
             .toEqual(true);
         expect(
-            test_util.requiredTestEntry(nodeByName('Split').attrParams, 'numOrSizeSplits').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Split').attrParams, 'numOrSizeSplits').value, 'value'))
             .toEqual(3);
         expect(
-            test_util.requiredTestEntry(nodeByName('FusedBatchNorm').attrParams, 'epsilon').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('FusedBatchNorm').attrParams, 'epsilon').value, 'value'))
             .toEqual(0.0001);
         expect(
-            test_util.requiredTestEntry(nodeByName('Squeeze2').attrParams, 'axis').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Squeeze2').attrParams, 'axis').value, 'value'))
             .toEqual([]);
       });
 
       it('should map the placeholder attribute params', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'shape').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'shape').value, 'value'))
             .toEqual([3, 3, 3, 1]);
         expect(
-            test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'dtype').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'dtype').value, 'value'))
             .toEqual('float32');
       });
       it('should map params with deprecated name', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Squeeze').attrParams, 'axis').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Squeeze').attrParams, 'axis').value, 'value'))
             .toEqual([1, 2]);
       });
       it('should map params with int64 dtype', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Cast').attrParams, 'dtype').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Cast').attrParams, 'dtype').value, 'value'))
             .toEqual('int32');
       });
       it('should map params with complex64 dtype', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Cast4').attrParams, 'dtype').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Cast4').attrParams, 'dtype').value, 'value'))
             .toEqual('complex64');
       });
     });
@@ -494,7 +494,7 @@ describe('operationMapper with signature', () => {
         expect(convertedGraph.inputs.map(node => node.name)).toEqual([
           'image_placeholder'
         ]);
-        expect(convertedGraph.inputs.map(node => node.signatureKey)).toEqual([
+        expect(convertedGraph.inputs.map(node => test_util.requiredTestValue(node.signatureKey, 'signatureKey'))).toEqual([
           'image'
         ]);
       });
@@ -503,7 +503,7 @@ describe('operationMapper with signature', () => {
         expect(convertedGraph.outputs.map(node => node.name)).toEqual([
           'Squeeze'
         ]);
-        expect(convertedGraph.outputs.map(node => node.signatureKey)).toEqual([
+        expect(convertedGraph.outputs.map(node => test_util.requiredTestValue(node.signatureKey, 'signatureKey'))).toEqual([
           'squeeze'
         ]);
       });
@@ -536,65 +536,65 @@ describe('operationMapper with signature', () => {
 
       it('should map the input params', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'shape').inputIndexStart)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'shape').inputIndexStart, 'inputIndexStart'))
             .toEqual(0);
         expect(
-            test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'value').inputIndexStart)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Fill').inputParams, 'value').inputIndexStart, 'inputIndexStart'))
             .toEqual(1);
       });
 
       it('should map the attribute params', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'strides').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'strides').value, 'value'))
             .toEqual([1, 2, 2, 1]);
         expect(
-            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'pad').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'pad').value, 'value'))
             .toEqual('same');
         expect(
-            test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'useCudnnOnGpu').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Conv2D').attrParams, 'useCudnnOnGpu').value, 'value'))
             .toEqual(true);
         expect(
-            test_util.requiredTestEntry(nodeByName('Split').attrParams, 'numOrSizeSplits').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Split').attrParams, 'numOrSizeSplits').value, 'value'))
             .toEqual(3);
         expect(
-            test_util.requiredTestEntry(nodeByName('FusedBatchNorm').attrParams, 'epsilon').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('FusedBatchNorm').attrParams, 'epsilon').value, 'value'))
             .toEqual(0.0001);
         expect(
-            test_util.requiredTestEntry(nodeByName('Squeeze2').attrParams, 'axis').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Squeeze2').attrParams, 'axis').value, 'value'))
             .toEqual([]);
       });
 
       it('should map the placeholder attribute params', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'shape').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'shape').value, 'value'))
             .toEqual([3, 3, 3, 1]);
         expect(
-            test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'dtype').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('image_placeholder').attrParams, 'dtype').value, 'value'))
             .toEqual('float32');
       });
       it('should map params with deprecated name', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Squeeze').attrParams, 'axis').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Squeeze').attrParams, 'axis').value, 'value'))
             .toEqual([1, 2]);
       });
       it('should map params with int64 dtype', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Cast').attrParams, 'dtype').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Cast').attrParams, 'dtype').value, 'value'))
             .toEqual('int32');
       });
       it('should map params with uint8 dtype', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Cast2').attrParams, 'dtype').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Cast2').attrParams, 'dtype').value, 'value'))
             .toEqual('int32');
       });
       it('should map params with half dtype', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Cast3').attrParams, 'dtype').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Cast3').attrParams, 'dtype').value, 'value'))
             .toEqual('float32');
       });
       it('should map params with complex64 dtype', () => {
         expect(
-            test_util.requiredTestEntry(nodeByName('Cast4').attrParams, 'dtype').value)
+            test_util.requiredTestValue(test_util.requiredTestEntry(nodeByName('Cast4').attrParams, 'dtype').value, 'value'))
             .toEqual('complex64');
       });
     });

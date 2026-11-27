@@ -150,7 +150,7 @@ describeWithFlags('stridedSlice', ALL_ENVS, () => {
     const output = tf.stridedSlice(
         t, begin, end, strides, beginMask, endMask, ellipsisMask, newAxisMask);
     expect(output.shape).toEqual([1, 1, 3, 1, 2, 5]);
-    expectArraysClose(await output.data(), new Array(30).fill(0));
+    expectArraysClose(await output.data(), new Array<number>(30).fill(0));
   });
 
   it('strided slice with new axes and shrink axes', () => {

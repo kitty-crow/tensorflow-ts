@@ -22,7 +22,7 @@ async function expectTensor(
     tensor: tf.Tensor, shape: number[], value: string|number) {
   const length = shape.length === 0 ? 1 : shape.reduce((a, b) => a * b);
   expect(tensor.shape).toEqual(shape);
-  expectArraysEqual(await tensor.data(), new Array(length).fill(value));
+  expectArraysEqual(await tensor.data(), new Array<typeof value>(length).fill(value));
 }
 
 describeWithFlags('squeeze', ALL_ENVS, () => {

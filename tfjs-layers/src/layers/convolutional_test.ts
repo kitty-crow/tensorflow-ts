@@ -126,9 +126,9 @@ describeMathCPUAndGPU('conv1d', () => {
   const expectations = [[-10, -10, -40, -40], [-30, -30, -60, -60]];
 
   for (let i = 0; i < strides.length; ++i) {
-    const stride = strides[i];
-    const dilationRate = dilations[i];
-    const expectation = expectations[i];
+    const stride = requiredTestElement(strides, i);
+    const dilationRate = requiredTestElement(dilations, i);
+    const expectation = requiredTestElement(expectations, i);
     const testTitle = `outChannels=${outChannels}, stride=${stride}, ` +
         `${paddingMode}, dilationRate=${dilationRate}, ${dataFormat}`;
     it(testTitle, () => {
@@ -254,7 +254,8 @@ describeMathCPUAndGPU('conv2dWithBiasActivation', () => {
               }
             }
             for (let i = 0; i < yExpectedDataPerChannel.length; ++i) {
-              yExpectedDataPerChannel[i] += requiredTestElement(biasScalarData, 0);
+              yExpectedDataPerChannel[i] = requiredTestElement(yExpectedDataPerChannel, i) +
+                  requiredTestElement(biasScalarData, 0);
             }
             let yExpectedData: number[] = [];
             for (let i = 0; i < outChannels; ++i) {
@@ -635,7 +636,8 @@ describeMathCPUAndGPU('conv3d', () => {
               }
             }
             for (let i = 0; i < yExpectedDataPerChannel.length; ++i) {
-              yExpectedDataPerChannel[i] += requiredTestElement(biasScalarData, 0);
+              yExpectedDataPerChannel[i] = requiredTestElement(yExpectedDataPerChannel, i) +
+                  requiredTestElement(biasScalarData, 0);
             }
             let yExpectedData: number[] = [];
             for (let i = 0; i < outChannels; ++i) {

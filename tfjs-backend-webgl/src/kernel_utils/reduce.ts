@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, DataType, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, DataType, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
 import {MeanProgram} from '../mean_gpu';
@@ -29,16 +29,13 @@ function getReductionStages(inShape: number[]):
     Array<{inSize: number, windowSize: number, outSize: number}> {
   const stages: Array<{inSize: number, windowSize: number, outSize: number}> = [];
 
-  while (stages.length === 0 || stages[stages.length - 1].outSize !== 1) {
-    const outSize: number =
-        stages.length ? stages[stages.length - 1].outSize : inShape[1];
-    const windowSize = backend_util.computeOptimalWindowSize(outSize);
-    stages.push({
-      inSize: outSize,
-      windowSize,
-      outSize: Math.ceil(outSize / windowSize)
-    });
-  }
+  let inSize = util.requiredNumericEntry(inShape, 1);
+  do {
+    const windowSize = backend_util.computeOptimalWindowSize(inSize);
+    const outSize = Math.ceil(inSize / windowSize);
+    stages.push({inSize, windowSize, outSize});
+    inSize = outSize;
+  } while (inSize !== 1);
 
   return stages;
 }
@@ -49,19 +46,19 @@ export function reduce(
   const reductionStages = getReductionStages(x.shape);
 
   let result = x;
-  for (let i = 0; i < reductionStages.length; i++) {
-    const {inSize, windowSize, outSize} = reductionStages[i];
+  for (const [i, {inSize, windowSize, outSize}] of reductionStages.entries()) {
+    const batchSize = util.requiredNumericEntry(x.shape, 0);
 
     let program: ReduceProgram|MeanProgram;
     let previousResult: TensorInfo;
     if (reductionType === 'mean') {
       program = i === 0 ?
           new MeanProgram(
-              {windowSize, inSize, batchSize: x.shape[0], outSize}, inSize) :
-          new MeanProgram({windowSize, inSize, batchSize: x.shape[0], outSize});
+              {windowSize, inSize, batchSize, outSize}, inSize) :
+          new MeanProgram({windowSize, inSize, batchSize, outSize});
     } else {
       program = new ReduceProgram(
-          {windowSize, inSize, batchSize: x.shape[0], outSize}, reductionType);
+          {windowSize, inSize, batchSize, outSize}, reductionType);
     }
 
     previousResult = result;

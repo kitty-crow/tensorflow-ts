@@ -16,7 +16,7 @@
  * =============================================================================
  */
 
-import {env} from '@tensorflow/tfjs-core';
+import {env, test_util} from '@tensorflow/tfjs-core';
 import {FileDataSource} from '../sources/file_data_source';
 import {TextLineDataset} from './text_line_dataset';
 
@@ -56,8 +56,8 @@ describe('TextLineDataset', () => {
     const result = await iter.toArrayForTest();
 
     // \r is retained when not followed by \n
-    expect(result[0]).toEqual('abc\rdefg');
-    expect(result[1]).toEqual('hijklmn');
-    expect(result[2]).toEqual('opqrst');
+    expect(test_util.requiredTestElement(result, 0)).toEqual('abc\rdefg');
+    expect(test_util.requiredTestElement(result, 1)).toEqual('hijklmn');
+    expect(test_util.requiredTestElement(result, 2)).toEqual('opqrst');
   });
 });

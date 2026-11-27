@@ -1425,13 +1425,13 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       batchSize,
       callbacks: new CustomCallbackForTest(recordedParams)
     });
-    expect(requiredTestElement(recordedParams, 0).epochs).toEqual(epochs);
-    expect(requiredTestElement(recordedParams, 0).initialEpoch).toEqual(0);
-    expect(requiredTestElement(recordedParams, 0).samples).toEqual(inputs.shape[0]);
-    expect(requiredTestElement(recordedParams, 0).steps).toEqual(null);
-    expect(requiredTestElement(recordedParams, 0).batchSize).toEqual(batchSize);
-    expect(requiredTestElement(recordedParams, 0).doValidation).toEqual(false);
-    expect(requiredTestElement(recordedParams, 0).metrics).toEqual(['loss']);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'epochs')).toEqual(epochs);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'initialEpoch')).toEqual(0);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'samples')).toEqual(inputs.shape[0]);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'steps')).toEqual(null);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'batchSize')).toEqual(batchSize);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'doValidation')).toEqual(false);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'metrics')).toEqual(['loss']);
   });
 
   it('Custom callback params: has validation', async () => {
@@ -1447,14 +1447,14 @@ describeMathCPUAndWebGL2('LayersModel.fit', () => {
       validationSplit,
       callbacks: new CustomCallbackForTest(recordedParams)
     });
-    expect(requiredTestElement(recordedParams, 0).epochs).toEqual(epochs);
-    expect(requiredTestElement(recordedParams, 0).initialEpoch).toEqual(0);
-    expect(requiredTestElement(recordedParams, 0).samples)
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'epochs')).toEqual(epochs);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'initialEpoch')).toEqual(0);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'samples'))
         .toEqual(Math.round(inputs.shape[0] * (1 - validationSplit)));
-    expect(requiredTestElement(recordedParams, 0).steps).toEqual(null);
-    expect(requiredTestElement(recordedParams, 0).batchSize).toEqual(batchSize);
-    expect(requiredTestElement(recordedParams, 0).doValidation).toEqual(true);
-    expect(requiredTestElement(recordedParams, 0).metrics).toEqual(['loss', 'val_loss']);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'steps')).toEqual(null);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'batchSize')).toEqual(batchSize);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'doValidation')).toEqual(true);
+    expect(test_util.requiredTestEntry(requiredTestElement(recordedParams, 0), 'metrics')).toEqual(['loss', 'val_loss']);
   });
 
   class StopAfterNEpochs extends tfl.Callback {
@@ -2690,7 +2690,9 @@ describeMathCPUAndWebGL2('LayersModel.trainOnBatch', () => {
     const ys = tfc.tensor2d([[2], [1], [0]]);
 
     for (let i = 0; i < 3; ++i) {
-      const [loss, acc] = await model.trainOnBatch(xs, ys) as number[];
+      const scores = await model.trainOnBatch(xs, ys) as number[];
+      const loss = requiredTestElement(scores, 0);
+      const acc = requiredTestElement(scores, 1);
       switch (i) {
         case 0: {
           expect(loss).toBeCloseTo(1.0986123);

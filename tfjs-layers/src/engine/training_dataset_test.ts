@@ -18,7 +18,7 @@ import * as tfc from '@tensorflow/tfjs-core';
 import {CustomCallback, DEFAULT_YIELD_EVERY_MS} from '../base_callbacks';
 import * as tfl from '../index';
 import {Logs} from '../logs';
-import {describeMathCPUAndGPU, expectTensorsClose, StopAfterNBatches, historyMetric, historyMetricAt, requiredTestElement} from '../utils/test_utils';
+import {describeMathCPUAndGPU, expectTensorsClose, StopAfterNBatches, historyMetric, historyMetricAt, requiredTestElement, requiredTestEntry, requiredTestValue} from '../utils/test_utils';
 
 import {FakeNumericDataset} from './dataset_fakes';
 
@@ -349,8 +349,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          validationData: [valXs, valYs],
          callbacks: {
            onEpochEnd: async (epoch, logs) => {
-             epochEndValLosses.push(logs.val_loss);
-             epochEndValAccs.push(logs.val_acc);
+             epochEndValLosses.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'val_loss'));
+             epochEndValAccs.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'val_acc'));
            }
          }
        });
@@ -425,8 +425,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          validationData: [valXs, valYs],
          callbacks: {
            onEpochEnd: async (epoch, logs) => {
-             epochEndValLosses.push(logs.val_loss);
-             epochEndValAccs.push(logs.val_acc);
+             epochEndValLosses.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'val_loss'));
+             epochEndValAccs.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'val_acc'));
            }
          }
        });
@@ -495,7 +495,7 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
     expect(trainLogs.length).toEqual(2);
     // Assert that the the first log and the second logs do not overwrite each
     // other.
-    expect(requiredTestElement(trainLogs, 0).loss).not.toEqual(requiredTestElement(trainLogs, 1).loss);
+    expect(requiredTestEntry(requiredTestElement(trainLogs, 0), 'loss')).not.toEqual(requiredTestEntry(requiredTestElement(trainLogs, 1), 'loss'));
   });
 
   it('dataset.size != null feeds stepPerEpoch to callbacks', async () => {
@@ -698,8 +698,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          validationBatches: batchesPerEpoch * epochs,
          callbacks: {
            onEpochEnd: async (epoch, logs) => {
-             epochEndValLosses.push(logs.val_loss);
-             epochEndValAccs.push(logs.val_acc);
+             epochEndValLosses.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'val_loss'));
+             epochEndValAccs.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'val_acc'));
            }
          }
        });
@@ -789,8 +789,8 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
          validationData: valDataset,
          callbacks: {
            onEpochEnd: async (epoch, logs) => {
-             epochEndValLosses.push(logs.val_loss);
-             epochEndValAccs.push(logs.val_acc);
+             epochEndValLosses.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'val_loss'));
+             epochEndValAccs.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'val_acc'));
            }
          }
        });
@@ -988,16 +988,16 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
            },
            onEpochEnd: async (epoch, logs) => {
              epochEndEpochs.push(epoch);
-             epochEndLosses.push(logs.loss);
-             epochEndAccs.push(logs.acc);
+             epochEndLosses.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'loss'));
+             epochEndAccs.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'acc'));
            },
            onBatchBegin: async (batch, logs) => {
              batchBeginBatches.push(batch);
            },
            onBatchEnd: async (batch, logs) => {
              batchEndBatches.push(batch);
-             batchEndLosses.push(logs.loss);
-             batchEndAccs.push(logs.acc);
+             batchEndLosses.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'loss'));
+             batchEndAccs.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'acc'));
            },
          }
        });
@@ -1085,16 +1085,16 @@ describeMathCPUAndGPU('LayersModel.fitDataset', () => {
            },
            onEpochEnd: async (epoch, logs) => {
              epochEndEpochs.push(epoch);
-             epochEndLosses.push(logs.loss);
-             epochEndAccs.push(logs.acc);
+             epochEndLosses.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'loss'));
+             epochEndAccs.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'acc'));
            },
            onBatchBegin: async (batch, logs) => {
              batchBeginBatches.push(batch);
            },
            onBatchEnd: async (batch, logs) => {
              batchEndBatches.push(batch);
-             batchEndLosses.push(logs.loss);
-             batchEndAccs.push(logs.acc);
+             batchEndLosses.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'loss'));
+             batchEndAccs.push(requiredTestEntry(requiredTestValue(logs, 'logs'), 'acc'));
            },
          }
        });

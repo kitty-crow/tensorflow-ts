@@ -21,10 +21,32 @@ import {Callback} from '../callbacks';
 import {Layer, LayerArgs} from '../engine/topology';
 import {ValueError} from '../errors';
 import type {Logs} from '../logs';
+import {PyJsonDict, PyJsonValue} from '../keras_format/types';
 
 export const requiredTestElement = test_util.requiredTestElement;
 export const requiredTestValue = test_util.requiredTestValue;
 export const requiredTestEntry = test_util.requiredTestEntry;
+
+/** JSON.parse without a reviver produces a JSON value. Require a dictionary
+ * at the fixture boundary rather than letting the parser's any escape. */
+export function parseTestJsonDict(json: string): PyJsonDict {
+  const parsed: PyJsonValue = JSON.parse(json);
+  return requireTestJsonDict(parsed, 'JSON fixture');
+}
+
+/** A fixture field expected to contain a JSON dictionary, not an array. */
+export function requireTestJsonDict(
+    value: PyJsonValue|undefined, name: string): PyJsonDict {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`Expected a JSON dictionary for ${name}.`);
+  }
+  return value;
+}
+
+/** Preserve JSON serialization semantics while returning an independent copy. */
+export function cloneTestJsonDict(value: PyJsonDict): PyJsonDict {
+  return parseTestJsonDict(JSON.stringify(value));
+}
 
 /** A completed fit must contain the requested metric with numeric values. */
 export function historyMetric(history: History, name: string): number[] {
@@ -218,7 +240,7 @@ export function describeMathWebGL2(testName: string, tests: () => void) {
  */
 export function expectNoLeakedTensors(
     // tslint:disable-next-line:no-any
-    testFunc: () => any, numNewTensors: number) {
+    testFunc: () => void, numNewTensors: number) {
   testFunc();
   const numTensorsBefore = memory().numTensors;
   testFunc();

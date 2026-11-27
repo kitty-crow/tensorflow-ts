@@ -16,6 +16,7 @@
  */
 // tslint:disable-next-line: no-imports-from-dist
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
+import {test_util} from '@tensorflow/tfjs-core';
 
 import {ExecutionContext} from '../../executor/execution_context';
 import * as spectral from '../op_list/spectral';
@@ -54,7 +55,7 @@ describe('spectral', () => {
         spyOps.fft.and.returnValue({});
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.fft).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.fft).toHaveBeenCalledWith(test_util.requiredTestElement(input1, 0));
       });
       it('should match json def', () => {
         node.op = 'FFT';
@@ -68,7 +69,7 @@ describe('spectral', () => {
         spyOps.ifft.and.returnValue({});
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.ifft).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.ifft).toHaveBeenCalledWith(test_util.requiredTestElement(input1, 0));
       });
       it('should match json def', () => {
         node.op = 'IFFT';
@@ -82,7 +83,7 @@ describe('spectral', () => {
         spyOps.rfft.and.returnValue({});
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.rfft).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.rfft).toHaveBeenCalledWith(test_util.requiredTestElement(input1, 0));
       });
       it('should match json def', () => {
         node.op = 'RFFT';
@@ -96,7 +97,7 @@ describe('spectral', () => {
         spyOps.irfft.and.returnValue({});
         executeOp(node, {input1}, context, spyOpsAsTfOps);
 
-        expect(spyOps.irfft).toHaveBeenCalledWith(input1[0]);
+        expect(spyOps.irfft).toHaveBeenCalledWith(test_util.requiredTestElement(input1, 0));
       });
       it('should match json def', () => {
         node.op = 'IRFFT';

@@ -45,17 +45,15 @@ export function normalizeShapeList(x: Shape|Shape[]): Shape[] {
  * @throws ValueError: If `xs` is an `Array` and its length is not 1.
  */
 export function getExactlyOneTensor(xs: Tensor|Tensor[]): Tensor {
-  let x: Tensor;
-  if (Array.isArray(xs)) {
-    if (xs.length !== 1) {
-      throw new ValueError(`Expected Tensor length to be 1; got ${xs.length}`);
-    }
-    x = xs[0];
-    if (x == null) {
-      throw new ValueError('Expected a tensor, but the input array is empty.');
-    }
-  } else {
-    x = xs;
+  if (!Array.isArray(xs)) {
+    return xs;
+  }
+  if (xs.length !== 1) {
+    throw new ValueError(`Expected Tensor length to be 1; got ${xs.length}`);
+  }
+  const x = xs[0];
+  if (x == null) {
+    throw new ValueError('Expected a tensor, but the input array is empty.');
   }
   return x;
 }

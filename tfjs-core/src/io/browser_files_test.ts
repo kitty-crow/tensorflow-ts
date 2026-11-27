@@ -137,11 +137,11 @@ describeWithFlags('browserDownloads', BROWSER_ENVS, () => {
     const jsonContent = await fetch(jsonAnchor.href);
     const modelJSON = JSON.parse(await jsonContent.text()) as tf.io.ModelJSON;
     expect(modelJSON.modelTopology).toEqual(modelTopology1);
-    expect(modelJSON.format).toEqual('layers-model');
-    expect(modelJSON.generatedBy).toEqual('TensorFlow.js v0.0.0');
-    expect(modelJSON.convertedBy).toEqual(null);
-    expect(modelJSON.modelInitializer).toEqual({});
-    expect(modelJSON.trainingConfig).toEqual(trainingConfig1);
+    expect(requiredTestValue(modelJSON.format, 'format')).toEqual('layers-model');
+    expect(requiredTestValue(modelJSON.generatedBy, 'generatedBy')).toEqual('TensorFlow.js v0.0.0');
+    expect(requiredTestValue(modelJSON.convertedBy, 'convertedBy')).toEqual(null);
+    expect(requiredTestValue(modelJSON.modelInitializer, 'modelInitializer')).toEqual({});
+    expect(requiredTestValue(modelJSON.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
 
     const weightsManifest = modelJSON.weightsManifest;
     expect(weightsManifest.length).toEqual(1);

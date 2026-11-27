@@ -20,6 +20,7 @@ import {ReLU} from '../layers/advanced_activations';
 import {LayerNormalization} from '../layers/normalization';
 import {LSTMCell, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
 import {requiredElement, requiredEntry} from '../utils/generic_utils';
+import {cloneTestJsonDict, parseTestJsonDict, requireTestJsonDict} from '../utils/test_utils';
 import {min, max, sum, variance} from '../utils/math_utils';
 import {Conv2D} from '../layers/convolutional';
 import {DepthwiseConv2D} from '../layers/convolutional_depthwise';
@@ -269,5 +270,25 @@ describe('checked model graph reconstruction', () => {
     expect(() => LayersModel.fromConfig(LayersModel, {
       ...config, outputLayers: [['checked_relu', 0, 1]]
     })).toThrowError(/Missing required element/);
+  });
+});
+
+
+describe('typed JSON test fixture boundaries', () => {
+  it('preserves JSON values and makes independent nested copies', () => {
+    const source = {config: {name: 'original', count: 0, enabled: false},
+      shape: [null, 2]};
+    const copy = cloneTestJsonDict(source);
+    requireTestJsonDict(copy['config'], 'config')['name'] = 'changed';
+    expect(source.config.name).toBe('original');
+    expect(JSON.stringify(copy)).toBe(
+        '{"config":{"name":"changed","count":0,"enabled":false},"shape":[null,2]}');
+  });
+  it('rejects non-dictionary JSON rather than passing it to fixtures', () => {
+    expect(() => parseTestJsonDict('null')).toThrowError(/JSON dictionary/);
+    expect(() => parseTestJsonDict('[1]')).toThrowError(/JSON dictionary/);
+    expect(() => parseTestJsonDict('false')).toThrowError(/JSON dictionary/);
+    expect(() => parseTestJsonDict('{')).toThrow();
+    expect(() => requireTestJsonDict(null, 'config')).toThrowError(/config/);
   });
 });

@@ -29,15 +29,15 @@ function TensorValue3x4Integer() {
 }
 
 function TensorValue10() {
-  return tf.tensor1d(Array.from(Array(10), (_, i) => i + 1));
+  return tf.tensor1d(Array.from({length: 10}, (_, i) => i + 1));
 }
 
 function TensorValue10x4() {
-  return tf.tensor2d(Array.from(Array(40), (_, i) => i + 1), [10, 4]);
+  return tf.tensor2d(Array.from({length: 40}, (_, i) => i + 1), [10, 4]);
 }
 
 function TensorValue10x2x4() {
-  return tf.tensor3d(Array.from(Array(80), (_, i) => i + 1), [10, 2, 4]);
+  return tf.tensor3d(Array.from({length: 80}, (_, i) => i + 1), [10, 2, 4]);
 }
 
 describeWithFlags('sparseSegmentMean', ALL_ENVS, () => {

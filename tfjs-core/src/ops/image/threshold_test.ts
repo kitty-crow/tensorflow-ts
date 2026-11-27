@@ -28,6 +28,18 @@ describeWithFlags('threshold', ALL_ENVS, () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
   });
 
+  it('retains the single-channel input and inverts the threshold boundary', async () => {
+    const input: tf.Tensor3D = tf.tensor3d([0, 127, 128, 255], [2, 2, 1]);
+    const normal = tf.image.threshold(input);
+    const inverted = tf.image.threshold(input, 'binary', true);
+    expectArraysEqual(await normal.data(), [0, 0, 255, 255]);
+    expectArraysEqual(await inverted.data(), [255, 255, 0, 0]);
+    expect(normal.shape).toEqual([2, 2, 1]);
+    input.dispose();
+    normal.dispose();
+    inverted.dispose();
+  });
+
   it('default method binary, no arguments passed but input image', async () => {
     const image: tf.Tensor3D = tf.tensor3d(
         [144, 255, 51, 13, 32, 59, 222, 100, 51, 69, 71, 222], [2, 2, 3]);

@@ -17,11 +17,21 @@ import {Reshape} from './layers/core';
 import {deserialize} from './layers/serialization';
 import {loadLayersModel, ModelAndWeightsConfig, modelFromJSON} from './models';
 import {convertPythonicToTs, convertTsToPythonic} from './utils/serialization_utils';
-import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, checkedNumericAt, requiredTestElement} from './utils/test_utils';
+import {describeMathCPU, describeMathCPUAndGPU, describeMathCPUAndWebGL2, expectTensorsClose, historyMetric, historyMetricAt, checkedNumericAt, requiredTestElement, cloneTestJsonDict, parseTestJsonDict, requireTestJsonDict} from './utils/test_utils';
 import {version as layersVersion} from './version';
 
 const OCTET_STREAM_TYPE = 'application/octet-stream';
 const JSON_TYPE = 'application/json';
+
+function renameSecondFixtureLayer(topology: PyJsonDict, name: string): void {
+  const config = requireTestJsonDict(topology['config'], 'model config');
+  const layers = config['layers'];
+  if (!Array.isArray(layers)) {
+    throw new Error('Expected fixture layers to be an array.');
+  }
+  const layer = requireTestJsonDict(requiredTestElement(layers, 1), 'second layer');
+  requireTestJsonDict(layer['config'], 'second layer config')['name'] = name;
+}
 
 describeMathCPU('Nested model topology', () => {
   it('Nested Sequential model: Sequential as first layer', done => {
@@ -48,7 +58,7 @@ describeMathCPU('Nested model topology', () => {
           expectTensorsClose(modelLevel3.predict(x) as Tensor, newY);
           done();
         })
-        .catch(err => done.fail(err.stack));
+        .catch(err => done.fail(test_util.testFailureDescription(err)));
   });
 
   it('Nested Sequential model: Functional model as first layer', done => {
@@ -77,7 +87,7 @@ describeMathCPU('Nested model topology', () => {
           expectTensorsClose(modelLevel3.predict(x) as Tensor, newY);
           done();
         })
-        .catch(err => done.fail(err.stack));
+        .catch(err => done.fail(test_util.testFailureDescription(err)));
   });
 
   it('Nested Sequential model: Sequential as second layer', done => {
@@ -102,7 +112,7 @@ describeMathCPU('Nested model topology', () => {
           expectTensorsClose(outerModel.predict(x2By2) as Tensor, newY);
           done();
         })
-        .catch(err => done.fail(err.stack));
+        .catch(err => done.fail(test_util.testFailureDescription(err)));
   });
 
   it('Nested Sequential model: Sequential as middle layer', done => {
@@ -132,7 +142,7 @@ describeMathCPU('Nested model topology', () => {
               outerModel.predict(x2By2) as Tensor, newY.reshape([1, 2, 2]));
           done();
         })
-        .catch(err => done.fail(err.stack));
+        .catch(err => done.fail(test_util.testFailureDescription(err)));
   });
 
   it('getLayer() works for nested sequential model', () => {
@@ -470,7 +480,7 @@ describeMathCPU('modelFromJSON', () => {
     const serializedModel = model.toJSON() as string;
     // toJSON() returns a string by default.
     expect(typeof serializedModel).toEqual('string');
-    const reparsedJson = JSON.parse(serializedModel);
+    const reparsedJson = parseTestJsonDict(serializedModel);
     expect(reparsedJson['class_name'])
         .toEqual(fakeRoundtripModel.modelTopology['class_name']);
     // Intentionally skipping backend and keras_version fields.
@@ -592,8 +602,8 @@ describeMathCPU('loadLayersModel from URL', () => {
         ];
         // JSON.parse and stringify to deep copy fakeSequentialModel.
         let modelTopology =
-            JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
-        modelTopology['config']['layers'][1]['config']['name'] = denseLayerName;
+            cloneTestJsonDict(fakeSequentialModel.modelTopology);
+        renameSecondFixtureLayer(modelTopology, denseLayerName);
         if (isModelConfigNested) {
           // Simulate case in which `configJson` contains not only
           // `model_config`, but also other data, such as training.
@@ -614,7 +624,7 @@ describeMathCPU('loadLayersModel from URL', () => {
 
   it('load topology and weights from implicit relative http path', async () => {
     const modelTopology =
-        JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
+        cloneTestJsonDict(fakeSequentialModel.modelTopology);
     const weightsManifest: io.WeightsManifestConfig = [
       {
         'paths': ['weight_0'],
@@ -674,7 +684,7 @@ describeMathCPU('loadLayersModel from URL', () => {
   it('loadLayersModel: with onProgress callback from relative path',
      async () => {
        const modelTopology =
-           JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
+           cloneTestJsonDict(fakeSequentialModel.modelTopology);
        const weightsManifest: io.WeightsManifestConfig = [
          {
            'paths': ['weight_0'],
@@ -743,7 +753,7 @@ describeMathCPU('loadLayersModel from URL', () => {
 
   it('loadLayersModel: with onProgress callback from URL', async () => {
     const modelTopology =
-        JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
+        cloneTestJsonDict(fakeSequentialModel.modelTopology);
     const weightsManifest: io.WeightsManifestConfig = [
       {
         'paths': ['weight_0'],
@@ -811,7 +821,7 @@ describeMathCPU('loadLayersModel from URL', () => {
 
   it('loadLayersModel: no memory leak during model loading', async () => {
     const modelTopology =
-        JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
+        cloneTestJsonDict(fakeSequentialModel.modelTopology);
     const weightsManifest: io.WeightsManifestConfig = [
       {
         'paths': ['weight_0'],
@@ -874,8 +884,7 @@ describeMathCPU('loadLayersModel from URL', () => {
   it('loadLayersModel: no memory leak with nested LayersModel layer',
      async () => {
        const modelTopology =
-           JSON.parse(JSON.stringify(fakeSequentialModelWithNestedContainer))
-               .modelTopology;
+           cloneTestJsonDict(fakeSequentialModelWithNestedContainer.modelTopology);
 
        const weightsManifest: io.WeightsManifestConfig = [{
          'paths': ['weight_0'],
@@ -927,8 +936,7 @@ describeMathCPU('loadLayersModel from URL', () => {
   it('load topology and weights from implicit relative http path: HDF5 format',
      async () => {
        const modelTopology =
-           JSON.parse(JSON.stringify(fakeSequentialModelFromHDF5))
-               .modelTopology;
+           cloneTestJsonDict(fakeSequentialModelFromHDF5.modelTopology);
        const weightsManifest: io.WeightsManifestConfig = [
          {
            'paths': ['weight_0'],
@@ -1012,8 +1020,7 @@ describeMathCPU('loadLayersModel from URL', () => {
 
   it('load topology and weights: non-array Sequential config', async () => {
     const modelTopology =
-        JSON.parse(JSON.stringify(fakeNonArrayConfigSequentialModelFromHDF5))
-            .modelTopology;
+        cloneTestJsonDict(fakeNonArrayConfigSequentialModelFromHDF5.modelTopology);
     const weightsManifest: io.WeightsManifestConfig = [
       {
         'paths': ['weight_0'],
@@ -1095,7 +1102,7 @@ describeMathCPU('loadLayersModel from URL', () => {
   it('load topology and weights with browserHTTPRequest with requestInit',
      async () => {
        const modelTopology =
-           JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
+           cloneTestJsonDict(fakeSequentialModel.modelTopology);
        const weightsManifest: io.WeightsManifestConfig = [
          {
            'paths': ['weight_0'],
@@ -1184,7 +1191,7 @@ describeMathCPU('loadLayersModel from URL', () => {
     it(`load topology and weights: explicit relative ${protocol} path`,
        async () => {
          const modelTopology =
-             JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
+             cloneTestJsonDict(fakeSequentialModel.modelTopology);
          const weightsManifest: io.WeightsManifestConfig = [
            {
              'paths': ['weight_0'],
@@ -1255,8 +1262,8 @@ describeMathCPU('loadLayersModel from URL', () => {
     ];  // Missing bias.
     // JSON.parse and stringify to deep copy fakeSequentialModel.
     const configJson =
-        JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
-    configJson['config']['layers'][1]['config']['name'] = denseLayerName;
+        cloneTestJsonDict(fakeSequentialModel.modelTopology);
+    renameSecondFixtureLayer(configJson, denseLayerName);
     modelFromJSON({modelTopology: configJson, weightsManifest, pathPrefix: '.'})
         .then(() => done.fail())
         .catch(() => done());
@@ -1286,8 +1293,8 @@ describeMathCPU('loadLayersModel from URL', () => {
     ];
     // JSON.parse and stringify to deep copy fakeSequentialModel.
     const configJson =
-        JSON.parse(JSON.stringify(fakeSequentialModel)).modelTopology;
-    configJson['config']['layers'][1]['config']['name'] = denseLayerName;
+        cloneTestJsonDict(fakeSequentialModel.modelTopology);
+    renameSecondFixtureLayer(configJson, denseLayerName);
     const model1 = await modelFromJSON(
         {modelTopology: configJson, weightsManifest, pathPrefix: '.'});
     expect(requiredTestElement(model1.weights, 0).name).toEqual('dense_uniqueify/kernel');

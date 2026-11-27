@@ -16,6 +16,7 @@
  */
 
 import {TensorInfo} from '../tensor_info';
+import {assertArrayLength} from '../util_base';
 import {sequentialConvolutionTestInputs, requiredTestElement, requiredTestEntry} from '../test_util';
 
 import {prepareSplitSize} from './split_util';
@@ -73,5 +74,16 @@ describe('typed numeric and tensor test fixtures', () => {
     expect(requiredTestEntry({value: 0}, 'value')).toBe(0);
     expect(() => requiredTestElement([], 0)).toThrowError(/Missing/);
     expect(() => requiredTestEntry({value: 0}, 'missing')).toThrowError(/Missing/);
+  });
+});
+
+
+describe('channel split contract', () => {
+  it('requires exactly three populated channels without changing their identity', () => {
+    const channels = [{id: 1}, {id: 2}, {id: 3}];
+    assertArrayLength(channels, 3);
+    const [r, g, b] = channels;
+    expect([r.id, g.id, b.id]).toEqual([1, 2, 3]);
+    expect(() => assertArrayLength([{id: 1}], 3)).toThrowError();
   });
 });

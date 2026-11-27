@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {test_util} from '@tensorflow/tfjs-core';
 import * as tensorflow from '../../data/compiled_api';
 import {ExecutionContext} from '../../executor/execution_context';
 import {Graph, Node} from '../types';
@@ -42,13 +43,13 @@ describe('custom node attribute conditional dispatch', () => {
       }
     };
     const result = new NodeValueImpl(node, {}, new ExecutionContext({}, {}, {}));
-    expect(result.attrs['scalarFirst']).toBe(7);
-    expect(result.attrs['numericFirst']).toEqual([3, 6, 0]);
-    expect(result.attrs['floats']).toEqual([1.5, 2.5]);
-    expect(result.attrs['strings']).toEqual(['nhwc']);
-    expect(result.attrs['bools']).toEqual([true, false]);
-    expect(result.attrs['shapes']).toEqual([[2, 3]]);
-    expect(result.attrs['types']).toEqual(['int32']);
+    expect(test_util.requiredTestEntry(result.attrs, 'scalarFirst')).toBe(7);
+    expect(test_util.requiredTestEntry(result.attrs, 'numericFirst')).toEqual([3, 6, 0]);
+    expect(test_util.requiredTestEntry(result.attrs, 'floats')).toEqual([1.5, 2.5]);
+    expect(test_util.requiredTestEntry(result.attrs, 'strings')).toEqual(['nhwc']);
+    expect(test_util.requiredTestEntry(result.attrs, 'bools')).toEqual([true, false]);
+    expect(test_util.requiredTestEntry(result.attrs, 'shapes')).toEqual([[2, 3]]);
+    expect(test_util.requiredTestEntry(result.attrs, 'types')).toEqual(['int32']);
     expect(result.attrs['empty']).toBeUndefined();
     expect(result.attrs['emptyList']).toBeUndefined();
   });
@@ -91,7 +92,7 @@ describe('graph analysis traversal and lifetime contracts', () => {
     const ordered = getNodesInTopologicalOrder(graph, info);
     expect(ordered.map(node => node.name)).toEqual(['first', 'second']);
     const release = getNodeLiveUntilMap(ordered);
-    expect(release.get('second')).toEqual([input, output]);
+    expect(test_util.requiredTestValue(release.get('second'), 'second')).toEqual([input, output]);
   });
 });
 

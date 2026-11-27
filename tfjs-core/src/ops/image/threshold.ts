@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import { Tensor1D, Tensor3D } from '../../tensor';
+import { Tensor, Tensor1D, Tensor3D } from '../../tensor';
 import { tensor1d } from '../tensor1d';
 import { TensorLike } from '../../types';
 import { op } from '../operation';
@@ -71,7 +71,7 @@ function threshold_(
     const totalPixelsInImage = $image.shape[0] * $image.shape[1];
 
     let $threshold = mul(tensor1d([threshValue]), 255);
-    let r, g, b, grayscale;
+    let grayscale: Tensor|TensorLike;
 
     util.assert(
         $image.rank === 3,
@@ -94,7 +94,9 @@ function threshold_(
       () => `Method must be binary or otsu, but was ${method}`);
 
     if ($image.shape[2] === 3) {
-        [r, g, b] = split($image, [1, 1, 1], -1);
+        const channels = split($image, [1, 1, 1], -1);
+        util.assertArrayLength(channels, 3);
+        const [r, g, b] = channels;
         const $r = mul(r,RED_INTENCITY_COEF);
         const $g = mul(g,GREEN_INTENCITY_COEF);
         const $b = mul(b,BLUE_INTENCITY_COEF);
@@ -123,27 +125,25 @@ function otsu(histogram: Tensor1D, total: number):Tensor1D {
     let bestThresh = tensor1d([-1]);
     let bestInBetVar = tensor1d([0]);
     let cInBetVar = tensor1d([0]);
-    let classFirst, classSecond, meanFirst,
-        meanSec, weightForeground, weightBack;
 
     for (let index = 0; index < histogram.size-1; index++) {
 
-        classFirst = slice(histogram, 0, index + 1);
+        const classFirst = slice(histogram, 0, index + 1);
 
-        classSecond = slice(histogram,index + 1);
+        const classSecond = slice(histogram,index + 1);
 
-        weightForeground = div(sum(classFirst),total);
+        const weightForeground = div(sum(classFirst),total);
 
-        weightBack = div(sum(classSecond),total);
+        const weightBack = div(sum(classSecond),total);
 
         const meanFirstDivA = sum(mul(classFirst, range(0, classFirst.size)));
 
-        meanFirst = div(meanFirstDivA, sum(classFirst) );
+        const meanFirst = div(meanFirstDivA, sum(classFirst) );
 
         const meanSecFill = fill(classSecond.shape, classFirst.size);
         const meanSecAdd = add(range(0,classSecond.size),meanSecFill);
         const meanSecMul = mul(classSecond, (meanSecAdd));
-        meanSec = div(sum(meanSecMul), sum(classSecond));
+        const meanSec = div(sum(meanSecMul), sum(classSecond));
 
         const cInBetVarSubA = sub(meanFirst, meanSec);
         const cInBetVarSubB = sub(meanFirst, meanSec);

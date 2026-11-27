@@ -242,7 +242,7 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
 
           expect(requestInits.length).toEqual(1);
           const init = requiredTestElement(requestInits, 0);
-          expect(init.method).toEqual('POST');
+          expect(requiredTestValue(init.method, 'method')).toEqual('POST');
           const body = init.body as FormData;
           const jsonFile = body.get('model.json') as File;
           const jsonFileReader = new FileReader();
@@ -256,7 +256,7 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
             expect(modelJSON.modelTopology).toEqual(modelTopology1);
             expect(modelJSON.weightsManifest.length).toEqual(1);
             expect(requiredTestElement(modelJSON.weightsManifest, 0).weights).toEqual(weightSpecs1);
-            expect(modelJSON.trainingConfig).toEqual(trainingConfig1);
+            expect(requiredTestValue(modelJSON.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
 
             const weightsFile = body.get('model.weights.bin') as File;
             const weightsFileReader = new FileReader();
@@ -302,7 +302,7 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
 
           expect(requestInits.length).toEqual(1);
           const init = requiredTestElement(requestInits, 0);
-          expect(init.method).toEqual('POST');
+          expect(requiredTestValue(init.method, 'method')).toEqual('POST');
           const body = init.body as FormData;
           const jsonFile = body.get('model.json') as File;
           const jsonFileReader = new FileReader();
@@ -357,7 +357,7 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
 
           expect(requestInits.length).toEqual(1);
           const init = requiredTestElement(requestInits, 0);
-          expect(init.method).toEqual('PUT');
+          expect(requiredTestValue(init.method, 'method')).toEqual('PUT');
 
           // Check headers.
           expect(init.headers).toEqual({
@@ -375,14 +375,14 @@ describeWithFlags('http-save', CHROME_ENVS, () => {
               return;
             }
             const modelJSON = JSON.parse(jsonText) as tf.io.ModelJSON;
-            expect(modelJSON.format).toEqual('layers-model');
-            expect(modelJSON.generatedBy).toEqual('TensorFlow.js v0.0.0');
-            expect(modelJSON.convertedBy).toEqual(null);
+            expect(requiredTestValue(modelJSON.format, 'format')).toEqual('layers-model');
+            expect(requiredTestValue(modelJSON.generatedBy, 'generatedBy')).toEqual('TensorFlow.js v0.0.0');
+            expect(requiredTestValue(modelJSON.convertedBy, 'convertedBy')).toEqual(null);
             expect(modelJSON.modelTopology).toEqual(modelTopology1);
-            expect(modelJSON.modelInitializer).toEqual({});
+            expect(requiredTestValue(modelJSON.modelInitializer, 'modelInitializer')).toEqual({});
             expect(modelJSON.weightsManifest.length).toEqual(1);
             expect(requiredTestElement(modelJSON.weightsManifest, 0).weights).toEqual(weightSpecs1);
-            expect(modelJSON.trainingConfig).toEqual(trainingConfig1);
+            expect(requiredTestValue(modelJSON.trainingConfig, 'trainingConfig')).toEqual(trainingConfig1);
 
             const weightsFile = body.get('model.weights.bin') as File;
             const weightsFileReader = new FileReader();
@@ -579,9 +579,9 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
           .weightData))).toEqual(floatData);
       expect(Object.keys(requestInits).length).toEqual(2);
       expect(Object.keys(requestInits).length).toEqual(2);
-      expect(requestInits['./model.json'].headers['header_key_1'])
+      expect(requiredTestValue(requiredTestValue(requestInits['./model.json'], './model.json').headers['header_key_1'], 'header_key_1'))
           .toEqual('header_value_1');
-      expect(requestInits['./weightfile0'].headers['header_key_1'])
+      expect(requiredTestValue(requiredTestValue(requestInits['./weightfile0'], './weightfile0').headers['header_key_1'], 'header_key_1'))
           .toEqual('header_value_1');
 
       expect(fetchSpy.calls.mostRecent().object).toEqual(window);
@@ -872,9 +872,9 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
           requiredTestValue(modelArtifacts.weightData, 'weightData')))).toEqual(floatData);
       expect(Object.keys(requestInits).length).toEqual(2);
       expect(Object.keys(requestInits).length).toEqual(2);
-      expect(requestInits['./model.json'].headers['header_key_1'])
+      expect(requiredTestValue(requiredTestValue(requestInits['./model.json'], './model.json').headers['header_key_1'], 'header_key_1'))
           .toEqual('header_value_1');
-      expect(requestInits['auth_weightfile0'].headers['header_key_1'])
+      expect(requiredTestValue(requiredTestValue(requestInits['auth_weightfile0'], 'auth_weightfile0').headers['header_key_1'], 'header_key_1'))
           .toEqual('header_value_1');
 
       expect(fetchSpy.calls.mostRecent().object).toEqual(window);
@@ -940,7 +940,7 @@ describeWithFlags('http-load', BROWSER_ENVS, () => {
 
     expect(fetchInputs).toEqual(['./model.json', './weightfile0']);
     expect(fetchInits.length).toEqual(2);
-    expect(requiredTestElement(fetchInits, 0).credentials).toEqual('include');
-    expect(requiredTestElement(fetchInits, 1).credentials).toEqual('include');
+    expect(requiredTestValue(requiredTestElement(fetchInits, 0).credentials, 'credentials')).toEqual('include');
+    expect(requiredTestValue(requiredTestElement(fetchInits, 1).credentials, 'credentials')).toEqual('include');
   });
 });

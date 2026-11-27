@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import {flatten} from './util';
 import {requiredTestEntry, requiredTestValue} from './test_util';
 import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
 
@@ -130,5 +131,15 @@ describe('required test values', () => {
     expect(requiredTestValue(false, 'flag')).toBe(false);
     expect(requiredTestValue(null, 'nullable')).toBeNull();
     expect(() => requiredTestValue(undefined, 'missing')).toThrowError(/missing/);
+  });
+});
+
+
+describe('flatten traversal', () => {
+  it('preserves destination identity and depth-first ordering', () => {
+    const result = [0];
+    expect(flatten([1, [2, 3], 4], result)).toBe(result);
+    expect(result).toEqual([0, 1, 2, 3, 4]);
+    expect(flatten([[], [5]])).toEqual([5]);
   });
 });

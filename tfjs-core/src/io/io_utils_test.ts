@@ -19,7 +19,7 @@ import * as tf from '../index';
 import {ALL_ENVS, BROWSER_ENVS, describeWithFlags} from '../jasmine_util';
 import {scalar, tensor1d, tensor2d} from '../ops/ops';
 import {NamedTensor, NamedTensorMap} from '../tensor_types';
-import {expectArraysEqual, requiredTestEntry} from '../test_util';
+import {expectArraysEqual, requiredTestElement, requiredTestEntry} from '../test_util';
 import {expectArraysClose} from '../test_util';
 import {encodeString} from '../util';
 
@@ -384,35 +384,35 @@ describeWithFlags('encodeWeights', ALL_ENVS, () => {
             x1ByteLength + x2ByteLength + x3ByteLength + x4ByteLength +
             x5ByteLength);
     // x1 'a'.
-    expect(new Uint32Array(data, 0, 1)[0]).toBe(1);
+    expect(requiredTestElement(new Uint32Array(data, 0, 1), 0)).toBe(1);
     expect(new Uint8Array(data, 4, 1)).toEqual(encodeString('a'));
     // x1 'bc'.
-    expect(new Uint32Array(data.slice(5, 9))[0]).toBe(2);
+    expect(requiredTestElement(new Uint32Array(data.slice(5, 9)), 0)).toBe(2);
     expect(new Uint8Array(data, 9, 2)).toEqual(encodeString('bc'));
     // x1 'def'.
-    expect(new Uint32Array(data.slice(11, 15))[0]).toBe(3);
+    expect(requiredTestElement(new Uint32Array(data.slice(11, 15)), 0)).toBe(3);
     expect(new Uint8Array(data, 15, 3)).toEqual(encodeString('def'));
     // x1 'g'.
-    expect(new Uint32Array(data.slice(18, 22))[0]).toBe(1);
+    expect(requiredTestElement(new Uint32Array(data.slice(18, 22)), 0)).toBe(1);
     expect(new Uint8Array(data, 22, 1)).toEqual(encodeString('g'));
 
     // x2 is empty string.
-    expect(new Uint32Array(data.slice(23, 27))[0]).toBe(0);
+    expect(requiredTestElement(new Uint32Array(data.slice(23, 27)), 0)).toBe(0);
 
     // x3 'здраво'.
-    expect(new Uint32Array(data.slice(27, 31))[0]).toBe(12);
+    expect(requiredTestElement(new Uint32Array(data.slice(27, 31)), 0)).toBe(12);
     expect(new Uint8Array(data, 31, 12)).toEqual(encodeString('здраво'));
 
     // x3 'поздрав'.
-    expect(new Uint32Array(data.slice(43, 47))[0]).toBe(14);
+    expect(requiredTestElement(new Uint32Array(data.slice(43, 47)), 0)).toBe(14);
     expect(new Uint8Array(data, 47, 14)).toEqual(encodeString('поздрав'));
 
     // x4 '正常'.
-    expect(new Uint32Array(data.slice(61, 65))[0]).toBe(6);
+    expect(requiredTestElement(new Uint32Array(data.slice(61, 65)), 0)).toBe(6);
     expect(new Uint8Array(data, 65, 6)).toEqual(encodeString('正常'));
 
     // x5 'hello'.
-    expect(new Uint32Array(data.slice(71, 75))[0]).toBe(5);
+    expect(requiredTestElement(new Uint32Array(data.slice(71, 75)), 0)).toBe(5);
     expect(new Uint8Array(data, 75, 5)).toEqual(encodeString('hello'));
 
     expect(specs).toEqual([

@@ -142,7 +142,7 @@ export function toCamelCase(identifier: string): string {
   if (identifier.indexOf('_') === -1) {
     return identifier;
   }
-  return identifier.replace(/[_]+(\w|$)/g, (m, p1) => p1.toUpperCase());
+  return identifier.replace(/[_]+(\w|$)/g, (_match: string, p1: string) => p1.toUpperCase());
 }
 
 // tslint:disable-next-line:no-any
