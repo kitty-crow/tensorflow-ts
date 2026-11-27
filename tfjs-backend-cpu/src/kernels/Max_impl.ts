@@ -17,23 +17,14 @@
 
 import {DataType, NumericDataType, TypedArray, util} from '@tensorflow/tfjs-core';
 
+import {reduceValues} from './reduce_values';
+
 export function maxImpl(
     aVals: TypedArray, reduceSize: number, outShape: number[],
     dtype: DataType): TypedArray {
   const vals = util.getTypedArrayFromDType(
       dtype as NumericDataType, util.sizeFromShape(outShape));
 
-  for (let i = 0; i < vals.length; ++i) {
-    const offset = i * reduceSize;
-    let max = aVals[offset];
-    for (let j = 0; j < reduceSize; ++j) {
-      const value = aVals[offset + j];
-      if (Number.isNaN(value) ||
-          value > max) {  // comparison with NaN always return false
-        max = value;
-      }
-    }
-    vals[i] = max;
-  }
+  reduceValues(aVals, reduceSize, vals, 'max');
   return vals;
 }

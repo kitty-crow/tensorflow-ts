@@ -17,6 +17,7 @@
 
 import {backend_util, DataType, DataValues, NumericDataType, TypedArray, util} from '@tensorflow/tfjs-core';
 
+import {requiredCpuEntry} from '../cpu_util';
 import {SimpleBinaryKernelImpl, SimpleBinaryOperation} from './binary_types';
 
 /**
@@ -46,7 +47,7 @@ export function createSimpleBinaryKernelImpl(op: SimpleBinaryOperation):
 
     if (aBroadcastDims.length + bBroadcastDims.length === 0) {
       for (let i = 0; i < result.length; ++i) {
-        result[i] = op(aVals[i % aVals.length], bVals[i % bVals.length]);
+        result[i] = op(requiredCpuEntry<number|string>(aVals, i % aVals.length), requiredCpuEntry<number|string>(bVals, i % bVals.length));
       }
     } else {
       for (let i = 0; i < result.length; ++i) {
@@ -60,7 +61,7 @@ export function createSimpleBinaryKernelImpl(op: SimpleBinaryOperation):
         bBroadcastDims.forEach(d => bLoc[d] = 0);
         const bIndex = util.locToIndex(bLoc, bRank, bStrides);
 
-        result[i] = op(aVals[aIndex], bVals[bIndex]);
+        result[i] = op(requiredCpuEntry<number|string>(aVals, aIndex), requiredCpuEntry<number|string>(bVals, bIndex));
       }
     }
 

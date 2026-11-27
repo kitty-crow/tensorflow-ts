@@ -85,6 +85,14 @@ describeWithFlags('2D IRFFT', ALL_ENVS, () => {
 });
 
 describeWithFlags('3D IRFFT', ALL_ENVS, () => {
+  it('retains batch dimensions for a singleton spectrum', async () => {
+    const result = tf.tidy(() => tf.spectral.irfft(tf.complex(
+        tf.tensor3d([3, -2], [2, 1, 1]), tf.zeros([2, 1, 1]))));
+    expect(result.shape).toEqual([2, 1, 1]);
+    expectArraysClose(await result.data(), [3, -2]);
+    result.dispose();
+  });
+
   it('should return the same value with TensorFlow (2x2x2 elements)',
      async () => {
        const t1Real = tf.tensor3d([1, 2, 3, 4, 1, 2, 3, 4], [2, 2, 2]);

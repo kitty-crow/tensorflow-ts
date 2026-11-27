@@ -15,12 +15,10 @@
  * =============================================================================
  */
 
-import {All, AllAttrs, AllInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {All, AllAttrs, AllInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
-import {reshape} from './Reshape';
-import {transpose} from './Transpose';
+import {reduceAxis} from './reduce_axis';
 
 export function all(
     args: {inputs: AllInputs, backend: MathBackendCPU, attrs: KernelAttributes<AllAttrs>}):
@@ -29,51 +27,7 @@ export function all(
   const {x} = inputs;
   const {axis, keepDims} = attrs;
 
-  assertNotComplex(x, 'all');
-
-  const origAxes = util.parseAxisParam(axis, x.shape);
-  let axes = origAxes;
-  const permutedAxes = backend_util.getAxesPermutation(axes, x.shape.length);
-  let $x = x;
-  if (permutedAxes != null) {
-    $x = transpose({inputs: {x}, backend, attrs: {perm: permutedAxes}});
-    axes = backend_util.getInnerMostAxes(axes.length, x.shape.length);
-  }
-
-  backend_util.assertAxesAreInnerMostDims('all', axes, $x.shape.length);
-  const [outShape, reduceShape] =
-      backend_util.computeOutAndReduceShapes($x.shape, axes);
-  const reduceSize = util.sizeFromShape(reduceShape);
-  const vals = util.makeZerosTypedArray(util.sizeFromShape(outShape), $x.dtype);
-
-  const aVals = backend.requireValues($x.dataId) as TypedArray;
-  for (let i = 0; i < vals.length; ++i) {
-    const offset = i * reduceSize;
-    let all = aVals[offset];
-    for (let j = 0; j < reduceSize; ++j) {
-      const value = aVals[offset + j];
-      all = all && value;
-    }
-    vals[i] = all;
-  }
-
-  if (permutedAxes != null) {
-    backend.disposeIntermediateTensorInfo($x);
-  }
-
-  const result = backend.makeTensorInfo(outShape, $x.dtype, vals);
-
-  if (keepDims) {
-    const expandedShape = backend_util.expandShapeToKeepDim(outShape, origAxes);
-    const reshapedResult =
-        reshape({inputs: {x: result}, backend, attrs: {shape: expandedShape}});
-
-    backend.disposeIntermediateTensorInfo(result);
-
-    return reshapedResult;
-  }
-
-  return result;
+  return reduceAxis(x, backend, axis, keepDims, 'all');
 }
 
 export const allConfig: KernelConfig = {

@@ -68,9 +68,9 @@ export function batchNorm(args: {
   let si = 0;
   let vi = 0;
   for (let i = 0; i < xVals.length; ++i) {
-    outVals[i] = offVals[offi++] +
-        (xVals[i] - mVals[mi++]) * sVals[si++] /
-            Math.sqrt(varVals[vi++] + varianceEpsilon);
+    outVals[i] = util.requiredNumericEntry(offVals, offi++) +
+        (util.requiredNumericEntry(xVals, i) - util.requiredNumericEntry(mVals, mi++)) * util.requiredNumericEntry(sVals, si++) /
+            Math.sqrt(util.requiredNumericEntry(varVals, vi++) + varianceEpsilon);
     if (offi >= offValsLength) {
       offi = 0;
     }

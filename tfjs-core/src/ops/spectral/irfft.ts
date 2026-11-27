@@ -26,6 +26,7 @@ import {reshape} from '../reshape';
 import {reverse} from '../reverse';
 import {scalar} from '../scalar';
 import {slice} from '../slice';
+import {requiredNumericEntry} from '../../util_base';
 
 import {ifft} from './ifft';
 
@@ -47,7 +48,7 @@ import {ifft} from './ifft';
  * @doc {heading: 'Operations', subheading: 'Spectral', namespace: 'spectral'}
  */
 function irfft_(input: Tensor): Tensor {
-  const innerDimensionSize = input.shape[input.shape.length - 1];
+  const innerDimensionSize = requiredNumericEntry(input.shape, input.shape.length - 1);
   const batch = input.size / innerDimensionSize;
   let ret: Tensor;
   if (innerDimensionSize <= 2) {
@@ -56,7 +57,7 @@ function irfft_(input: Tensor): Tensor {
   } else {
     // The length of unique components of the DFT of a real-valued signal
     // is 2 * (input_len - 1)
-    const outputShape = [batch, 2 * (innerDimensionSize - 1)];
+    const outputShape: [number, number] = [batch, 2 * (innerDimensionSize - 1)];
     const realInput = reshape(real(input), [batch, innerDimensionSize]);
     const imagInput = reshape(imag(input), [batch, innerDimensionSize]);
 
@@ -69,15 +70,16 @@ function irfft_(input: Tensor): Tensor {
     const r = concat([realInput, realConjugate], 1);
     const i = concat([imagInput, imagConjugate], 1);
     const complexInput =
-        reshape(complex(r, i), [outputShape[0], outputShape[1]]);
+        reshape(complex(r, i), outputShape);
     ret = ifft(complexInput);
   }
   ret = real(ret);
   // reshape the result if the input is 3D tensor.
   if (input.rank === 3 && input.shape[0] !== 0) {
     const temp = ret;
-    const batch = input.shape[0];
-    ret = reshape(ret, [batch, ret.shape[0] / batch, ret.shape[1]]);
+    const batch = requiredNumericEntry(input.shape, 0);
+    ret = reshape(ret, [batch, requiredNumericEntry(ret.shape, 0) / batch,
+      requiredNumericEntry(ret.shape, 1)]);
     temp.dispose();
   }
   return ret;

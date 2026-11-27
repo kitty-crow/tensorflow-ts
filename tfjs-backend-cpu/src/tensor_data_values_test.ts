@@ -22,6 +22,14 @@ import {splitV} from './kernels/SplitV';
 import {leakyRelu} from './kernels/LeakyRelu';
 import {multinomial} from './kernels/Multinomial';
 import {MathBackendCPU} from './backend_cpu';
+import {all} from './kernels/All';
+import {any as anyReduction} from './kernels/Any';
+import {min} from './kernels/Min';
+import {max} from './kernels/Max';
+import {batchNorm} from './kernels/BatchNorm';
+import {select} from './kernels/Select';
+import {concatImpl} from './kernels/Concat_impl';
+import {createSimpleBinaryKernelImpl} from './utils/binary_impl';
 import {cumsum} from './kernels/Cumsum';
 import {cumprod} from './kernels/Cumprod';
 import {mirrorPad} from './kernels/MirrorPad';
@@ -686,4 +694,98 @@ describe('shared CPU dilation maximum and gradient dispatch', () => {
       expect(backend.numDataIds()).toBe(0);
     });
   }
+});
+
+describe('CPU reduction and checked numeric traversal', () => {
+  it('preserves transposed boolean reductions, retained axes and ownership', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2, 2], 'bool', new Uint8Array([1, 0, 1, 1]));
+    const args = {inputs: {x}, backend, attrs: {axis: [0], keepDims: true}};
+    const a = all(args);
+    const b = anyReduction(args);
+    expect(a.shape).toEqual([1, 2]);
+    expect(b.shape).toEqual([1, 2]);
+    expect(backend.readSync(a.dataId)).toEqual(new Uint8Array([1, 0]));
+    expect(backend.readSync(b.dataId)).toEqual(new Uint8Array([1, 1]));
+    [a, b, x].forEach(tensor => backend.disposeData(tensor.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('propagates NaN and retains the first signed zero in min and max', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2, 3], 'float32',
+        new Float32Array([3, NaN, 1, -0, 0, -0]));
+    const a = min({inputs: {x}, backend, attrs: {axis: [1], keepDims: false}});
+    const b = max({inputs: {x}, backend, attrs: {reductionIndices: [1], keepDims: false}});
+    expect(backend.readSync(a.dataId)).toEqual(new Float32Array([NaN, -0]));
+    expect(backend.readSync(b.dataId)).toEqual(new Float32Array([NaN, -0]));
+    [a, b, x].forEach(tensor => backend.disposeData(tensor.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('preserves historical empty-block conversions', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2, 0], 'bool', new Uint8Array(0));
+    const y = backend.makeTensorInfo([2, 0], 'float32', new Float32Array(0));
+    const args = {inputs: {x}, backend, attrs: {axis: [1], keepDims: false}};
+    const a = all(args);
+    const b = anyReduction(args);
+    const c = min({inputs: {x: y}, backend, attrs: {axis: [1], keepDims: false}});
+    const d = max({inputs: {x: y}, backend, attrs: {reductionIndices: [1], keepDims: false}});
+    expect(backend.readSync(a.dataId)).toEqual(new Uint8Array([0, 0]));
+    expect(backend.readSync(b.dataId)).toEqual(new Uint8Array([0, 0]));
+    expect(backend.readSync(c.dataId)).toEqual(new Float32Array([NaN, NaN]));
+    expect(backend.readSync(d.dataId)).toEqual(new Float32Array([NaN, NaN]));
+    [a, b, c, d, x, y].forEach(tensor => backend.disposeData(tensor.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('retains batch normalisation defaults and cyclic parameter indexing', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2, 2], 'float32', new Float32Array([1, 2, 3, 4]));
+    const mean = backend.makeTensorInfo([2], 'float32', new Float32Array([1, 2]));
+    const variance = backend.makeTensorInfo([2], 'float32', new Float32Array([1, 4]));
+    const scale = backend.makeTensorInfo([2], 'float32', new Float32Array([2, 4]));
+    const offset = backend.makeTensorInfo([2], 'float32', new Float32Array([1, 2]));
+    const attrs = {varianceEpsilon: 0};
+    const a = batchNorm({inputs: {x, mean, variance, scale: null, offset: null}, backend, attrs});
+    const b = batchNorm({inputs: {x, mean, variance, scale, offset}, backend, attrs});
+    expect(backend.readSync(a.dataId)).toEqual(new Float32Array([0, 0, 2, 1]));
+    expect(backend.readSync(b.dataId)).toEqual(new Float32Array([1, 2, 5, 6]));
+    [a, b, x, mean, variance, scale, offset].forEach(tensor => backend.disposeData(tensor.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('selects only the chosen values and retains zero', () => {
+    const backend = new MathBackendCPU();
+    const condition = backend.makeTensorInfo([3], 'bool', new Uint8Array([1, 0, 1]));
+    const t = backend.makeTensorInfo([3], 'float32', new Float32Array([0, NaN, 3]));
+    const e = backend.makeTensorInfo([3], 'float32', new Float32Array([NaN, 2, NaN]));
+    const result = select({inputs: {condition, t, e}, backend});
+    expect(backend.readSync(result.dataId)).toEqual(new Float32Array([0, 2, 3]));
+    [condition, t, e, result].forEach(tensor => backend.disposeData(tensor.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('checks concatenation storage without changing interleaving', () => {
+    const inputs = [
+      {vals: new Float32Array([0, 2]), shape: [2, 1]},
+      {vals: new Float32Array([1, 3]), shape: [2, 1]}
+    ];
+    expect(concatImpl(inputs, [2, 2], 'float32', false))
+        .toEqual(new Float32Array([0, 1, 2, 3]));
+    expect(() => concatImpl([{vals: new Float32Array(0), shape: [1, 1]}],
+        [1, 1], 'float32', false)).toThrowError();
+  });
+
+  it('preserves binary broadcasting, string payloads and empty output', () => {
+    const subtract = createSimpleBinaryKernelImpl((a, b) => Number(a) - Number(b));
+    expect(subtract([2, 1], [1, 2], new Float32Array([0, 3]),
+        new Float32Array([1, 2]), 'float32'))
+        .toEqual([new Float32Array([-1, -2, 2, 1]), [2, 2]]);
+    expect(subtract([2], [1], ['', '2'], ['1'], 'float32'))
+        .toEqual([new Float32Array([-1, 1]), [2]]);
+    expect(subtract([0], [1], new Float32Array(0), new Float32Array([1]), 'float32'))
+        .toEqual([new Float32Array(0), [0]]);
+  });
 });

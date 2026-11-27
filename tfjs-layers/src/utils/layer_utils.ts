@@ -11,6 +11,9 @@
 import {Container} from '../engine/container';
 import {Layer, Node} from '../engine/topology';
 import {countParamsInWeights} from './variable_utils';
+import {requiredElement, requiredEntry} from './generic_utils';
+
+type SummaryPrinter = (message: string) => void;
 
 /**
  * Print the summary of a LayersModel object.
@@ -55,7 +58,7 @@ export function printSummary(
     toDisplay.push('Receives inputs');
     relevantNodes = [];
     for (const depth in model.nodesByDepth) {
-      relevantNodes.push(...model.nodesByDepth[depth]);
+      relevantNodes.push(...requiredEntry(model.nodesByDepth, depth));
     }
   }
 
@@ -64,12 +67,12 @@ export function printSummary(
   printFn('='.repeat(lineLength));
 
   const layers = model.layers;
-  for (let i = 0; i < layers.length; ++i) {
+  for (const [i, layer] of layers.entries()) {
     if (sequentialLike) {
-      printLayerSummary(layers[i], positions, printFn);
+      printLayerSummary(layer, positions, printFn);
     } else {
       printLayerSummaryWithConnections(
-          layers[i], positions, relevantNodes, printFn);
+          layer, positions, relevantNodes, printFn);
     }
     printFn((i === layers.length - 1 ? '=' : '_').repeat(lineLength));
   }
@@ -104,49 +107,38 @@ function isModelSequentialLike(model: Container): boolean {
   const nodesByDepth: Node[][] = [];
   const nodes: Node[] = [];
   for (const depth in model.nodesByDepth) {
-    nodesByDepth.push(model.nodesByDepth[depth]);
+    nodesByDepth.push(requiredEntry(model.nodesByDepth, depth));
   }
   for (const depthNodes of nodesByDepth) {
     if (depthNodes.length > 1 ||
-        depthNodes.length === 1 && depthNodes[0].inboundLayers.length > 1) {
+        depthNodes.length === 1 && requiredElement(depthNodes, 0).inboundLayers.length > 1) {
       sequentialLike = false;
       break;
     }
     nodes.push(...depthNodes);
   }
-  if (sequentialLike) {
-    // Search for shared layers.
-    for (const layer of model.layers) {
-      let flag = false;
-      for (const node of layer.inboundNodes) {
-        if (!(nodes.indexOf(node) !== -1)) continue;
-        {
-          if (flag) {
-            sequentialLike = false;
-            break;
-          } else {
-            flag = true;
-          }
-        }
-      }
-      if (!sequentialLike) {
-        break;
-      }
+  if (!sequentialLike) {
+    return false;
+  }
+  // Search for shared layers.
+  for (const layer of model.layers) {
+    const matchingNodes = layer.inboundNodes.filter(node => nodes.indexOf(node) !== -1);
+    if (matchingNodes.length > 1) {
+      return false;
     }
   }
-  return sequentialLike;
+  return true;
 }
 
 function printRow(
     fields: string[], positions: number[],
-    // tslint:disable-next-line:no-any
-    printFn: (message?: any, ...optionalParams: any[]) => void = console.log) {
+    printFn: SummaryPrinter = console.log) {
   let line = '';
-  for (let i = 0; i < fields.length; ++i) {
+  for (const [i, field] of fields.entries()) {
     if (i > 0) {
       line = line.slice(0, line.length - 1) + ' ';
     }
-    line += fields[i];
+    line += field;
     line = line.slice(0, positions[i]);
     line += ' '.repeat(positions[i] - line.length);
   }
@@ -160,8 +152,7 @@ function printRow(
  */
 function printLayerSummary(
     layer: Layer, positions: number[],
-    // tslint:disable-next-line:no-any
-    printFn: (message?: any, ...optionalParams: any[]) => void) {
+    printFn: SummaryPrinter) {
   let outputShape: string;
   let inputShape: string;
 
@@ -192,8 +183,7 @@ function printLayerSummary(
  */
 function printLayerSummaryWithConnections(
     layer: Layer, positions: number[], relevantNodes: Node[],
-    // tslint:disable-next-line:no-any
-    printFn: (message?: any, ...optionalParams: any[]) => void) {
+    printFn: SummaryPrinter) {
   let outputShape: string;
   let inputShape: string;
 
@@ -218,16 +208,16 @@ function printLayerSummaryWithConnections(
       continue;
     }
     for (let i = 0; i < node.inboundLayers.length; ++i) {
-      const inboundLayer = node.inboundLayers[i].name;
-      const inboundLayerIndex = node.nodeIndices[i];
-      const inboundTensorIndex = node.tensorIndices[i];
+      const inboundLayer = requiredElement(node.inboundLayers, i).name;
+      const inboundLayerIndex = requiredElement(node.nodeIndices, i);
+      const inboundTensorIndex = requiredElement(node.tensorIndices, i);
       connections.push(
           `${inboundLayer}[${inboundLayerIndex}][${inboundTensorIndex}]`);
     }
   }
   const name = layer.name;
   const className = layer.getClassName();
-  const firstConnection = connections.length === 0 ? '' : connections[0];
+  const firstConnection = connections.length === 0 ? '' : requiredElement(connections, 0);
   const fields: string[] = [
     `${name} (${className})`, inputShape,
     outputShape, layer.countParams().toString(),
@@ -235,7 +225,7 @@ function printLayerSummaryWithConnections(
   ];
 
   printRow(fields, positions, printFn);
-  for (let i = 1; i < connections.length; ++i) {
-    printRow(['', '', '', '', connections[i]], positions, printFn);
+  for (const connection of connections.slice(1)) {
+    printRow(['', '', '', '', connection], positions, printFn);
   }
 }

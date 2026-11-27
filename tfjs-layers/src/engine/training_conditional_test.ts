@@ -11,6 +11,7 @@
 import {Rank, Tensor} from '@tensorflow/tfjs-core';
 import {BaseLogger, History} from '../base_callbacks';
 import {getSourceInputs} from './topology';
+import {Input, InputLayer, InputLayerArgs} from './input_layer';
 import {disposeTensorsInLogs, resolveScalarsInLogs, UnresolvedLogs} from '../logs';
 import {analyzeEinsumString} from '../layers/nlp/einsum_dense';
 import {BytePairTokenizerCache, StaticHashTable} from '../layers/nlp/tokenizers_utils';
@@ -345,5 +346,43 @@ describe('einsum shape indexing', () => {
   it('rejects a required missing input dimension', () => {
     expect(() => analyzeEinsumString('ab,bc->ac', null, [null], [4]))
         .toThrowError(/Missing einsum dimension/);
+  });
+});
+
+describe('input layer shape normalisation', () => {
+  it('retains symbolic batch dimensions and explicit zero dimensions', () => {
+    const args: InputLayerArgs = {inputShape: [0, 2]};
+    const layer = new InputLayer(args);
+    expect(args.batchSize).toBeNull();
+    expect(args.sparse).toBe(false);
+    expect(layer.batchInputShape).toEqual([null, 0, 2]);
+    expect(Input({shape: [2]}).shape).toEqual([null, 2]);
+    const input = Input({batchShape: [0, 3], dtype: 'int32', sparse: true});
+    expect(input.shape).toEqual([0, 3]);
+    expect(input.dtype).toBe('int32');
+  });
+
+  it('rejects missing or conflicting shape arguments', () => {
+    expect(() => Input({})).toThrowError(/Please provide/);
+    expect(() => Input({shape: [2], batchShape: [1, 2]})).toThrowError(/not both/);
+    expect(() => new InputLayer({})).toThrowError(/An InputLayer/);
+    expect(() => new InputLayer({inputShape: [2], batchInputShape: [1, 2]}))
+        .toThrowError(/not both/);
+    expect(() => new InputLayer({batchInputShape: [0, 2], batchSize: 0}))
+        .toThrowError(/Cannot specify batchSize/);
+  });
+});
+
+describe('model summary traversal', () => {
+  it('prints layer rows and parameter counts through a string callback', () => {
+    const model = new Sequential({layers: [
+      new ReLU({inputShape: [2], name: 'summary_relu'})
+    ]});
+    const rows: string[] = [];
+    model.summary(90, null, (line: string) => { rows.push(line); });
+    expect(rows.some(line => line.includes('summary_relu (ReLU)'))).toBe(true);
+    expect(rows).toContain('Total params: 0');
+    expect(rows).toContain('Trainable params: 0');
+    expect(rows).toContain('Non-trainable params: 0');
   });
 });

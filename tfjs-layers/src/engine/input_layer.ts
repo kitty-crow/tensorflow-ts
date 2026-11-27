@@ -14,6 +14,7 @@ import {getUid} from '../backend/state';
 import {ValueError} from '../errors';
 import {Shape} from '../keras_format/common';
 import {Kwargs} from '../types';
+import {requiredElement} from '../utils/generic_utils';
 
 import {DisposeResult, Layer, Node, SymbolicTensor} from './topology';
 
@@ -42,6 +43,32 @@ export declare interface InputLayerArgs {
   name?: string;
 }
 
+function resolveInputLayerShape(args: InputLayerArgs): Shape {
+  const inputShape = args.inputShape ?? null;
+  const batchShape = args.batchInputShape ?? null;
+  const batchSize = args.batchSize ?? null;
+  if (inputShape != null && batchShape != null) {
+    throw new ValueError(
+        'Only provide the inputShape OR ' +
+        'batchInputShape argument to inputLayer, not both at the same time.');
+  }
+  if (batchShape != null && batchSize != null) {
+    // TODO(michaelterry): Backport to PyKeras
+    throw new ValueError(
+        'Cannot specify batchSize if batchInputShape is ' +
+        'specified when creating an InputLayer.');
+  }
+  if (batchShape != null) {
+    return batchShape;
+  }
+  if (inputShape == null) {
+    throw new ValueError(
+        'An InputLayer should be passed either a ' +
+        '`batchInputShape` or an `inputShape`.');
+  }
+  return [batchSize, ...inputShape];
+}
+
 export class InputLayer extends Layer {
   /** @nocollapse */
   static readonly className = 'InputLayer';
@@ -63,28 +90,7 @@ export class InputLayer extends Layer {
     this.built = true;
     this.sparse = args.sparse;
 
-    if (args.inputShape != null && args.batchInputShape != null) {
-      throw new ValueError(
-          'Only provide the inputShape OR ' +
-          'batchInputShape argument to inputLayer, not both at the same time.');
-    }
-    let batchInputShape = args.batchInputShape;
-    if (batchInputShape == null) {
-      if (args.inputShape == null) {
-        throw new ValueError(
-            'An InputLayer should be passed either a ' +
-            '`batchInputShape` or an `inputShape`.');
-      } else {
-        batchInputShape = [args.batchSize].concat(args.inputShape);
-      }
-    } else {
-      // TODO(michaelterry): Backport to PyKeras
-      if (args.batchSize != null) {
-        throw new ValueError(
-            'Cannot specify batchSize if batchInputShape is ' +
-            'specified when creating an InputLayer.');
-      }
-    }
+    const batchInputShape = resolveInputLayerShape(args);
 
     const dtype = args.dtype || 'float32';
 
@@ -173,28 +179,24 @@ export interface InputConfig {
 }
 
 export function Input(config: InputConfig): SymbolicTensor {
-  if (config.batchShape == null && config.shape == null) {
+  const suppliedBatchShape = config.batchShape ?? null;
+  const shape = config.shape ?? null;
+  if (suppliedBatchShape == null && shape == null) {
     throw new Error(
         'Please provide to Input either a `shape`' +
         ' or a `batchShape` argument. Note that ' +
         '`shape` does not include the batch ' +
         'dimension.');
   }
-  if (config.batchShape != null && config.shape != null) {
+  if (suppliedBatchShape != null && shape != null) {
     // TODO(michaelterry): Backport to PyKeras.
     throw new ValueError(
         'Please provide either a `shape` or `batchShape` ' +
         'argument to Input, but not both.');
   }
-  let batchShape = config.batchShape;
-  if (config.shape != null && batchShape == null) {
-    batchShape = [null].concat(config.shape);
-  }
-
-  let dtype = config.dtype;
-  if (dtype == null) {
-    dtype = 'float32';
-  }
+  const batchShape: Shape = suppliedBatchShape != null ?
+      suppliedBatchShape : [null, ...shape];
+  const dtype = config.dtype ?? 'float32';
 
   const inputLayer = new InputLayer({
     batchInputShape: batchShape,
@@ -203,6 +205,6 @@ export function Input(config: InputConfig): SymbolicTensor {
     sparse: config.sparse
   });
 
-  const outputs = inputLayer.inboundNodes[0].outputTensors;
-  return outputs[0];
+  const outputs = requiredElement(inputLayer.inboundNodes, 0).outputTensors;
+  return requiredElement(outputs, 0);
 }

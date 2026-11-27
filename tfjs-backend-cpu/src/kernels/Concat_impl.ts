@@ -46,7 +46,7 @@ export function concatImpl(
       for (let row = 0; row < requiredCpuEntry(input.shape, 0); ++row) {
         const resIdx = row * requiredCpuEntry(outShape, 1) + colOffset;
         for (let col = 0; col < requiredCpuEntry(input.shape, 1); ++col) {
-          outVals[resIdx + col] = decodedData[tIdx++];
+          outVals[resIdx + col] = requiredCpuEntry<number|string>(decodedData, tIdx++);
         }
       }
 

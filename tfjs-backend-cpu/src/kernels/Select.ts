@@ -43,10 +43,10 @@ export function select(args: {inputs: SelectInputs, backend: MathBackendCPU}):
 
   for (let i = 0; i < values.length; i++) {
     for (let j = 0; j < offset; j++) {
-      if (values[i] === 1) {
-        newValues[index++] = tValues[i];
+      if (util.requiredNumericEntry(values, i) === 1) {
+        newValues[index++] = util.requiredNumericEntry(tValues, i);
       } else {
-        newValues[index++] = eValues[i];
+        newValues[index++] = util.requiredNumericEntry(eValues, i);
       }
     }
   }
