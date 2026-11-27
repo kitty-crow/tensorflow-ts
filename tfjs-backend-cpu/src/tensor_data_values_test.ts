@@ -463,6 +463,26 @@ describe('checked CPU ragged and sparse metadata', () => {
     expect(output).toEqual([[3, 2], new Int32Array([1, 2, 0, 0, 3, 0])]);
   });
 
+  it('infers dense trailing dimensions and checks explicit shape constraints', () => {
+    const values = new Int32Array([1, 2, 3, 4, 5, 6]);
+    const partitions = [new Int32Array([0, 2, 2, 3])];
+    const densify = (shape: Int32Array, shapeShape: number[]) =>
+        raggedTensorToTensorImpl(shape, shapeShape, values, [3, 2],
+            'int32', new Int32Array([-9]), [], partitions, [[4]],
+            ['ROW_SPLITS']);
+    const expected = [[3, 2, 2],
+      new Int32Array([1, 2, 3, 4, -9, -9, -9, -9, 5, 6, -9, -9])];
+    expect(densify(new Int32Array([-1]), [])).toEqual(expected);
+    expect(densify(new Int32Array([-1, -1, -1]), [3])).toEqual(expected);
+    expect(densify(new Int32Array([3, 2, 2]), [3])).toEqual(expected);
+    expect(() => densify(new Int32Array([3, 2, 4]), [3]))
+        .toThrowError(/are incompatible/);
+    expect(() => densify(new Int32Array([0]), []))
+        .toThrowError(/only valid scalar shape tensor/);
+    expect(() => densify(new Int32Array([3, 2]), [2]))
+        .toThrowError(/are incompatible/);
+  });
+
   it('fills sparse rows, restores row order and retains reverse indices', () => {
     const output = sparseFillEmptyRowsImpl(new Int32Array([2, 0, 0, 1]),
         [2, 2], 'int32', new Int32Array([5, 7]), 'int32',

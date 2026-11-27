@@ -108,8 +108,10 @@ class RaggedTensorToTensorOp {
       // MakePartialShape/MakeShapeHelper.
       return makeShape(t, isPartial);
     }
-    if (t[0] === -1) {
-      return [];
+    if (requiredCpuEntry(t, 0) === -1) {
+      // A scalar -1 means every output dimension is unknown, not rank zero.
+      return new Array<number>(this.raggedRank + this.valuesShape.length)
+          .fill(-1);
     }
     throw new Error(
         `The only valid scalar shape tensor is the fully unknown shape specified as -1.`);

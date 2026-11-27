@@ -56,8 +56,7 @@ export function combineRaggedTensorToTensorShapes(
 
   for (let i = 1; i < valueShape.length; ++i) {
     const valueDim = valueShape[i];
-    const outputShapeDimIndex =
-        outputShape[outputShape.length - valueShape.length + i];
+    const outputShapeDimIndex = outputShape.length - valueShape.length + i;
     const outputShapeDim = outputShape[outputShapeDimIndex];
 
     if (!(valueDim >= 0)) {
