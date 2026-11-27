@@ -19,7 +19,7 @@
 import {findPackagesWithDiff, allPackages} from './find_packages_with_diff.js';
 import {generateCloudbuild} from './generate_cloudbuild';
 import {ArgumentParser} from 'argparse';
-import * as yaml from 'js-yaml';
+
 import * as fs from 'fs';
 import {requireRecord, requireString, requireStringArray} from './release-inputs';
 
@@ -58,4 +58,12 @@ if (args.packages.length > 0) {
 }
 
 const cloudbuild = generateCloudbuild(packages, nightly);
-fs.writeFileSync(args.output, yaml.dump(cloudbuild));
+// The repository uses js-yaml 3.x, whereas its declaration package describes
+// 4.x. Preserve the original safe serializer rather than allowing JS tags.
+const yamlRuntime = requireRecord(require('js-yaml'), 'js-yaml 3.x');
+const safeDump = yamlRuntime.safeDump;
+if (typeof safeDump !== 'function') {
+  throw new Error('js-yaml 3.x safeDump is required');
+}
+const output = requireString(safeDump(cloudbuild), 'Cloud Build YAML');
+fs.writeFileSync(args.output, output);

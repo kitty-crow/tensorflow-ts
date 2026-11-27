@@ -47,14 +47,14 @@ function readOptionalArray(value: unknown, description: string): unknown[] {
 export function parseKernelToOps(text: string): KernelToOps {
   const value: unknown = JSON.parse(text);
   const record = requireRecord(value, 'kernel to ops mapping');
-  const mapping: KernelToOps = Object.create(null);
+  const entries: Array<[string, string[]]> = [];
   for (const [kernel, ops] of Object.entries(record)) {
     if (!Array.isArray(ops) || !ops.every(op => typeof op === 'string')) {
       throw new Error(`Expected string operation names for kernel ${kernel}`);
     }
-    mapping[kernel] = ops;
+    entries.push([kernel, ops]);
   }
-  return mapping;
+  return Object.fromEntries(entries);
 }
 
 export function getOpsForConfig(
@@ -91,8 +91,9 @@ function getTopologyOps(topology: unknown, kernelToOp: KernelToOps): string[] {
       if (typeof kernel !== 'string') {
         throw new Error('Expected a string operation name for graph node');
       }
-      const ops = kernelToOp[kernel] ?? null;
-      if (ops === null) {
+      const ops = Object.prototype.hasOwnProperty.call(kernelToOp, kernel) ?
+          kernelToOp[kernel] : null;
+      if (ops == null) {
         const message = `Kernel => Op warning: could not find op mapping for kernel ${kernel}`;
         console.warn(message);
         throw new Error(message);
