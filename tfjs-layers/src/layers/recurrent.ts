@@ -2023,19 +2023,19 @@ export class StackedRNNCells extends RNNCell {
       // const constantShape = inputShape.slice(1);
       inputShape = requiredElement((inputShape as Shape[]), 0);
     }
-    inputShape = inputShape as Shape;
+    let cellInputShape = inputShape as Shape;
     let outputDim: number;
     this.cells.forEach((cell, i) => {
       nameScope(`RNNCell_${i}`, () => {
         // TODO(cais): Take care of input constants.
 
-        cell.build(inputShape);
+        cell.build(cellInputShape);
         if (Array.isArray(cell.stateSize)) {
           outputDim = requiredElement(cell.stateSize, 0);
         } else {
           outputDim = cell.stateSize;
         }
-        inputShape = [requiredElement(inputShape, 0), outputDim] as Shape;
+        cellInputShape = [requiredElement(cellInputShape, 0), outputDim];
       });
     });
     this.built = true;

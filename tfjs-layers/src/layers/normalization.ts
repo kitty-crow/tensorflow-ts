@@ -523,8 +523,8 @@ export class LayerNormalization extends Layer {
   }
 
   public override build(inputShape: Shape|Shape[]): void {
-    inputShape = getExactlyOneShape(inputShape);
-    const nDims = inputShape.length;
+    const shape = getExactlyOneShape(inputShape);
+    const nDims = shape.length;
 
     // Convert axis to array and resolve negatives.
     if (typeof this.axis === 'number') {
@@ -547,7 +547,8 @@ export class LayerNormalization extends Layer {
       throw new Error(`Found duplicate axes in: ${this.axis}`);
     }
 
-    const paramShape = this.axis.map(axis => generic_utils.requiredElement(inputShape, axis)) as number[];
+    const paramShape = this.axis.map(
+        axis => generic_utils.requiredElement(shape, axis));
 
     const trainable = true;
     if (this.scale) {

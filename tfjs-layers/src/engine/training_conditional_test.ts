@@ -15,7 +15,8 @@ import '../flags_layers';
 import {ReLULayerConfig} from '../keras_format/layers/advanced_activation_serialization';
 import {LayerMetadata} from '../keras_format/topology_config';
 import {ReLU} from '../layers/advanced_activations';
-import {standardizeArgs} from '../layers/recurrent';
+import {LayerNormalization} from '../layers/normalization';
+import {LSTMCell, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
 import {requiredElement, requiredEntry} from '../utils/generic_utils';
 import {Conv2D} from '../layers/convolutional';
 import {DepthwiseConv2D} from '../layers/convolutional_depthwise';
@@ -154,5 +155,39 @@ describe('checked symbolic model and depthwise shapes', () => {
   it('keeps unknown spatial dimensions through depthwise convolution', () => {
     const layer = new DepthwiseConv2D({kernelSize: 3, depthMultiplier: 2, padding: 'same'});
     expect(layer.computeOutputShape([null, 5, null, 2])).toEqual([null, 5, null, 4]);
+  });
+});
+
+describe('checked callback shape contracts', () => {
+  it('normalizes a single nested shape without allocating weights', () => {
+    const layer = new LayerNormalization({axis: [-1, 1], center: false, scale: false});
+    layer.build([[null, 0, 4]]);
+    expect(layer.built).toBe(true);
+    expect(layer.getConfig().axis).toEqual([2, 1]);
+    const missing = new LayerNormalization({axis: 1, center: false, scale: false});
+    const shape = new Array<number>(2);
+    shape[0] = 1;
+    expect(() => missing.build(shape)).toThrowError(/Missing required element/);
+  });
+
+  it('passes the selected input and each preceding cell output shape in order', () => {
+    const first = new SimpleRNNCell({units: 3});
+    const second = new LSTMCell({units: 5});
+    const third = new SimpleRNNCell({units: 7});
+    const firstBuild = spyOn(first, 'build');
+    const secondBuild = spyOn(second, 'build');
+    const thirdBuild = spyOn(third, 'build');
+    const stack = new StackedRNNCells({cells: [first, second, third]});
+    const shape = [null, 2];
+    stack.build([shape, [null, 9]]);
+    expect(firstBuild.calls.mostRecent().args[0]).toBe(shape);
+    expect(secondBuild).toHaveBeenCalledOnceWith([null, 3]);
+    expect(thirdBuild).toHaveBeenCalledOnceWith([null, 5]);
+    expect(stack.built).toBe(true);
+    const flatShape = [0, 2];
+    stack.build(flatShape);
+    expect(firstBuild.calls.mostRecent().args[0]).toBe(flatShape);
+    expect(secondBuild.calls.mostRecent().args[0]).toEqual([0, 3]);
+    expect(thirdBuild.calls.mostRecent().args[0]).toEqual([0, 5]);
   });
 });
