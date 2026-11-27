@@ -27,6 +27,7 @@ import {getNumericArrayParam, OperationMapper, parseStringParam} from '../operat
 import {NodeValueImpl} from './node_value_impl';
 import {spyOnAllFunctions} from '../executors/spy_ops';
 import {getPadding, parseNodeName} from '../executors/utils';
+import {validateParam} from '../executors/test_helper';
 
 describe('custom node attribute conditional dispatch', () => {
   it('preserves scalar/list precedence and all list representations', () => {
@@ -234,5 +235,20 @@ describe('converter spy module entries', () => {
     expect(new spies.CompositeArrayBuffer(3).size).toBe(3);
     expect(spies.nested.add(2, 3)).toBe(5);
     expect(spies.nested.add).toHaveBeenCalledWith(2, 3);
+  });
+});
+
+describe('operation mapper fixture validation', () => {
+  it('checks required mapper definitions and preserves omitted input ends', () => {
+    const node: Node = {name: 'test', op: 'Identity', category: 'graph',
+      inputNames: ['x'], inputs: [], children: [],
+      inputParams: {x: {type: 'tensor', inputIndexStart: 0}},
+      attrParams: {}};
+    expect(validateParam(node, [{tfOpName: 'Identity',
+      inputs: [{name: 'x', type: 'tensor', start: 0}]}])).toBe(true);
+    expect(validateParam(node, [{tfOpName: 'Identity',
+      inputs: [{name: 'x', type: 'tensor', start: 0, end: 0}]}])).toBe(false);
+    expect(validateParam(node, [{tfOpName: 'Identity'}])).toBe(false);
+    expect(() => validateParam(node, [])).toThrowError(/No operation mapper/);
   });
 });

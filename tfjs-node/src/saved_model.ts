@@ -25,8 +25,7 @@ export {getEnumKeyFromValue} from './saved_model_metadata';
 
 const readFile = promisify(fs.readFile);
 
-// tslint:disable-next-line:no-require-imports
-const messages = require('./proto/api_pb');
+import * as messages from './proto/api_pb';
 
 const SAVED_MODEL_FILE_NAME = '/saved_model.pb';
 
@@ -72,7 +71,7 @@ export async function readSavedModelProto(path: string) {
  */
 export async function getMetaGraphsFromSavedModel(path: string):
     Promise<MetaGraph[]> {
-  const modelMessage: unknown = await readSavedModelProto(path);
+  const modelMessage = await readSavedModelProto(path);
   return inspectSavedModelMetadata(modelMessage, messages.DataType);
 }
 

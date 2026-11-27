@@ -75,19 +75,21 @@ export function createDtypeAttr(dtype: string): ParamValue {
 
 export function validateParam(
     node: Node, opMappers: OpMapper[], tfOpName?: string) {
-  const opMapper = tfOpName != null ?
-      opMappers.find(mapper => mapper.tfOpName === tfOpName) :
-      opMappers.find(mapper => mapper.tfOpName === node.op);
-  const matched = Object.keys(node.inputParams).every(key => {
-    const value = node.inputParams[key];
-    const def = opMapper.inputs.find(param => param.name === key);
-    return def && def.type === value.type &&
+  const name = tfOpName ?? node.op;
+  const opMapper = opMappers.find(mapper => mapper.tfOpName === name);
+  if (opMapper == null) {
+    throw new Error(`No operation mapper found for '${name}'.`);
+  }
+  const inputs = opMapper.inputs ?? [];
+  const attrs = opMapper.attrs ?? [];
+  const matched = Object.entries(node.inputParams).every(([key, value]) => {
+    const def = inputs.find(param => param.name === key);
+    return def != null && def.type === value.type &&
         def.start === value.inputIndexStart && def.end === value.inputIndexEnd;
   }) &&
-      Object.keys(node.attrParams).every(key => {
-        const value = node.attrParams[key];
-        const def = opMapper.attrs.find(param => param.name === key);
-        return def && def.type === value.type;
+      Object.entries(node.attrParams).every(([key, value]) => {
+        const def = attrs.find(param => param.name === key);
+        return def != null && def.type === value.type;
       });
   if (!matched) {
     console.log('node = ', node);

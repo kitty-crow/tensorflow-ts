@@ -20,8 +20,7 @@ import * as tf from './index';
 import {nodeBackend} from './nodejs_kernel_backend';
 import {getEnumKeyFromValue, getSignatureDefEntryFromMetaGraphInfo, readSavedModelProto} from './saved_model';
 
-// tslint:disable-next-line:no-require-imports
-const messages = require('./proto/api_pb');
+import * as messages from './proto/api_pb';
 
 describe('SavedModel', () => {
   it('deserialize SavedModel pb file', async () => {
@@ -57,31 +56,36 @@ describe('SavedModel', () => {
         './test_objects/saved_model/times_three_float');
 
     // This SavedModel has one MetaGraph with tag serve
-    expect(modelMessage.getMetaGraphsList().length).toBe(1);
-    expect(modelMessage.getMetaGraphsList()[0]
-               .getMetaInfoDef()
-               .getTagsList()
-               .length)
-        .toBe(1);
-    expect(
-        modelMessage.getMetaGraphsList()[0].getMetaInfoDef().getTagsList()[0])
-        .toBe('serve');
+    const graphs = modelMessage.getMetaGraphsList();
+    expect(graphs.length).toBe(1);
+    const graph = test_util.requiredTestElement(graphs, 0);
+    const metaInfo = graph.getMetaInfoDef();
+    if (metaInfo == null) {
+      throw new Error('Missing SavedModel metagraph information.');
+    }
+    const tags = metaInfo.getTagsList();
+    expect(tags.length).toBe(1);
+    expect(test_util.requiredTestElement(tags, 0)).toBe('serve');
 
     // Validate the SavedModel has signatureDef serving_default
-    const signatureDefMapMessage =
-        modelMessage.getMetaGraphsList()[0].getSignatureDefMap();
+    const signatureDefMapMessage = graph.getSignatureDefMap();
     expect(signatureDefMapMessage.has('serving_default')).toBe(true);
+    const signature = test_util.requiredTestValue(
+        signatureDefMapMessage.get('serving_default'), 'serving_default');
 
     // The input op of signature serving_default is serving_default_x, DataType
     // is DT_FLOAT
-    const inputsMapMessage =
-        signatureDefMapMessage.get('serving_default').getInputsMap();
+    const inputsMapMessage = signature.getInputsMap();
     expect(inputsMapMessage.getLength()).toBe(1);
     const inputsMapKeys = inputsMapMessage.keys();
     const inputsMapKey1 = inputsMapKeys.next();
     expect(inputsMapKey1.done).toBe(false);
+    if (inputsMapKey1.done) {
+      throw new Error('Missing input map key.');
+    }
     expect(inputsMapKey1.value).toBe('x');
-    const inputTensorMessage = inputsMapMessage.get(inputsMapKey1.value);
+    const inputTensorMessage = test_util.requiredTestValue(
+        inputsMapMessage.get(inputsMapKey1.value), 'input tensor');
     expect(inputTensorMessage.getName()).toBe('serving_default_x:0');
     expect(
         getEnumKeyFromValue(messages.DataType, inputTensorMessage.getDtype()))
@@ -89,14 +93,17 @@ describe('SavedModel', () => {
 
     // The output op of signature serving_default is StatefulPartitionedCall,
     // DataType is DT_FLOAT
-    const outputsMapMessage =
-        signatureDefMapMessage.get('serving_default').getOutputsMap();
+    const outputsMapMessage = signature.getOutputsMap();
     expect(outputsMapMessage.getLength()).toBe(1);
     const outputsMapKeys = outputsMapMessage.keys();
     const outputsMapKey1 = outputsMapKeys.next();
     expect(outputsMapKey1.done).toBe(false);
+    if (outputsMapKey1.done) {
+      throw new Error('Missing output map key.');
+    }
     expect(outputsMapKey1.value).toBe('output_0');
-    const outputTensorMessage = outputsMapMessage.get(outputsMapKey1.value);
+    const outputTensorMessage = test_util.requiredTestValue(
+        outputsMapMessage.get(outputsMapKey1.value), 'output tensor');
     expect(outputTensorMessage.getName()).toBe('StatefulPartitionedCall:0');
     expect(
         getEnumKeyFromValue(messages.DataType, outputTensorMessage.getDtype()))

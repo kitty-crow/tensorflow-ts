@@ -21,27 +21,30 @@ import {expectArraysClose, expectArraysEqual} from '../test_util';
 
 function readPixelsFromCanvas(
     canvas: HTMLCanvasElement, contextType: string, width: number,
-    height: number) {
-  let actualData;
+    height: number): Uint8ClampedArray {
   if (contextType === '2d') {
     const ctx = canvas.getContext(contextType);
-    actualData = ctx.getImageData(0, 0, width, height).data;
-  } else {
-    const tmpCanvas = document.createElement('canvas');
-    tmpCanvas.width = width;
-    tmpCanvas.height = height;
-    const ctx = tmpCanvas.getContext('2d');
-
-    ctx.drawImage(canvas, 0, 0);
-    actualData = new Uint8ClampedArray(
-        ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data);
+    if (ctx == null) {
+      throw new Error('Missing canvas 2D context.');
+    }
+    return ctx.getImageData(0, 0, width, height).data;
   }
-  return actualData;
+  const tmpCanvas = document.createElement('canvas');
+  tmpCanvas.width = width;
+  tmpCanvas.height = height;
+  const ctx = tmpCanvas.getContext('2d');
+  if (ctx == null) {
+    throw new Error('Missing temporary canvas 2D context.');
+  }
+  ctx.drawImage(canvas, 0, 0);
+  return new Uint8ClampedArray(
+      ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data);
 }
 
 function convertToRGBA(
     data: number[], shape: number[], dtype: string, alpha = 1) {
-  const [height, width] = shape.slice(0, 2);
+  const height = tf.test_util.requiredTestElement(shape, 0);
+  const width = tf.test_util.requiredTestElement(shape, 1);
   const depth = shape.length === 2 ? 1 : tf.test_util.requiredTestElement(shape, 2);
   const multiplier = dtype === 'float32' ? 255 : 1;
   const bytes = new Uint8ClampedArray(width * height * 4);
@@ -50,7 +53,7 @@ function convertToRGBA(
     const rgba = [0, 0, 0, 255 * alpha];
 
     for (let d = 0; d < depth; d++) {
-      const value = data[i * depth + d];
+      const value = tf.test_util.requiredTestElement(data, i * depth + d);
 
       switch (dtype) {
         case 'float32': {
@@ -91,9 +94,10 @@ function convertToRGBA(
 
 function drawAndReadback(
     contextType: string, data: number[], shape: number[], dtype: string,
-    alpha = 1, canvasUsedAs2d = false) {
-  const [height, width] = shape.slice(0, 2);
-  let img;
+    alpha = 1, canvasUsedAs2d = false): [Uint8ClampedArray, Uint8ClampedArray] {
+  const height = tf.test_util.requiredTestElement(shape, 0);
+  const width = tf.test_util.requiredTestElement(shape, 1);
+  let img: tf.Tensor2D|tf.Tensor3D;
   if (shape.length === 3) {
     img = tf.tensor3d(
         data, shape as [number, number, number], dtype as keyof tf.DataTypeMap);
@@ -108,8 +112,7 @@ function drawAndReadback(
     canvas.getContext('2d');
   }
   const drawOptions = {contextOptions: {contextType}, imageOptions: {alpha}};
-  // tslint:disable-next-line:no-any
-  tf.browser.draw(img, canvas as any, drawOptions);
+  tf.browser.draw(img, canvas, drawOptions);
   const actualData = readPixelsFromCanvas(canvas, contextType, width, height);
   const expectedData = convertToRGBA(data, shape, dtype, alpha);
   img.dispose();
