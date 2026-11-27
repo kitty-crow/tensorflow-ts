@@ -70,7 +70,7 @@ export function convertPythonicToTs(
     return tsDict;
   }
   {
-    const tsArray = [];
+    const tsArray: serialization.ConfigDictValue[] = [];
     const arrayLength = pythonicConfig.length;
     for (let i = 0; i < arrayLength; ++i) {
       const item = pythonicConfig[i];
@@ -119,7 +119,7 @@ export function convertTsToPythonic(
     return pyDict;
   }
   {
-    const pyArray = [];
+    const pyArray: PyJsonValue[] = [];
     const arrayLength = tsConfig.length;
     for (let i = 0; i < arrayLength; ++i) {
       const item = tsConfig[i];

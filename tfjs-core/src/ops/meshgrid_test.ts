@@ -18,7 +18,7 @@
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
 import {Tensor} from '../tensor';
-import {expectArraysEqual, expectArraysClose} from '../test_util';
+import {expectArraysEqual, expectArraysClose, requiredTestElement} from '../test_util';
 
 describeWithFlags('no input', ALL_ENVS, () => {
   it('Should return an empty tensor ', async () => {
@@ -29,7 +29,8 @@ describeWithFlags('no input', ALL_ENVS, () => {
 describeWithFlags('single input', ALL_ENVS, () => {
   it('Should return a tensor with the same data', async () => {
     const x = [1, 2, 3, 4];
-    const [got] = tf.meshgrid(x);
+    const outputs = tf.meshgrid(x);
+    const got = requiredTestElement(outputs, 0);
 
     expectArraysEqual(await got.data(), x);
   });
@@ -39,7 +40,9 @@ describeWithFlags('simple inputs', ALL_ENVS, () => {
   it('Should handle the simple 2D case', async () => {
     const x = [1, 2, 3];
     const y = [4, 5, 6, 7];
-    const [X, Y] = tf.meshgrid(x, y);
+    const outputs = tf.meshgrid(x, y);
+    const X = requiredTestElement(outputs, 0);
+    const Y = requiredTestElement(outputs, 1);
 
     // 'close' instead of 'equal' because of matmul precision
     // in certain backends (WebGL).
@@ -52,7 +55,9 @@ describeWithFlags('simple inputs', ALL_ENVS, () => {
   it('Should support \'ij\' indexing', async () => {
     const x = [1, 2, 3];
     const y = [4, 5, 6, 7];
-    const [X, Y] = tf.meshgrid(x, y, {indexing: 'ij'});
+    const outputs = tf.meshgrid(x, y, {indexing: 'ij'});
+    const X = requiredTestElement(outputs, 0);
+    const Y = requiredTestElement(outputs, 1);
 
     // 'close' instead of 'equal' because of matmul precision
     // in certain backends (WebGL).
@@ -68,7 +73,9 @@ describeWithFlags('higher dimensional input', ALL_ENVS, () => {
     const x = [1, 2, 3];
     const a = [[1, 1], [1, 1]];
 
-    const [X, A] = tf.meshgrid(x, a);
+    const outputs = tf.meshgrid(x, a);
+    const X = requiredTestElement(outputs, 0);
+    const A = requiredTestElement(outputs, 1);
 
     // 'close' instead of 'equal' because of matmul precision
     // in certain backends (WebGL).
@@ -83,7 +90,9 @@ describeWithFlags('dtypes', ALL_ENVS, () => {
   it('Should use float32 for arrays of numbers', async () => {
     const x = [1, 2];
     const y = [3, 4];
-    const [X, Y] = tf.meshgrid(x, y);
+    const outputs = tf.meshgrid(x, y);
+    const X = requiredTestElement(outputs, 0);
+    const Y = requiredTestElement(outputs, 1);
 
     expect(X.dtype).toBe('float32');
     expect(Y.dtype).toBe('float32');
@@ -92,7 +101,9 @@ describeWithFlags('dtypes', ALL_ENVS, () => {
   it('Should use the input tensor dtype', async () => {
     const x = tf.tensor1d([1, 2], 'int32');
     const y = tf.tensor1d([3, 4], 'float32');
-    const [X, Y] = tf.meshgrid(x, y);
+    const outputs = tf.meshgrid(x, y);
+    const X = requiredTestElement(outputs, 0);
+    const Y = requiredTestElement(outputs, 1);
 
     expect(X.dtype).toBe('int32');
     expect(Y.dtype).toBe('float32');
@@ -101,12 +112,15 @@ describeWithFlags('dtypes', ALL_ENVS, () => {
 
 describeWithFlags('scalars', ALL_ENVS, () => {
   it('Should treat them as 1D tensors', async () => {
-    const [X] = tf.meshgrid(0);
+    const outputs = tf.meshgrid(0);
+    const X = requiredTestElement(outputs, 0);
     // 'close' instead of 'equal' because of matmul precision
     // in certain backends (WebGL).
     expectArraysClose(await X.data(), [0]);
 
-    const [Y, Z] = tf.meshgrid([0], 1);
+    const secondOutputs = tf.meshgrid([0], 1);
+    const Y = requiredTestElement(secondOutputs, 0);
+    const Z = requiredTestElement(secondOutputs, 1);
     expectArraysClose(await Y.data(), [[0]]);
     expectArraysClose(await Z.data(), [[1]]);
   });

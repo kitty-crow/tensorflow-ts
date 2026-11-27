@@ -57,6 +57,21 @@ export function requiredTestEntry<T>(values: {[key: string]: T}, key: string): T
   return value;
 }
 
+/** Independent sequential numeric input and filter fixtures for convolution tests. */
+export function sequentialConvolutionTestInputs(
+    totalSizeTensor: number, totalSizeFilter: number):
+    {input: number[], filter: number[]} {
+  const input = new Array<number>(totalSizeTensor);
+  const filter = new Array<number>(totalSizeFilter);
+  for (let i = 0; i < totalSizeTensor; i++) {
+    input[i] = i + 1;
+  }
+  for (let i = 0; i < totalSizeFilter; i++) {
+    filter[i] = i + 1;
+  }
+  return {input, filter};
+}
+
 const TEST_EPSILON_FLOAT32 = 1e-3;
 export const TEST_EPSILON_FLOAT16 = 1e-1;
 

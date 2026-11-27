@@ -70,9 +70,9 @@ describe('graph', () => {
         node.inputParams.x = createTensorAttr(0);
         node.op = 'Identity';
         test_util.expectArraysEqual(
-            await (executeOp(node, {input: input1}, context) as Tensor[])[0]
+            await test_util.requiredTestElement(executeOp(node, {input: input1}, context) as Tensor[], 0)
                 .array(),
-            await input1[0].array());
+            await test_util.requiredTestElement(input1, 0).array());
       });
     });
     describe('IdentityN', () => {
@@ -82,7 +82,7 @@ describe('graph', () => {
         node.op = 'IdentityN';
         expect(
             (executeOp(node, {input1, input3}, context) as Tensor[]).map(t => {
-              return Array.prototype.slice.call(t.dataSync());
+              return Array.from<number|string>(t.dataSync());
             }))
             .toEqual([[1], [1, 1, 1, 2, 2, 2]]);
       });
@@ -93,8 +93,8 @@ describe('graph', () => {
         node.inputParams.x = createTensorAttr(0);
         node.op = 'Snapshot';
         const result =
-            (executeOp(node, {input: input1}, context) as Tensor[])[0];
-        expect(result.rank).toEqual(input1[0].rank);
+            test_util.requiredTestElement(executeOp(node, {input: input1}, context) as Tensor[], 0);
+        expect(result.rank).toEqual(test_util.requiredTestElement(input1, 0).rank);
         test_util.expectArraysClose(await result.data(), [1]);
       });
     });
@@ -103,8 +103,8 @@ describe('graph', () => {
         node.inputNames = ['input'];
         node.inputParams.x = createTensorAttr(0);
         node.op = 'Shape';
-        expect(Array.prototype.slice.call(
-                   (executeOp(node, {input: input3}, context) as Tensor[])[0]
+        expect(Array.from<number|string>(
+                   test_util.requiredTestElement(executeOp(node, {input: input3}, context) as Tensor[], 0)
                        .dataSync()))
             .toEqual([1, 2, 3]);
       });
@@ -116,7 +116,7 @@ describe('graph', () => {
         node.op = 'ShapeN';
         expect(
             (executeOp(node, {input1, input3}, context) as Tensor[]).map(t => {
-              return Array.prototype.slice.call(t.dataSync());
+              return Array.from<number|string>(t.dataSync());
             }))
             .toEqual([[1], [1, 2, 3]]);
       });
@@ -126,8 +126,8 @@ describe('graph', () => {
         node.inputNames = ['input'];
         node.inputParams.x = createTensorAttr(0);
         node.op = 'Size';
-        expect(Array.prototype.slice.call(
-                   (executeOp(node, {input: input3}, context) as Tensor[])[0]
+        expect(Array.from<number|string>(
+                   test_util.requiredTestElement(executeOp(node, {input: input3}, context) as Tensor[], 0)
                        .dataSync()))
             .toEqual([6]);
       });
@@ -137,8 +137,8 @@ describe('graph', () => {
         node.inputNames = ['input'];
         node.inputParams.x = createTensorAttr(0);
         node.op = 'Rank';
-        expect(Array.prototype.slice.call(
-                   (executeOp(node, {input: input3}, context) as Tensor[])[0]
+        expect(Array.from<number|string>(
+                   test_util.requiredTestElement(executeOp(node, {input: input3}, context) as Tensor[], 0)
                        .dataSync()))
             .toEqual([3]);
       });
@@ -147,7 +147,7 @@ describe('graph', () => {
       it('should return empty', async () => {
         node.op = 'NoOp';
         test_util.expectArraysClose(
-            await (executeOp(node, {}, context) as Tensor[])[0].data(), [1]);
+            await test_util.requiredTestElement(executeOp(node, {}, context) as Tensor[], 0).data(), [1]);
       });
     });
   });
@@ -174,9 +174,9 @@ describe('graph', () => {
       node.inputParams.x = createTensorAttr(0);
       node.op = 'StopGradient';
       test_util.expectArraysClose(
-          await (executeOp(node, {input: input1}, context) as Tensor[])[0]
+          await test_util.requiredTestElement(executeOp(node, {input: input1}, context) as Tensor[], 0)
               .array(),
-          await input1[0].array());
+          await test_util.requiredTestElement(input1, 0).array());
     });
   });
   describe('FakeQuantWithMinMaxVars', () => {
@@ -185,9 +185,9 @@ describe('graph', () => {
       node.inputParams.x = createTensorAttr(0);
       node.op = 'FakeQuantWithMinMaxVars';
       test_util.expectArraysClose(
-          await (executeOp(node, {input: input1}, context) as Tensor[])[0]
+          await test_util.requiredTestElement(executeOp(node, {input: input1}, context) as Tensor[], 0)
               .array(),
-          await input1[0].array());
+          await test_util.requiredTestElement(input1, 0).array());
     });
   });
 });

@@ -48,7 +48,7 @@ function computeMaxSizePerColumn(
     strides: number[]): number[] {
   const n = sizeFromShape(shape);
   const numCols = strides[strides.length - 1];
-  const padPerCol = new Array(numCols).fill(0);
+  const padPerCol = new Array<number>(numCols).fill(0);
   const rank = shape.length;
   const valuesOrTuples =
       dtype === 'complex64' ? createComplexTuples(vals) : vals;

@@ -157,7 +157,7 @@ export class StartEndPacker extends Layer {
         const strInput = input.arraySync() as unknown as string[];
 
         if (strInput.length <= length) {
-          const pads = Array(length - strInput.length).fill(padValue);
+          const pads = Array<string>(length - strInput.length).fill(padValue);
           return tensor(strInput.concat(pads));
         }
 
@@ -166,7 +166,7 @@ export class StartEndPacker extends Layer {
 
       const paddedMask: Tensor[] = x.map(t => {
         // `onesLike` not used since it does not support string tensors.
-        const ones = tensor(Array(t.shape[0]).fill(1));
+        const ones = tensor(Array<number>(t.shape[0]).fill(1));
         return ensureLength(ones, sequenceLength, 0).cast('bool');
       });
       const mask = inputIs1d ?

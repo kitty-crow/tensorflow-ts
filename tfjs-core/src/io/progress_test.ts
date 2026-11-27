@@ -21,7 +21,7 @@ describe('util.monitorPromisesProgress', () => {
   it('Default progress from 0 to 1', (done) => {
     const expectFractions: number[] = [0.25, 0.50, 0.75, 1.00];
     const fractionList: number[] = [];
-    const tasks = Array(4).fill(0).map(() => {
+    const tasks = Array<number>(4).fill(0).map(() => {
       return Promise.resolve();
     });
     monitorPromisesProgress(tasks, (progress: number) => {
@@ -37,7 +37,7 @@ describe('util.monitorPromisesProgress', () => {
     const endFraction = 0.8;
     const expectFractions: number[] = [0.35, 0.50, 0.65, 0.80];
     const fractionList: number[] = [];
-    const tasks = Array(4).fill(0).map(() => {
+    const tasks = Array<number>(4).fill(0).map(() => {
       return Promise.resolve();
     });
     monitorPromisesProgress(tasks, (progress: number) => {
@@ -52,7 +52,7 @@ describe('util.monitorPromisesProgress', () => {
     expect(() => {
       const startFraction = -1;
       const endFraction = 1;
-      const tasks = Array(4).fill(0).map(() => {
+      const tasks = Array<number>(4).fill(0).map(() => {
         return Promise.resolve();
       });
       monitorPromisesProgress(
@@ -64,7 +64,7 @@ describe('util.monitorPromisesProgress', () => {
     expect(() => {
       const startFraction = 0.8;
       const endFraction = 0.2;
-      const tasks = Array(4).fill(0).map(() => {
+      const tasks = Array<number>(4).fill(0).map(() => {
         return Promise.resolve();
       });
       monitorPromisesProgress(

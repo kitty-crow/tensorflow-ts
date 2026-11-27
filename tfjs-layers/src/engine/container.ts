@@ -1066,11 +1066,11 @@ export abstract class Container extends Layer {
         this.buildNodeConversionMap(this.layers);
 
     // Serialize and save the layers in layerConfigs
-    const layerConfigs = [];
+    const layerConfigs: serialization.ConfigDict[] = [];
     for (const layer of this.layers) {
       const layerClassName = layer.getClassName();
       const layerConfig = layer.getConfig();
-      const filteredInboundNodes = [];
+      const filteredInboundNodes: serialization.ConfigDictValue[][][] = [];
       for (let originalNodeIndex = 0;
            originalNodeIndex < layer.inboundNodes.length; originalNodeIndex++) {
         const node = generic_utils.requiredElement(layer.inboundNodes, originalNodeIndex);
@@ -1095,7 +1095,7 @@ export abstract class Container extends Layer {
             }
           }
           if (node.inboundLayers.length > 0) {
-            const nodeData = [];
+            const nodeData: serialization.ConfigDictValue[][] = [];
             for (let i = 0; i < node.inboundLayers.length; i++) {
               const inboundLayer = generic_utils.requiredElement(node.inboundLayers, i);
               const nodeIndex = generic_utils.requiredElement(node.nodeIndices, i);
@@ -1118,7 +1118,7 @@ export abstract class Container extends Layer {
     }
     config['layers'] = layerConfigs;
     // Gather info about inputs and outputs
-    const modelInputs = [];
+    const modelInputs: Array<[string, number, number]> = [];
     for (let i = 0; i < this.inputLayers.length; i++) {
       const layer = generic_utils.requiredElement(this.inputLayers, i);
       const nodeIndex = generic_utils.requiredElement(this.inputLayersNodeIndices, i);
@@ -1136,7 +1136,7 @@ export abstract class Container extends Layer {
     }
     config['inputLayers'] = modelInputs;
 
-    const modelOutputs = [];
+    const modelOutputs: Array<[string, number, number]> = [];
     for (let i = 0; i < this.outputLayers.length; i++) {
       const layer = generic_utils.requiredElement(this.outputLayers, i);
       const nodeIndex = generic_utils.requiredElement(this.outputLayersNodeIndices, i);

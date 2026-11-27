@@ -14,6 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
+import {Tensor, test_util} from '@tensorflow/tfjs-core';
 // tslint:disable-next-line: no-imports-from-dist
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 
@@ -135,10 +136,15 @@ describe('slice join', () => {
         spyOps.stack.and.returnValue({});
         executeOp(node, {input1, input2, input3}, context, spyOpsAsTfOps);
 
-        expect(spyOps.stack.calls.mostRecent().args[0][0]).toEqual(input1[0]);
-        expect(spyOps.stack.calls.mostRecent().args[0][1]).toEqual(input2[0]);
-        expect(spyOps.stack.calls.mostRecent().args[0][2]).toEqual(input3[0]);
-        expect(spyOps.stack.calls.mostRecent().args[1]).toEqual(4);
+        const args: unknown[] = spyOps.stack.calls.mostRecent().args;
+        const tensors: unknown = test_util.requiredTestElement(args, 0);
+        if (!Array.isArray(tensors)) {
+          throw new Error('Expected stack to receive a tensor array.');
+        }
+        expect(test_util.requiredTestElement<unknown[]>(tensors, 0)).toEqual(input1[0]);
+        expect(test_util.requiredTestElement<unknown[]>(tensors, 1)).toEqual(input2[0]);
+        expect(test_util.requiredTestElement<unknown[]>(tensors, 2)).toEqual(input3[0]);
+        expect(test_util.requiredTestElement(args, 1)).toEqual(4);
       });
       it('should match json def for unstack', () => {
         node.op = 'Pack';
@@ -156,11 +162,20 @@ describe('slice join', () => {
         executeOp(
             node, {input1, input2, input3, input4}, context, spyOpsAsTfOps);
 
-        expect(spyOps.stack.calls.mostRecent().args[0][0]).toEqual(input1[0]);
-        expect(spyOps.stack.calls.mostRecent().args[0][1]).toEqual(input2[0]);
-        expect(spyOps.stack.calls.mostRecent().args[0][2]).toEqual(input3[0]);
-        expect(spyOps.stack.calls.mostRecent().args[0][3].shape).toEqual([]);
-        expect(spyOps.stack.calls.mostRecent().args[1]).toEqual(4);
+        const args: unknown[] = spyOps.stack.calls.mostRecent().args;
+        const tensors: unknown = test_util.requiredTestElement(args, 0);
+        if (!Array.isArray(tensors)) {
+          throw new Error('Expected stack to receive a tensor array.');
+        }
+        expect(test_util.requiredTestElement<unknown[]>(tensors, 0)).toEqual(input1[0]);
+        expect(test_util.requiredTestElement<unknown[]>(tensors, 1)).toEqual(input2[0]);
+        expect(test_util.requiredTestElement<unknown[]>(tensors, 2)).toEqual(input3[0]);
+        const reshaped: unknown = test_util.requiredTestElement<unknown[]>(tensors, 3);
+        if (!(reshaped instanceof Tensor)) {
+          throw new Error('Expected a reshaped tensor.');
+        }
+        expect(reshaped.shape).toEqual([]);
+        expect(test_util.requiredTestElement(args, 1)).toEqual(4);
       });
       it('should raise error if tensors shape does not match for tfOps.stack',
          () => {

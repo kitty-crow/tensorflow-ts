@@ -17,22 +17,22 @@
 
 import * as tf from '../../index';
 import {ALL_ENVS, describeWithFlags} from '../../jasmine_util';
-import {expectArraysEqual} from '../../test_util';
+import {expectArraysEqual, requiredTestEntry} from '../../test_util';
 
 async function expectResult(
     result: tf.NamedTensorMap, indices: number[][], values: string[],
     shape: [number, number]) {
-  expectArraysEqual(await result.indices.data(), indices);
-  expectArraysEqual(await result.values.data(), values);
-  expectArraysEqual(await result.shape.data(), shape);
+  expectArraysEqual(await requiredTestEntry(result, 'indices').data(), indices);
+  expectArraysEqual(await requiredTestEntry(result, 'values').data(), values);
+  expectArraysEqual(await requiredTestEntry(result, 'shape').data(), shape);
 
-  expect(result.indices.shape).toEqual([indices.length, 2]);
-  expect(result.values.shape).toEqual([values.length]);
-  expect(result.shape.shape).toEqual([2]);
+  expect(requiredTestEntry(result, 'indices').shape).toEqual([indices.length, 2]);
+  expect(requiredTestEntry(result, 'values').shape).toEqual([values.length]);
+  expect(requiredTestEntry(result, 'shape').shape).toEqual([2]);
 
-  expect(result.indices.dtype).toEqual('int32');
-  expect(result.values.dtype).toEqual('string');
-  expect(result.shape.dtype).toEqual('int32');
+  expect(requiredTestEntry(result, 'indices').dtype).toEqual('int32');
+  expect(requiredTestEntry(result, 'values').dtype).toEqual('string');
+  expect(requiredTestEntry(result, 'shape').dtype).toEqual('int32');
 }
 
 describeWithFlags('stringSplit', ALL_ENVS, () => {
@@ -102,7 +102,7 @@ describeWithFlags('stringSplit', ALL_ENVS, () => {
     const input = 'a'.repeat(200000);
     const result = tf.string.stringSplit([input], '');
     await expectResult(
-        result, Array(input.length).fill(0).map((_, i) => [0, i]),
+        result, Array<number>(input.length).fill(0).map((_, i) => [0, i]),
         input.split(''), [1, input.length]);
   });
 });

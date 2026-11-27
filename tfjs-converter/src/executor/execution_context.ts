@@ -89,7 +89,7 @@ export class ExecutionContext {
   }
 
   private generateCurrentContextIds() {
-    const names = [];
+    const names: string[] = [];
     for (let i = 0; i < this.contexts.length - 1; i++) {
       const contexts = this.contexts.slice(0, this.contexts.length - i);
       names.push(this.contextIdforContexts(contexts));

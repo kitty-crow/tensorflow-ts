@@ -18,34 +18,19 @@
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
 import {Tensor5D} from '../tensor';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, sequentialConvolutionTestInputs, requiredTestElement} from '../test_util';
 import {sizeFromShape} from '../util';
 
 // Generates small floating point inputs to avoid overflows
 function generateCaseInputs(totalSizeTensor: number, totalSizeFilter: number) {
-  const inp = new Array(totalSizeTensor);
-  const filt = new Array(totalSizeFilter);
+  const inp = new Array<number>(totalSizeTensor);
+  const filt = new Array<number>(totalSizeFilter);
 
   for (let i = 0; i < totalSizeTensor; i++) {
     inp[i] = (i + 1) / totalSizeTensor;
   }
   for (let i = 0; i < totalSizeFilter; i++) {
     filt[i] = (i + 1) / totalSizeFilter;
-  }
-
-  return {input: inp, filter: filt};
-}
-
-function generateGradientCaseInputs(
-    totalSizeTensor: number, totalSizeFilter: number) {
-  const inp = new Array(totalSizeTensor);
-  const filt = new Array(totalSizeFilter);
-
-  for (let i = 0; i < totalSizeTensor; i++) {
-    inp[i] = i + 1;
-  }
-  for (let i = 0; i < totalSizeFilter; i++) {
-    filt[i] = i + 1;
   }
 
   return {input: inp, filter: filt};
@@ -84,7 +69,7 @@ function runGradientConv3DTestCase(
 
   const totalSizeTensor = sizeFromShape(inputShape);
   const totalSizeFilter = sizeFromShape(filterShape);
-  const inputs = generateGradientCaseInputs(totalSizeTensor, totalSizeFilter);
+  const inputs = sequentialConvolutionTestInputs(totalSizeTensor, totalSizeFilter);
 
   const x = tf.tensor5d(inputs.input, inputShape);
   const w = tf.tensor5d(inputs.filter, filterShape);
@@ -92,12 +77,15 @@ function runGradientConv3DTestCase(
   const grads = tf.grads(
       (x: Tensor5D, filter: Tensor5D) =>
           tf.conv3d(x.clone(), filter.clone(), stride, pad).clone());
-  const [dx, dfilter] = grads([x, w]);
+  const results = grads([x, w]);
+  const dx = requiredTestElement(results, 0);
+  const dfilter = requiredTestElement(results, 1);
 
   expect(dx.shape).toEqual(x.shape);
   expect(dfilter.shape).toEqual(w.shape);
 
-  return [dx, dfilter];
+  const result: [typeof dx, typeof dfilter] = [dx, dfilter];
+  return result;
 }
 
 describeWithFlags('conv3d', ALL_ENVS, () => {

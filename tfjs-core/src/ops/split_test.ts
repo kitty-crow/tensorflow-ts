@@ -145,7 +145,7 @@ describeWithFlags('split', ALL_ENVS, () => {
 
   it('gradient of 1st output', async () => {
     const a = tf.tensor1d([1, 2, 3]);
-    const da = tf.grad(x => tf.split(x, [1, 2])[0])(a);
+    const da = tf.grad(x => requiredTestElement(tf.split(x, [1, 2]), 0))(a);
 
     expect(da.shape).toEqual([3]);
     expectArraysClose(await da.data(), [1, 0, 0]);
@@ -153,7 +153,7 @@ describeWithFlags('split', ALL_ENVS, () => {
 
   it('gradient with clones', async () => {
     const a = tf.tensor1d([1, 2, 3]);
-    const da = tf.grad(x => tf.split(x.clone(), [1, 2])[0].clone())(a);
+    const da = tf.grad(x => requiredTestElement(tf.split(x.clone(), [1, 2]), 0).clone())(a);
 
     expect(da.shape).toEqual([3]);
     expectArraysClose(await da.data(), [1, 0, 0]);
@@ -161,7 +161,7 @@ describeWithFlags('split', ALL_ENVS, () => {
 
   it('gradient of 2nd output', async () => {
     const a = tf.tensor1d([1, 2, 3]);
-    const da = tf.grad(x => tf.split(x, [1, 2])[1])(a);
+    const da = tf.grad(x => requiredTestElement(tf.split(x, [1, 2]), 1))(a);
 
     expect(da.shape).toEqual([3]);
     expectArraysClose(await da.data(), [0, 1, 1]);

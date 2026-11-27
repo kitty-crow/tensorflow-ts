@@ -64,8 +64,8 @@ function buildAttentionEquation(
   const targetNotationArr = _CHR_IDX.slice(0, rank);
   // `batchDims` includes the head dim.
   const excludeIndices = [...attnAxes, rank - 1];
-  const batchDims = [];
-  for (const e of Array(rank).keys()) {
+  const batchDims: number[] = [];
+  for (const e of Array<number>(rank).keys()) {
     if (!excludeIndices.includes(e)) {
       batchDims.push(e);
     }
@@ -138,7 +138,7 @@ function getOutputShape(
   outputRank: number, knownLastDims: number[]
 ): Shape {
   const outputShape =
-    Array(outputRank - knownLastDims.length).fill(null).concat(knownLastDims);
+    Array<number|null>(outputRank - knownLastDims.length).fill(null).concat(knownLastDims);
   return outputShape;
 }
 

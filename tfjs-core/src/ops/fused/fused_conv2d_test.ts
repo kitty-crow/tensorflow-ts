@@ -20,8 +20,8 @@ import {ALL_ENVS, describeWithFlags} from '../../jasmine_util';
 import {expectArraysClose} from '../../test_util';
 
 function generateCaseInputs(totalSizeTensor: number, totalSizeFilter: number) {
-  const inp = new Array(totalSizeTensor);
-  const filt = new Array(totalSizeFilter);
+  const inp = new Array<number>(totalSizeTensor);
+  const filt = new Array<number>(totalSizeFilter);
 
   for (let i = 0; i < totalSizeTensor; i++) {
     inp[i] = i * 0.001 - totalSizeTensor * 0.001 / 2;
@@ -97,12 +97,12 @@ describeWithFlags('fused conv2d', ALL_ENVS, () => {
 
        // TODO(annxingyuan): Make this test work with large inputs
        // https://github.com/tensorflow/tfjs/issues/3143
-       const inputData = [];
+       const inputData: number[] = [];
        for (let i = 0; i < xSize * xSize * inputDepth; i++) {
          inputData.push(i % 5);
        }
 
-       const wData = [];
+       const wData: number[] = [];
        for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
          wData.push(i % 5);
        }

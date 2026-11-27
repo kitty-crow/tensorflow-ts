@@ -19,20 +19,6 @@ import * as tf from '@tensorflow/tfjs-core';
 import {test_util} from '@tensorflow/tfjs-core';
 import {describeWebGPU} from '../test_util';
 
-function generateCaseInputs(totalSizeTensor: number, totalSizeFilter: number) {
-  const inp = new Array(totalSizeTensor);
-  const filt = new Array(totalSizeFilter);
-
-  for (let i = 0; i < totalSizeTensor; i++) {
-    inp[i] = i + 1;
-  }
-  for (let i = 0; i < totalSizeFilter; i++) {
-    filt[i] = i + 1;
-  }
-
-  return {input: inp, filter: filt};
-}
-
 describeWebGPU('im2col as separate shader', () => {
   let flag: boolean;
   beforeAll(() => {
@@ -195,7 +181,7 @@ describeWebGPU('im2col as separate shader', () => {
     const pad = 'valid';
     const stride: [number, number] = [1, 2];
 
-    const inputs = generateCaseInputs(1 * 3 * 6 * inputDepth, fSize * fSize);
+    const inputs = test_util.sequentialConvolutionTestInputs(1 * 3 * 6 * inputDepth, fSize * fSize);
     const x = tf.tensor4d(inputs.input, inputShape);
     const w =
         tf.tensor4d(inputs.filter, [fSize, fSize, inputDepth, outputDepth]);
@@ -211,15 +197,15 @@ describeWebGPU('conv2d vec4', () => {
     const pad = 'valid';
     const stride = 1;
 
-    const inputData = [];
+    const inputData: number[] = [];
     for (let i = 0; i < 4 * 4 * 3; i++) {
       inputData.push(i % 5);
     }
-    const wData1 = [];
+    const wData1: number[] = [];
     for (let i = 0; i < 2 * 2 * 3 * 4; i++) {
       wData1.push(i % 5);
     }
-    const wData2 = [];
+    const wData2: number[] = [];
     for (let i = 0; i < 2 * 2 * 4 * 4; i++) {
       wData2.push(i % 5);
     }
@@ -257,12 +243,12 @@ describeWebGPU('conv2d vec4', () => {
     const pad = 'same';
     const stride: [number, number] = [2, 2];
 
-    const inputData = [];
+    const inputData: number[] = [];
     for (let i = 0; i < xSize * xSize * inputDepth; i++) {
       inputData.push(i % 5);
     }
 
-    const wData = [];
+    const wData: number[] = [];
     for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
       wData.push(i % 5);
     }
@@ -319,12 +305,12 @@ describeWebGPU('conv2d vec4', () => {
     const pad = 'valid';
     const stride: [number, number] = [2, 2];
 
-    const inputData = [];
+    const inputData: number[] = [];
     for (let i = 0; i < xSize * xSize * inputDepth; i++) {
       inputData.push(i % 5);
     }
 
-    const wData = [];
+    const wData: number[] = [];
     for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
       wData.push(i % 5);
     }
@@ -355,12 +341,12 @@ describeWebGPU('conv2d vec4', () => {
     const pad = 'same';
     const stride: [number, number] = [2, 2];
 
-    const inputData = [];
+    const inputData: number[] = [];
     for (let i = 0; i < xSize * xSize * inputDepth; i++) {
       inputData.push(i % 5);
     }
 
-    const wData = [];
+    const wData: number[] = [];
     for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
       wData.push(i % 5);
     }
@@ -390,12 +376,12 @@ describeWebGPU('conv2d vec4', () => {
        const pad = 'valid';
        const stride: [number, number] = [2, 2];
 
-       const inputData = [];
+       const inputData: number[] = [];
        for (let i = 0; i < xSize * xSize * inputDepth; i++) {
          inputData.push(i % 5);
        }
 
-       const wData = [];
+       const wData: number[] = [];
        for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
          wData.push(i % 5);
        }
@@ -466,12 +452,12 @@ describeWebGPU('conv2d vec4', () => {
        const pad = 'same';
        const stride: [number, number] = [1, 1];
 
-       const inputData = [];
+       const inputData: number[] = [];
        for (let i = 0; i < xSize * xSize * inputDepth; i++) {
          inputData.push(i % 5);
        }
 
-       const wData = [];
+       const wData: number[] = [];
        for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
          wData.push(i % 5);
        }

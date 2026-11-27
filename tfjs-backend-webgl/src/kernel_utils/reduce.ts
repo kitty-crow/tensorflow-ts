@@ -27,7 +27,7 @@ type ReduceTypes = 'all'|'any'|'max'|'min'|'sum'|'prod'|'mean';
 // reduction.
 function getReductionStages(inShape: number[]):
     Array<{inSize: number, windowSize: number, outSize: number}> {
-  const stages = [];
+  const stages: Array<{inSize: number, windowSize: number, outSize: number}> = [];
 
   while (stages.length === 0 || stages[stages.length - 1].outSize !== 1) {
     const outSize: number =

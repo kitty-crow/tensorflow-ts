@@ -47,7 +47,7 @@ export class GatherProgram implements GPGPUProgram {
 function getSourceCoords(aShape: GatherShape, axis: number): string {
   const currentCoords = ['resRC.x', 'resRC.y', 'resRC.z', 'resRC.w'];
 
-  const sourceCoords = [];
+  const sourceCoords: string[] = [];
   for (let i = 0; i < aShape.length; i++) {
     if (i === 2) {
       sourceCoords.push('index');

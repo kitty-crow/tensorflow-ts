@@ -92,11 +92,11 @@ describe('control', () => {
 
         const pred = [tfOps.scalar(true)];
         test_util.expectArraysEqual(
-            await (await executeOp(node, {pred: undefined, input1}, context))[0]
+            await test_util.requiredTestElement(await executeOp(node, {pred: undefined, input1}, context), 0)
                 .array(),
             await test_util.requiredTestElement(input1, 0).array());
         test_util.expectArraysEqual(
-            await (await executeOp(node, {pred, input1: undefined}, context))[0]
+            await test_util.requiredTestElement(await executeOp(node, {pred, input1: undefined}, context), 0)
                 .array(),
             await test_util.requiredTestElement(pred, 0).array());
       });
@@ -122,7 +122,7 @@ describe('control', () => {
         node.inputNames = ['input1'];
 
         test_util.expectArraysEqual(
-            await (await executeOp(node, {input1}, context))[0].array(),
+            await test_util.requiredTestElement(await executeOp(node, {input1}, context), 0).array(),
             await test_util.requiredTestElement(input1, 0).array());
         expect(context.enterFrame).toHaveBeenCalled();
       });
@@ -141,7 +141,7 @@ describe('control', () => {
         node.inputNames = ['input1'];
 
         test_util.expectArraysEqual(
-            await (await executeOp(node, {input1}, context))[0].array(),
+            await test_util.requiredTestElement(await executeOp(node, {input1}, context), 0).array(),
             await test_util.requiredTestElement(input1, 0).array());
         expect(context.exitFrame).toHaveBeenCalled();
       });
@@ -160,7 +160,7 @@ describe('control', () => {
         node.inputNames = ['input1'];
 
         test_util.expectArraysEqual(
-            await (await executeOp(node, {input1}, context))[0].array(),
+            await test_util.requiredTestElement(await executeOp(node, {input1}, context), 0).array(),
             await test_util.requiredTestElement(input1, 0).array());
         expect(context.nextIteration).toHaveBeenCalled();
       });
@@ -184,7 +184,7 @@ describe('control', () => {
         node.attrParams['identicalElementShapes'] = createBoolAttr(true);
         node.inputNames = ['input1'];
 
-        const tensorId = (await executeOp(node, {input1}, context))[0];
+        const tensorId = test_util.requiredTestElement(await executeOp(node, {input1}, context), 0);
         expect(context.getTensorArray(tensorId.id)).toBeDefined();
       });
       it('should match json def', () => {
@@ -683,7 +683,7 @@ describe('control', () => {
       node.inputNames = ['input4', 'input1'];
       const input4 = [tensor1d([10, 10], 'int32')];
       const tensorListId =
-          (await executeOp(node, {input1, input4}, context))[0];
+          test_util.requiredTestElement(await executeOp(node, {input1, input4}, context), 0);
       const tensorList = context.getTensorList(tensorListId.id);
       expect(tensorList.elementDtype).toEqual('int32');
       expect(tensorList.elementShape).toEqual([10, 10]);
@@ -708,7 +708,7 @@ describe('control', () => {
       node.inputNames = ['input4', 'input1'];
       const input4 = [tensor1d([10, 10], 'int32')];
       const tensorListId =
-          (await executeOp(node, {input1, input4}, context))[0];
+          test_util.requiredTestElement(await executeOp(node, {input1, input4}, context), 0);
       const tensorList = context.getTensorList(tensorListId.id);
       expect(tensorList.elementDtype).toEqual('int32');
       expect(tensorList.elementShape).toEqual([10, 10]);
@@ -791,7 +791,7 @@ describe('control', () => {
       const input2 = [tensor1d([0, 1], 'int32')];
       const input3 = [tensor1d([3], 'int32')];
       const tensorListId =
-          (await executeOp(node, {input2, input3, input4}, context))[0];
+          test_util.requiredTestElement(await executeOp(node, {input2, input3, input4}, context), 0);
       const tensorList = context.getTensorList(tensorListId.id);
       expect(tensorList.size()).toEqual(2);
     });
@@ -819,7 +819,7 @@ describe('control', () => {
       const input3 = [tensor1d([3], 'int32')];
       const input5 = [tensor1d([2], 'int32')];
       const tensorListId =
-          (await executeOp(node, {input2, input3, input4, input5}, context))[0];
+          test_util.requiredTestElement(await executeOp(node, {input2, input3, input4, input5}, context), 0);
       const tensorList = context.getTensorList(tensorListId.id);
       expect(tensorList.size()).toEqual(2);
     });
@@ -1019,7 +1019,7 @@ describe('control', () => {
       const input2 = [tensor1d([3], 'int32')];
       const input3 = [tensor1d([1, 1], 'int32')];
       const idTensor =
-          (await executeOp(node, {input2, input3, input4}, context))[0];
+          test_util.requiredTestElement(await executeOp(node, {input2, input3, input4}, context), 0);
       const tensorList = context.getTensorList(idTensor.id);
       expect(tensorList.size()).toEqual(2);
     });
@@ -1072,7 +1072,7 @@ describe('control', () => {
       const input2 = [tensorList.idTensor];
       const input3 = [scalar(1)];
       const tensorListId =
-          (await executeOp(node, {input2, input3}, context))[0];
+          test_util.requiredTestElement(await executeOp(node, {input2, input3}, context), 0);
       const destTensorList = context.getTensorList(tensorListId.id);
       expect(destTensorList.size()).toEqual(1);
     });
@@ -1089,7 +1089,7 @@ describe('control', () => {
       const input2 = [srcTensorList.idTensor];
       const input3 = [scalar(3)];
       const destTensorListId =
-          (await executeOp(node, {input2, input3}, context))[0];
+          test_util.requiredTestElement(await executeOp(node, {input2, input3}, context), 0);
       const destTensorList = context.getTensorList(destTensorListId.id);
       expect(destTensorList.size()).toEqual(3);
     });

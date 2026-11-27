@@ -24,7 +24,7 @@ export function gatherNdImpl<R extends Rank>(
   const outBuf = buffer([numSlices, sliceSize], dtype);
 
   for (let i = 0; i < numSlices; i++) {
-    const index = [];
+    const index: number[] = [];
     let flattenIndex = 0;
     for (let j = 0; j < sliceRank; j++) {
       const dim = indicesData[i * sliceRank + j];

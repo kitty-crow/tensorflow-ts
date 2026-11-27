@@ -45,7 +45,7 @@ export class CenterCrop extends Layer {
       const bottom   = ((height) + hBuffer) / inputHeight;
       const right    = ((width) + wBuffer) / inputWidth;
       const bound    = [top, left, bottom, right];
-      const boxesArr = [];
+      const boxesArr: number[][] = [];
 
       if(inputs.rank === 3) {
         isRank3  = true;

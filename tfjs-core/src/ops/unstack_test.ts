@@ -233,12 +233,12 @@ describeWithFlags('unstack', ALL_ENVS, () => {
 
   it('grad of unstack axis=0', async () => {
     const x = tf.tensor([[1, 2, 3], [4, 5, 6]]);
-    const dx1 = tf.grad(x => tf.unstack(x)[0])(x);
+    const dx1 = tf.grad(x => requiredTestElement(tf.unstack(x), 0))(x);
     expect(dx1.shape).toEqual([2, 3]);
     expect(dx1.dtype).toBe('float32');
     expectArraysClose(await dx1.data(), [1, 1, 1, 0, 0, 0]);
 
-    const dx2 = tf.grad(x => tf.unstack(x)[1])(x);
+    const dx2 = tf.grad(x => requiredTestElement(tf.unstack(x), 1))(x);
     expect(dx2.shape).toEqual([2, 3]);
     expect(dx2.dtype).toBe('float32');
     expectArraysClose(await dx2.data(), [0, 0, 0, 1, 1, 1]);
@@ -246,12 +246,12 @@ describeWithFlags('unstack', ALL_ENVS, () => {
 
   it('gradient with clones', async () => {
     const x = tf.tensor([[1, 2, 3], [4, 5, 6]]);
-    const dx1 = tf.grad(x => tf.unstack(x.clone())[0].clone())(x);
+    const dx1 = tf.grad(x => requiredTestElement(tf.unstack(x.clone()), 0).clone())(x);
     expect(dx1.shape).toEqual([2, 3]);
     expect(dx1.dtype).toBe('float32');
     expectArraysClose(await dx1.data(), [1, 1, 1, 0, 0, 0]);
 
-    const dx2 = tf.grad(x => tf.unstack(x.clone())[1].clone())(x);
+    const dx2 = tf.grad(x => requiredTestElement(tf.unstack(x.clone()), 1).clone())(x);
     expect(dx2.shape).toEqual([2, 3]);
     expect(dx2.dtype).toBe('float32');
     expectArraysClose(await dx2.data(), [0, 0, 0, 1, 1, 1]);
@@ -260,17 +260,17 @@ describeWithFlags('unstack', ALL_ENVS, () => {
   it('grad of unstack axis=1', async () => {
     const x = tf.tensor([[1, 2, 3], [4, 5, 6]]);
     const axis = 1;
-    const dx1 = tf.grad(x => tf.unstack(x, axis)[0])(x);
+    const dx1 = tf.grad(x => requiredTestElement(tf.unstack(x, axis), 0))(x);
     expect(dx1.shape).toEqual([2, 3]);
     expect(dx1.dtype).toBe('float32');
     expectArraysClose(await dx1.data(), [1, 0, 0, 1, 0, 0]);
 
-    const dx2 = tf.grad(x => tf.unstack(x, axis)[1])(x);
+    const dx2 = tf.grad(x => requiredTestElement(tf.unstack(x, axis), 1))(x);
     expect(dx2.shape).toEqual([2, 3]);
     expect(dx2.dtype).toBe('float32');
     expectArraysClose(await dx2.data(), [0, 1, 0, 0, 1, 0]);
 
-    const dx3 = tf.grad(x => tf.unstack(x, axis)[2])(x);
+    const dx3 = tf.grad(x => requiredTestElement(tf.unstack(x, axis), 2))(x);
     expect(dx3.shape).toEqual([2, 3]);
     expect(dx3.dtype).toBe('float32');
     expectArraysClose(await dx3.data(), [0, 0, 1, 0, 0, 1]);

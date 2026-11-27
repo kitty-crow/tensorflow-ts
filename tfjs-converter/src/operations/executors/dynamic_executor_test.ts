@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {memory} from '@tensorflow/tfjs-core';
+import {memory, Tensor, test_util} from '@tensorflow/tfjs-core';
 // tslint:disable-next-line: no-imports-from-dist
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 
@@ -208,9 +208,14 @@ describe('dynamic', () => {
 
         const result =
             executeOp(node, {input1}, context, undefined, spyOpsAsTfOps);
-        expect(spyOps.whereAsync.calls.mostRecent().args[0].dtype)
+        const args: unknown[] = spyOps.whereAsync.calls.mostRecent().args;
+        const condition = test_util.requiredTestElement(args, 0);
+        if (!(condition instanceof Tensor)) {
+          throw new Error('Expected whereAsync to receive a tensor.');
+        }
+        expect(condition.dtype)
             .toEqual('bool');
-        expect(spyOps.whereAsync.calls.mostRecent().args[0].arraySync())
+        expect(condition.arraySync())
             .toEqual(1);
         expect(result instanceof Promise).toBeTruthy();
       });

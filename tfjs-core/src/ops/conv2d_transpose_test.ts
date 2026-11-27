@@ -678,11 +678,11 @@ describeWithFlags('conv2dTranspose', ALL_ENVS, () => {
     const wShape: [number, number, number, number] =
         [fSize, fSize, origInputDepth, origOutputDepth];
 
-    const inputData = [];
+    const inputData: number[] = [];
     for (let i = 0; i < fSize * fSize * origInputDepth; i++) {
       inputData.push(i % 5);
     }
-    const wData = [];
+    const wData: number[] = [];
     for (let i = 0; i < fSize * fSize * origInputDepth * origOutputDepth; i++) {
       wData.push(i % 5);
     }

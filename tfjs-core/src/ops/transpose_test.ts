@@ -117,7 +117,7 @@ describeWithFlags('transpose', ALL_ENVS, () => {
 
   it('5D [r, c, d, e, f] => [r, c, d, f, e]', async () => {
     const t = tf.tensor5d(
-        new Array(32).fill(0).map((x, i) => i + 1), [2, 2, 2, 2, 2]);
+        new Array<number>(32).fill(0).map((x, i) => i + 1), [2, 2, 2, 2, 2]);
     const t2 = tf.transpose(t, [0, 1, 2, 4, 3]);
 
     expect(t2.shape).toEqual([2, 2, 2, 2, 2]);
@@ -129,7 +129,7 @@ describeWithFlags('transpose', ALL_ENVS, () => {
 
   it('4D [r, c, d, e] => [c, r, d, e]', async () => {
     const t =
-        tf.tensor4d(new Array(16).fill(0).map((x, i) => i + 1), [2, 2, 2, 2]);
+        tf.tensor4d(new Array<number>(16).fill(0).map((x, i) => i + 1), [2, 2, 2, 2]);
     const t2 = tf.transpose(t, [1, 0, 2, 3]);
 
     expect(t2.shape).toEqual([2, 2, 2, 2]);
@@ -140,7 +140,7 @@ describeWithFlags('transpose', ALL_ENVS, () => {
 
   it('4D [r, c, d, e] => [c, r, e, d]', async () => {
     const t =
-        tf.tensor4d(new Array(16).fill(0).map((x, i) => i + 1), [2, 2, 2, 2]);
+        tf.tensor4d(new Array<number>(16).fill(0).map((x, i) => i + 1), [2, 2, 2, 2]);
     const t2 = tf.transpose(t, [1, 0, 3, 2]);
 
     expect(t2.shape).toEqual([2, 2, 2, 2]);
@@ -151,7 +151,7 @@ describeWithFlags('transpose', ALL_ENVS, () => {
 
   it('4D [r, c, d, e] => [e, r, c, d]', async () => {
     const t =
-        tf.tensor4d(new Array(16).fill(0).map((x, i) => i + 1), [2, 2, 2, 2]);
+        tf.tensor4d(new Array<number>(16).fill(0).map((x, i) => i + 1), [2, 2, 2, 2]);
     const t2 = tf.transpose(t, [3, 0, 1, 2]);
 
     expect(t2.shape).toEqual([2, 2, 2, 2]);
@@ -162,7 +162,7 @@ describeWithFlags('transpose', ALL_ENVS, () => {
 
   it('4D [r, c, d, e] => [d, c, e, r]', async () => {
     const t =
-        tf.tensor4d(new Array(16).fill(0).map((x, i) => i + 1), [2, 2, 2, 2]);
+        tf.tensor4d(new Array<number>(16).fill(0).map((x, i) => i + 1), [2, 2, 2, 2]);
     const t2 = tf.transpose(t, [2, 1, 3, 0]);
 
     expect(t2.shape).toEqual([2, 2, 2, 2]);
@@ -173,7 +173,7 @@ describeWithFlags('transpose', ALL_ENVS, () => {
 
   it('5D [r, c, d, e, f] => [c, r, d, e, f]', async () => {
     const t = tf.tensor5d(
-        new Array(32).fill(0).map((x, i) => i + 1), [2, 2, 2, 2, 2]);
+        new Array<number>(32).fill(0).map((x, i) => i + 1), [2, 2, 2, 2, 2]);
     const t2 = tf.transpose(t, [1, 0, 2, 3, 4]);
 
     expect(t2.shape).toEqual([2, 2, 2, 2, 2]);
@@ -185,7 +185,7 @@ describeWithFlags('transpose', ALL_ENVS, () => {
 
   it('6D [r, c, d, e, f] => [r, c, d, f, e]', async () => {
     const t = tf.tensor6d(
-        new Array(64).fill(0).map((x, i) => i + 1), [2, 2, 2, 2, 2, 2]);
+        new Array<number>(64).fill(0).map((x, i) => i + 1), [2, 2, 2, 2, 2, 2]);
     const t2 = tf.transpose(t, [0, 1, 2, 3, 5, 4]);
     expect(t2.shape).toEqual([2, 2, 2, 2, 2, 2]);
     expectArraysClose(await t2.data(), [
@@ -198,7 +198,7 @@ describeWithFlags('transpose', ALL_ENVS, () => {
 
   it('6D [r, c, d, e, f, g] => [c, r, d, e, f, g]', async () => {
     const t = tf.tensor6d(
-        new Array(64).fill(0).map((x, i) => i + 1), [2, 2, 2, 2, 2, 2]);
+        new Array<number>(64).fill(0).map((x, i) => i + 1), [2, 2, 2, 2, 2, 2]);
     const t2 = tf.transpose(t, [1, 0, 2, 3, 4, 5]);
     expect(t2.shape).toEqual([2, 2, 2, 2, 2, 2]);
     expectArraysClose(await t2.data(), [

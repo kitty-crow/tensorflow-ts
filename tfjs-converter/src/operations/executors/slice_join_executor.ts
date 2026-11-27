@@ -59,7 +59,7 @@ export const executeOp: InternalOpExecutor =
         case 'Reverse': {
           const dims =
               getParamValue('dims', node, tensorMap, context) as boolean[];
-          const axis = [];
+          const axis: number[] = [];
           for (let i = 0; i < dims.length; i++) {
             if (dims[i]) {
               axis.push(i);

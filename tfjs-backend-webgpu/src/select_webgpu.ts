@@ -44,8 +44,8 @@ export class SelectProgram extends FlatDispatchProgram implements WebGPUProgram 
       cCoords = `resRC`;
     } else {
       const currentCoords = ['resRC.x', 'resRC.y', 'resRC.z', 'resRC.w'];
-      const cCoordVars = [];
-      const abCoordVars = [];
+      const cCoordVars: string[] = [];
+      const abCoordVars: string[] = [];
       for (let i = 0; i < this.outputShape.length; i++) {
         abCoordVars.push(`${currentCoords[i]}`);
         if (i < this.cRank) {

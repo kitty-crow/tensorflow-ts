@@ -53,7 +53,7 @@ scatterImpl<R extends Rank, D extends 'float32'|'int32'|'bool'|'string'>(
   }
 
   for (let i = 0; i < numUpdates; i++) {
-    const index = [];
+    const index: number[] = [];
     let flattenIndex = 0;
     for (let j = 0; j < sliceRank; j++) {
       const dim = indicesData[i * sliceRank + j];

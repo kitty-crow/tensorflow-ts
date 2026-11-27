@@ -176,7 +176,7 @@ describe('CSVDataset', () => {
       await dataset.columnNames();
       fail();
     } catch (error) {
-      expect(error.message)
+      expect(fixtureTestUtil.requiredTestErrorMessage(error))
           .toBe(
               'The key "A" provided in columnConfigs does not ' +
               'match any of the column names (foo,bar,baz).');
@@ -191,7 +191,7 @@ describe('CSVDataset', () => {
          await dataset.columnNames();
          fail();
        } catch (error) {
-         expect(error.message)
+         expect(fixtureTestUtil.requiredTestErrorMessage(error))
              .toBe('Column names must be provided if there is no header line.');
        }
      });
@@ -244,7 +244,7 @@ describe('CSVDataset', () => {
       await iter.toArrayForTest();
       fail();
     } catch (error) {
-      expect(error.message)
+      expect(fixtureTestUtil.requiredTestErrorMessage(error))
           .toBe('Required column foo is empty in this line: ,mn,op');
     }
   });

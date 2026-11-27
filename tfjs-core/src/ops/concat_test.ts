@@ -352,8 +352,8 @@ describeWithFlags('concat3d', ALL_ENVS, () => {
   });
 
   it('concat a large number of tensors, axis=0', async () => {
-    const tensors = [];
-    const expected = [];
+    const tensors: tf.Tensor[] = [];
+    const expected: number[] = [];
     for (let i = 0; i < 100; i++) {
       tensors.push(tf.tensor([i], [1]));
       expected.push(i);
@@ -366,8 +366,8 @@ describeWithFlags('concat3d', ALL_ENVS, () => {
   });
 
   it('concat a large number of tensors, axis=1', async () => {
-    const tensors = [];
-    const expected = [];
+    const tensors: tf.Tensor[] = [];
+    const expected: number[] = [];
     for (let i = 0; i < 100; i++) {
       tensors.push(tf.tensor([i], [1, 1]));
       expected.push(i);

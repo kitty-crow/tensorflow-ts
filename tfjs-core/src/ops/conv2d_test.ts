@@ -17,22 +17,8 @@
 
 import * as tf from '../index';
 import {ALL_ENVS, describeWithFlags} from '../jasmine_util';
-import {expectArraysClose} from '../test_util';
+import {expectArraysClose, sequentialConvolutionTestInputs} from '../test_util';
 import {Rank} from '../types';
-
-function generateCaseInputs(totalSizeTensor: number, totalSizeFilter: number) {
-  const inp = new Array(totalSizeTensor);
-  const filt = new Array(totalSizeFilter);
-
-  for (let i = 0; i < totalSizeTensor; i++) {
-    inp[i] = i + 1;
-  }
-  for (let i = 0; i < totalSizeFilter; i++) {
-    filt[i] = i + 1;
-  }
-
-  return {input: inp, filter: filt};
-}
 
 describeWithFlags('conv2d', ALL_ENVS, () => {
   it('x=[1,4,4,1] f=[1,1,1,3] s=2 d=1 p=same', async () => {
@@ -468,7 +454,7 @@ describeWithFlags('conv2d', ALL_ENVS, () => {
     const pad = 'valid';
     const stride: [number, number] = [1, 2];
 
-    const inputs = generateCaseInputs(1 * 3 * 6 * inputDepth, fSize * fSize);
+    const inputs = sequentialConvolutionTestInputs(1 * 3 * 6 * inputDepth, fSize * fSize);
     const x = tf.tensor4d(inputs.input, inputShape);
     const w =
         tf.tensor4d(inputs.filter, [fSize, fSize, inputDepth, outputDepth]);
@@ -490,12 +476,12 @@ describeWithFlags('conv2d', ALL_ENVS, () => {
 
     // TODO(annxingyuan): Make this test work with large inputs using
     // generateCaseInputs https://github.com/tensorflow/tfjs/issues/3143
-    const inputData = [];
+    const inputData: number[] = [];
     for (let i = 0; i < xSize * xSize * inputDepth; i++) {
       inputData.push(i % 5);
     }
 
-    const wData = [];
+    const wData: number[] = [];
     for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
       wData.push(i % 5);
     }
@@ -522,12 +508,12 @@ describeWithFlags('conv2d', ALL_ENVS, () => {
 
     // TODO(annxingyuan): Make this test work with large inputs using
     // generateCaseInputs https://github.com/tensorflow/tfjs/issues/3143
-    const inputData = [];
+    const inputData: number[] = [];
     for (let i = 0; i < xSize * xSize * inputDepth; i++) {
       inputData.push(i % 5);
     }
 
-    const wData = [];
+    const wData: number[] = [];
     for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
       wData.push(i % 5);
     }
@@ -557,12 +543,12 @@ describeWithFlags('conv2d', ALL_ENVS, () => {
     const pad = 'valid';
     const stride: [number, number] = [2, 2];
 
-    const inputData = [];
+    const inputData: number[] = [];
     for (let i = 0; i < xSize * xSize * inputDepth; i++) {
       inputData.push(i % 5);
     }
 
-    const wData = [];
+    const wData: number[] = [];
     for (let i = 0; i < fSize * fSize * inputDepth * outputDepth; i++) {
       wData.push(i % 5);
     }

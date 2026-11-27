@@ -98,7 +98,7 @@ export function concatImpl(
   // the maximum for input is limits.maxStorageBuffersPerShaderStage - 1
   const maxInputNum = backend.device.limits.maxStorageBuffersPerShaderStage - 1;
   if (inputs.length > maxInputNum) {
-    const reducedInputs = [];
+    const reducedInputs: TensorInfo[] = [];
     for (let i = 0; i < inputs.length; i += maxInputNum) {
       const subArray = inputs.slice(i, i + maxInputNum);
       reducedInputs.push(concatImpl(subArray, axis, backend));
@@ -117,7 +117,7 @@ export function concatImpl(
   const program = new ConcatProgram(shapes);
 
   const uniformData: Array<{type: string; data: number[]}> = [];
-  const offsets: number[] = new Array(shapes.length - 1);
+  const offsets: number[] = new Array<number>(shapes.length - 1);
   if (offsets.length > 0) {
     offsets[0] = shapes[0][1];
     uniformData.push({type: 'int32', data: [offsets[0]]});

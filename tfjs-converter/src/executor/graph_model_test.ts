@@ -575,7 +575,7 @@ describe('Model', () => {
     beforeEach(() => {
       spyIo.getLoadHandlers.and.returnValue([CUSTOM_HTTP_MODEL_LOADER]);
       registerOp('CustomOp', (nodeValue: GraphNode) => {
-        const x = nodeValue.inputs[0];
+        const x = requiredTestElement(nodeValue.inputs, 0);
         return [tfc.add(x, scalar(1, 'int32'))];
       });
     });
@@ -590,7 +590,7 @@ describe('Model', () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.predict(input);
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
     });
 
@@ -653,28 +653,28 @@ describe('Model', () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.predict(input);
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
 
       it('should support signature keys', async () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.predict({x: input});
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
 
       it('should generate the output for tensor array', async () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.predict([input]);
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
 
       it('should generate the output for tensor map', async () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.predict({'Input': input});
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
 
       it('should throw error if wrong signature key is used', async () => {
@@ -705,21 +705,21 @@ describe('Model', () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.execute({'Input': input});
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
       it('should allow signature keys', async () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.execute({x: input}, ['y']);
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
       it('should generate the output array', async () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.execute({'Input': input}, ['Add', 'Const']);
         expect(Array.isArray(output)).toBeTruthy();
-        expect((output as tfc.Tensor[])[0].dataSync()[0]).toEqual(3);
-        expect((output as tfc.Tensor[])[1].dataSync()[0]).toEqual(1);
+        expect(requiredTestElement(requiredTestElement(output as tfc.Tensor[], 0).dataSync(), 0)).toEqual(3);
+        expect(requiredTestElement(requiredTestElement(output as tfc.Tensor[], 1).dataSync(), 0)).toEqual(1);
       });
       it('should throw exception if inputs shapes do not match', () => {
         const input = tfc.tensor2d([1, 1], [1, 2], 'int32');
@@ -842,7 +842,7 @@ describe('Model', () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.execute({'Input': input});
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
     });
 
@@ -851,7 +851,7 @@ describe('Model', () => {
         await model.load();
         const input = tfc.tensor2d([1, 1], [2, 1], 'int32');
         const output = model.execute(input);
-        expect((output as tfc.Tensor).dataSync()[0]).toEqual(3);
+        expect(requiredTestElement((output as tfc.Tensor).dataSync(), 0)).toEqual(3);
       });
     });
   });

@@ -16,6 +16,7 @@
  */
 
 import {TensorInfo} from '../tensor_info';
+import {sequentialConvolutionTestInputs, requiredTestElement, requiredTestEntry} from '../test_util';
 
 import {prepareSplitSize} from './split_util';
 import {checkPadOnDimRoundingMode} from './conv_util';
@@ -53,5 +54,24 @@ describe('checked split dimensions', () => {
     const empty: TensorInfo = {dataId: {}, shape: [0, 3], dtype: 'float32'};
     expect(prepareSplitSize(empty, 2, 0)).toEqual([0, 0]);
     expect(() => prepareSplitSize(empty, 2, 2)).toThrowError(/Missing dimension/);
+  });
+});
+
+describe('typed numeric and tensor test fixtures', () => {
+  it('generates independent sequential arrays including empty inputs', () => {
+    const result = sequentialConvolutionTestInputs(3, 2);
+    expect(result.input).toEqual([1, 2, 3]);
+    expect(result.filter).toEqual([1, 2]);
+    result.input[0] = 9;
+    expect(result.filter).toEqual([1, 2]);
+    expect(sequentialConvolutionTestInputs(0, 0)).toEqual(
+        {input: [], filter: []});
+  });
+
+  it('retains zero and rejects missing output entries', () => {
+    expect(requiredTestElement([0], 0)).toBe(0);
+    expect(requiredTestEntry({value: 0}, 'value')).toBe(0);
+    expect(() => requiredTestElement([], 0)).toThrowError(/Missing/);
+    expect(() => requiredTestEntry({value: 0}, 'missing')).toThrowError(/Missing/);
   });
 });

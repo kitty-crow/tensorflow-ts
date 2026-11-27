@@ -37,8 +37,8 @@ export class SelectProgram implements GPGPUProgram {
       cCoords = `resRC`;
     } else {
       const currentCoords = ['resRC.x', 'resRC.y', 'resRC.z', 'resRC.w'];
-      const cCoordVars = [];
-      const abCoordVars = [];
+      const cCoordVars: string[] = [];
+      const abCoordVars: string[] = [];
       for (let i = 0; i < shape.length; i++) {
         abCoordVars.push(`${currentCoords[i]}`);
         if (i < cRank) {

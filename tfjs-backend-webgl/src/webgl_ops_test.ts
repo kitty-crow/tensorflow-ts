@@ -1003,7 +1003,7 @@ describeWithFlags('gatherNd', WEBGL_ENVS, () => {
   });
 
   it('works for out of bounds indices 1d', async () => {
-    const x = tf.tensor1d([...Array(4).keys()].map(e => e + 1), 'int32');
+    const x = tf.tensor1d([...Array<number>(4).keys()].map(e => e + 1), 'int32');
     const indices = [0, 1, 2, 5];
     const ind = tf.tensor2d(indices, [4, 1], 'int32');
     const g = tf.gatherND(x, ind);
@@ -1013,8 +1013,8 @@ describeWithFlags('gatherNd', WEBGL_ENVS, () => {
 
   it('works for out of bounds indices 2d', async () => {
     const x =
-        tf.tensor2d([...Array(4).keys()].map(e => e + 1), [2, 2], 'int32');
-    const indices = [];
+        tf.tensor2d([...Array<number>(4).keys()].map(e => e + 1), [2, 2], 'int32');
+    const indices: number[] = [];
     for (let y = -1; y !== 3; y += 1) {
       for (let x = -1; x !== 3; x += 1) {
         indices.push(y);
@@ -1030,8 +1030,8 @@ describeWithFlags('gatherNd', WEBGL_ENVS, () => {
 
   it('works for out of bounds indices 3d', async () => {
     const x =
-        tf.tensor3d([...Array(8).keys()].map(e => e + 1), [2, 2, 2], 'int32');
-    const indices = [];
+        tf.tensor3d([...Array<number>(8).keys()].map(e => e + 1), [2, 2, 2], 'int32');
+    const indices: number[] = [];
     for (let z = -1; z !== 3; z += 1) {
       for (let y = -1; y !== 3; y += 1) {
         for (let x = -1; x !== 3; x += 1) {
@@ -1053,7 +1053,7 @@ describeWithFlags('gatherNd', WEBGL_ENVS, () => {
 
   it('works for out of bounds indices 5d', async () => {
     const x = tf.tensor5d(
-        [...Array(32).keys()].map(e => e + 1), [2, 2, 2, 2, 2], 'int32');
+        [...Array<number>(32).keys()].map(e => e + 1), [2, 2, 2, 2, 2], 'int32');
     const indices = [0, 0, 0, 0, 0, 2, 1, 1, 1, 1];
     const ind = tf.tensor2d(indices, [2, 5], 'int32');
     const g = tf.gatherND(x, ind);

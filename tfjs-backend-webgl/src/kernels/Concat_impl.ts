@@ -113,7 +113,7 @@ export function concatImpl(
 
   const maxTexturesInShader = env().getNumber('WEBGL_MAX_TEXTURES_IN_SHADER');
   if ($inputs.length > maxTexturesInShader) {
-    const reducedInputs = [];
+    const reducedInputs: TensorInfo[] = [];
     for (let i = 0; i < $inputs.length; i += maxTexturesInShader) {
       const subArray = $inputs.slice(i, i + maxTexturesInShader);
       reducedInputs.push(concatImpl(subArray, axis, backend));

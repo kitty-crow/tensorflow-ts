@@ -191,7 +191,7 @@ class ConvRNN2D extends RNN {
       const initialState = tfc.zeros(stateShape);
 
       if (Array.isArray(stateSize)) {
-        return Array(stateSize.length).fill(initialState);
+        return Array<Tensor>(stateSize.length).fill(initialState);
       }
 
       return [initialState];

@@ -48,9 +48,9 @@ describe('delayed upload', () => {
     const logits = tf.tensor1d([1, 2, 3]);
     const softmaxLogits = tf.softmax(logits);
     const data = softmaxLogits.dataSync();
-    expect(softmaxLogits.dataSync()[0]).toEqual(data[0]);
-    expect(softmaxLogits.dataSync()[1]).toEqual(data[1]);
-    expect(softmaxLogits.dataSync()[2]).toEqual(data[2]);
+    expect(tf.test_util.requiredTestElement(softmaxLogits.dataSync(), 0)).toEqual(tf.test_util.requiredTestElement(data, 0));
+    expect(tf.test_util.requiredTestElement(softmaxLogits.dataSync(), 1)).toEqual(tf.test_util.requiredTestElement(data, 1));
+    expect(tf.test_util.requiredTestElement(softmaxLogits.dataSync(), 2)).toEqual(tf.test_util.requiredTestElement(data, 2));
   });
 });
 
@@ -234,22 +234,22 @@ describe('shared native dispatch contracts', () => {
           (name, attrs, inputs) => {
             expect(name).toBe('Tile');
             expect(attrs).toEqual([]);
-            expect(inputs[0]).toBe(x);
-            const vector = inputs[1] as tf.Tensor;
+            expect(tf.test_util.requiredTestElement(inputs, 0)).toBe(x);
+            const vector = tf.test_util.requiredTestElement(inputs, 1) as tf.Tensor;
             captured.push(vector);
             expect(vector.dtype).toBe('int32');
             expect(Array.from(vector.dataSync())).toEqual([2, 3]);
             return result;
           });
       expect(executeWithInt32Vector(backend, 'Tile', [], [x], [2, 3])).toBe(result);
-      expect(captured[0].isDisposed).toBeTrue();
+      expect(tf.test_util.requiredTestElement(captured, 0).isDisposed).toBeTrue();
       dispatch.and.callFake((name, attrs, inputs) => {
-        captured.push(inputs[1] as tf.Tensor);
+        captured.push(tf.test_util.requiredTestElement(inputs, 1) as tf.Tensor);
         throw new Error('native failure');
       });
       expect(() => executeWithInt32Vector(backend, 'Tile', [], [x], [2, 3]))
           .toThrowError('native failure');
-      expect(captured[1].isDisposed).toBeTrue();
+      expect(tf.test_util.requiredTestElement(captured, 1).isDisposed).toBeTrue();
       expect(x.isDisposed).toBeFalse();
     } finally {
       x.dispose();
@@ -302,9 +302,9 @@ describe('native reduction, pooling and resize contracts', () => {
       const dispatch = spyOn(backend, 'executeSingleOutput').and.callFake(
           (name, attrs, inputs) => {
             expect(['ArgMin', 'ArgMax']).toContain(name);
-            expect(inputs[0]).toBe(x);
+            expect(tf.test_util.requiredTestElement(inputs, 0)).toBe(x);
             expect(attrs.map(a => a.name)).toEqual(['T', 'Tidx', 'output_type']);
-            const axis = inputs[1] as tf.Tensor;
+            const axis = tf.test_util.requiredTestElement(inputs, 1) as tf.Tensor;
             axes.push(axis);
             expect(axis.shape).toEqual([]);
             expect(axis.dtype).toBe('int32');
@@ -328,9 +328,9 @@ describe('native reduction, pooling and resize contracts', () => {
     try {
       const dispatch = spyOn(backend, 'executeSingleOutput').and.callFake(
           (name, attrs, inputs) => {
-            expect(inputs[0]).toBe(images);
+            expect(tf.test_util.requiredTestElement(inputs, 0)).toBe(images);
             expect(attrs.map(a => a.value)).toEqual([backend.binding.TF_FLOAT, false, true]);
-            expect(Array.from((inputs[1] as tf.Tensor).dataSync())).toEqual([2, 3]);
+            expect(Array.from((tf.test_util.requiredTestElement(inputs, 1) as tf.Tensor).dataSync())).toEqual([2, 3]);
             return result;
           });
       const attrs = {alignCorners: false, halfPixelCenters: true, size: [2, 3]};

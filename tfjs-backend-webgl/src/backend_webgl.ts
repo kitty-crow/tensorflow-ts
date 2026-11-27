@@ -1197,7 +1197,7 @@ export class MathBackendWebGL extends KernelBackend {
   }
 
   async checkCompileCompletionAsync(): Promise<boolean[]> {
-    const ps = [];
+    const ps: Promise<boolean>[] = [];
     if (this.gpgpu.parallelCompilationExtension) {
       for (const [, binary] of Object.entries(this.binaryCache)) {
         ps.push(this.checkCompletionAsync_(binary));

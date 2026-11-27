@@ -57,7 +57,7 @@ export class GatherProgram implements WebGPUProgram {
 // The input and output are always flattened into rank 4 tensors.
 function getSourceCoords(aShape: number[]): string {
   const currentCoords = ['resRC.x', 'resRC.y', 'resRC.z', 'resRC.w'];
-  const sourceCoords = [];
+  const sourceCoords: string[] = [];
   for (let i = 0; i < aShape.length; i++) {
     if (i === 2) {
       sourceCoords.push('indexZ');

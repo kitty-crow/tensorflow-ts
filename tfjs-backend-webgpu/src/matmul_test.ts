@@ -1220,14 +1220,14 @@ function matmulTest(programType: MatMulProgramType) {
     });
 
     it('A x B with large K. [16,2048]x[2048,16]', async () => {
-      const a = tf.tensor2d(new Array(16 * 2048).fill(1), [16, 2048]);
-      const b = tf.tensor2d(new Array(2048 * 16).fill(1), [2048, 16]);
+      const a = tf.tensor2d(new Array<number>(16 * 2048).fill(1), [16, 2048]);
+      const b = tf.tensor2d(new Array<number>(2048 * 16).fill(1), [2048, 16]);
 
       const c = tf.matMul(a, b);
       const cData = await c.data();
 
       expect(c.shape).toEqual([16, 16]);
-      expectArraysClose(cData, new Array(16 * 16).fill(2048));
+      expectArraysClose(cData, new Array<number>(16 * 16).fill(2048));
     });
 
     it('matmul followed by mul', async () => {

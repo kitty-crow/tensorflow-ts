@@ -72,7 +72,7 @@ export function sparseToDense(args: {
   const $defaultValue = reshape({
     inputs: {x: defaultValue},
     backend,
-    attrs: {shape: Array(flattenShape.length).fill(1)}
+    attrs: {shape: Array<number>(flattenShape.length).fill(1)}
   });
   const $denseValues =
       tile({inputs: {x: $defaultValue}, backend, attrs: {reps: flattenShape}});

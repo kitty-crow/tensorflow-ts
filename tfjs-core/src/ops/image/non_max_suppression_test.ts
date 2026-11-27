@@ -107,12 +107,12 @@ describeWithFlags('nonMaxSuppression', ALL_ENVS, () => {
 
     it('select from ten identical boxes', async () => {
       const numBoxes = 10;
-      const corners = new Array(numBoxes)
+      const corners = new Array<number>(numBoxes)
                           .fill(0)
                           .map(_ => [0, 0, 1, 1])
                           .reduce((arr, curr) => arr.concat(curr));
       const boxes = tf.tensor2d(corners, [numBoxes, 4]);
-      const scores = tf.tensor1d(Array(numBoxes).fill(0.9));
+      const scores = tf.tensor1d(Array<number>(numBoxes).fill(0.9));
       const maxOutputSize = 3;
       const iouThreshold = 0.5;
       const scoreThreshold = 0;

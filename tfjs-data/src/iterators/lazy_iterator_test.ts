@@ -252,7 +252,7 @@ describe('LazyIterator', () => {
       await errorHandlingIterator.toArray();
       fail();
     } catch (e) {
-      expect(e.message).toEqual('Oh no, an even number: 2');
+      expect(fixtureTestUtil.requiredTestErrorMessage(e)).toEqual('Oh no, an even number: 2');
     }
   });
 
@@ -432,7 +432,7 @@ describe('LazyIterator', () => {
       await readStream.toArray();
       fail();
     } catch (error) {
-      expect(error.message)
+      expect(fixtureTestUtil.requiredTestErrorMessage(error))
           .toBe(
               'Zipped streams should have the same length. ' +
               'Mismatched at element 2.');

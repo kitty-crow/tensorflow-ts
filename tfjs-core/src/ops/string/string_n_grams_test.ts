@@ -17,18 +17,18 @@
 
 import * as tf from '../../index';
 import {ALL_ENVS, describeWithFlags} from '../../jasmine_util';
-import {expectArraysEqual} from '../../test_util';
+import {expectArraysEqual, requiredTestEntry} from '../../test_util';
 
 async function expectResult(
     result: tf.NamedTensorMap, nGrams: string[], nGramsSplits: number[]) {
-  expectArraysEqual(await result.nGrams.data(), nGrams);
-  expectArraysEqual(await result.nGramsSplits.data(), nGramsSplits);
+  expectArraysEqual(await requiredTestEntry(result, 'nGrams').data(), nGrams);
+  expectArraysEqual(await requiredTestEntry(result, 'nGramsSplits').data(), nGramsSplits);
 
-  expect(result.nGrams.shape).toEqual([nGrams.length]);
-  expect(result.nGramsSplits.shape).toEqual([nGramsSplits.length]);
+  expect(requiredTestEntry(result, 'nGrams').shape).toEqual([nGrams.length]);
+  expect(requiredTestEntry(result, 'nGramsSplits').shape).toEqual([nGramsSplits.length]);
 
-  expect(result.nGrams.dtype).toEqual('string');
-  expect(result.nGramsSplits.dtype).toEqual('int32');
+  expect(requiredTestEntry(result, 'nGrams').dtype).toEqual('string');
+  expect(requiredTestEntry(result, 'nGramsSplits').dtype).toEqual('int32');
 }
 
 describeWithFlags('stringNGrams', ALL_ENVS, () => {

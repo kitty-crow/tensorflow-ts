@@ -55,7 +55,7 @@ export function tensorScatterUpdate(args: {
   const output = tile({
     inputs: {x: flattenTensor},
     backend,
-    attrs: {reps: Array(flattenShape.length).fill(1)}
+    attrs: {reps: Array<number>(flattenShape.length).fill(1)}
   });
   const program = new ScatterProgram(
       [numUpdates, sliceSize], sliceRank, flattenIndices.shape.length,

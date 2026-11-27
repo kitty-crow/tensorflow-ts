@@ -39,7 +39,7 @@ export function unsortedSegmentSum(args: {
 
   const xRank = x.shape.length;
   const segmentIdsRank = segmentIds.shape.length;
-  const res = [];
+  const res: TensorInfo[] = [];
   const intermediates: TensorInfo[] = [];
 
   // Reshape the segment id's so that they can be broadcast with
