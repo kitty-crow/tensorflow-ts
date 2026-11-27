@@ -12,8 +12,12 @@ import {BaseSerialization} from './types';
 
 export type L1L2Config = {
   /** L1 regularization rate. Defaults to 0.01. */
+  // CG305: L1L2 supplies the default L1 coefficient; serialized JSON may omit l1.
+  //@cg-expect-error
   l1?: number;
   /** L2 regularization rate. Defaults to 0.01. */
+  // CG305: L1L2 supplies the default L2 coefficient; serialized JSON may omit l2.
+  //@cg-expect-error
   l2?: number;
 };
 

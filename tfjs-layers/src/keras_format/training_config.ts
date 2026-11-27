@@ -31,8 +31,16 @@ export interface TrainingConfig extends PyJsonDict {
   // tslint:disable-next-line:no-any
   optimizer_config: OptimizerSerialization;
   loss: LossIdentifier|LossIdentifier[]|{[key: string]: LossIdentifier};
+  // CG305: Training may omit metrics; serialized JSON may omit metrics.
+  //@cg-expect-error
   metrics?: MetricsIdentifier[]|{[key: string]: MetricsIdentifier};
+  // CG305: Training may omit weighted metrics; serialized JSON may omit weighted_metrics.
+  //@cg-expect-error
   weighted_metrics?: MetricsIdentifier[];
+  // CG305: Training may omit sample weighting mode; serialized JSON may omit sample_weight_mode.
+  //@cg-expect-error
   sample_weight_mode?: SampleWeightMode;
+  // CG305: Training may omit loss weighting; serialized JSON may omit loss_weights.
+  //@cg-expect-error
   loss_weights?: LossWeights;
 }

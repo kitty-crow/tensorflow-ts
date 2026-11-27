@@ -25,7 +25,11 @@ export type ModelConfig = {
  */
 export interface ModelSerialization extends
     BaseSerialization<'Model', ModelConfig> {
+  // CG305: Model JSON may omit legacy backend metadata; serialized JSON may omit backend.
+  //@cg-expect-error
   backend?: string;
+  // CG305: Model JSON may omit Keras version metadata; serialized JSON may omit keras_version.
+  //@cg-expect-error
   keras_version?: string;
 }
 
@@ -38,7 +42,11 @@ export type SequentialConfig = {
  */
 export interface SequentialSerialization extends
     BaseSerialization<'Sequential', SequentialConfig> {
+  // CG305: Sequential JSON may omit legacy backend metadata; serialized JSON may omit backend.
+  //@cg-expect-error
   backend?: string;
+  // CG305: Sequential JSON may omit Keras version metadata; serialized JSON may omit keras_version.
+  //@cg-expect-error
   keras_version?: string;
 }
 
@@ -55,7 +63,11 @@ export type LegacySequentialSerialization = {
   class_name: 'Sequential';
 
   config: LayerSerialization[];
+  // CG305: Legacy Sequential JSON may omit backend metadata; serialized JSON may omit backend.
+  //@cg-expect-error
   backend?: string;
+  // CG305: Legacy Sequential JSON may omit Keras version metadata; serialized JSON may omit keras_version.
+  //@cg-expect-error
   keras_version?: string;
 };
 

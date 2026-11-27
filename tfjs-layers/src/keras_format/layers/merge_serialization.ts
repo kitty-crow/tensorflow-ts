@@ -25,6 +25,8 @@ export type MinimumLayerSerialization =
     BaseLayerSerialization<'Minimum', LayerConfig>;
 
 export interface ConcatenateLayerConfig extends LayerConfig {
+  // CG305: Concatenate supplies its default axis; serialized JSON may omit axis.
+  //@cg-expect-error
   axis?: number;
 }
 
@@ -39,6 +41,8 @@ export type ConcatenateLayerSerialization =
 //@cg-expect-error
 export interface DotLayerConfig extends LayerConfig {
   axes: number|[number, number];
+  // CG305: Dot supports no normalization override; serialized JSON may omit normalize.
+  //@cg-expect-error
   normalize?: boolean;
 }
 

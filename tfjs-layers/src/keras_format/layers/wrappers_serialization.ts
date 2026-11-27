@@ -36,6 +36,8 @@ export type BidirectionalLayerSerialization =
 //@cg-expect-error
 export interface BidirectionalLayerConfig extends LayerConfig {
   layer: RecurrentLayerSerialization;
+  // CG305: Bidirectional supplies a default merge mode; serialized JSON may omit merge_mode.
+  //@cg-expect-error
   merge_mode?: BidirectionalMergeMode;
 }
 

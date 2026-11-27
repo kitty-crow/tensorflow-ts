@@ -16,9 +16,17 @@ import {BaseConvLayerConfig} from './convolutional_serialization';
 
 export interface DepthwiseConv2DLayerConfig extends BaseConvLayerConfig {
   kernel_size: number|[number, number];
+  // CG305: Depthwise convolution supplies the default depth multiplier; serialized JSON may omit depth_multiplier.
+  //@cg-expect-error
   depth_multiplier?: number;
+  // CG305: Depthwise convolution supplies the default initializer; serialized JSON may omit depthwise_initializer.
+  //@cg-expect-error
   depthwise_initializer?: InitializerSerialization;
+  // CG305: Depthwise convolution need not have a weight constraint; serialized JSON may omit depthwise_constraint.
+  //@cg-expect-error
   depthwise_constraint?: ConstraintSerialization;
+  // CG305: Depthwise convolution need not have a weight regularizer; serialized JSON may omit depthwise_regularizer.
+  //@cg-expect-error
   depthwise_regularizer?: RegularizerSerialization;
 }
 

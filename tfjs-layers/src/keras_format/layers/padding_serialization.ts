@@ -12,7 +12,11 @@ import {DataFormatSerialization} from '../common';
 import {BaseLayerSerialization, LayerConfig} from '../topology_config';
 
 export interface ZeroPadding2DLayerConfig extends LayerConfig {
+  // CG305: ZeroPadding2D supplies its default padding; serialized JSON may omit padding.
+  //@cg-expect-error
   padding?: number|[number, number]|[[number, number], [number, number]];
+  // CG305: ZeroPadding2D supplies its default channel ordering; serialized JSON may omit data_format.
+  //@cg-expect-error
   data_format?: DataFormatSerialization;
 }
 

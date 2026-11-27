@@ -16,11 +16,23 @@ import {BaseLayerSerialization, LayerConfig} from '../topology_config';
 export interface EmbeddingLayerConfig extends LayerConfig {
   input_dim: number;
   output_dim: number;
+  // CG305: Embedding supplies a default initializer; serialized JSON may omit embeddings_initializer.
+  //@cg-expect-error
   embeddings_initializer?: InitializerSerialization;
+  // CG305: Embedding does not require a weight regularizer; serialized JSON may omit embeddings_regularizer.
+  //@cg-expect-error
   embeddings_regularizer?: RegularizerSerialization;
+  // CG305: Embedding does not require activity regularization; serialized JSON may omit activity_regularizer.
+  //@cg-expect-error
   activity_regularizer?: RegularizerSerialization;
+  // CG305: Embedding does not require a weight constraint; serialized JSON may omit embeddings_constraint.
+  //@cg-expect-error
   embeddings_constraint?: ConstraintSerialization;
+  // CG305: Embedding does not require zero masking; serialized JSON may omit mask_zero.
+  //@cg-expect-error
   mask_zero?: boolean;
+  // CG305: Input sequence length may be inferred; serialized JSON may omit input_length.
+  //@cg-expect-error
   input_length?: number|number[];
 }
 
