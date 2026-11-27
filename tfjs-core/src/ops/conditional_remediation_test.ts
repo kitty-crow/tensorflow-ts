@@ -16,6 +16,7 @@
  */
 
 import {TensorInfo} from '../tensor_info';
+import {tensorToString} from '../tensor_format';
 import {assertArrayLength} from '../util_base';
 import {sequentialConvolutionTestInputs, requiredTestElement, requiredTestEntry} from '../test_util';
 
@@ -85,5 +86,26 @@ describe('channel split contract', () => {
     const [r, g, b] = channels;
     expect([r.id, g.id, b.id]).toEqual([1, 2, 3]);
     expect(() => assertArrayLength([{id: 1}], 3)).toThrowError();
+  });
+});
+
+describe('tensor formatting storage contracts', () => {
+  it('preserves scalar, empty, padded and abbreviated formatting', () => {
+    expect(tensorToString(new Float32Array([2]), [], 'float32', false))
+        .toBe('Tensor\n    2');
+    expect(tensorToString(new Float32Array(0), [0], 'float32', false))
+        .toBe('Tensor\n    []');
+    expect(tensorToString(new Uint8Array([0]), [], 'bool', false))
+        .toBe('Tensor\n    false');
+    expect(tensorToString(new Float32Array([1, 2, 30, 4]), [2, 2], 'float32', false))
+        .toBe('Tensor\n    [[1 , 2],\n     [30, 4]]');
+    expect(tensorToString(Float32Array.from({length: 21}, (_, i) => i), [21], 'float32', false))
+        .toBe('Tensor\n    [0, 1, 2, ..., 18, 19, 20]');
+  });
+  it('preserves complex component ordering and rejects incomplete components', () => {
+    expect(tensorToString(new Float32Array([1, 2, 3, 4]), [2], 'complex64', false))
+        .toBe('Tensor\n    [1 + 2j, 3 + 4j]');
+    expect(() => tensorToString(new Float32Array([1]), [1], 'complex64', false))
+        .toThrowError(/Missing tensor format entry/);
   });
 });

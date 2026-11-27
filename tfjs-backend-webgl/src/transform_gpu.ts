@@ -29,7 +29,7 @@ export class TransformProgram implements GPGPUProgram {
       outShape: [number, number, number, number]) {
     this.outputShape = outShape;
     const interpolationModeId = interpolation === 'nearest' ? 1 : 2;
-    let fillModeId;
+    let fillModeId: number;
     switch (fillMode) {
       case 'constant':
         fillModeId = 1;

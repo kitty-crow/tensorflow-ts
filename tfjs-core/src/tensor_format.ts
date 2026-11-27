@@ -16,7 +16,7 @@
  */
 
 import {DataType, TypedArray} from './types';
-import {computeStrides, isString, rightPad, sizeFromShape} from './util';
+import {computeStrides, isString, requiredNumericEntry, rightPad, sizeFromShape} from './util';
 
 // Maximum number of values before we decide to show ellipsis.
 const FORMAT_LIMIT_NUM_VALS = 20;
@@ -43,24 +43,32 @@ export function tensorToString(
   return lines.join('\n');
 }
 
+function requiredFormatEntry<T>(values: ArrayLike<T>, index: number): T {
+  const value = values[index];
+  if (value == null) {
+    throw new Error(`Missing tensor format entry at index ${index}.`);
+  }
+  return value;
+}
+
 function computeMaxSizePerColumn(
     vals: TypedArray|string[], shape: number[], dtype: DataType,
     strides: number[]): number[] {
+  if (shape.length < 2) {
+    return [];
+  }
   const n = sizeFromShape(shape);
-  const numCols = strides[strides.length - 1];
+  const numCols = requiredNumericEntry(strides, strides.length - 1);
   const padPerCol = new Array<number>(numCols).fill(0);
-  const rank = shape.length;
-  const valuesOrTuples =
+  const valuesOrTuples: ArrayLike<number|string|[number, number]> =
       dtype === 'complex64' ? createComplexTuples(vals) : vals;
 
-  if (rank > 1) {
-    for (let row = 0; row < n / numCols; row++) {
-      const offset = row * numCols;
-      for (let j = 0; j < numCols; j++) {
-        padPerCol[j] = Math.max(
-            padPerCol[j],
-            valToString(valuesOrTuples[offset + j], 0, dtype).length);
-      }
+  for (let row = 0; row < n / numCols; row++) {
+    const offset = row * numCols;
+    for (let j = 0; j < numCols; j++) {
+      padPerCol[j] = Math.max(
+          requiredNumericEntry(padPerCol, j),
+          valToString(requiredFormatEntry(valuesOrTuples, offset + j), 0, dtype).length);
     }
   }
   return padPerCol;
@@ -83,7 +91,7 @@ function valToString(
       parseFloat(val.toFixed(FORMAT_NUM_SIG_DIGITS)).toString(), pad);
 }
 
-function boolNumToString(v: number): string {
+function boolNumToString(v: number|string): string {
   return v === 0 ? 'false' : 'true';
 }
 
@@ -92,53 +100,43 @@ function scalarTensorToString(
     vals: TypedArray|string[], dtype: DataType): string[] {
   if (dtype === 'complex64') {
     const complexTuple = createComplexTuples(vals);
-    return [valToString(complexTuple[0], 0, dtype)];
+    return [valToString(requiredFormatEntry(complexTuple, 0), 0, dtype)];
   }
+  const value = requiredFormatEntry<number|string>(vals, 0);
   if (dtype === 'bool') {
-    return [boolNumToString(vals[0] as number)];
+    return [boolNumToString(value)];
   }
-  return [vals[0].toString()];
+  return [value.toString()];
 }
 
 /** Format one tensor row, including its abbreviated long-array form. */
 function vectorTensorToString(
     vals: TypedArray|string[], size: number, dtype: DataType,
     storagePerElement: number, padPerCol: number[]): string[] {
-  if (size > FORMAT_LIMIT_NUM_VALS) {
-    const firstValsSize = FORMAT_NUM_FIRST_LAST_VALS * storagePerElement;
-
-    let firstVals = Array.from<number|string|[number, number]>(
-        vals.slice(0, firstValsSize));
-    let lastVals = Array.from<number|string|[number, number]>(vals.slice(
-        (size - FORMAT_NUM_FIRST_LAST_VALS) * storagePerElement,
-        size * storagePerElement));
-    if (dtype === 'complex64') {
-      firstVals = createComplexTuples(firstVals);
-      lastVals = createComplexTuples(lastVals);
-    }
-    return [
-      '[' +
-      firstVals.map((x, i) => valToString(x, padPerCol[i], dtype))
-          .join(', ') +
-      ', ..., ' +
-      lastVals
-          .map(
-              (x, i) => valToString(
-                  x, padPerCol[size - FORMAT_NUM_FIRST_LAST_VALS + i], dtype))
-          .join(', ') +
-      ']'
-    ];
+  if (size <= FORMAT_LIMIT_NUM_VALS) {
+    const displayVals = formatVectorValues(vals, dtype);
+    return ['[' + displayVals.map(
+        (x, i) => valToString(x, padPerCol[i] ?? 0, dtype)).join(', ') + ']'];
   }
-  const displayVals: Array<number|string|[number, number]> =
-      dtype === 'complex64' ? createComplexTuples(vals) :
-                              Array.from<number|string>(vals);
-
+  const firstValsSize = FORMAT_NUM_FIRST_LAST_VALS * storagePerElement;
+  const firstVals = formatVectorValues(vals.slice(0, firstValsSize), dtype);
+  const lastVals = formatVectorValues(vals.slice(
+      (size - FORMAT_NUM_FIRST_LAST_VALS) * storagePerElement,
+      size * storagePerElement), dtype);
   return [
     '[' +
-    displayVals.map((x, i) => valToString(x, padPerCol[i], dtype))
-        .join(', ') +
+    firstVals.map((x, i) => valToString(x, padPerCol[i] ?? 0, dtype)).join(', ') +
+    ', ..., ' +
+    lastVals.map((x, i) => valToString(
+        x, padPerCol[size - FORMAT_NUM_FIRST_LAST_VALS + i] ?? 0, dtype)).join(', ') +
     ']'
   ];
+}
+
+function formatVectorValues(vals: TypedArray|string[], dtype: DataType):
+    Array<number|string|[number, number]> {
+  return dtype === 'complex64' ? createComplexTuples(vals) :
+                                Array.from<number|string>(vals);
 }
 
 function subTensorToString(
@@ -146,11 +144,11 @@ function subTensorToString(
     strides: number[], padPerCol: number[], isLast = true): string[] {
   const storagePerElement = dtype === 'complex64' ? 2 : 1;
 
-  const size = shape[0];
   const rank = shape.length;
   if (rank === 0) {
     return scalarTensorToString(vals, dtype);
   }
+  const size = requiredNumericEntry(shape, 0);
   if (rank === 1) {
     return vectorTensorToString(
         vals, size, dtype, storagePerElement, padPerCol);
@@ -159,7 +157,7 @@ function subTensorToString(
   // The array is rank 2 or more.
   const subshape = shape.slice(1);
   const substrides = strides.slice(1);
-  const stride = strides[0] * storagePerElement;
+  const stride = requiredNumericEntry(strides, 0) * storagePerElement;
   const lines: string[] = [];
   if (size > FORMAT_LIMIT_NUM_VALS) {
     for (let i = 0; i < FORMAT_NUM_FIRST_LAST_VALS; i++) {
@@ -187,24 +185,28 @@ function subTensorToString(
     }
   }
   const sep = rank === 2 ? ',' : '';
-  lines[0] = '[' + (size > 0 ? lines[0] + sep : '');
+  lines[0] = '[' + (size > 0 ? requiredFormatEntry(lines, 0) + sep : '');
   for (let i = 1; i < lines.length - 1; i++) {
-    lines[i] = ' ' + lines[i] + sep;
+    lines[i] = ' ' + requiredFormatEntry(lines, i) + sep;
   }
   let newLineSep = ',\n';
   for (let i = 2; i < rank; i++) {
     newLineSep += '\n';
   }
   lines[lines.length - 1] =
-      ' ' + lines[lines.length - 1] + ']' + (isLast ? '' : newLineSep);
+      ' ' + requiredFormatEntry(lines, lines.length - 1) + ']' + (isLast ? '' : newLineSep);
   return lines;
 }
 
-function createComplexTuples(vals: Array<{}>|
-                             TypedArray): Array<[number, number]> {
+function createComplexTuples(vals: ArrayLike<number|string>): Array<[number, number]> {
   const complexTuples: Array<[number, number]> = [];
   for (let i = 0; i < vals.length; i += 2) {
-    complexTuples.push([vals[i], vals[i + 1]] as [number, number]);
+    const real = requiredFormatEntry(vals, i);
+    const imag = requiredFormatEntry(vals, i + 1);
+    if (typeof real !== 'number' || typeof imag !== 'number') {
+      throw new Error('Complex tensor components must be numeric.');
+    }
+    complexTuples.push([real, imag]);
   }
   return complexTuples;
 }

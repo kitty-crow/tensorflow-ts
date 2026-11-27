@@ -30,6 +30,7 @@ import {concat} from './kernels/Concat';
 import {flipLeftRightConfig} from './kernels/FlipLeftRight';
 import {imageDimensions, matrixBatchStrides, matrixDimensions, rankFiveStrides, spatialStrides2D} from './cpu_util';
 import {batchMatMul} from './kernels/BatchMatMul';
+import {sum} from './kernels/Sum';
 import {conv2D} from './kernels/Conv2D';
 import {conv2DBackpropInput} from './kernels/Conv2DBackpropInput';
 import {conv3D} from './kernels/Conv3D';
@@ -619,5 +620,21 @@ describe('checked CPU kernel reads', () => {
     expect(backend.readSync(result.dataId)).toEqual(new Int32Array(6));
     backend.disposeData(logits.dataId);
     backend.disposeData(result.dataId);
+  });
+});
+
+describe('typed CPU reduction result paths', () => {
+  it('retains reduction shape, values and input ownership with keepDims', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2, 2], 'float32', new Float32Array([1, 2, 3, 4]));
+    for (const keepDims of [false, true]) {
+      const out = sum({inputs: {x}, backend, attrs: {axis: [1], keepDims}});
+      expect(out.shape).toEqual(keepDims ? [2, 1] : [2]);
+      expect(backend.readSync(out.dataId)).toEqual(new Float32Array([3, 7]));
+      backend.disposeData(out.dataId);
+    }
+    expect(backend.refCount(x.dataId)).toBe(1);
+    backend.disposeData(x.dataId);
+    expect(backend.numDataIds()).toBe(0);
   });
 });

@@ -38,9 +38,8 @@ export function getSystemFetch(): FetchFn {
 }
 
 export class PlatformNode implements Platform {
-  private textEncoder: TextEncoder;
-  // tslint:disable-next-line:no-any
-  util: any;
+  private textEncoder: InstanceType<typeof import('util').TextEncoder>;
+  util: typeof import('util');
 
   constructor() {
     // tslint:disable-next-line:no-require-imports

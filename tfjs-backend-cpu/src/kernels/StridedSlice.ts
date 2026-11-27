@@ -57,7 +57,7 @@ export function stridedSlice(args: {
           x.shape, begin, end, strides, beginMask, endMask, ellipsisMask,
           newAxisMask, shrinkAxisMask);
 
-  let result;
+  let result: TensorInfo;
 
   // ref:
   // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/strided_slice_op.cc

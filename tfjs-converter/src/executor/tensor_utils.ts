@@ -41,8 +41,8 @@ export function assertShapesMatchAllowUndefinedSize(
       shapeA.length === shapeB.length,
       () => errorMessagePrefix + ` Shapes ${shapeA} and ${shapeB} must match`);
   for (let i = 0; i < shapeA.length; i++) {
-    const dim0 = shapeA[i];
-    const dim1 = shapeB[i];
+    const dim0 = util.requiredNumericEntry(shapeA, i);
+    const dim1 = util.requiredNumericEntry(shapeB, i);
     util.assert(
         dim0 < 0 || dim1 < 0 || dim0 === dim1,
         () =>
@@ -101,8 +101,8 @@ export function mergeElementShape(
 
   const result: number[] = [];
   for (let i = 0; i < elementShapeA.length; ++i) {
-    const dim0 = elementShapeA[i];
-    const dim1 = elementShapeB[i];
+    const dim0 = util.requiredNumericEntry(elementShapeA, i);
+    const dim1 = util.requiredNumericEntry(elementShapeB, i);
     if (dim0 >= 0 && dim1 >= 0 && dim0 !== dim1) {
       throw new Error(`Incompatible shape during merge: ${elementShapeA} vs. ${
           elementShapeB}`);

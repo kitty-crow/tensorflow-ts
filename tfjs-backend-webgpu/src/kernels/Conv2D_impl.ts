@@ -48,8 +48,8 @@ function conv2dByMatMul({
       convInfo.filterWidth === convInfo.inWidth &&
       convInfo.padInfo.type === 'VALID';
   const intermediates: TensorInfo[] = [];
-  let xReshaped;
-  let filterReshaped;
+  let xReshaped: TensorInfo;
+  let filterReshaped: TensorInfo;
 
   if (sameSize) {
     const sharedDim =

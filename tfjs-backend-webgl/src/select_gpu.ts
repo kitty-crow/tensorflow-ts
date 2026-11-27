@@ -26,8 +26,8 @@ export class SelectProgram implements GPGPUProgram {
   constructor(cRank: number, shape: number[], rank: number) {
     this.outputShape = shape;
 
-    let cCoords;
-    let abCoords;
+    let cCoords: string;
+    let abCoords: string;
     if (rank > 4) {
       throw Error(`Where for rank ${rank} is not yet supported`);
     }

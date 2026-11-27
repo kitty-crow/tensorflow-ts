@@ -46,7 +46,7 @@ export function prod(
 
   backend_util.assertAxesAreInnerMostDims('prod', axes, xRank);
 
-  let res;
+  let res: TensorInfo;
   if (backend.shouldExecuteOnCPU([permutedX])) {
     const xVals = backend.texData.get(permutedX.dataId).values as TypedArray;
     const {outVals, outShape, outDtype} =

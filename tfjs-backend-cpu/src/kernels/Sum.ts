@@ -34,7 +34,7 @@ export function sum(
 
   assertNotComplex(x, 'sum');
 
-  let $x;
+  let $x: TensorInfo;
   if (x.dtype === 'bool') {
     $x = cast({inputs: {x}, backend, attrs: {dtype: 'int32'}});
   } else {

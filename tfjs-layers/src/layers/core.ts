@@ -199,10 +199,10 @@ export class Dense extends Layer {
 
   readonly DEFAULT_KERNEL_INITIALIZER: InitializerIdentifier = 'glorotNormal';
   readonly DEFAULT_BIAS_INITIALIZER: InitializerIdentifier = 'zeros';
-  private readonly kernelConstraint?: Constraint;
-  private readonly biasConstraint?: Constraint;
-  private readonly kernelRegularizer?: Regularizer;
-  private readonly biasRegularizer?: Regularizer;
+  private readonly kernelConstraint: Constraint;
+  private readonly biasConstraint: Constraint;
+  private readonly kernelRegularizer: Regularizer;
+  private readonly biasRegularizer: Regularizer;
 
   constructor(args: DenseLayerArgs) {
     super(args);

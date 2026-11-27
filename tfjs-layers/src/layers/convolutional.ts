@@ -405,9 +405,9 @@ export abstract class BaseConv extends Layer {
   // are in subclass `Conv` because some subclasses use different parameters to
   // control kernel properties, for instance, `DepthwiseConv2D` uses
   // `depthwiseInitializer` instead of `kernelInitializer`.
-  protected readonly biasInitializer?: Initializer;
-  protected readonly biasConstraint?: Constraint;
-  protected readonly biasRegularizer?: Regularizer;
+  protected readonly biasInitializer: Initializer;
+  protected readonly biasConstraint: Constraint;
+  protected readonly biasRegularizer: Regularizer;
 
   protected bias: LayerVariable = null;
 
@@ -501,9 +501,9 @@ export abstract class Conv extends BaseConv {
   // bias. Kernel-related properties are defined here rather than in the
   // superclass because some convolution subclasses use different names and
   // configuration parameters for their internal kernel state.
-  protected readonly kernelInitializer?: Initializer;
-  protected readonly kernelConstraint?: Constraint;
-  protected readonly kernelRegularizer?: Regularizer;
+  protected readonly kernelInitializer: Initializer;
+  protected readonly kernelConstraint: Constraint;
+  protected readonly kernelRegularizer: Regularizer;
 
   constructor(rank: number, args: ConvLayerArgs) {
     super(rank, args as BaseConvLayerArgs);
@@ -1041,12 +1041,12 @@ export class SeparableConv extends Conv {
 
   readonly depthMultiplier: number;
 
-  protected readonly depthwiseInitializer?: Initializer;
-  protected readonly depthwiseRegularizer?: Regularizer;
-  protected readonly depthwiseConstraint?: Constraint;
-  protected readonly pointwiseInitializer?: Initializer;
-  protected readonly pointwiseRegularizer?: Regularizer;
-  protected readonly pointwiseConstraint?: Constraint;
+  protected readonly depthwiseInitializer: Initializer;
+  protected readonly depthwiseRegularizer: Regularizer;
+  protected readonly depthwiseConstraint: Constraint;
+  protected readonly pointwiseInitializer: Initializer;
+  protected readonly pointwiseRegularizer: Regularizer;
+  protected readonly pointwiseConstraint: Constraint;
 
   readonly DEFAULT_DEPTHWISE_INITIALIZER: InitializerIdentifier =
       'glorotUniform';

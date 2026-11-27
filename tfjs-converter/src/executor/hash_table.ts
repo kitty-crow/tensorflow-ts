@@ -24,8 +24,7 @@ import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 export class HashTable {
   readonly handle: Tensor;
 
-  // tslint:disable-next-line: no-any
-  private tensorMap: Map<any, Tensor>;
+  private tensorMap: Map<number|string, Tensor>;
 
   get id() {
     return this.handle.id;
@@ -39,8 +38,7 @@ export class HashTable {
    */
   constructor(readonly keyDType: DataType, readonly valueDType: DataType) {
     this.handle = scalar(0);
-    // tslint:disable-next-line: no-any
-    this.tensorMap = new Map<any, Tensor>();
+    this.tensorMap = new Map<number|string, Tensor>();
 
     keep(this.handle);
   }
@@ -99,6 +97,9 @@ export class HashTable {
       for (let i = 0; i < keysLength; i++) {
         const key = $keys[i];
         const value = $values[i];
+        if (key == null || value == null) {
+          throw new Error('Missing hash table key or value.');
+        }
 
         keep(value);
         this.tensorMap.set(key, value);
@@ -133,6 +134,9 @@ export class HashTable {
 
       for (let i = 0; i < $keys.length; i++) {
         const key = $keys[i];
+        if (key == null) {
+          throw new Error('Missing hash table key.');
+        }
 
         const value = this.findWithDefault(key, defaultValue);
         result.push(value);
@@ -142,8 +146,7 @@ export class HashTable {
     });
   }
 
-  // tslint:disable-next-line: no-any
-  private findWithDefault(key: any, defaultValue: Tensor): Tensor {
+  private findWithDefault(key: number|string, defaultValue: Tensor): Tensor {
     const result = this.tensorMap.get(key);
 
     return result != null ? result : defaultValue;

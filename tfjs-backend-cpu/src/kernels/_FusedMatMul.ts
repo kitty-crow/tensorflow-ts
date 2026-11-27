@@ -32,9 +32,9 @@ export function _fusedMatMul(args: {
   const {a, b, bias, preluActivationWeights} = inputs;
   const {transposeA, transposeB, activation, leakyreluAlpha} = attrs;
 
-  let current;
-  let addRes;
-  let activationRes;
+  let current: TensorInfo;
+  let addRes: TensorInfo;
+  let activationRes: TensorInfo;
 
   const intermediates: TensorInfo[] = [];
 

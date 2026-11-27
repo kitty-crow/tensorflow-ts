@@ -18,6 +18,7 @@
 import {test_util} from '@tensorflow/tfjs-core';
 import * as tensorflow from '../../data/compiled_api';
 import {ExecutionContext} from '../../executor/execution_context';
+import {assertShapesMatchAllowUndefinedSize, mergeElementShape} from '../../executor/tensor_utils';
 import {Graph, Node} from '../types';
 import {getExecutionSubgraph, getNodesInTopologicalOrder, getNodeLiveUntilMap} from '../../executor/model_analysis';
 import {GraphExecutor} from '../../executor/graph_executor';
@@ -130,5 +131,16 @@ describe('converter indexed metadata contracts', () => {
     expect(pairs).toEqual([[0, 0], [1, 2], [3, 4], [0, 0]]);
     node.attrParams.explicitPaddings = {value: [0, 0], type: 'number[]'};
     expect(() => getPadding(node, {}, context)).toThrowError(/explicit padding/);
+  });
+});
+
+describe('tensor list shape metadata', () => {
+  it('preserves wildcard dimensions, zero dimensions and unknown rank', () => {
+    expect(mergeElementShape([-1, 0], [4, -1])).toEqual([4, 0]);
+    expect(mergeElementShape(-1, [2, 0])).toEqual([2, 0]);
+    expect(() => assertShapesMatchAllowUndefinedSize([-1, 0], [4, 0])).not.toThrow();
+    expect(() => mergeElementShape([2], [3])).toThrowError(/Incompatible shape/);
+    expect(() => mergeElementShape(new Array<number>(1), [2]))
+        .toThrowError(/Missing numeric entry/);
   });
 });

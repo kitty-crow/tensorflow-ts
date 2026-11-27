@@ -49,7 +49,7 @@ export function any(
       reshape({inputs: {x: permutedX}, backend, attrs: {shape: [-1, inSize]}});
   const reduced = reduce(a2D, a2D.dtype, 'any', backend);
 
-  let res;
+  let res: TensorInfo;
   if (keepDims) {
     const newShape = backend_util.expandShapeToKeepDim(outShape, origAxes);
     res = reshape({inputs: {x: reduced}, backend, attrs: {shape: newShape}});

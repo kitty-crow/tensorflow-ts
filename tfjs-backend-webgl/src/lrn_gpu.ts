@@ -33,7 +33,7 @@ export class LRNProgram implements GPGPUProgram {
     // src: https://github.com/tensorflow/tensorflow/..
     // blob/26033a1644a9c4a5fbe3170ab2e864b6a4ccd4ca/..
     // tensorflow/core/kernels/mkl_lrn_op.cc#L320
-    let powOperator;
+    let powOperator: string;
     const basis = `float(${bias}) + float(${alpha}) * sum`;
     switch (beta) {
       case 0.5: {

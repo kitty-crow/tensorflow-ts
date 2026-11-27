@@ -30,7 +30,7 @@ export function clipByValue(args: {
   const {x} = inputs;
   const {clipValueMin, clipValueMax} = attrs;
 
-  let program;
+  let program: ClipPackedProgram|ClipProgram;
   if (env().getBool('WEBGL_PACK_CLIP')) {
     program = new ClipPackedProgram(x.shape);
   } else {

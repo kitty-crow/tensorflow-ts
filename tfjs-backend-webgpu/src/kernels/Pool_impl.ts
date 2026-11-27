@@ -48,7 +48,7 @@ export function poolImpl(
         ]
       }
     });
-    let reduceX;
+    let reduceX: TensorInfo;
     if (poolType === 'avg') {
       reduceX = mean(
           {inputs: {x: reshapeX}, backend, attrs: {axis: 0, keepDims: false}});

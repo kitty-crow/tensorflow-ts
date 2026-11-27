@@ -86,19 +86,19 @@ class Utf8Iterator extends StringIterator {
  *   file.
  */
 class Utf8IteratorImpl extends OneToManyIterator<string> {
-  // `decoder` as `any` here to dynamically assign value based on the
-  // environment.
-  // tslint:disable-next-line:no-any
-  decoder: any;
+  private readonly decodeChunk: (chunk: Uint8Array) => string;
 
   constructor(protected readonly upstream: LazyIterator<Uint8Array>) {
     super();
     if (env().get('IS_BROWSER')) {
-      this.decoder = new TextDecoder('utf-8');
+      const decoder = new TextDecoder('utf-8');
+      this.decodeChunk = chunk => decoder.decode(chunk, {stream: true});
     } else {
       // tslint:disable-next-line:no-require-imports
-      const {StringDecoder} = require('string_decoder');
-      this.decoder = new StringDecoder('utf8');
+      const {StringDecoder}: typeof import('string_decoder') =
+          require('string_decoder');
+      const decoder = new StringDecoder('utf8');
+      this.decodeChunk = chunk => decoder.write(Buffer.from(chunk.buffer));
     }
   }
   summary() {
@@ -107,20 +107,10 @@ class Utf8IteratorImpl extends OneToManyIterator<string> {
 
   async pump(): Promise<boolean> {
     const chunkResult = await this.upstream.next();
-    let chunk;
     if (chunkResult.done) {
       return false;
-    } else {
-      chunk = chunkResult.value;
     }
-
-    let text: string;
-    if (env().get('IS_BROWSER')) {
-      text = this.decoder.decode(chunk, {stream: true});
-    } else {
-      text = this.decoder.write(Buffer.from(chunk.buffer));
-    }
-    this.outputQueue.push(text);
+    this.outputQueue.push(this.decodeChunk(chunkResult.value));
     return true;
   }
 }

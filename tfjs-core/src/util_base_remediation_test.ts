@@ -19,6 +19,7 @@
 import './base_side_effects';
 
 import {flatten} from './util';
+import {env} from './environment';
 import {requiredTestEntry, requiredTestValue} from './test_util';
 import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
 
@@ -152,5 +153,17 @@ describe('flatten traversal', () => {
     const preserved = flatten<Float32Array>(values, [], true);
     expect(preserved.length).toBe(1);
     expect(requiredTestValue(preserved[0], 'preserved typed array')).toBe(values);
+  });
+});
+
+describe('Registered platform typed utility contract', () => {
+  it('preserves UTF-8 bytes, empty decoding and typed array detection', () => {
+    const platform = env().platform;
+    const bytes = platform.encode('é', 'utf-8');
+    expect(Array.from(bytes)).toEqual([195, 169]);
+    expect(platform.decode(bytes, 'utf-8')).toBe('é');
+    expect(platform.decode(new Uint8Array(0), 'utf-8')).toBe('');
+    expect(platform.isTypedArray(bytes)).toBe(true);
+    expect(platform.isTypedArray([195, 169])).toBe(false);
   });
 });

@@ -56,7 +56,7 @@ export function stridedSlice(args: {
           x.shape, begin, end, strides, beginMask, endMask, ellipsisMask,
           newAxisMask, shrinkAxisMask);
 
-  let result;
+  let result: TensorInfo;
 
   if (isIdentity) {
     // Optimization #1, slice is a no-op plus reshape

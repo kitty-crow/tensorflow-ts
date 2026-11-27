@@ -59,7 +59,7 @@ export function reduce(
     resOutShape = backend_util.expandShapeToKeepDim(reduceOutShape, origAxes);
   }
 
-  let res;
+  let res: TensorInfo;
   if ((reduceType === 'max' || reduceType === 'prod') &&
       backend.shouldExecuteOnCPU([input])) {
     const xVals = backend.tensorMap.get(input.dataId).values as TypedArray;
