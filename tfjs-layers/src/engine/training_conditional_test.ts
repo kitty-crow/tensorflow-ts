@@ -260,6 +260,9 @@ describe('checked model graph reconstruction', () => {
       ]
     };
     const model = LayersModel.fromConfig(LayersModel, config);
+    if (!(model instanceof LayersModel)) {
+      throw new Error('Expected graph reconstruction to return a LayersModel');
+    }
     expect(model.name).toBe('checked_graph');
     expect(requiredElement(model.inputs, 0).shape).toEqual([null, 2]);
     expect(requiredElement(model.outputs, 0).shape).toEqual([null, 2]);
