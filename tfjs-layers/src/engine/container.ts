@@ -43,8 +43,8 @@ const isKerasSavedModelFormat = (weights: NamedTensorMap): boolean => {
   if (keys.length === 0) {
     return false;
   }
-  const key = keys[0].split('/');
-  return !isNaN(parseInt(key[key.length - 1], 10));
+  const key = generic_utils.requiredElement(keys, 0).split('/');
+  return !isNaN(parseInt(generic_utils.requiredElement(key, key.length - 1), 10));
 };
 
 /**
@@ -205,7 +205,7 @@ export abstract class Container extends Layer {
     this.feedInputNames = [];
     this.feedOutputNames = [];
     for (let i = 0; i < this.inputLayers.length; i++) {
-      const layer = this.inputLayers[i];
+      const layer = generic_utils.requiredElement(this.inputLayers, i);
       // Check that layer is an InputLayer.
       if (!(layer instanceof InputLayer)) {
         throw new TypeError(
@@ -630,7 +630,7 @@ export abstract class Container extends Layer {
       if (nameToWeight[name] == null) {
         const tokens = name.split('/');
         const shortenNameArray =
-            tokens.slice(0, -2).concat([tokens[tokens.length - 1]]);
+            tokens.slice(0, -2).concat([generic_utils.requiredElement(tokens, tokens.length - 1)]);
         validatedName = shortenNameArray.join('/');
       }
       const weight = nameToWeight[validatedName];
@@ -639,7 +639,7 @@ export abstract class Container extends Layer {
             `Provided weight data has no target variable: ${name}`);
       }
       if (weight != null) {
-        weightValueTuples.push([weight, weights[name]]);
+        weightValueTuples.push([weight, generic_utils.requiredEntry(weights, name)]);
       }
       delete nameToWeight[validatedName];
     }
@@ -729,7 +729,8 @@ export abstract class Container extends Layer {
       inputs = generic_utils.toList(inputs);
       const feedDict = new FeedDict();
       for (let i = 0; i < this.inputs.length; ++i) {
-        feedDict.add(this.inputs[i], inputs[i]);
+        feedDict.add(generic_utils.requiredElement(this.inputs, i),
+                     generic_utils.requiredElement(inputs, i));
       }
       return execute(this.outputs, feedDict, kwargs) as Tensor | Tensor[];
     });
@@ -1026,7 +1027,7 @@ export abstract class Container extends Layer {
           `Was asked to retrieve layer at index ${index}, but model only ` +
           `has ${this.layers.length} layer(s).`);
     } else {
-      return this.layers[index];
+      return generic_utils.requiredElement(this.layers, index);
     }
   }
 

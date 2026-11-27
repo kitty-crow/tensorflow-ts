@@ -252,3 +252,14 @@ describe('operation mapper fixture validation', () => {
     expect(() => validateParam(node, [])).toThrowError(/No operation mapper/);
   });
 });
+
+describe('graph signature tensor names', () => {
+  it('rejects an incomplete output signature before graph traversal', () => {
+    const graph: Graph = {nodes: {}, placeholders: [], inputs: [],
+      outputs: [], weights: [], signature: {outputs: {result: {}}}};
+    const executor = new GraphExecutor(graph);
+    executor.weightMap = {};
+    expect(() => executor.execute({}, ['result']))
+        .toThrowError(/Missing signature tensor name for output 'result'/);
+  });
+});

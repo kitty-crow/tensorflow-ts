@@ -318,10 +318,12 @@ export class GraphExecutor implements FunctionExecutor {
   }
 
   private getFrozenTensorIds(tensorMap: NamedTensorsMap): Set<number> {
-    const ids = [].concat.apply(
-        [],
-        Object.values(tensorMap)
-            .map(tensors => tensors.map(tensor => tensor.id)));
+    const ids: number[] = [];
+    for (const tensors of Object.values(tensorMap)) {
+      for (const tensor of tensors) {
+        ids.push(tensor.id);
+      }
+    }
     return new Set(ids);
   }
 
@@ -735,7 +737,7 @@ export class GraphExecutor implements FunctionExecutor {
     });
   }
 
-  private mapInputs(inputs: NamedTensorMap) {
+  private mapInputs(inputs: NamedTensorMap): NamedTensorMap {
     const result: NamedTensorMap = {};
     for (const inputName in inputs) {
       const input = inputs[inputName];
@@ -744,6 +746,9 @@ export class GraphExecutor implements FunctionExecutor {
       }
       const tensor = this._signature ?.inputs ?.[inputName];
       if (tensor != null) {
+        if (tensor.name == null) {
+          throw new Error(`Missing signature tensor name for input '${inputName}'`);
+        }
         result[tensor.name] = input;
       } else {
         result[inputName] = input;
@@ -772,10 +777,13 @@ export class GraphExecutor implements FunctionExecutor {
     }
   }
 
-  private mapOutputs(outputs: string[]) {
+  private mapOutputs(outputs: string[]): string[] {
     return outputs.map(name => {
       const tensor = this._signature ?.outputs ?.[name];
       if (tensor != null) {
+        if (tensor.name == null) {
+          throw new Error(`Missing signature tensor name for output '${name}'`);
+        }
         return tensor.name;
       }
       return name;

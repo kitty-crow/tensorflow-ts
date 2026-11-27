@@ -23,23 +23,25 @@ import {ValueError} from './errors';
 // Porting note: This diverges from the PyKeras implementation and may need to
 // change based on (de)serialization requirements.
 export function getOptimizer(identifier: string): Optimizer {
-  const optimizerMap: {[optimizerName: string]: () => Optimizer} = {
-    'Adagrad': () => train.adagrad(0.01),
-    'Adadelta': () => train.adadelta(1, 0.95, epsilon()),
-    'Adam': () => train.adam(0.001, 0.9, 0.999, epsilon()),
-    'Adamax': () => train.adamax(0.002, 0.9, 0.999, epsilon(), 0),
-    'RMSProp': () => train.rmsprop(0.001, 0.9, 0, epsilon()),
-    'SGD': () => train.sgd(0.01)
-  };
-  optimizerMap['adagrad'] = optimizerMap['Adagrad'];
-  optimizerMap['adadelta'] = optimizerMap['Adadelta'];
-  optimizerMap['adam'] = optimizerMap['Adam'];
-  optimizerMap['adamax'] = optimizerMap['Adamax'];
-  optimizerMap['rmsprop'] = optimizerMap['RMSProp'];
-  optimizerMap['sgd'] = optimizerMap['SGD'];
-
-  if (identifier in optimizerMap) {
-    return optimizerMap[identifier]();
+  switch (identifier) {
+    case 'Adagrad':
+    case 'adagrad':
+      return train.adagrad(0.01);
+    case 'Adadelta':
+    case 'adadelta':
+      return train.adadelta(1, 0.95, epsilon());
+    case 'Adam':
+    case 'adam':
+      return train.adam(0.001, 0.9, 0.999, epsilon());
+    case 'Adamax':
+    case 'adamax':
+      return train.adamax(0.002, 0.9, 0.999, epsilon(), 0);
+    case 'RMSProp':
+    case 'rmsprop':
+      return train.rmsprop(0.001, 0.9, 0, epsilon());
+    case 'SGD':
+    case 'sgd':
+      return train.sgd(0.01);
   }
   throw new ValueError(`Unknown Optimizer ${identifier}`);
 }

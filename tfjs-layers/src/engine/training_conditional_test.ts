@@ -32,6 +32,7 @@ import {min, max, sum, variance} from '../utils/math_utils';
 import {Conv2D} from '../layers/convolutional';
 import {DepthwiseConv2D} from '../layers/convolutional_depthwise';
 import {Sequential} from '../models';
+import {getOptimizer} from '../optimizers';
 import {collectMetrics, LayersModel, standardizeInputData} from './training';
 import {disposeNewTensors, ensureTensorsRank2OrHigher} from './training_tensors';
 
@@ -272,6 +273,9 @@ describe('checked model graph reconstruction', () => {
       throw new Error('Expected graph reconstruction to return a LayersModel');
     }
     expect(model.name).toBe('checked_graph');
+    expect(model.findLayer(0)).toBe(requiredElement(model.layers, 0));
+    expect(() => model.findLayer(-1)).toThrowError(/Missing required element/);
+    expect(() => model.findLayer(0.5)).toThrowError(/Missing required element/);
     expect(requiredElement(model.inputs, 0).shape).toEqual([null, 2]);
     expect(requiredElement(model.outputs, 0).shape).toEqual([null, 2]);
     expect(() => LayersModel.fromConfig(LayersModel, {
@@ -446,5 +450,13 @@ describe('layer boundary contracts', () => {
     const outer = new TimeDistributed({layer: inner});
     expect(inner.updates).toBe(updates);
     expect(outer.updates).toBe(updates);
+  });
+});
+
+describe('optimizer name dispatch', () => {
+  it('rejects unknown names, including inherited object members', () => {
+    for (const name of ['constructor', 'toString', 'ADAM', 'unknown']) {
+      expect(() => getOptimizer(name)).toThrowError(/Unknown Optimizer/);
+    }
   });
 });
