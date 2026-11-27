@@ -44,6 +44,8 @@ export type KernelAttributes<A> = { [K in keyof A]: A[K] };
 export type KernelFunc = (params: {
   inputs: NamedTensorInfoMap,
   backend: {},
+  // CG305: Kernels without attributes can be registered and invoked without an attrs map.
+  //@cg-expect-error
   attrs?: NamedAttrMap,
 }) => TensorInfo | TensorInfo[];
 
@@ -62,17 +64,27 @@ export interface KernelConfig {
   kernelName: string;
   backendName: string;
   kernelFunc: KernelFunc;
+  // CG305: Kernels that need no backend initialization may omit the setup hook.
+  //@cg-expect-error
   setupFunc?: KernelSetupFunc;
+  // CG305: Kernels that need no backend teardown may omit the disposal hook.
+  //@cg-expect-error
   disposeFunc?: KernelDisposeFunc;
 }
 
 /** Config object for registering a gradient in the global registry. */
 export interface GradConfig {
   kernelName: string;
+  // CG305: Gradients that do not require saved inputs omit the input list.
+  //@cg-expect-error
   inputsToSave?: string[];
   // When saveAllInputs is true, all inputs will be saved. Only use this flag
   // if inputs is an array of Tensors.
+  // CG305: Only gradients that need all inputs enable the save-all flag.
+  //@cg-expect-error
   saveAllInputs?: boolean;
+  // CG305: Gradients that do not require saved outputs omit the output mask.
+  //@cg-expect-error
   outputsToSave?: boolean[];
   gradFunc: GradFunc;
 }

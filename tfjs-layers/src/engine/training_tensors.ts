@@ -26,11 +26,15 @@ export interface ModelFitArgs {
    * Number of samples per gradient update. If unspecified, it
    * will default to 32.
    */
+  // CG305: Tensor training defaults the batch size to 32.
+  //@cg-expect-error
   batchSize?: number;
 
   /**
    * Integer number of times to iterate over the training data arrays.
    */
+  // CG305: Tensor training supports the default epoch count.
+  //@cg-expect-error
   epochs?: number;
 
   /**
@@ -44,6 +48,8 @@ export interface ModelFitArgs {
    *     In the browser: no action. This is the default.
    * 2 - Not implemented yet.
    */
+  // CG305: Tensor training defaults verbosity to one.
+  //@cg-expect-error
   verbose?: ModelLoggingVerbosity | 2;
 
   /**
@@ -60,6 +66,8 @@ export interface ModelFitArgs {
    *      as in `onBatchEnd()`. Note that `onYield` can skip batches or
    *      epochs. See also docs for `yieldEvery` below.
    */
+  // CG305: Training may run without caller-provided callbacks.
+  //@cg-expect-error
   callbacks?: BaseCallback[]|CustomCallbackArgs|CustomCallbackArgs[];
 
   /**
@@ -70,6 +78,8 @@ export interface ModelFitArgs {
    * The validation data is selected from the last samples in the `x` and `y`
    * data provided, before shuffling.
    */
+  // CG305: Training may run without a held-out validation fraction.
+  //@cg-expect-error
   validationSplit?: number;
 
   /**
@@ -79,6 +89,8 @@ export interface ModelFitArgs {
    * valSampleWeights]. The model will not be trained on this data.
    * `validationData` will override `validationSplit`.
    */
+  // CG305: Training may run without explicit validation tensors.
+  //@cg-expect-error
   validationData?: [
     Tensor|Tensor[], Tensor|Tensor[]
   ]|[Tensor | Tensor[], Tensor|Tensor[], Tensor|Tensor[]];
@@ -87,6 +99,8 @@ export interface ModelFitArgs {
    * Whether to shuffle the training data before each epoch. Has
    * no effect when `stepsPerEpoch` is not `null`.
    */
+  // CG305: Tensor training uses its default shuffle behaviour when omitted.
+  //@cg-expect-error
   shuffle?: boolean;
 
   /**
@@ -100,6 +114,8 @@ export interface ModelFitArgs {
    * or an object that maps model output names (e.g., `model.outputNames[0]`)
    * to weight objects.
    */
+  // CG305: Training can use equal class weights without an override.
+  //@cg-expect-error
   classWeight?: ClassWeight|ClassWeight[]|ClassWeightMap;
 
   /**
@@ -110,6 +126,8 @@ export interface ModelFitArgs {
    * sample. In this case you should make sure to specify
    * sampleWeightMode="temporal" in compile().
    */
+  // CG305: Training can use unweighted samples without an explicit weight tensor.
+  //@cg-expect-error
   sampleWeight?: Tensor;
 
   /**
@@ -118,6 +136,8 @@ export interface ModelFitArgs {
    * The model is not trained for a number of iterations given by `epochs`,
    * but merely until the epoch of index `epochs` is reached.
    */
+  // CG305: Training starts at the initial epoch when no resume index is given.
+  //@cg-expect-error
   initialEpoch?: number;
 
   /**
@@ -127,12 +147,16 @@ export interface ModelFitArgs {
    * equal to the number of unique samples in your dataset divided by the
    * batch size, or 1 if that cannot be determined.
    */
+  // CG305: Tensor training can infer the epoch size from the samples and batch size.
+  //@cg-expect-error
   stepsPerEpoch?: number;
 
   /**
    * Only relevant if `stepsPerEpoch` is specified. Total number of steps
    * (batches of samples) to validate before stopping.
    */
+  // CG305: Validation steps are only required when explicitly limiting step-based validation.
+  //@cg-expect-error
   validationSteps?: number;
 
   /**
@@ -152,6 +176,8 @@ export interface ModelFitArgs {
    *   - `'never'`: never yield. (yielding can still happen through `await
    *      nextFrame()` calls in custom callbacks.)
    */
+  // CG305: Training defaults its event-loop yield frequency to auto.
+  //@cg-expect-error
   yieldEvery?: YieldEveryOptions;
 }
 

@@ -198,6 +198,8 @@ export interface WebGLData {
  */
 export interface WebGPUData {
   buffer: GPUBuffer;
+  // CG305: WebGPU tensor creation copies buffers by default unless zero-copy is requested.
+  //@cg-expect-error
   zeroCopy?: boolean;
 }
 
@@ -217,6 +219,8 @@ export interface ImageOptions {
    * tensor with 1 or 3 channels, the alpha channels would set as its value;
    * otherwise, it would not make effects.
    */
+  // CG305: Drawing may use the default alpha rather than a caller override.
+  //@cg-expect-error
   alpha?: number;
 }
 
@@ -225,11 +229,15 @@ export interface ContextOptions {
    * Optional.  If the canvas has created a context, it would not make effects.
    * If it is not set, it would be variable based on the current backend.
    */
+  // CG305: The canvas context may be selected by the current backend.
+  //@cg-expect-error
   contextType?: string;
   /**
    * Optional. A WebGLContextAttributes configuration. If the canvas has created
    * a context, it would not make effects.
    */
+  // CG305: The canvas can use default context attributes.
+  //@cg-expect-error
   contextAttributes?: WebGLContextAttributes;
 }
 
@@ -237,9 +245,13 @@ export interface DrawOptions {
   /**
    * Optional. An object of options to customize the values of image tensor.
    */
+  // CG305: Drawing accepts default image options.
+  //@cg-expect-error
   imageOptions?: ImageOptions;
   /**
    * Optional. An object to configure the context of the canvas to draw to.
    */
+  // CG305: Drawing accepts default context options.
+  //@cg-expect-error
   contextOptions?: ContextOptions;
 }

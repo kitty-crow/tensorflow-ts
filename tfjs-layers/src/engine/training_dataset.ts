@@ -36,6 +36,8 @@ export interface ModelFitDatasetArgs<T> {
    * If it is not provided, use `done` return value in `iterator.next()` as
    * signal to finish an epoch.
    */
+  // CG305: Dataset training uses iterator exhaustion when batchesPerEpoch is omitted.
+  //@cg-expect-error
   batchesPerEpoch?: number;
 
   /**
@@ -54,6 +56,8 @@ export interface ModelFitDatasetArgs<T> {
    *     In the browser: no action. This is the default.
    * 2 - Not implemented yet.
    */
+  // CG305: Dataset training defaults verbosity to one.
+  //@cg-expect-error
   verbose?: ModelLoggingVerbosity;
 
   /**
@@ -70,6 +74,8 @@ export interface ModelFitDatasetArgs<T> {
    *      as in `onBatchEnd()`. Note that `onYield` can skip batches or
    *      epochs. See also docs for `yieldEvery` below.
    */
+  // CG305: Dataset training may run without caller-provided callbacks.
+  //@cg-expect-error
   callbacks?: BaseCallback[]|CustomCallbackArgs|CustomCallbackArgs[];
 
   /**
@@ -96,6 +102,8 @@ export interface ModelFitDatasetArgs<T> {
    *
    * The model will not be trained on this data.
    */
+  // CG305: Dataset training may run without validation data.
+  //@cg-expect-error
   validationData?: [
     TensorOrArrayOrMap, TensorOrArrayOrMap
   ]|[TensorOrArrayOrMap, TensorOrArrayOrMap, TensorOrArrayOrMap]|Dataset<T>;
@@ -108,6 +116,8 @@ export interface ModelFitDatasetArgs<T> {
    *
    * If not specified, its value defaults to 32.
    */
+  // CG305: Tensor validation batches default to 32 when no override is supplied.
+  //@cg-expect-error
   validationBatchSize?: number;
 
   /**
@@ -119,6 +129,8 @@ export interface ModelFitDatasetArgs<T> {
    * specified, `evaluateDataset` will use `iterator.next().done` as signal to
    * stop validation.
    */
+  // CG305: Dataset validation uses iterator exhaustion when validationBatches is omitted.
+  //@cg-expect-error
   validationBatches?: number;
 
   /**
@@ -138,6 +150,8 @@ export interface ModelFitDatasetArgs<T> {
    *   - `'never'`: never yield. (But yielding can still happen through `await
    *      nextFrame()` calls in custom callbacks.)
    */
+  // CG305: Dataset training defaults its yield frequency to auto.
+  //@cg-expect-error
   yieldEvery?: YieldEveryOptions;
 
   /**
@@ -146,6 +160,8 @@ export interface ModelFitDatasetArgs<T> {
    * The model is not trained for a number of iterations given by `epochs`,
    * but merely until the epoch of index `epochs` is reached.
    */
+  // CG305: Dataset training starts at the initial epoch unless a resume index is supplied.
+  //@cg-expect-error
   initialEpoch?: number;
 
   /**
@@ -159,6 +175,8 @@ export interface ModelFitDatasetArgs<T> {
    * or an object that maps model output names (e.g., `model.outputNames[0]`)
    * to weight objects.
    */
+  // CG305: Dataset training can use equal class weights without an override.
+  //@cg-expect-error
   classWeight?: ClassWeight|ClassWeight[]|ClassWeightMap;
 }
 
@@ -175,11 +193,15 @@ export interface ModelEvaluateDatasetArgs {
    * Number of batches to draw from the dataset object before ending the
    * evaluation.
    */
+  // CG305: Dataset evaluation may use iterator exhaustion instead of a batch limit.
+  //@cg-expect-error
   batches?: number;
 
   /**
    * Verbosity mode.
    */
+  // CG305: Dataset evaluation uses its default verbosity when not specified.
+  //@cg-expect-error
   verbose?: ModelLoggingVerbosity;
 }
 

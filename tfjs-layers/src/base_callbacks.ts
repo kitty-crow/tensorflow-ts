@@ -346,15 +346,33 @@ export class History extends BaseCallback {
 }
 
 export interface CustomCallbackArgs {
+  // CG305: Train-begin hooks are opt-in and the callback may be invoked without logs.
+  //@cg-expect-error
   onTrainBegin?: (logs?: Logs) => void | Promise<void>;
+  // CG305: Train-end hooks are opt-in and the callback may be invoked without logs.
+  //@cg-expect-error
   onTrainEnd?: (logs?: Logs) => void | Promise<void>;
+  // CG305: Epoch-begin hooks are opt-in and the callback may be invoked without logs.
+  //@cg-expect-error
   onEpochBegin?: (epoch: number, logs?: Logs) => void | Promise<void>;
+  // CG305: Epoch-end hooks are opt-in and the callback may be invoked without logs.
+  //@cg-expect-error
   onEpochEnd?: (epoch: number, logs?: Logs) => void | Promise<void>;
+  // CG305: Batch-begin hooks are opt-in and the callback may be invoked without logs.
+  //@cg-expect-error
   onBatchBegin?: (batch: number, logs?: Logs) => void | Promise<void>;
+  // CG305: Batch-end hooks are opt-in and the callback may be invoked without logs.
+  //@cg-expect-error
   onBatchEnd?: (batch: number, logs?: Logs) => void | Promise<void>;
+  // CG305: The yield hook is optional; yielding still occurs via nextFrame.
+  //@cg-expect-error
   onYield?: (epoch: number, batch: number, logs: Logs) => void | Promise<void>;
   // Used for test DI mocking.
+  // CG305: A custom clock is optional test injection; normal execution uses the default clock.
+  //@cg-expect-error
   nowFunc?: Function;
+  // CG305: A custom next-frame function is optional test injection; normal execution uses nextFrame.
+  //@cg-expect-error
   nextFrameFunc?: Function;
 }
 

@@ -26,9 +26,17 @@ export type Conv2DKernelConfig<B extends KernelBackend> = {
   filter: TensorInfo,
   convInfo: Conv2DInfo,
   backend: B,
+  // CG305: Fused operations support execution without a bias tensor.
+  //@cg-expect-error
   bias?: TensorInfo,
+  // CG305: Only PReLU activation requires its weights tensor.
+  //@cg-expect-error
   preluActivationWeights?: TensorInfo,
+  // CG305: An alpha override is only relevant for leaky ReLU activation.
+  //@cg-expect-error
   leakyreluAlpha?: number,
+  // CG305: Fused operations default to linear activation when not requested.
+  //@cg-expect-error
   activation?: Activation
 };
 
@@ -36,9 +44,17 @@ export type FusedConv2DConfig = {
   input: Tensor4D,
   filter: Tensor4D,
   convInfo: Conv2DInfo,
+  // CG305: Fused operations support execution without a bias tensor.
+  //@cg-expect-error
   bias?: Tensor,
+  // CG305: Fused operations default to linear activation when not requested.
+  //@cg-expect-error
   activation?: Activation,
+  // CG305: Only PReLU activation requires its weights tensor.
+  //@cg-expect-error
   preluActivationWeights?: Tensor,
+  // CG305: An alpha override is only relevant for leaky ReLU activation.
+  //@cg-expect-error
   leakyreluAlpha?: number
 };
 
@@ -47,9 +63,17 @@ export type FusedBatchMatMulConfig = {
   b: Tensor3D,
   transposeA: boolean,
   transposeB: boolean,
+  // CG305: Fused operations support execution without a bias tensor.
+  //@cg-expect-error
   bias?: Tensor,
+  // CG305: Fused operations default to linear activation when not requested.
+  //@cg-expect-error
   activation?: Activation,
+  // CG305: Only PReLU activation requires its weights tensor.
+  //@cg-expect-error
   preluActivationWeights?: Tensor,
+  // CG305: An alpha override is only relevant for leaky ReLU activation.
+  //@cg-expect-error
   leakyreluAlpha?: number
 };
 
