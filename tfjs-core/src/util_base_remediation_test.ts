@@ -15,6 +15,9 @@
  * =============================================================================
  */
 
+// Standalone Jasmine specs need the same platform registration as core.
+import './base_side_effects';
+
 import {flatten} from './util';
 import {requiredTestEntry, requiredTestValue} from './test_util';
 import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, squeezeShape, toNestedArray} from './util_base';
@@ -141,5 +144,13 @@ describe('flatten traversal', () => {
     expect(flatten([1, [2, 3], 4], result)).toBe(result);
     expect(result).toEqual([0, 1, 2, 3, 4]);
     expect(flatten([[], [5]])).toEqual([5]);
+  });
+
+  it('flattens typed arrays or retains them when requested', () => {
+    const values = new Float32Array([0, 2]);
+    expect(flatten<number|Float32Array>([1, values])).toEqual([1, 0, 2]);
+    const preserved = flatten<Float32Array>(values, [], true);
+    expect(preserved.length).toBe(1);
+    expect(requiredTestValue(preserved[0], 'preserved typed array')).toBe(values);
   });
 });
