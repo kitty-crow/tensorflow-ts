@@ -73,7 +73,7 @@ export function getPreamble() {
   return preamble;
 }
 
-export function bail(errorMsg: string) {
+export function bail(errorMsg: string): never {
   console.log(chalk.red(errorMsg));
   process.exit(1);
 }

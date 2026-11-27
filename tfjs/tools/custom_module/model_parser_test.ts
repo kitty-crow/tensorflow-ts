@@ -20,7 +20,7 @@ import * as tensorflow from '@tensorflow/tfjs-converter/dist/data/compiled_api';
 import {io} from '@tensorflow/tfjs-core';
 import * as fs from 'fs';
 
-import {getOps} from './model_parser';
+import {getOps, KernelToOps, parseKernelToOps} from './model_parser';
 
 const SIMPLE_MODEL: io.ModelArtifacts = {
   format: 'graph-model',
@@ -252,12 +252,21 @@ const CONTROL_FLOW_V2_MODEL: io.ModelArtifacts = {
 };
 
 describe('Model parse', () => {
-  // tslint:disable-next-line: no-any
-  let kernelToOps: any;
+  let kernelToOps: KernelToOps;
   beforeAll(() => {
     const mappingPath =
         require.resolve('@tensorflow/tfjs-converter/metadata/kernel2op.json');
-    kernelToOps = JSON.parse(fs.readFileSync(mappingPath, 'utf-8'));
+    kernelToOps = parseKernelToOps(fs.readFileSync(mappingPath, 'utf-8'));
+  });
+
+  it('rejects malformed mapping entries', () => {
+    expect(() => parseKernelToOps('{"Add":[1]}')).toThrowError(
+        'Expected string operation names for kernel Add');
+  });
+
+  it('rejects malformed graph nodes before looking up operations', () => {
+    expect(() => getOps({modelTopology: {node: [{op: 1}]}}, {}))
+        .toThrowError('Expected a string operation name for graph node');
   });
 
   it('should get ops from simple model', () => {

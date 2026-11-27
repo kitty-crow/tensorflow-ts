@@ -19,7 +19,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import {getCustomConverterOpsModule, getCustomModuleString} from './custom_module';
-import {getOpsForConfig} from './model_parser';
+import {getOpsForConfig, KernelToOps, parseKernelToOps} from './model_parser';
 import {CustomTFJSBundleConfig, ImportProvider, ModuleProvider, SupportedBackend} from './types';
 import {bail, kernelNameToVariableName, opNameToFileName} from './util';
 
@@ -51,14 +51,14 @@ class ESMModuleProvider implements ModuleProvider {
 
     // Write a custom module tfjs-core ops used by converter executors
 
-    let kernelToOps;
-    let mappingPath;
+    let kernelToOps: KernelToOps;
+    let mappingPath = '@tensorflow/tfjs-converter/metadata/kernel2op.json';
     try {
       mappingPath =
           require.resolve('@tensorflow/tfjs-converter/metadata/kernel2op.json');
-      kernelToOps = JSON.parse(fs.readFileSync(mappingPath, 'utf-8'));
+      kernelToOps = parseKernelToOps(fs.readFileSync(mappingPath, 'utf-8'));
     } catch (e) {
-      bail(`Error loading kernel to ops mapping file ${mappingPath}`);
+      return bail(`Error loading kernel to ops mapping file ${mappingPath}`);
     }
 
     const converterOps = getOpsForConfig(config, kernelToOps);

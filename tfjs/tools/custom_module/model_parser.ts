@@ -15,69 +15,101 @@
  * =============================================================================
  */
 
-// tslint:disable-next-line: no-imports-from-dist
-import * as tensorflow from '@tensorflow/tfjs-converter/dist/data/compiled_api';
 import {io} from '@tensorflow/tfjs-core';
 import * as fs from 'fs';
 import {CustomTFJSBundleConfig} from './types';
 import {bail} from './util';
 
-export function getOpsForConfig(
-    // tslint:disable-next-line: no-any
-    config: CustomTFJSBundleConfig, kernelToOps: any) {
-  // This will return a list of ops used by the model.json(s) passed in.
-  const results: Set<string> = new Set();
-  let modelJson;
-  for (const modelJsonPath of config.models) {
-    try {
-      modelJson = JSON.parse(fs.readFileSync(modelJsonPath, 'utf-8'));
-    } catch (e) {
-      bail(`Error loading JSON file ${modelJsonPath}`);
-    }
+export type KernelToOps = Record<string, string[]>;
 
-    const ops = getOps(modelJson, kernelToOps);
-    ops.forEach((op: string) => results.add(op));
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function requireRecord(value: unknown, description: string): Record<string, unknown> {
+  if (!isRecord(value)) {
+    throw new Error(`Expected an object for ${description}`);
+  }
+  return value;
+}
+
+function readOptionalArray(value: unknown, description: string): unknown[] {
+  if (value == null) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    throw new Error(`Expected an array for ${description}`);
+  }
+  return value;
+}
+
+/** Validate the mapping at the JSON boundary before using its operation names. */
+export function parseKernelToOps(text: string): KernelToOps {
+  const value: unknown = JSON.parse(text);
+  const record = requireRecord(value, 'kernel to ops mapping');
+  const mapping: KernelToOps = Object.create(null);
+  for (const [kernel, ops] of Object.entries(record)) {
+    if (!Array.isArray(ops) || !ops.every(op => typeof op === 'string')) {
+      throw new Error(`Expected string operation names for kernel ${kernel}`);
+    }
+    mapping[kernel] = ops;
+  }
+  return mapping;
+}
+
+export function getOpsForConfig(
+    config: CustomTFJSBundleConfig, kernelToOps: KernelToOps): string[] {
+  const results = new Set<string>();
+  for (const modelJsonPath of config.models ?? []) {
+    let modelJson: Record<string, unknown>;
+    try {
+      const parsed: unknown = JSON.parse(fs.readFileSync(modelJsonPath, 'utf-8'));
+      modelJson = requireRecord(parsed, 'model artifacts');
+    } catch (e) {
+      return bail(`Error loading JSON file ${modelJsonPath}`);
+    }
+    for (const op of getTopologyOps(modelJson.modelTopology, kernelToOps)) {
+      results.add(op);
+    }
   }
   return Array.from(results);
 }
 
 export function getOps(
-    // tslint:disable-next-line: no-any
-    modelJson: io.ModelArtifacts, kernelToOp: any): string[] {
-  const results: Set<string> = new Set();
+    modelJson: io.ModelArtifacts, kernelToOp: KernelToOps): string[] {
+  return getTopologyOps(modelJson.modelTopology, kernelToOp);
+}
 
-  const addOpsToResults = (kernel: string) => {
-    const ops = kernelToOp[kernel];
-    if (ops == null) {
-      console.warn(
-          `Kernel => Op warning: could not find op mapping for kernel ${
-              kernel}`);
-    }
-    ops.forEach((op: string) => {
-      results.add(op);
-    });
-  };
+function getTopologyOps(topology: unknown, kernelToOp: KernelToOps): string[] {
+  const results = new Set<string>();
+  const graph = requireRecord(topology, 'model topology');
 
-  const graph = modelJson.modelTopology as tensorflow.IGraphDef;
-
-  // Parse nodes
-  if (graph.node != null) {
-    graph.node.forEach((node) => {
-      addOpsToResults(node.op);
-    });
-  }
-
-  // Parse functionDef nodes
-  if (graph.library != null && graph.library.function != null) {
-    graph.library.function.forEach((functionDef) => {
-      const nodeDef = functionDef.nodeDef;
-      if (nodeDef != null) {
-        nodeDef.forEach((node) => {
-          addOpsToResults(node.op);
-        });
+  function addNodes(nodes: unknown, description: string): void {
+    for (const rawNode of readOptionalArray(nodes, description)) {
+      const node = requireRecord(rawNode, 'graph node');
+      const kernel = node.op;
+      if (typeof kernel !== 'string') {
+        throw new Error('Expected a string operation name for graph node');
       }
-    });
+      const ops = kernelToOp[kernel] ?? null;
+      if (ops === null) {
+        const message = `Kernel => Op warning: could not find op mapping for kernel ${kernel}`;
+        console.warn(message);
+        throw new Error(message);
+      }
+      for (const op of ops) {
+        results.add(op);
+      }
+    }
   }
 
+  addNodes(graph.node, 'graph nodes');
+  if (graph.library != null) {
+    const library = requireRecord(graph.library, 'function library');
+    for (const rawFunction of readOptionalArray(library.function, 'functions')) {
+      const functionDef = requireRecord(rawFunction, 'function definition');
+      addNodes(functionDef.nodeDef, 'function nodes');
+    }
+  }
   return Array.from(results);
 }

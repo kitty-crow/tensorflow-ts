@@ -45,6 +45,9 @@
       "@tensorflow/tfjs": [
         "./tfjs/src/index.ts",
       ],
+      "@tensorflow/tfjs-converter/dist/data/compiled_api": [
+        "./tfjs-converter/src/data/compiled_api.ts",
+      ],
       "@tensorflow/tfjs-core/dist/*": [
         "./tfjs-core/src/*",
       ],
