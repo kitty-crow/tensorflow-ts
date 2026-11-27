@@ -169,7 +169,7 @@ describe('checked function signature mapping', () => {
   });
 
   it('rejects missing return names and permits an empty signature', () => {
-    const definition = {name: 'inner', inputArg: [],
+    const definition: tensorflow.IOpDef = {name: 'inner', inputArg: [],
       outputArg: [{name: 'result', type: dtype}]};
     expect(() => OperationMapper.Instance.transformGraph({
       node: [], library: {function: [{signature: definition, ret: {}}]}
