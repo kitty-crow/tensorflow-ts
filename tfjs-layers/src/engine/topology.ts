@@ -493,7 +493,7 @@ export abstract class Layer extends serialization.Serializable {
     }
     this.name = name;
 
-    this.trainable_ = args.trainable == null ? true : args.trainable;
+    this.trainable_ = args.trainable ?? true;
 
     if (args.inputShape != null || args.batchInputShape != null) {
       /*

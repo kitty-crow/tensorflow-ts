@@ -46,10 +46,10 @@ export function getFilteredNodesXToY(
     tape: TapeNode[], xs: Tensor[], y: Tensor): TapeNode[] {
   // Forward pass to compute all the nodes and Tensors that are transitively a
   // function of x.
-  const tensorsFromX: {[tensorId: number]: boolean} = {};
-  const nodesFromX: {[nodeId: number]: boolean} = {};
+  const tensorsFromX = new Set<number>();
+  const nodesFromX = new Set<number>();
   for (let i = 0; i < xs.length; i++) {
-    tensorsFromX[requiredKernelEntry(xs, i).id] = true;
+    tensorsFromX.add(requiredKernelEntry(xs, i).id);
   }
 
   for (let i = 0; i < tape.length; i++) {
@@ -58,26 +58,18 @@ export function getFilteredNodesXToY(
     for (const inputName in nodeInputs) {
       const input = util.requiredNamedEntry(nodeInputs, inputName);
 
-      let anyInputFromX = false;
-      for (let j = 0; j < xs.length; j++) {
-        if (tensorsFromX[input.id]) {
-          node.outputs.forEach(output => tensorsFromX[output.id] = true);
-          anyInputFromX = true;
-          nodesFromX[node.id] = true;
-          break;
-        }
-      }
-
-      if (anyInputFromX) {
+      if (tensorsFromX.has(input.id)) {
+        node.outputs.forEach(output => tensorsFromX.add(output.id));
+        nodesFromX.add(node.id);
         break;
       }
     }
   }
 
   // Backward pass to find all of the nodes and Tensors that lead to y.
-  const tensorsLeadToY: {[tensorId: number]: boolean} = {};
-  tensorsLeadToY[y.id] = true;
-  const nodesToY: {[nodeId: number]: boolean} = {};
+  const tensorsLeadToY = new Set<number>();
+  tensorsLeadToY.add(y.id);
+  const nodesToY = new Set<number>();
 
   for (let i = tape.length - 1; i >= 0; i--) {
     const node = requiredKernelEntry(tape, i);
@@ -85,10 +77,10 @@ export function getFilteredNodesXToY(
 
     // If any of the outputs lead to y, mark all of the inputs as leading to y.
     for (let j = 0; j < node.outputs.length; j++) {
-      if (tensorsLeadToY[requiredKernelEntry(node.outputs, j).id]) {
+      if (tensorsLeadToY.has(requiredKernelEntry(node.outputs, j).id)) {
         for (const inputName in nodeInputs) {
-          tensorsLeadToY[util.requiredNamedEntry(nodeInputs, inputName).id] = true;
-          nodesToY[node.id] = true;
+          tensorsLeadToY.add(util.requiredNamedEntry(nodeInputs, inputName).id);
+          nodesToY.add(node.id);
         }
         break;
       }
@@ -100,13 +92,13 @@ export function getFilteredNodesXToY(
   for (let i = 0; i < tape.length; i++) {
     const node = requiredKernelEntry(tape, i);
 
-    if (!(nodesFromX[node.id] && nodesToY[node.id])) continue;
+    if (!(nodesFromX.has(node.id) && nodesToY.has(node.id))) continue;
     {
       // Prune the inputs from the node that aren't a function of x.
       const prunedInputs: {[inputName: string]: Tensor} = {};
       for (const inputName in node.inputs) {
         const nodeInput = util.requiredNamedEntry(node.inputs, inputName);
-        if (tensorsFromX[nodeInput.id]) {
+        if (tensorsFromX.has(nodeInput.id)) {
           prunedInputs[inputName] = nodeInput;
         }
       }

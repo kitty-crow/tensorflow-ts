@@ -86,7 +86,7 @@ export class LeakyReLU extends Layer {
     if (args == null) {
       args = {};
     }
-    this.alpha = args.alpha == null ? this.DEFAULT_ALPHA : args.alpha;
+    this.alpha = args.alpha ?? this.DEFAULT_ALPHA;
   }
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
@@ -243,7 +243,7 @@ export class ELU extends Layer {
           `ELU layer yet.`);
     }
 
-    this.alpha = args.alpha == null ? this.DEFAULT_ALPHA : args.alpha;
+    this.alpha = args.alpha ?? this.DEFAULT_ALPHA;
   }
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
@@ -284,7 +284,7 @@ export class ThresholdedReLU extends Layer {
       args = {};
     }
 
-    this.theta = args.theta == null ? this.DEFAULT_THETA : args.theta;
+    this.theta = args.theta ?? this.DEFAULT_THETA;
   }
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
@@ -326,7 +326,7 @@ export class Softmax extends Layer {
       args = {};
     }
     this.softmax = new softmaxActivation().apply;
-    this.axis = args.axis == null ? this.DEFAULT_AXIS : args.axis;
+    this.axis = args.axis ?? this.DEFAULT_AXIS;
   }
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {

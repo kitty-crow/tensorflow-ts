@@ -17,7 +17,8 @@
 import {KernelBackend} from './backends/backend';
 import {IOHandler, ModelArtifacts, WeightsManifestEntry} from './io/types';
 import {ArgMax, ArgMin, Max, MaxAttrs, Reshape, Sum} from './kernel_names';
-import {ENGINE} from './engine';
+import {Engine, ENGINE} from './engine';
+import {Environment} from './environment';
 import {reduceBroadcastGradient, sumBroadcastGradient} from './gradients/broadcast_grad_util';
 import {GradConfig, KernelAttributes, KernelConfig, KernelFunc} from './kernel_registry';
 import {argMaxGradConfig} from './gradients/ArgMax_grad';
@@ -334,5 +335,39 @@ describe('optional backend and I/O extension contracts', () => {
       name: 'half', shape: [1], dtype: 'float32',
       quantization: {dtype: 'float16'}
     });
+  });
+});
+
+
+describe('checked engine storage and tape membership', () => {
+  it('routes registered reads and rejects missing data without disposal side effects', () => {
+    const engine = new Engine(new Environment({}));
+    const backend = new KernelBackend();
+    const dataId = {};
+    const values = new Float32Array([0]);
+    spyOn(backend, 'readSync').and.returnValue(values);
+    engine.state.tensorInfo.set(dataId, {backend, bytes: 4, dtype: 'float32', shape: [1]});
+    engine.state.numDataBuffers = 1;
+    expect(engine.readSync(dataId)).toBe(values);
+    expect(() => engine.readSync({})).toThrowError(/Tensor data is not registered/);
+    expect(() => engine.read({})).toThrowError(/Tensor data is not registered/);
+    engine.removeDataId(dataId, new KernelBackend());
+    expect(engine.state.numDataBuffers).toBe(1);
+    engine.removeDataId(dataId, backend);
+    engine.removeDataId(dataId, backend);
+    expect(engine.state.numDataBuffers).toBe(0);
+  });
+  it('retains only connected tape nodes in original order including zero IDs', () => {
+    const x = new Tensor<Rank.R1>([1], 'float32', {}, 0);
+    const middle = new Tensor<Rank.R1>([1], 'float32', {}, 1);
+    const other = new Tensor<Rank.R1>([1], 'float32', {}, 2);
+    const y = new Tensor<Rank.R1>([1], 'float32', {}, 3);
+    const tape: TapeNode[] = [
+      {id: 0, kernelName: 'first', inputs: {x}, outputs: [middle]},
+      {id: 1, kernelName: 'irrelevant', inputs: {x}, outputs: [other]},
+      {id: 2, kernelName: 'last', inputs: {middle}, outputs: [y]}
+    ];
+    expect(getFilteredNodesXToY(tape, [x], y).map(node => node.id)).toEqual([0, 2]);
+    expect(getFilteredNodesXToY(tape, [], y)).toEqual([]);
   });
 });

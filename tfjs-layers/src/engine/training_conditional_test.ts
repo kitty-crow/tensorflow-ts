@@ -10,6 +10,7 @@
 
 import {Rank, Tensor} from '@tensorflow/tfjs-core';
 import {LayerVariable} from '../variables';
+import {Identity} from '../initializers';
 import {BaseLogger, History} from '../base_callbacks';
 import {getSourceInputs} from './topology';
 import {Input, InputLayer, InputLayerArgs} from './input_layer';
@@ -479,5 +480,19 @@ describe('omitted public layer configuration', () => {
     expect(requiredEntry(normalization, 'center')).toBe(false);
     expect(requiredEntry(normalization, 'scale')).toBe(false);
     expect(requiredEntry(normalization, 'epsilon')).toBe(0.001);
+  });
+});
+
+
+describe('single-read configuration defaults', () => {
+  it('keeps explicit zero gain and reads the supplied property once', () => {
+    let reads = 0;
+    const initializer = new Identity({get gain() {
+      reads++;
+      return 0;
+    }});
+    expect(reads).toBe(1);
+    expect(requiredEntry(initializer.getConfig(), 'gain')).toBe(0);
+    expect(requiredEntry(new Identity({}).getConfig(), 'gain')).toBe(1);
   });
 });

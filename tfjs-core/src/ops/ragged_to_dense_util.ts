@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {requiredDimension, requiredKernelEntry} from './shape_dimension';
+
 export enum RowPartitionType {
   FIRST_DIM_SIZE,
   VALUE_ROWIDS,
@@ -55,9 +57,9 @@ export function combineRaggedTensorToTensorShapes(
   }
 
   for (let i = 1; i < valueShape.length; ++i) {
-    const valueDim = valueShape[i];
+    const valueDim = requiredDimension(valueShape, i);
     const outputShapeDimIndex = outputShape.length - valueShape.length + i;
-    const outputShapeDim = outputShape[outputShapeDimIndex];
+    const outputShapeDim = requiredDimension(outputShape, outputShapeDimIndex);
 
     if (!(valueDim >= 0)) {
       continue;
@@ -100,7 +102,7 @@ export function getRaggedRank(rowPartitionTypes: RowPartitionType[]) {
   if (rowPartitionTypes.length === 0) {
     return 0;
   }
-  if (rowPartitionTypes[0] === RowPartitionType.FIRST_DIM_SIZE) {
+  if (requiredKernelEntry(rowPartitionTypes, 0) === RowPartitionType.FIRST_DIM_SIZE) {
     return rowPartitionTypes.length - 1;
   }
   return rowPartitionTypes.length;
@@ -122,8 +124,8 @@ export function validateDefaultValueShape(
         valuesNDims})`);
   }
   for (let i = 0; i < Math.min(defaultNDims, valuesNDims - 1); ++i) {
-    const defaultDim = defaultValueShape[i];
-    const valueDim = valueShape[i + 1];
+    const defaultDim = requiredDimension(defaultValueShape, i);
+    const valueDim = requiredDimension(valueShape, i + 1);
     if (defaultDim >= 0 && valueDim >= 0 && defaultDim !== 1 &&
         defaultDim !== valueDim) {
       throw new Error(`defaultValue.shape=${

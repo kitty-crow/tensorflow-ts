@@ -88,7 +88,7 @@ export class InputLayer extends Layer {
   constructor(args: InputLayerArgs) {
     super({
       dtype: args.dtype,
-      name: args.name != null ? args.name : getUid('input').toString()
+      name: args.name ?? getUid('input').toString()
     });
     // Normalize config.batchSize and config.sparse
     if (args.batchSize == null) {

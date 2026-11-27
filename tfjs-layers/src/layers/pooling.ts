@@ -202,7 +202,7 @@ export abstract class Pooling1D extends Layer {
     }
     assertPositiveInteger(this.strides, 'strides');
 
-    this.padding = args.padding == null ? 'valid' : args.padding;
+    this.padding = args.padding ?? 'valid';
     checkPaddingMode(this.padding);
     this.inputSpec = [new InputSpec({ndim: 3})];
   }
@@ -345,9 +345,9 @@ export abstract class Pooling2D extends Layer {
     }
     assertPositiveInteger(this.poolSize, 'poolSize');
     assertPositiveInteger(this.strides, 'strides');
-    this.padding = args.padding == null ? 'valid' : args.padding;
+    this.padding = args.padding ?? 'valid';
     this.dataFormat =
-        args.dataFormat == null ? 'channelsLast' : args.dataFormat;
+        args.dataFormat ?? 'channelsLast';
     checkDataFormat(this.dataFormat);
     checkPaddingMode(this.padding);
 
@@ -499,9 +499,9 @@ export abstract class Pooling3D extends Layer {
     }
     assertPositiveInteger(this.poolSize, 'poolSize');
     assertPositiveInteger(this.strides, 'strides');
-    this.padding = args.padding == null ? 'valid' : args.padding;
+    this.padding = args.padding ?? 'valid';
     this.dataFormat =
-        args.dataFormat == null ? 'channelsLast' : args.dataFormat;
+        args.dataFormat ?? 'channelsLast';
     checkDataFormat(this.dataFormat);
     checkPaddingMode(this.padding);
 
@@ -668,7 +668,7 @@ export abstract class GlobalPooling2D extends Layer {
   constructor(args: GlobalPooling2DLayerArgs) {
     super(args);
     this.dataFormat =
-        args.dataFormat == null ? 'channelsLast' : args.dataFormat;
+        args.dataFormat ?? 'channelsLast';
     checkDataFormat(this.dataFormat);
     this.inputSpec = [new InputSpec({ndim: 4})];
   }

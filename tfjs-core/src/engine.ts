@@ -22,6 +22,7 @@ import {Add, Cast, Identity} from './kernel_names';
 import { getGradient, getKernel, getKernelsForBackend, GradFunc, NamedAttrMap } from './kernel_registry';
 import { TensorInfo } from './tensor_info';
 import * as log from './log';
+import {requiredKernelEntry} from './ops/shape_dimension';
 import {KernelProfile, Profiler} from './profiler';
 import {backpropagateGradients, getFilteredNodesXToY, TapeNode} from './tape';
 import {DataToGPUOptions, GPUData, setTensorTracker, Tensor, TensorTracker, Variable} from './tensor';
@@ -246,7 +247,7 @@ export class Engine implements TensorTracker, DataMover {
 
   findBackend(backendName: string): KernelBackend {
     if (backendName in this.registry) {
-      return this.registry[backendName];
+      return util.requiredNamedEntry(this.registry, backendName);
     }
     // Initialize a registered backend if it is not already available.
     if (!(backendName in this.registryFactory)) {
@@ -261,7 +262,7 @@ export class Engine implements TensorTracker, DataMover {
     if (!(backendName in this.registryFactory)) {
       return null;
     }
-    return this.registryFactory[backendName].factory;
+    return util.requiredNamedEntry(this.registryFactory, backendName).factory;
   }
 
   registerBackend(
@@ -387,7 +388,7 @@ export class Engine implements TensorTracker, DataMover {
 
     if (backendName in this.registry) {
       this.disposeRegisteredKernels(backendName);
-      this.registry[backendName].dispose();
+      util.requiredNamedEntry(this.registry, backendName).dispose();
       delete this.registry[backendName];
     }
 
@@ -427,8 +428,16 @@ export class Engine implements TensorTracker, DataMover {
         `failed.`);
   }
 
+  private requireTensorInfo(dataId: DataId) {
+    const info = this.state.tensorInfo.get(dataId) ?? null;
+    if (info === null) {
+      throw new Error('Tensor data is not registered.');
+    }
+    return info;
+  }
+
   moveData(backend: KernelBackend, dataId: DataId) {
-    const info = this.state.tensorInfo.get(dataId);
+    const info = this.requireTensorInfo(dataId);
     const srcBackend = info.backend;
     const values = this.readSync(dataId);
     const refCount = srcBackend.refCount(dataId);
@@ -746,7 +755,7 @@ export class Engine implements TensorTracker, DataMover {
         extraInfo: kernelProfile.extraInfo
       });
     }
-    return (Array.isArray(out) ? outputs : outputs[0]) as T;
+    return (Array.isArray(out) ? outputs : requiredKernelEntry(outputs, 0)) as T;
   }
 
   /**
@@ -824,7 +833,7 @@ export class Engine implements TensorTracker, DataMover {
 
     // Count bytes for string tensors.
     if (dtype === 'string') {
-      const info = this.state.tensorInfo.get(dataId);
+      const info = this.requireTensorInfo(dataId);
       const newBytes = bytesFromStringArray(backendVals as Uint8Array[]);
       this.state.numBytes += newBytes - info.bytes;
       info.bytes = newBytes;
@@ -914,17 +923,17 @@ export class Engine implements TensorTracker, DataMover {
   }
 
   removeDataId(dataId: DataId, backend: KernelBackend) {
-    if (this.state.tensorInfo.has(dataId) &&
-        this.state.tensorInfo.get(dataId).backend === backend) {
+    const info = this.state.tensorInfo.get(dataId) ?? null;
+    if (info !== null && info.backend === backend) {
       this.state.tensorInfo.delete(dataId);
       this.state.numDataBuffers--;
     }
   }
   disposeTensor(a: Tensor): void {
-    if (!this.state.tensorInfo.has(a.dataId)) {
+    const info = this.state.tensorInfo.get(a.dataId) ?? null;
+    if (info === null) {
       return;
     }
-    const info = this.state.tensorInfo.get(a.dataId);
 
     this.state.numTensors--;
     if (a.dtype === 'string') {
@@ -1225,18 +1234,18 @@ export class Engine implements TensorTracker, DataMover {
 
   readSync(dataId: DataId): BackendValues {
     // Route the read to the correct backend.
-    const info = this.state.tensorInfo.get(dataId);
+    const info = this.requireTensorInfo(dataId);
     return info.backend.readSync(dataId);
   }
   read(dataId: DataId): Promise<BackendValues> {
     // Route the read to the correct backend.
-    const info = this.state.tensorInfo.get(dataId);
+    const info = this.requireTensorInfo(dataId);
     return info.backend.read(dataId);
   }
 
   readToGPU(dataId: DataId, options?: DataToGPUOptions): GPUData {
     // Route the read to the correct backend.
-    const info = this.state.tensorInfo.get(dataId);
+    const info = this.requireTensorInfo(dataId);
     return info.backend.readToGPU(dataId, options);
   }
 
@@ -1280,7 +1289,7 @@ export class Engine implements TensorTracker, DataMover {
 
     for (const backendName in this.registry) {
       this.disposeRegisteredKernels(backendName);
-      this.registry[backendName].dispose();
+      util.requiredNamedEntry(this.registry, backendName).dispose();
       delete this.registry[backendName];
     }
     this.backendName = null;

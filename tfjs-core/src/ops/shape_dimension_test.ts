@@ -16,6 +16,7 @@
  */
 
 import * as axis from './axis_util';
+import {combineRaggedTensorToTensorShapes, getRaggedRank, RowPartitionType, validateDefaultValueShape} from './ragged_to_dense_util';
 import {pixelBytes, pixelGeometry} from './pixel_util';
 import * as complexUtil from '../backends/complex_util';
 import {nonMaxSuppressionV3Impl, nonMaxSuppressionV5Impl} from '../backends/non_max_suppression_impl';
@@ -274,5 +275,24 @@ describe('inserted batch-axis kernel result geometry', () => {
     delete volume[4];
     expect(() => unbatchedShape(image, 4)).toThrowError(/Missing dimension at index 2/);
     expect(() => unbatchedShape(volume, 5)).toThrowError(/Missing dimension at index 4/);
+  });
+});
+
+
+describe('checked ragged metadata', () => {
+  it('retains zero dimensions, unknown dimensions and partition rank', () => {
+    expect(combineRaggedTensorToTensorShapes(1, [-1, -1, -1], [4, 0]))
+        .toEqual([-1, -1, 0]);
+    expect(getRaggedRank([])).toBe(0);
+    expect(getRaggedRank([RowPartitionType.FIRST_DIM_SIZE, RowPartitionType.ROW_SPLITS]))
+        .toBe(1);
+    expect(() => validateDefaultValueShape([1], [4, 0])).not.toThrow();
+    expect(() => validateDefaultValueShape([2], [4, 0])).toThrowError();
+  });
+  it('rejects a missing required ragged dimension', () => {
+    const missing = [4, 2];
+    delete missing[1];
+    expect(() => combineRaggedTensorToTensorShapes(1, [-1, -1, -1], missing))
+        .toThrowError(/Missing dimension/);
   });
 });
