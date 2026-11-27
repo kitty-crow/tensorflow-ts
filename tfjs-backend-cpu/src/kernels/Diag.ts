@@ -16,6 +16,7 @@
  */
 
 import {buffer, Diag, DiagInputs, KernelConfig, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -30,7 +31,7 @@ export function diag(args: {inputs: DiagInputs, backend: MathBackendCPU}):
   const outBuf = buffer([xSize, xSize], x.dtype);
   const vals = outBuf.values;
   for (let i = 0; i < xVals.length; i++) {
-    vals[i * xSize + i] = xVals[i];
+    vals[i * xSize + i] = requiredCpuEntry(xVals, i);
   }
 
   const outShape = [...x.shape, ...x.shape];

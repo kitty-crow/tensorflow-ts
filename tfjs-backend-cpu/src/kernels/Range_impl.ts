@@ -16,6 +16,7 @@
  */
 
 import {DataTypeMap, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 export function rangeImpl(
     start: number, stop: number, step: number,
@@ -40,7 +41,7 @@ export function rangeImpl(
 
   values[0] = start;
   for (let i = 1; i < values.length; i++) {
-    values[i] = values[i - 1] + step;
+    values[i] = requiredCpuEntry(values, i - 1) + step;
   }
   return values;
 }

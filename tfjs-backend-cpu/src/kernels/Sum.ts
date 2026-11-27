@@ -18,7 +18,7 @@
 import {backend_util, KernelConfig, KernelAttributes, Sum, SumAttrs, SumInputs, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
 import {zeros} from '../utils/zeros_impl';
 import {cast} from './Cast';
 import {identity} from './Identity';
@@ -68,7 +68,7 @@ export function sum(
     const offset = i * reduceSize;
     let sum = 0;
     for (let j = 0; j < reduceSize; ++j) {
-      sum += aVals[offset + j];
+      sum += requiredCpuEntry(aVals, offset + j);
     }
     vals[i] = sum;
   }

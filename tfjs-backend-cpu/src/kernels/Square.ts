@@ -18,7 +18,7 @@
 import {Square, SquareInputs} from '@tensorflow/tfjs-core';
 import {KernelConfig} from '@tensorflow/tfjs-core';
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
 
 export const squareConfig: KernelConfig = {
   kernelName: Square,
@@ -31,7 +31,7 @@ export const squareConfig: KernelConfig = {
     const values = cpuBackend.requireValues(x.dataId) as Float32Array;
     const newValues = new Float32Array(values.length);
     for (let i = 0; i < values.length; ++i) {
-      const value = values[i];
+      const value = requiredCpuEntry(values, i);
       newValues[i] = value * value;
     }
     const dataId = cpuBackend.write(newValues, x.shape, x.dtype);

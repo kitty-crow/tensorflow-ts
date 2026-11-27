@@ -29,7 +29,7 @@ export function gatherNd(
   const {params, indices} = inputs;
 
   const indicesShape = indices.shape;
-  const sliceRank = indicesShape[indicesShape.length - 1];
+  const sliceRank = backend_util.requiredDimension(indicesShape, indicesShape.length - 1);
   const paramsSize = util.sizeFromShape(params.shape);
 
   const [resultShape, numSlices, sliceSize, strides] =

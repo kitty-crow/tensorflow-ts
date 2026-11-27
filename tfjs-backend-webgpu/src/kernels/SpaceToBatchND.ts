@@ -45,7 +45,7 @@ export const spaceToBatchND = (args: {
   }
 
   const paddedXShape = completePaddings.map(
-      (p, i) => p[0] /* beforePad */ + x.shape[i] + p[1] /* afterPad */);
+      (p, i) => p[0] /* beforePad */ + util.requiredNumericEntry(x.shape, i) + p[1] /* afterPad */);
   const reshapedPaddedShape =
       backend_util.getReshaped(paddedXShape, blockShape, prod, false);
 

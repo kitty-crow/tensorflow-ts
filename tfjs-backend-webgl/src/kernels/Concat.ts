@@ -28,7 +28,7 @@ export function concat(
   const {inputs, backend, attrs} = args;
   const {axis} = attrs;
 
-  const $axis = util.parseAxisParam(axis, inputs[0].shape)[0];
+  const $axis = util.requiredNumericEntry(util.parseAxisParam(axis, inputs[0].shape), 0);
 
   const shapes = inputs.map(t => t.shape);
   backend_util.assertParamsConsistent(shapes, $axis);

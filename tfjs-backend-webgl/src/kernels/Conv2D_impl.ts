@@ -47,7 +47,10 @@ export function conv2dByMatMul({
   const xShape = x.shape;
   const xTexData = backend.texData.get(x.dataId);
   const sharedMatMulDim = convInfo.inChannels;
-  const outerShapeX = xShape[0] * xShape[1] * xShape[2];
+  const batch = util.requiredNumericEntry(xShape, 0);
+  const rows = util.requiredNumericEntry(xShape, 1);
+  const cols = util.requiredNumericEntry(xShape, 2);
+  const outerShapeX = batch * rows * cols;
   const outerShapeFilter = convInfo.outChannels;
   const isChannelsLast = convInfo.dataFormat === 'channelsLast';
   const transposeA = false;
@@ -74,7 +77,7 @@ export function conv2dByMatMul({
   // on GPU, (5) col is odd, (6) the width, height and inChannels are the same
   // for xTexData.shape and xShape.
   const canOptimize = !batchMatMulWillBeUnpacked && xTexData.isPacked &&
-      isChannelsLast && xTexData.texture != null && xShape[2] % 2 !== 0 &&
+      isChannelsLast && xTexData.texture != null && cols % 2 !== 0 &&
       util.arraysEqual(xTexData.shape.slice(-3), xShape.slice(-3));
 
   if (canOptimize) {
@@ -84,7 +87,7 @@ export function conv2dByMatMul({
     // it is for next even col. We make the odd-cols tensor to look like
     // even-cols tensor before the operation and, after the batchMatMul,
     // fix the even-cols result to have odd number of cols.
-    const targetShape = xShape[0] * xShape[1] * (xShape[2] + 1);
+    const targetShape = batch * rows * (cols + 1);
     const xReshaped: TensorInfo = {
       dataId: x.dataId,
       shape: [1, targetShape, convInfo.inChannels],
@@ -100,7 +103,9 @@ export function conv2dByMatMul({
     // xTexData.shape is restored.
     const originalXTexDataShape = xTexData.shape;
     xTexData.shape = xTexData.shape.slice();
-    xTexData.shape[xTexData.shape.length - 2]++;
+    const textureColumnAxis = xTexData.shape.length - 2;
+    xTexData.shape[textureColumnAxis] =
+        util.requiredNumericEntry(xTexData.shape, textureColumnAxis) + 1;
     util.assert(
         webgl_util.isReshapeFree(xTexData.shape, xReshaped.shape),
         () => `packed reshape ${xTexData.shape} to ${

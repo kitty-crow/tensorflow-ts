@@ -44,6 +44,10 @@ import {flipLeftRightConfig} from './kernels/FlipLeftRight';
 import {imageDimensions, matrixBatchStrides, matrixDimensions, rankFiveStrides, spatialStrides2D} from './cpu_util';
 import {batchMatMul} from './kernels/BatchMatMul';
 import {sum} from './kernels/Sum';
+import {simpleAbsImpl} from './kernels/Abs';
+import {prodImpl} from './kernels/Prod';
+import {linSpaceImpl} from './kernels/LinSpace_impl';
+import {rangeImpl} from './kernels/Range_impl';
 import {conv2D} from './kernels/Conv2D';
 import {conv2DBackpropInput} from './kernels/Conv2DBackpropInput';
 import {conv3D} from './kernels/Conv3D';
@@ -869,5 +873,27 @@ describe('checked CPU insertion points and numeric kernel entries', () => {
     expect(backend.readSync(emptyResult.dataId)).toEqual(new Float32Array([7, 7]));
     [x, empty, result, emptyResult].forEach(t => backend.disposeData(t.dataId));
     expect(backend.numDataIds()).toBe(0);
+  });
+});
+
+
+describe('checked CPU arithmetic and sequence entries', () => {
+  it('preserves zero, NaN and empty absolute-value inputs', () => {
+    expect(simpleAbsImpl(new Float32Array([0, -2, NaN])))
+        .toEqual(new Float32Array([0, 2, NaN]));
+    expect(simpleAbsImpl(new Float32Array(0))).toEqual(new Float32Array(0));
+  });
+  it('preserves product identity and rejects missing required values', () => {
+    expect(prodImpl([2, 2], 'float32', new Float32Array([0, 2, -3, 4]), [1]).outVals)
+        .toEqual(new Float32Array([0, -12]));
+    expect(prodImpl([2, 0], 'float32', new Float32Array(0), [1]).outVals)
+        .toEqual(new Float32Array([1, 1]));
+    expect(() => prodImpl([2], 'float32', new Float32Array([1]), [0])).toThrowError();
+  });
+  it('retains step accumulation and empty or singleton sequences', () => {
+    expect(linSpaceImpl(0, 2, 3)).toEqual(new Float32Array([0, 1, 2]));
+    expect(linSpaceImpl(3, 5, 1)).toEqual(new Float32Array([3]));
+    expect(rangeImpl(3, 0, 1, 'int32')).toEqual(new Int32Array([3, 2, 1]));
+    expect(rangeImpl(0, 0, 1, 'int32')).toEqual(new Int32Array(0));
   });
 });

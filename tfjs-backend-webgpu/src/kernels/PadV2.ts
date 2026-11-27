@@ -37,7 +37,7 @@ export const padV2 =
         // the shape is used to compute output shape to pad.
         const outputShape = paddings.map(
             (p, i) =>
-                p[0] /* beforePad */ + x.shape[i] + p[1] /* afterPad */);
+                p[0] /* beforePad */ + util.requiredNumericEntry(x.shape, i) + p[1] /* afterPad */);
         return fill({
           backend,
           attrs: {shape: outputShape, value: constantValue, dtype: x.dtype}

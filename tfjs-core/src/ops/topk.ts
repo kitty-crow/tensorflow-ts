@@ -20,6 +20,7 @@ import {TopK, TopKAttrs, TopKInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
+import {requiredNumericEntry} from '../util';
 
 import {op} from './operation';
 
@@ -53,7 +54,7 @@ function topk_<T extends Tensor>(
   if ($x.rank === 0) {
     throw new Error('topk() expects the input to be of rank 1 or higher');
   }
-  const lastDim = $x.shape[$x.shape.length - 1];
+  const lastDim = requiredNumericEntry($x.shape, $x.shape.length - 1);
 
   if (k < 0) {
     throw new Error(`'k' passed to topk() must be >= 0 but got ${k}`);

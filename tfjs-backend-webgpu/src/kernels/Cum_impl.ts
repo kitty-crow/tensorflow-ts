@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, TensorInfo} from '@tensorflow/tfjs-core';
+import {backend_util, TensorInfo, util} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from '../backend_webgpu';
 import {CumOpType, CumProgram} from '../cum_webgpu';
@@ -32,7 +32,7 @@ export function cumImpl(
   if (permutation != null) {
     permutedX = transpose({inputs: {x}, backend, attrs: {perm: permutation}});
   }
-  const permutedAxis = backend_util.getInnerMostAxes(1, xRank)[0];
+  const permutedAxis = util.requiredNumericEntry(backend_util.getInnerMostAxes(1, xRank), 0);
 
   if (permutedAxis !== xRank - 1) {
     throw new Error(
@@ -40,7 +40,7 @@ export function cumImpl(
             x.shape.length - 1} ` +
         `but got axis=${axis}`);
   }
-  const size = permutedX.shape[permutedAxis];
+  const size = util.requiredNumericEntry(permutedX.shape, permutedAxis);
   let result = identity({inputs: {x: permutedX}, backend});
   // Use cum parallel algorithm, inspired by:
   // https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda

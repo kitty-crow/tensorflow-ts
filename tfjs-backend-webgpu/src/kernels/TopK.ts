@@ -42,7 +42,7 @@ export function topK(
   const {k, sorted}= attrs;
 
   const xShape = x.shape;
-  const lastDim = xShape[xShape.length - 1];
+  const lastDim = util.requiredNumericEntry(xShape, xShape.length - 1);
 
   if (backend.shouldExecuteOnCPU([x])) {
     const xVals = backend.readSync(x.dataId) as TypedArray;

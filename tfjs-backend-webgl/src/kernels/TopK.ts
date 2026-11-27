@@ -52,7 +52,7 @@ export function topK(
       env().getNumber('TOPK_K_CPU_HANDOFF_THRESHOLD');
 
   const xShape = x.shape;
-  const lastDim = xShape[xShape.length - 1];
+  const lastDim = util.requiredNumericEntry(xShape, xShape.length - 1);
 
   if (backend.shouldExecuteOnCPU([x]) ||
       lastDim < TOPK_LAST_DIM_CPU_HANDOFF_SIZE_THRESHOLD ||

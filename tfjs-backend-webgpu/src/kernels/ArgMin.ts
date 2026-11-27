@@ -39,8 +39,9 @@ export function argMin(
     axes = backend_util.getInnerMostAxes(axes.length, $x.shape.length);
   }
 
-  backend_util.assertAxesAreInnerMostDims('argMin', [axes[0]], $x.shape.length);
-  const program = new ArgMinMaxProgram($x.shape, axes[0], 'min');
+  const reductionAxis = util.requiredNumericEntry(axes, 0);
+  backend_util.assertAxesAreInnerMostDims('argMin', [reductionAxis], $x.shape.length);
+  const program = new ArgMinMaxProgram($x.shape, reductionAxis, 'min');
   const uniformData = [{type: 'float32', data: [Number.POSITIVE_INFINITY]}];
   const out = backend.runWebGPUProgram(program, [$x], 'int32', uniformData);
   intermediateTensorInfos.forEach(t => backend.disposeData(t.dataId));

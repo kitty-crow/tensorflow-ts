@@ -18,7 +18,7 @@
 import {backend_util, DataType, KernelConfig, KernelAttributes, Prod, ProdAttrs, ProdInputs, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
 import {transpose} from './Transpose';
 
 export function prodImpl(
@@ -36,7 +36,7 @@ export function prodImpl(
     const offset = i * reduceSize;
     let prod = 1;
     for (let j = 0; j < reduceSize; ++j) {
-      prod *= xVals[offset + j];
+      prod *= requiredCpuEntry(xVals, offset + j);
     }
     outVals[i] = prod;
   }

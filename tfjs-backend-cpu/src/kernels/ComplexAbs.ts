@@ -16,6 +16,7 @@
  */
 
 import {ComplexAbs, ComplexAbsInputs, KernelConfig, util} from '@tensorflow/tfjs-core';
+import {requiredCpuEntry} from '../cpu_util';
 
 import {MathBackendCPU} from '../backend_cpu';
 
@@ -28,8 +29,8 @@ export const complexAbs =
       const realVals = cpuBackend.requireValues(real.dataId) as Float32Array;
       const imagVals = cpuBackend.requireValues(imag.dataId) as Float32Array;
       for (let i = 0; i < realVals.length; i++) {
-        const real = realVals[i];
-        const imag = imagVals[i];
+        const real = requiredCpuEntry(realVals, i);
+        const imag = requiredCpuEntry(imagVals, i);
         resultValues[i] = Math.hypot(real, imag);
       }
 

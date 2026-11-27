@@ -43,8 +43,9 @@ export function poolImpl(
       backend,
       attrs: {
         shape: [
-          x.shape[length - 3] * x.shape[length - 2] /* height * width */,
-          x.shape[length - 1] /* channel */
+          util.requiredNumericEntry(x.shape, length - 3) *
+              util.requiredNumericEntry(x.shape, length - 2) /* height * width */,
+          util.requiredNumericEntry(x.shape, length - 1) /* channel */
         ]
       }
     });

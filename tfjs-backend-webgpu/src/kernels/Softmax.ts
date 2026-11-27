@@ -29,12 +29,13 @@ export function softmax(
   const {logits} = inputs;
   const {dim} = attrs;
 
+  const axisSize = util.requiredNumericEntry(logits.shape, dim);
   const logitsReshaped = reshape({
     inputs: {x: logits},
     backend,
     attrs: {
       shape: [
-        util.sizeFromShape(logits.shape) / logits.shape[dim], logits.shape[dim]
+        util.sizeFromShape(logits.shape) / axisSize, axisSize
       ]
     }
   });

@@ -195,3 +195,28 @@ describe('checked function signature mapping', () => {
     expect(parseStringParam([], true)).toBe('');
   });
 });
+
+
+describe('converter legacy attribute fallback', () => {
+  it('uses legacy squeeze axes only if the modern attribute is absent', () => {
+    const graph = OperationMapper.Instance.transformGraph({node: [
+      {name: 'input', op: 'Placeholder'},
+      {name: 'legacy', op: 'Squeeze', input: ['input'], attr: {
+        squeeze_dims: {list: {i: [1, 2]}}
+      }},
+      {name: 'modern', op: 'Squeeze', input: ['input'], attr: {
+        axis: {list: {i: [0]}}, squeeze_dims: {list: {i: [1, 2]}}
+      }},
+      {name: 'empty', op: 'Squeeze', input: ['input'], attr: {
+        axis: {list: {i: []}}, squeeze_dims: {list: {i: [1, 2]}}
+      }},
+      {name: 'absent', op: 'Squeeze', input: ['input']}
+    ]});
+    const axis = (name: string) => test_util.requiredTestEntry(
+        test_util.requiredTestEntry(graph.nodes, name).attrParams, 'axis').value;
+    expect(axis('legacy')).toEqual([1, 2]);
+    expect(axis('modern')).toEqual([0]);
+    expect(axis('empty')).toEqual([]);
+    expect(axis('absent')).toBeUndefined();
+  });
+});

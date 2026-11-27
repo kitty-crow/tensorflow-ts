@@ -18,7 +18,7 @@
 import {backend_util, Conv3DBackpropFilterV2, Conv3DBackpropFilterV2Attrs, Conv3DBackpropFilterV2Inputs, KernelConfig, KernelAttributes, TensorBuffer, TensorInfo, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex, rankFiveStrides} from '../cpu_util';
+import {assertNotComplex, rankFiveStrides, requiredCpuEntry} from '../cpu_util';
 
 export function conv3DBackpropFilterV2(args: {
   inputs: Conv3DBackpropFilterV2Inputs,
@@ -99,7 +99,8 @@ export function conv3DBackpropFilterV2(args: {
                     const xOffset4 = xC * xS3 + xOffset3;
                     const yOffset4 = yC * dyS3 + yOffset3;
 
-                    dotProd += xValues[xOffset4 + d1] * dyValues[yOffset4 + d2];
+                    dotProd += requiredCpuEntry(xValues, xOffset4 + d1) *
+                        requiredCpuEntry(dyValues, yOffset4 + d2);
                   }
                 }
               }

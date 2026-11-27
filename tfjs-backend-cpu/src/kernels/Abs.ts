@@ -18,12 +18,12 @@
 import {Abs, AbsInputs, KernelConfig, TypedArray, util} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex} from '../cpu_util';
+import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
 
 export function simpleAbsImpl(vals: TypedArray): Float32Array {
   const resultValues = new Float32Array(vals.length);
   for (let i = 0; i < vals.length; ++i) {
-    resultValues[i] = Math.abs(vals[i]);
+    resultValues[i] = Math.abs(requiredCpuEntry(vals, i));
   }
   return resultValues;
 }

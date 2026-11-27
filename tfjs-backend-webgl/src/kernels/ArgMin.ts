@@ -39,9 +39,10 @@ export function argMin(
     axes = backend_util.getInnerMostAxes(axes.length, $x.shape.length);
   }
 
-  backend_util.assertAxesAreInnerMostDims('argMin', [axes[0]], $x.shape.length);
+  const reductionAxis = util.requiredNumericEntry(axes, 0);
+  backend_util.assertAxesAreInnerMostDims('argMin', [reductionAxis], $x.shape.length);
 
-  const out = argMinMaxReduce(backend, $x, axes[0], 'min');
+  const out = argMinMaxReduce(backend, $x, reductionAxis, 'min');
 
   intermediateTensorInfos.forEach(
       t => backend.disposeIntermediateTensorInfo(t));

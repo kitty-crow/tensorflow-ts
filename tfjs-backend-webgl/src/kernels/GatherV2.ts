@@ -32,14 +32,14 @@ export function gatherV2(args: {
   const {x, indices} = inputs;
   const {axis, batchDims} = attrs;
 
-  const parsedAxis = util.parseAxisParam(axis, x.shape)[0];
+  const parsedAxis = util.requiredNumericEntry(util.parseAxisParam(axis, x.shape), 0);
   if (env().get('DEBUG')) {
     // In debug mode, throw error when any index is out of bound.
     // Otherwise, just fill out of bounds with zeroes.
     const indicesVals = backend.readSync(indices.dataId) as TypedArray;
     const axisDim = x.shape[parsedAxis];
     for (let i = 0; i < indicesVals.length; ++i) {
-      const index = indicesVals[i];
+      const index = util.requiredNumericEntry(indicesVals, i);
       util.assert(
         index <= axisDim - 1 && index >= 0,
         () =>

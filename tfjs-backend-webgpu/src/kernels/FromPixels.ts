@@ -92,10 +92,10 @@ export function fromPixels(args: {
           GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING;
       const format = 'rgba8unorm' as GPUTextureFormat;
       const texture = backend.textureManager.acquireTexture(
-          outputShape[1], outputShape[0], format, usage);
+          width, height, format, usage);
       backend.queue.copyExternalImageToTexture(
           {source: pixels as HTMLCanvasElement | ImageBitmap}, {texture},
-          [outputShape[1], outputShape[0]]);
+          [width, height]);
       resource = texture;
     }
 
@@ -129,7 +129,7 @@ export function fromPixels(args: {
     let j = 0;
     for (let i = 0; i < dataLength; i++) {
       if (i % 4 < numChannels) {
-        pixelArray[j++] = imageData[i];
+        pixelArray[j++] = util.requiredNumericEntry(imageData, i);
       }
     }
   }

@@ -41,7 +41,16 @@ import * as sparse from './op_list/sparse';
 import * as spectral from './op_list/spectral';
 import * as string from './op_list/string';
 import * as transformation from './op_list/transformation';
-import {Graph, InputParamValue, Node, OpMapper, ParamValue} from './types';
+import {AttrParamMapper, Graph, InputParamValue, Node, OpMapper, ParamValue} from './types';
+
+/** Preserve legacy fallback only for absent modern values, not falsy values. */
+function readMappedAttribute<T>(
+    param: AttrParamMapper, read: (name: string) => T,
+    readDeprecated: (name: string) => T = read): T {
+  const value = read(param.tfName);
+  const deprecatedName = param.tfDeprecatedName ?? '';
+  return value === undefined && deprecatedName ? readDeprecated(deprecatedName) : value;
+}
 
 export class OperationMapper {
   private static _instance: OperationMapper;
@@ -240,106 +249,49 @@ export class OperationMapper {
             let value: ParamValue['value'];
             switch (param.type) {
               case 'string':
-                value = getStringParam(
-                    attrs, param.tfName, param.defaultValue as string, param.keepCase);
-
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getStringParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as string, param.keepCase);
-                }
+                value = readMappedAttribute(param,
+                    name => getStringParam(attrs, name, param.defaultValue as string, param.keepCase));
                 break;
               case 'string[]':
-                value = getStringArrayParam(
-                    attrs, param.tfName, param.defaultValue as string[], param.keepCase);
-
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getStringArrayParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as string[], param.keepCase);
-                }
+                value = readMappedAttribute(param,
+                    name => getStringArrayParam(attrs, name, param.defaultValue as string[], param.keepCase));
                 break;
               case 'number':
-                value = getNumberParam(
-                    attrs, param.tfName,
-                    (param.defaultValue || 0) as number);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getNumberParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as number);
-                }
+                value = readMappedAttribute(param,
+                    name => getNumberParam(attrs, name, (param.defaultValue || 0) as number),
+                    name => getNumberParam(attrs, name, param.defaultValue as number));
                 break;
               case 'number[]':
-                value = getNumericArrayParam(
-                    attrs, param.tfName, param.defaultValue as number[]);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getNumericArrayParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as number[]);
-                }
+                value = readMappedAttribute(param,
+                    name => getNumericArrayParam(attrs, name, param.defaultValue as number[]));
                 break;
               case 'bool':
-                value = getBoolParam(
-                    attrs, param.tfName, param.defaultValue as boolean);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getBoolParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as boolean);
-                }
+                value = readMappedAttribute(param,
+                    name => getBoolParam(attrs, name, param.defaultValue as boolean));
                 break;
               case 'bool[]':
-                value = getBoolArrayParam(
-                    attrs, param.tfName, param.defaultValue as boolean[]);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getBoolArrayParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as boolean[]);
-                }
+                value = readMappedAttribute(param,
+                    name => getBoolArrayParam(attrs, name, param.defaultValue as boolean[]));
                 break;
               case 'shape':
-                value = getTensorShapeParam(
-                    attrs, param.tfName, param.defaultValue as number[]);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getTensorShapeParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as number[]);
-                }
+                value = readMappedAttribute(param,
+                    name => getTensorShapeParam(attrs, name, param.defaultValue as number[]));
                 break;
               case 'shape[]':
-                value = getTensorShapeArrayParam(
-                    attrs, param.tfName, param.defaultValue as number[][]);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getTensorShapeArrayParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as number[][]);
-                }
+                value = readMappedAttribute(param,
+                    name => getTensorShapeArrayParam(attrs, name, param.defaultValue as number[][]));
                 break;
               case 'dtype':
-                value = getDtypeParam(
-                    attrs, param.tfName, param.defaultValue as DataType);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getDtypeParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as DataType);
-                }
+                value = readMappedAttribute(param,
+                    name => getDtypeParam(attrs, name, param.defaultValue as DataType));
                 break;
               case 'dtype[]':
-                value = getDtypeArrayParam(
-                    attrs, param.tfName, param.defaultValue as DataType[]);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getDtypeArrayParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as DataType[]);
-                }
+                value = readMappedAttribute(param,
+                    name => getDtypeArrayParam(attrs, name, param.defaultValue as DataType[]));
                 break;
               case 'func':
-                value = getFuncParam(
-                    attrs, param.tfName, param.defaultValue as string);
-                if (value === undefined && !!param.tfDeprecatedName) {
-                  value = getFuncParam(
-                      attrs, param.tfDeprecatedName,
-                      param.defaultValue as string);
-                }
+                value = readMappedAttribute(param,
+                    name => getFuncParam(attrs, name, param.defaultValue as string));
                 break;
               case 'tensor':
               case 'tensors':
