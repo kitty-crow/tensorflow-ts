@@ -31,6 +31,7 @@ import * as shell from 'shelljs';
 import {TMP_DIR, $, question, makeReleaseDir, createPR, TFJS_RELEASE_UNIT, updateTFJSDependencyVersions, ALPHA_RELEASE_UNIT, getMinorUpdateVersion, getPatchUpdateVersion, E2E_PHASE, getReleaseBlockers, getNightlyVersion} from './release-util';
 import * as path from 'path';
 import {findDeps} from './graph_utils';
+import {optionalString, parsePackageManifest, parseVersionList, requireBoolean, requireRecord, requireString, requiredEntry} from './release-inputs';
 
 const parser = new argparse.ArgumentParser({
   description: 'Create a release PR for the tfjs monorepo.',
@@ -71,12 +72,12 @@ parser.addArgument('--force', {
 async function getNewVersion(
     packageName: string, incrementVersion: (version: string) => string,
     ask = true) {
-  let newVersion: string|undefined;
+  let newVersion: string|null = null;
   try {
-    const versions: string[] =
-        JSON.parse($(`npm view @tensorflow/${packageName} versions --json`));
+    const versions =
+        parseVersionList($(`npm view @tensorflow/${packageName} versions --json`));
     if (Array.isArray(versions) && versions.length !== 0) {
-      const latestVersion = semver.rsort(versions)[0];
+      const latestVersion = requiredEntry(semver.rsort(versions), 0, 'latest version');
       newVersion = incrementVersion(latestVersion);
     }
   } catch (e) {
@@ -114,9 +115,17 @@ async function getNewVersion(
 }
 
 async function main() {
-  const args = parser.parseArgs();
+  const raw = requireRecord(parser.parseArgs(), 'monorepo release arguments');
+  const args = {
+    git_protocol: requireBoolean(raw.git_protocol, 'git-protocol'),
+    dry: requireBoolean(raw.dry, 'dry'),
+    guess_version: optionalString(raw.guess_version, 'guess-version'),
+    commit_hash: optionalString(raw.commit_hash, 'commit-hash'),
+    use_local_changes: requireBoolean(raw.use_local_changes, 'use-local-changes'),
+    force: requireBoolean(raw.force, 'force')
+  };
 
-  let incrementVersion: ((version: string) => string)|undefined;
+  let incrementVersion: ((version: string) => string)|null = null;
   if (args.guess_version === 'nightly') {
     incrementVersion = v => getNightlyVersion(getMinorUpdateVersion(v));
   }
@@ -215,14 +224,18 @@ async function main() {
       const packagePath = path.join(dir, packageName);
       const packageJsonPath = path.join(packagePath, 'package.json');
       let pkg = fs.readFileSync(packageJsonPath, 'utf8');
-      const parsedPkg = JSON.parse(`${pkg}`);
+      const parsedPkg = parsePackageManifest(pkg);
 
       console.log(chalk.magenta.bold(`~~~ Processing ${packageName} ~~~`));
-      const newVersion = versions.get(packageName);
-      pkg = `${pkg}`.replace(
-          `"version": "${parsedPkg.version}"`, `"version": "${newVersion}"`);
-
-      fs.writeFileSync(packageJsonPath, pkg);
+      const newVersion = versions.get(packageName) ?? null;
+      // e2e is not published and does not have an assigned release version.
+      if (newVersion !== null) {
+        pkg = pkg.replace(
+            `"version": "${requireString(parsedPkg.version, 'package version')}"`, `"version": "${newVersion}"`);
+        fs.writeFileSync(packageJsonPath, pkg);
+      } else if (packageName !== 'e2e') {
+        throw new Error(`Missing release version for ${packageName}`);
+      }
 
       // Update dependency versions of all package.json files found in the
       // package to use the new version numbers (except ones in node_modules).
@@ -239,7 +252,7 @@ async function main() {
         // the package and are listed in the phase deps (we throw an error
         // if we find a dependency that doesn't satisfy these conditions).
         const transitiveDeps = [...findDeps([packageName])].filter(
-            dep => phase.deps.includes(dep));
+            dep => (phase.deps ?? []).includes(dep));
 
         // Also add the package itself so subpackages can use it.
         // Some packages, like e2e, are never published to npm, so check first.
@@ -249,7 +262,7 @@ async function main() {
 
         const packageDependencyVersions = new Map(
             transitiveDeps.map(dep => {
-              const version = versions.get(dep);
+              const version = versions.get(dep) ?? null;
               if (version == null) {
                 throw new Error(`Missing release version for ${dep}.`);
               }
@@ -262,9 +275,10 @@ async function main() {
 
           fs.writeFileSync(packageJsonPath, updated);
         } catch (e) {
-          e.message = `For ${packageJsonPath}, ${packageName} ${e.message}`;
-          console.error(e.stack);
-          errors.push(e);
+          const error = e instanceof Error ? e : new Error(String(e));
+          error.message = `For ${packageJsonPath}, ${packageName} ${error.message}`;
+          console.error(error.stack ?? error.message);
+          errors.push(error);
         }
       }
 

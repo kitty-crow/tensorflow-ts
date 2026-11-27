@@ -28,12 +28,15 @@ import * as shell from 'shelljs';
 
 import {$, makeReleaseDir, TMP_DIR, WEBSITE_RELEASE_UNIT, updateDependency, prepareReleaseBuild, createPR} from './release-util';
 
-export async function releaseWebsite(args: any) {
-  const {phases, repo} = WEBSITE_RELEASE_UNIT;
+import {parsePackageManifest, requireString, requiredEntry} from './release-inputs';
+
+export async function releaseWebsite(args: {git_protocol: boolean}) {
+  const {phases} = WEBSITE_RELEASE_UNIT;
+  const repo = requireString(WEBSITE_RELEASE_UNIT.repo, 'website repository');
   // Website release only has one phase.
-  const phase = phases[0];
-  const packages = phases[0].packages;
-  const deps = phases[0].deps || [];
+  const phase = requiredEntry(phases, 0, 'website phase');
+  const packages = phase.packages;
+  const deps = phase.deps ?? [];
 
   const dir = `${TMP_DIR}/${repo}`;
   makeReleaseDir(dir);
@@ -44,14 +47,13 @@ export async function releaseWebsite(args: any) {
   $(`git clone ${urlBase}tensorflow/${repo} ${dir} --depth=1`);
   shell.cd(dir);
 
-  for (let i = 0; i < packages.length; i++) {
-    const packageName = packages[i];
+  for (const packageName of packages) {
 
     // Update the version.
     const packageJsonPath = `${dir}/package.json`;
     let pkg = `${fs.readFileSync(packageJsonPath)}`;
-    const parsedPkg = JSON.parse(`${pkg}`);
-    const latestVersion = parsedPkg.version;
+    const parsedPkg = parsePackageManifest(pkg);
+    const latestVersion = requireString(parsedPkg.version, 'website version');
 
     console.log(chalk.magenta.bold(
         `~~~ Processing ${packageName} (${latestVersion}) ~~~`));
@@ -66,5 +68,5 @@ export async function releaseWebsite(args: any) {
   const timestamp = Date.now();
   const branchName = `master_${timestamp}`;
 
-  createPR(branchName, 'master', phase.title);
+  createPR(branchName, 'master', requireString(phase.title, 'website release title'));
 }

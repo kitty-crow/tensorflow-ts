@@ -16,12 +16,12 @@
  * =============================================================================
  */
 
-const {findPackagesWithDiff, allPackages} =
-    require('./find_packages_with_diff.js');
-const {generateCloudbuild} = require('./generate_cloudbuild');
-const {ArgumentParser} = require('argparse');
-const yaml = require('js-yaml');
-const fs = require('fs');
+import {findPackagesWithDiff, allPackages} from './find_packages_with_diff.js';
+import {generateCloudbuild} from './generate_cloudbuild';
+import {ArgumentParser} from 'argparse';
+import * as yaml from 'js-yaml';
+import * as fs from 'fs';
+import {requireRecord, requireString, requireStringArray} from './release-inputs';
 
 const parser = new ArgumentParser({
   description: 'Generate a cloudbuild file to test packages. When run' +
@@ -41,10 +41,11 @@ parser.addArgument(['-o', '--output'], {
   defaultValue: 'cloudbuild_generated.yml',
 });
 
-const args = parser.parseArgs(process.argv.slice(2));
+const raw = requireRecord(parser.parseArgs(process.argv.slice(2)), 'cloudbuild arguments');
+const args = {packages: requireStringArray(raw.packages, 'packages'), output: requireString(raw.output, 'output')};
 
-let packages;
-const nightly = process.env['NIGHTLY']
+let packages: string[];
+const nightly = Boolean(process.env['NIGHTLY']);
 if (args.packages.length > 0) {
   // Test packages specified in command line args.
   packages = args.packages;
@@ -57,4 +58,4 @@ if (args.packages.length > 0) {
 }
 
 const cloudbuild = generateCloudbuild(packages, nightly);
-fs.writeFileSync(args.output, yaml.safeDump(cloudbuild));
+fs.writeFileSync(args.output, yaml.dump(cloudbuild));

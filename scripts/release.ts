@@ -33,6 +33,7 @@ import * as fs from 'fs';
 import * as shell from 'shelljs';
 import {RELEASE_UNITS, WEBSITE_RELEASE_UNIT, TMP_DIR, $, question, printReleaseUnit, printPhase, makeReleaseDir, updateDependency, prepareReleaseBuild, createPR, getPatchUpdateVersion, ALPHA_RELEASE_UNIT} from './release-util';
 import {releaseWebsite} from './release-website';
+import {parsePackageManifest, parseVersionList, requireBoolean, requireRecord, requireString, requiredEntry} from './release-inputs';
 
 const parser = new argparse.ArgumentParser();
 
@@ -42,7 +43,8 @@ parser.addArgument('--git-protocol', {
 });
 
 async function main() {
-  const args = parser.parseArgs();
+  const raw = requireRecord(parser.parseArgs(), 'release arguments');
+  const args = {git_protocol: requireBoolean(raw.git_protocol, 'git-protocol')};
 
   // The alpha release unit is released with the monorepo and should not be
   // released by this script. Packages in the alpha release unit need their
@@ -61,7 +63,7 @@ async function main() {
   console.log(chalk.blue(`Using release unit ${releaseUnitInt}`));
   console.log();
 
-  const releaseUnit = releaseUnits[releaseUnitInt];
+  const releaseUnit = requiredEntry(releaseUnits, releaseUnitInt, 'release unit');
   const {name, phases} = releaseUnit;
 
   phases.forEach((_, i) => printPhase(phases, i));
@@ -76,9 +78,9 @@ async function main() {
   console.log(chalk.blue(`Using phase ${phaseInt}`));
   console.log();
 
-  const phase = phases[phaseInt];
-  const packages = phases[phaseInt].packages;
-  const deps = phases[phaseInt].deps || [];
+  const phase = requiredEntry(phases, phaseInt, 'release phase');
+  const packages = phase.packages;
+  const deps = phase.deps ?? [];
 
   if (releaseUnit === WEBSITE_RELEASE_UNIT) {
     await releaseWebsite(args);
@@ -98,9 +100,10 @@ async function main() {
 
   if (phaseInt !== 0) {
     // Phase0 should be published and release branch should have been created.
-    const firstPackageVersions: string[] = JSON.parse(
-        $(`npm view @tensorflow/${phases[0].packages[0]} versions --json`));
-    const firstPackageLatestVersion = semver.rsort(firstPackageVersions)[0];
+    const firstPackage = requiredEntry(requiredEntry(phases, 0, 'first phase').packages, 0, 'first package');
+    const firstPackageVersions = parseVersionList(
+        $(`npm view @tensorflow/${firstPackage} versions --json`));
+    const firstPackageLatestVersion = requiredEntry(semver.rsort(firstPackageVersions), 0, 'latest version');
 
     releaseBranch = `${name}_${firstPackageLatestVersion}`;
 
@@ -114,18 +117,17 @@ async function main() {
     shell.cd(dir);
   }
 
-  const newVersions = [];
-  for (let i = 0; i < packages.length; i++) {
-    const packageName = packages[i];
+  const newVersions: string[] = [];
+  for (const packageName of packages) {
     shell.cd(packageName);
 
     // Update the version.
     const packageJsonPath = `${dir}/${packageName}/package.json`;
     let pkg = `${fs.readFileSync(packageJsonPath)}`;
-    const parsedPkg = JSON.parse(`${pkg}`);
-    const packageVersions: string[] =
-        JSON.parse($(`npm view @tensorflow/${packageName} versions --json`));
-    const latestVersion = semver.rsort(packageVersions)[0];
+    const parsedPkg = parsePackageManifest(pkg);
+    const packageVersions =
+        parseVersionList($(`npm view @tensorflow/${packageName} versions --json`));
+    const latestVersion = requiredEntry(semver.rsort(packageVersions), 0, 'latest version');
 
     console.log(chalk.magenta.bold(
         `~~~ Processing ${packageName} (${latestVersion}) ~~~`));
@@ -147,7 +149,7 @@ async function main() {
     }
 
     pkg = `${pkg}`.replace(
-        `"version": "${parsedPkg.version}"`, `"version": "${newVersion}"`);
+        `"version": "${requireString(parsedPkg.version, 'package version')}"`, `"version": "${newVersion}"`);
 
     pkg = await updateDependency(deps, pkg, parsedPkg);
 

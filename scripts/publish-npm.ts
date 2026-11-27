@@ -30,6 +30,7 @@ import semverCompare from 'semver/functions/compare';
 import * as child_process from 'child_process';
 
 import {BAZEL_PACKAGES} from './bazel_packages';
+import {requireBoolean, requireRecord, requireString, requireStringArray, requiredEntry} from './release-inputs';
 
 const TMP_DIR = '/tmp/tfjs-publish';
 const VERDACCIO_REGISTRY = 'http://127.0.0.1:4873';
@@ -221,7 +222,17 @@ async function publish(pkg: string, registry: string, otp?: string,
 }
 
 async function main() {
-  const args = parser.parseArgs();
+  const raw = requireRecord(parser.parseArgs(), 'publish arguments');
+  const args = {
+    git_protocol: requireBoolean(raw.git_protocol, 'git-protocol'),
+    registry: requireString(raw.registry, 'registry'),
+    no_otp: requireBoolean(raw.no_otp, 'no-otp'),
+    release_this_branch: requireBoolean(raw.release_this_branch, 'release-this-branch'),
+    dry: requireBoolean(raw.dry, 'dry'),
+    auto_publish_local_newer: requireBoolean(raw.auto_publish_local_newer, 'auto-publish-local-newer'),
+    ci: requireBoolean(raw.ci, 'ci'),
+    packages: requireStringArray(raw.packages, 'packages')
+  };
 
   const killVerdaccio = await runVerdaccio();
 
@@ -243,7 +254,7 @@ async function main() {
     console.log(chalk.blue(`Using release unit ${releaseUnitInt}`));
     console.log();
 
-    const releaseUnit = PUBLISHABLE_RELEASE_UNITS[releaseUnitInt];
+    const releaseUnit = requiredEntry(PUBLISHABLE_RELEASE_UNITS, releaseUnitInt, 'release unit');
     const {name, } = releaseUnit;
 
     let releaseBranch: string;
@@ -396,7 +407,7 @@ async function main() {
     while (toPublish.length > 0) {
       // Using a while loop instead of .map since a stale OTP will require
       // a retry.
-      const pkg = toPublish[0];
+      const pkg = requiredEntry(toPublish, 0, 'package to publish');
       if (args.no_otp) {
         await publish(pkg, args.registry, '', false);
         toPublish.shift(); // Remove the published package from 'toPublish'.

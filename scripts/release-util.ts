@@ -26,6 +26,7 @@ import * as shell from 'shelljs';
 import rimraf from 'rimraf';
 import * as path from 'path';
 import {fork} from 'child_process';
+import {PackageManifest, parsePackageManifest, requireString, requireStringArray, requiredEntry} from './release-inputs';
 
 export interface Phase {
   // The list of packages that will be updated with this change.
@@ -272,11 +273,12 @@ export function printReleaseUnit(releaseUnit: ReleaseUnit, id: number) {
 }
 
 export function printPhase(phases: Phase[], phaseId: number) {
-  const phase = phases[phaseId];
+  const phase = requiredEntry(phases, phaseId, 'release phase');
   console.log(chalk.green(`Phase ${phaseId}:`));
   console.log(`  packages: ${chalk.blue(phase.packages.join(', '))}`);
-  if (phase.deps != null) {
-    console.log(`   deps: ${phase.deps.join(', ')}`);
+  const dependencies = phase.deps ?? null;
+  if (dependencies !== null) {
+    console.log(`   deps: ${dependencies.join(', ')}`);
   }
 }
 
@@ -293,7 +295,7 @@ export function makeReleaseDir(dir: string) {
 }
 
 export async function updateDependency(
-    deps: string[], pkg: string, parsedPkg: any): Promise<string> {
+    deps: string[], pkg: string, parsedPkg: PackageManifest): Promise<string> {
   console.log(chalk.magenta.bold(`~~~ Update dependency versions ~~~`));
 
   if (deps != null) {
@@ -302,22 +304,12 @@ export async function updateDependency(
             dep.includes('@') ? dep : '@tensorflow/' + dep} dist-tags.latest`));
 
     for (let j = 0; j < deps.length; j++) {
-      const dep = deps[j];
+      const dep = requiredEntry(deps, j, 'dependency');
 
-      let version = '';
       const depNpmName = dep.includes('@') ? dep : `@tensorflow/${dep}`;
-      if (parsedPkg['dependencies'] != null &&
-          parsedPkg['dependencies'][depNpmName] != null) {
-        version = parsedPkg['dependencies'][depNpmName];
-      } else if (
-          parsedPkg['peerDependencies'] != null &&
-          parsedPkg['peerDependencies'][depNpmName] != null) {
-        version = parsedPkg['peerDependencies'][depNpmName];
-      } else if (
-          parsedPkg['devDependencies'] != null &&
-          parsedPkg['devDependencies'][depNpmName] != null) {
-        version = parsedPkg['devDependencies'][depNpmName];
-      }
+      const version = parsedPkg.dependencies[depNpmName] ??
+          parsedPkg.peerDependencies[depNpmName] ??
+          parsedPkg.devDependencies[depNpmName] ?? null;
       if (version == null) {
         throw new Error(`No dependency found for ${dep}.`);
       }
@@ -326,7 +318,7 @@ export async function updateDependency(
       if (version.startsWith('~') || version.startsWith('^')) {
         relaxedVersionPrefix = version.slice(0, 1);
       }
-      const depVersionLatest = relaxedVersionPrefix + depsLatestVersion[j];
+      const depVersionLatest = relaxedVersionPrefix + requiredEntry(depsLatestVersion, j, 'latest dependency version');
 
       let depVersion = await question(
           `Updated version for ` +
@@ -353,13 +345,13 @@ export function updateTFJSDependencyVersions(
     pkg: string, versions: Map<string, string>,
     depsToReplace = [...versions.keys()]): string {
 
-  const parsedPkg = JSON.parse(pkg);
+  const parsedPkg = parsePackageManifest(pkg);
 
   const dependencyMaps: Array<{[index: string]: string}> = [
-    parsedPkg['dependencies'],
-    parsedPkg['peerDependencies'],
-    parsedPkg['devDependencies'],
-  ].filter(v => v != null);
+    parsedPkg.dependencies,
+    parsedPkg.peerDependencies,
+    parsedPkg.devDependencies,
+  ];
 
   for (const dependencyMap of dependencyMaps) {
     for (const [name, version] of Object.entries(dependencyMap)) {
@@ -367,7 +359,7 @@ export function updateTFJSDependencyVersions(
       if (!(name.startsWith(prefix) && version.startsWith('link:'))) continue;
       {
         const tfjsName = name.slice(prefix.length);
-        const newVersion = versions.get(tfjsName);
+        const newVersion = versions.get(tfjsName) ?? null;
         if (newVersion == null) {
           throw new Error(`Versions map does not include ${tfjsName}`);
         }
@@ -390,18 +382,17 @@ export function updateTFJSDependencyVersions(
 export function prepareReleaseBuild(phase: Phase, packageName: string) {
   console.log(chalk.magenta.bold(`~~~ Prepare release build ~~~`));
   console.log(chalk.bold('Prepare before-yarn'));
-  if (phase.scripts != null && phase.scripts[packageName] != null &&
-      phase.scripts[packageName]['before-yarn'] != null) {
-    phase.scripts[packageName]['before-yarn'].forEach(script => $(script));
+  const scripts = (phase.scripts ?? {})[packageName] ?? {};
+  for (const script of scripts['before-yarn'] ?? []) {
+    $(script);
   }
 
   console.log(chalk.bold('yarn'));
   $(`yarn`);
 
   console.log(chalk.bold('Prepare after-yarn'));
-  if (phase.scripts != null && phase.scripts[packageName] != null &&
-      phase.scripts[packageName]['after-yarn'] != null) {
-    phase.scripts[packageName]['after-yarn'].forEach(script => $(script));
+  for (const script of scripts['after-yarn'] ?? []) {
+    $(script);
   }
 }
 
@@ -419,11 +410,14 @@ export async function getReleaseBranch(name: string): Promise<string> {
   // It will not match temporary generated branches such as tfjs_1.7.1_phase0.
   const exp = '^' + name + '_([^_]+)$';
   const regObj = new RegExp(exp);
-  const maybeBranch = branches.find(branch => branch.match(regObj));
+  const maybeBranch = branches.find(branch => branch.match(regObj)) ?? null;
   releaseBranch = await question(
       `Which release branch (leave empty for ` +
       `${maybeBranch}):`);
   if (releaseBranch === '') {
+    if (maybeBranch === null) {
+      throw new Error(`No release branch found for ${name}`);
+    }
     releaseBranch = maybeBranch;
   }
 
@@ -431,7 +425,7 @@ export async function getReleaseBranch(name: string): Promise<string> {
 }
 
 export function checkoutReleaseBranch(
-    releaseBranch: string, git_protocol: string, dir: string) {
+    releaseBranch: string, git_protocol: string|boolean, dir: string) {
   console.log(chalk.magenta.bold(
       `~~~ Checking out release branch ${releaseBranch} ~~~`));
   $(`rm -f -r ${dir}`);
@@ -472,16 +466,18 @@ export function getReleaseBlockers() {
 // Computes the default updated version (does a patch version update).
 export function getPatchUpdateVersion(version: string): string {
   const versionSplit = version.split('.');
+  const major = requiredEntry(versionSplit, 0, 'major version');
+  const minor = requiredEntry(versionSplit, 1, 'minor version');
+  const patch = requiredEntry(versionSplit, 2, 'patch version');
 
   // For alpha or beta version string (e.g. "0.0.1-alpha.5"), increase the
   // number after alpha/beta.
-  if (versionSplit[2].includes('alpha') || versionSplit[2].includes('beta')) {
-    return [
-      versionSplit[0], versionSplit[1], versionSplit[2], +versionSplit[3] + 1
-    ].join('.');
+  if (patch.includes('alpha') || patch.includes('beta')) {
+    const prerelease = requiredEntry(versionSplit, 3, 'prerelease number');
+    return [major, minor, patch, +prerelease + 1].join('.');
   }
 
-  return [versionSplit[0], versionSplit[1], +versionSplit[2] + 1].join('.');
+  return [major, minor, +patch + 1].join('.');
 }
 
 
@@ -493,7 +489,9 @@ export function getPatchUpdateVersion(version: string): string {
 export function getMinorUpdateVersion(version: string): string {
   const versionSplit = version.split('.');
 
-  return [versionSplit[0], + versionSplit[1] + 1, '0'].join('.');
+  const major = requiredEntry(versionSplit, 0, 'major version');
+  const minor = requiredEntry(versionSplit, 1, 'minor version');
+  return [major, +minor + 1, '0'].join('.');
 }
 
 /**
@@ -509,7 +507,7 @@ export function getMinorUpdateVersion(version: string): string {
 export function getNightlyVersion(version: string): string {
   // Format date to YYYYMMDD.
   const date =
-      new Date().toISOString().split('T')[0].replace(new RegExp('-', 'g'), '');
+      new Date().toISOString().slice(0, 10).replace(/-/g, '');
   return `${version}-dev.${date}`;
 }
 
@@ -521,7 +519,7 @@ async function filterAsync<T>(
   condition: (t: T) => Promise<boolean>): Promise<T[]> {
 
   const results = await Promise.all(array.map(condition));
-  return array.filter((_val, index) => results[index]);
+  return array.filter((_val, index) => requiredEntry(results, index, 'filter result'));
 }
 
 /**
@@ -569,7 +567,7 @@ export async function selectPackages({
       ]).flat() // (Separator | Promise<Choice>)[] for all release units
   );
 
-  const choice = await inquirer.prompt({
+  const choice = await inquirer.prompt<{packages: string[]}>({
     name: 'packages',
     type: 'checkbox',
     message,
@@ -578,12 +576,12 @@ export async function selectPackages({
     loop: false,
   } as {name: 'packages'});
 
-  return choice['packages'] as string[];
+  return requireStringArray(choice.packages, 'selected packages');
 }
 
 export function getVersion(packageJsonPath: string) {
-  return JSON.parse(fs.readFileSync(packageJsonPath)
-                    .toString('utf8')).version as string;
+  const manifest = parsePackageManifest(fs.readFileSync(packageJsonPath, 'utf8'));
+  return requireString(manifest.version, 'package version');
 }
 
 export function getLocalVersion(pkg: string) {
@@ -612,7 +610,7 @@ export function getTagFromVersion(version: string): string {
 export function memoize<I, O>(f: (arg: I) => Promise<O>): (arg: I) => Promise<O> {
   const map = new Map<I, Promise<O>>();
   return async (i: I) => {
-    const existing = map.get(i);
+    const existing = map.get(i) ?? null;
     if (existing != null) {
       return existing;
     }
@@ -678,13 +676,7 @@ export async function runVerdaccio(): Promise<() => void> {
  * Check a package.json path for `link://` and `file://` dependencies.
  */
 export function checkPublishable(packageJsonPath: string): void {
-  const packageJson = JSON.parse(
-    fs.readFileSync(packageJsonPath)
-      .toString('utf8')) as {
-        name?: string,
-        private?: boolean,
-        dependencies?: Record<string, string>,
-      };
+  const packageJson = parsePackageManifest(fs.readFileSync(packageJsonPath, 'utf8'));
 
   if (!packageJson.name) {
     throw new Error(`${packageJsonPath} has no name.`);
@@ -693,15 +685,11 @@ export function checkPublishable(packageJsonPath: string): void {
   if (packageJson.private) {
     throw new Error(`${pkg} is private.`);
   }
-
-  if (!(packageJson.dependencies)) return;
-  {
-    for (let [dep, depVersion] of Object.entries(packageJson.dependencies)) {
-      const start = depVersion.slice(0,5);
-      if (start === 'link:' || start === 'file:') {
-        throw new Error(`${pkg} has a '${start}' dependency on ${dep}. `
-                        + 'Refusing to publish.');
-      }
+  for (const [dep, depVersion] of Object.entries(packageJson.dependencies)) {
+    const start = depVersion.slice(0, 5);
+    if (start === 'link:' || start === 'file:') {
+      throw new Error(`${pkg} has a '${start}' dependency on ${dep}. ` +
+                      'Refusing to publish.');
     }
   }
 }
