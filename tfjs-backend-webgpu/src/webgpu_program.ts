@@ -217,8 +217,20 @@ function makeShader(
   const prefixSnippets: string[] = [];
   const flatWorkgroupSize = program.workgroupSize[0] *
       program.workgroupSize[1] * program.workgroupSize[2];
-  program.outputComponent =
-      program.outputComponent ? program.outputComponent : 1;
+  const outputComponent = program.outputComponent || 1;
+  program.outputComponent = outputComponent;
+  const inputAt = (index: number): InputInfo => {
+    const input = inputInfo[index];
+    if (input == null) {
+      throw new Error(`Missing WebGPU shader input ${index}.`);
+    }
+    return input;
+  };
+  const componentAt = (index: number): number => {
+    const components = program.variableComponents;
+    return components ? backend_util.requiredDimension(components, index) :
+                        outputComponent;
+  };
   prefixSnippets.push(`
 
       var<private> localId: vec3<u32>;
@@ -243,9 +255,9 @@ function makeShader(
   if (program.pixelsOpType != null) {
     const inoutSnippet = program.pixelsOpType === PixelsOpType.FROM_PIXELS ?
         `@group(0) @binding(0) var<storage, read_write> result: array<${
-            dataTypeToGPUType(outputData.dtype, program.outputComponent)}>;` :
+            dataTypeToGPUType(outputData.dtype, outputComponent)}>;` :
         `@group(0) @binding(1) var<storage, read> inBuf : array<${
-            dataTypeToGPUType(inputInfo[0].dtype, program.outputComponent)}>;`;
+            dataTypeToGPUType(inputAt(0).dtype, outputComponent)}>;`;
     const outShapeStridesType =
         outputData.shape.length === 3 ? 'vec2<i32>' : 'i32';
     prefixSnippets.push(`
@@ -273,10 +285,10 @@ function makeShader(
   let stridesDataType: string;
   let uniformDeclaration = 'struct Uniforms { NAN : f32, INFINITY : f32, ';
   program.variableNames.forEach((x, i) => {
-    const perDataType = getCoordsDataType(inputInfo[i].shape.length);
+    const perDataType = getCoordsDataType(inputAt(i).shape.length);
     uniformDeclaration +=
         `${x.charAt(0).toLowerCase() + x.slice(1)}Shape : ${perDataType}, `;
-    stridesLength = inputInfo[i].shape.length - 1;
+    stridesLength = inputAt(i).shape.length - 1;
     stridesDataType = getCoordsDataType(stridesLength);
     uniformDeclaration +=
         `${x.charAt(0).toLowerCase() + x.slice(1)}ShapeStrides: ${
@@ -309,16 +321,13 @@ function makeShader(
   } else {
     prefixSnippets.push(`
       @group(0) @binding(0) var<storage, read_write> result: array<${
-        dataTypeToGPUType(outputData.dtype, program.outputComponent)}>;
+        dataTypeToGPUType(outputData.dtype, outputComponent)}>;
     `);
   }
   program.variableNames.forEach((x, i) => {
     prefixSnippets.push(`
       @group(0) @binding(${1 + i}) var<storage, read> ${x}: array<${
-        program.variableComponents ?
-            dataTypeToGPUType(
-                inputInfo[i].dtype, program.variableComponents[i]) :
-            dataTypeToGPUType(inputInfo[i].dtype, program.outputComponent)}>;
+        dataTypeToGPUType(inputAt(i).dtype, componentAt(i))}>;
         `);
   });
 
@@ -339,11 +348,11 @@ function makeShader(
   ];
   if (!program.atomic) {
     sources.push(setOutputSnippet(
-        outputData.shape, outputData.dtype, program.outputComponent));
+        outputData.shape, outputData.dtype, outputComponent));
   }
 
   program.variableNames.forEach((x, i) => {
-    sources.push(`${getCoordsFromIndexSnippet(inputInfo[i].shape, x)}`);
+    sources.push(`${getCoordsFromIndexSnippet(inputAt(i).shape, x)}`);
   });
 
   const inputSnippet =
@@ -351,8 +360,7 @@ function makeShader(
           .map(
               (x, i) => getInputSnippet(
                   x, outputData.shape,
-                  program.variableComponents ? program.variableComponents[i] :
-                                               program.outputComponent,
+                  componentAt(i),
                   program.dispatchLayout.x.length === outputData.shape.length))
           .join('\n');
   sources.push(inputSnippet);
@@ -491,16 +499,16 @@ export function getCoordsFromIndexSnippet(shape: number[], name = ''): string {
       return vec2<i32>(d0, d1);
     }`;
   }
-  let snippet;
-  snippet = 'var index2 = index;' +
+  const snippet = 'var index2 = index;' +
       strides
           .map((_, i) => {
-            const line1 = `let ${coords[i]} = index2 / uniforms.${
+            const coord = `d${i}`;
+            const line1 = `let ${coord} = index2 / uniforms.${
                 stridesName}.${getCoordsXYZ(i)}`;
             const line2 = i === strides.length - 1 ?
-                `let ${coords[i + 1]} = index2 - ${coords[i]} * uniforms.${
+                `let d${i + 1} = index2 - ${coord} * uniforms.${
                     stridesName}.${getCoordsXYZ(i)}` :
-                `index2 = index2 - ${coords[i]} * uniforms.${stridesName}.${
+                `index2 = index2 - ${coord} * uniforms.${stridesName}.${
                     getCoordsXYZ(i)}`;
             return `${line1}; ${line2};`;
           })
@@ -684,33 +692,37 @@ function getOutputCoordsSnippet(
   let gatherDimensionsStr = '';
   const dims = [x, y, z];
 
-  for (let i = 0; i < dims.length; i++) {
-    const arr = dims[i];
+  for (const [i, arr] of dims.entries()) {
 
     if (arr.length === 0) {
       continue;
     }
 
     if (arr.length === 1) {
-      gatherDimensionsStr += `let d${arr[0]} = i32(globalId[${i}]);`;
+      gatherDimensionsStr += `let d${backend_util.requiredDimension(arr, 0)} = i32(globalId[${i}]);`;
     } else {
       const strides = symbolicallyComputeStrides(arr, 'uniforms.outShape');
       gatherDimensionsStr += `var index${i} = i32(globalId[${i}]);`;
       for (let j = 0; j < strides.length; j++) {
-        gatherDimensionsStr += `let d${arr[j]} = index${i} / ${strides[j]};`;
+        const axis = backend_util.requiredDimension(arr, j);
+        const stride = strides[j];
+        if (stride == null) {
+          throw new Error(`Missing WebGPU output stride ${j}.`);
+        }
+        gatherDimensionsStr += `let d${axis} = index${i} / ${stride};`;
 
         if (j === strides.length - 1) {
-          gatherDimensionsStr += `let d${arr[j + 1]} = ` +
-              `index${i} - d${arr[j]} * ${strides[j]};`;
+          gatherDimensionsStr += `let d${backend_util.requiredDimension(arr, j + 1)} = ` +
+              `index${i} - d${axis} * ${stride};`;
         } else {
           gatherDimensionsStr +=
-              `index${i} = index${i} - d${arr[j]} * ${strides[j]};`;
+              `index${i} = index${i} - d${axis} * ${stride};`;
         }
       }
     }
   }
 
-  const dimensions = [];
+  const dimensions: string[] = [];
   for (let i = 0; i < rank; i++) {
     dimensions.push(`d${i}`);
   }

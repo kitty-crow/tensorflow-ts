@@ -16,6 +16,8 @@
  */
 
 import {ENGINE} from '../engine';
+
+import {requiredDimension} from './shape_dimension';
 import {MirrorPad, MirrorPadAttrs, MirrorPadInputs} from '../kernel_names';
 import {Tensor} from '../tensor';
 import {convertToTensor} from '../tensor_util_env';
@@ -69,14 +71,18 @@ function mirrorPad_<T extends Tensor>(
           `Got ${paddings.length}.`);
   const shapeOffset = mode === 'reflect' ? 1 : 0;
   for (let i = 0; i < $x.rank; i++) {
+    const padding = paddings[i];
+    if (padding == null) {
+      throw new Error(`Missing padding at dimension ${i}.`);
+    }
     util.assert(
-        paddings[i].length === 2,
+        padding.length === 2,
         () => `Invalid number of paddings. Must be length of 2 each.`);
     util.assert(
-        paddings[i][0] >= 0 && paddings[i][0] <= $x.shape[i] - shapeOffset &&
-            paddings[i][1] >= 0 && paddings[i][1] <= $x.shape[i] - shapeOffset,
+        padding[0] >= 0 && padding[0] <= requiredDimension($x.shape, i) - shapeOffset &&
+            padding[1] >= 0 && padding[1] <= requiredDimension($x.shape, i) - shapeOffset,
         () => `Padding in dimension ${i} cannot be greater than or equal ` +
-            `to ${$x.shape[i] - shapeOffset} or less than 0 for input of ` +
+            `to ${requiredDimension($x.shape, i) - shapeOffset} or less than 0 for input of ` +
             `shape ${$x.shape}`);
   }
 

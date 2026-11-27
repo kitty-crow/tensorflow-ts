@@ -24,11 +24,29 @@ export function symbolicallyComputeStrides(
 
   const numCoords = indicesArr.length;
   const indicesStr = 'xyzwuv';
-  const shape = indicesArr.map(d => `${variableName}.${indicesStr[d]}`);
-  const strides = new Array(numCoords - 1);
-  strides[numCoords - 2] = shape[numCoords - 1];
+  if (numCoords === 1) {
+    return [];
+  }
+  const shape = indicesArr.map(d => {
+    const field = indicesStr[d];
+    if (field == null) {
+      throw new Error(`Invalid symbolic stride axis ${d}.`);
+    }
+    return `${variableName}.${field}`;
+  });
+  const strides: string[] = new Array<string>(numCoords - 1);
+  let stride = shape[numCoords - 1];
+  if (stride == null) {
+    throw new Error('Missing final symbolic stride dimension.');
+  }
+  strides[numCoords - 2] = stride;
   for (let i = numCoords - 3; i >= 0; --i) {
-    strides[i] = `(${strides[i + 1]} * ${shape[i + 1]})`;
+    const dimension = shape[i + 1];
+    if (dimension == null) {
+      throw new Error(`Missing symbolic stride dimension ${i + 1}.`);
+    }
+    stride = `(${stride} * ${dimension})`;
+    strides[i] = stride;
   }
 
   return strides;

@@ -16,7 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
-import {getChannels} from './packing_util';
+import {getChannels, shaderEntry} from './packing_util';
 import {getCoordsDataType, UniformType} from './shader_compiler';
 
 export class SlicePackedProgram implements GPGPUProgram {
@@ -42,19 +42,19 @@ export class SlicePackedProgram implements GPGPUProgram {
         `getChannel(getSource(${sourceLoc.join()}), ${innerDims})`;
     const upperRow = `
       result.x = ${getChannel};
-      if (++${coords[this.rank - 1]} < ${destSize[this.rank - 1]}) {
-        ++${sourceLoc[this.rank - 1]};
+      if (++${shaderEntry(coords, this.rank - 1)} < ${shaderEntry(destSize, this.rank - 1)}) {
+        ++${shaderEntry(sourceLoc, this.rank - 1)};
         result.y = ${getChannel};
-        --${sourceLoc[this.rank - 1]};
+        --${shaderEntry(sourceLoc, this.rank - 1)};
       }
     `;
     const lowerRow = this.rank === 1 ? '' : `
-      --${coords[this.rank - 1]};
-      if (++${coords[this.rank - 2]} < ${destSize[this.rank - 2]}) {
-        ++${sourceLoc[this.rank - 2]};
+      --${shaderEntry(coords, this.rank - 1)};
+      if (++${shaderEntry(coords, this.rank - 2)} < ${shaderEntry(destSize, this.rank - 2)}) {
+        ++${shaderEntry(sourceLoc, this.rank - 2)};
         result.z = ${getChannel};
-        if (++${coords[this.rank - 1]} < ${destSize[this.rank - 1]}) {
-          ++${sourceLoc[this.rank - 1]};
+        if (++${shaderEntry(coords, this.rank - 1)} < ${shaderEntry(destSize, this.rank - 1)}) {
+          ++${shaderEntry(sourceLoc, this.rank - 1)};
           result.w = ${getChannel};
         }
       }
@@ -63,7 +63,7 @@ export class SlicePackedProgram implements GPGPUProgram {
     const sourceLocSetup = this.rank <= 4 ?
         `sourceLoc = coords +
             ${dtype}(${destSize.map((_, i) => `start[${i}]`).join()});` :
-        destSize.map((_, i) => `${sourceLoc[i]} = ${coords[i]} + start[${i}];`)
+        destSize.map((_, i) => `${shaderEntry(sourceLoc, i)} = ${shaderEntry(coords, i)} + start[${i}];`)
             .join('\n');
     this.userCode = `
       void main() {

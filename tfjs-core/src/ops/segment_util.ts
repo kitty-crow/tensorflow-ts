@@ -16,6 +16,8 @@
  */
 
 import { TensorInfo } from '../tensor_info';
+
+import {requiredDimension} from './shape_dimension';
 import {nearestDivisor} from '../util';
 
 import {PARALLELIZE_THRESHOLD} from './reduce_util';
@@ -30,7 +32,7 @@ export interface SegOpInfo {
 export function segOpComputeOptimalWindowSize(
     inSize: number, numSegments: number): number {
   let done = false;
-  let res;
+  let res: number;
 
   if (inSize <= PARALLELIZE_THRESHOLD) {
     res = inSize;
@@ -51,11 +53,11 @@ export function segOpComputeOptimalWindowSize(
 
 export function computeOutShape(
     aShape: number[], axis: number, numSegments: number): number[] {
-  const outShape = [];
+  const outShape: number[] = [];
   const rank = aShape.length;
   for (let dim = 0; dim < rank; dim++) {
     if (dim !== axis) {
-      outShape.push(aShape[dim]);
+      outShape.push(requiredDimension(aShape, dim));
     } else {
       outShape.push(numSegments);
     }
@@ -97,13 +99,13 @@ export function collectGatherOpShapeInfo(
   }
 
   for (let i = 0; i < batchDims; ++i) {
-    if (x.shape[i] !== indices.shape[i]) {
+    if (requiredDimension(x.shape, i) !== requiredDimension(indices.shape, i)) {
       throw new Error(
-          `x.shape[${i}]: ${x.shape[i]} should be equal to indices.shape[${
-              i}]: ${indices.shape[i]}.`);
+          `x.shape[${i}]: ${requiredDimension(x.shape, i)} should be equal to indices.shape[${
+              i}]: ${requiredDimension(indices.shape, i)}.`);
     }
   }
-  const dimSize = x.shape[axis];
+  const dimSize = requiredDimension(x.shape, axis);
 
   const outputShape: number[] = [];
   let batchSize = 1;
@@ -111,22 +113,22 @@ export function collectGatherOpShapeInfo(
   let sliceSize = 1;
 
   for (let i = 0; i < batchDims; ++i) {
-    outputShape.push(x.shape[i]);
-    batchSize *= x.shape[i];
+    outputShape.push(requiredDimension(x.shape, i));
+    batchSize *= requiredDimension(x.shape, i);
   }
 
   for (let i = batchDims; i < axis; i++) {
-    outputShape.push(x.shape[i]);
-    outerSize *= x.shape[i];
+    outputShape.push(requiredDimension(x.shape, i));
+    outerSize *= requiredDimension(x.shape, i);
   }
 
   for (let i = batchDims; i < indicesRank; i++) {
-    outputShape.push(indices.shape[i]);
+    outputShape.push(requiredDimension(indices.shape, i));
   }
 
   for (let i = axis + 1; i < xRank; i++) {
-    outputShape.push(x.shape[i]);
-    sliceSize *= x.shape[i];
+    outputShape.push(requiredDimension(x.shape, i));
+    sliceSize *= requiredDimension(x.shape, i);
   }
 
   return {batchSize, sliceSize, outerSize, dimSize, outputShape};

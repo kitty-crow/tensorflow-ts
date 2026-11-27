@@ -16,6 +16,8 @@
  */
 
 import {Tensor3D, Tensor4D} from '../tensor';
+
+import {requiredDimension} from './shape_dimension';
 import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
@@ -132,14 +134,14 @@ function pool_<T extends Tensor3D|Tensor4D>(
 // https://github.com/tensorflow/tensorflow/blob/50f6bb67dc98c9b74630b6047aae7a4f8a40fd02/tensorflow/python/ops/array_ops.py#L2184
 function requiredSpaceToBatchPaddings(
     inputShape: [number, number], blockShape: [number, number],
-    basePadding: number[][]) {
-  const padStart = basePadding.map(b => b[0]);
-  const origPadEnd = basePadding.map(b => b[1]);
+    basePadding: number[][]): [number[][], number[][]] {
+  const padStart = basePadding.map(b => requiredDimension(b, 0));
+  const origPadEnd = basePadding.map(b => requiredDimension(b, 1));
   const fullInputShape = inputShape.concat(padStart, origPadEnd);
-  const padEndExtra = blockShape.map((b, i) => (b - fullInputShape[i] % b) % b);
-  const padEnd = origPadEnd.map((s, i) => s + padEndExtra[i]);
-  const paddings = blockShape.map((_, i) => [padStart[i], padEnd[i]]);
-  const crops = blockShape.map((_, i) => [0, padEndExtra[i]]);
+  const padEndExtra = blockShape.map((b, i) => (b - requiredDimension(fullInputShape, i) % b) % b);
+  const padEnd = origPadEnd.map((s, i) => s + requiredDimension(padEndExtra, i));
+  const paddings = blockShape.map((_, i) => [requiredDimension(padStart, i), requiredDimension(padEnd, i)]);
+  const crops = blockShape.map((_, i) => [0, requiredDimension(padEndExtra, i)]);
   return [paddings, crops];
 }
 
@@ -147,20 +149,20 @@ function requiredSpaceToBatchPaddings(
 // tslint:disable-next-line:max-line-length
 // https://github.com/tensorflow/tensorflow/blob/50f6bb67dc98c9b74630b6047aae7a4f8a40fd02/tensorflow/python/ops/nn_ops.py#L524
 function withSpaceToBatchBasePaddings(
-    filterShape: [number, number], dilation: [number, number]) {
+    filterShape: [number, number], dilation: [number, number]): number[][] {
   // Spatial dimensions of the filters and the upsampled filters in which we
   // introduce (rate - 1) zeros between consecutive filter values.
   const dilatedFilterShape = filterShape.map((s, i) => {
-    return s + (s - 1) * (dilation[i] - 1);
+    return s + (s - 1) * (requiredDimension(dilation, i) - 1);
   });
   const padExtraShape = dilatedFilterShape.map(s => s - 1);
 
   // When padding is odd, we pad more at end, following the same
   // convention as conv2d.
   const padExtraStart = padExtraShape.map(s => Math.floor(s / 2));
-  const padExtraEnd = padExtraShape.map((s, i) => s - padExtraStart[i]);
+  const padExtraEnd = padExtraShape.map((s, i) => s - requiredDimension(padExtraStart, i));
   return padExtraShape.map((_, i) => {
-    return [padExtraStart[i], padExtraEnd[i]];
+    return [requiredDimension(padExtraStart, i), requiredDimension(padExtraEnd, i)];
   });
 }
 

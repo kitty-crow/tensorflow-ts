@@ -17,6 +17,11 @@
 
 import * as axis from './axis_util';
 import * as broadcast from './broadcast_util';
+import {decodeEinsumEquation, getEinsumComputePath, getEinsumPermutation} from '../backends/einsum_util';
+import {TensorInfo} from '../tensor_info';
+import * as arrayOps from './array_ops_util';
+import {calculateShapes} from './scatter_nd_util';
+import {collectGatherOpShapeInfo, computeOutShape} from './segment_util';
 import * as concat from './concat_util';
 import * as slice from './slice_util';
 import {depthToSpaceOutputShape, imageDimensions, matrixDimensions} from './shape_dimension';
@@ -107,5 +112,49 @@ describe('checked matrix and image dimensions', () => {
     expect(depthToSpaceOutputShape([0, 3, 5, 12], 2, 'NHWC'))
         .toEqual([0, 6, 10, 3]);
     expect(nhwc).toEqual([2, 3, 5, 12]);
+  });
+});
+
+describe('checked space, gather and scatter dimensions', () => {
+  it('preserves reshape order and zero-sized dimensions', () => {
+    expect(arrayOps.getReshaped([4, 0, 3], [2], 2)).toEqual([2, 2, 0, 3]);
+    expect(arrayOps.getReshaped([2, 4, 3], [2], 2, false))
+        .toEqual([2, 2, 2, 3]);
+    expect(arrayOps.getReshapedPermuted([4, 0, 3], [2], 2))
+        .toEqual([2, 0, 3]);
+    expect(arrayOps.getSliceBeginCoords([[0, 2]], 1)).toEqual([0, 0]);
+    expect(arrayOps.getSliceSize([2, 5], [[1, 2]], 1)).toEqual([2, 2]);
+    expect(() => arrayOps.getSliceSize([2, 5], [[1]], 1)).toThrowError();
+  });
+  it('retains zero dimensions in gather and scatter shape metadata', () => {
+    const x: TensorInfo = {dataId: {}, shape: [2, 3, 0], dtype: 'float32'};
+    const indices: TensorInfo = {dataId: {}, shape: [2, 1], dtype: 'int32'};
+    expect(collectGatherOpShapeInfo(x, indices, 1, 1)).toEqual({
+      batchSize: 2, sliceSize: 0, outerSize: 1, dimSize: 3,
+      outputShape: [2, 1, 0]
+    });
+    expect(computeOutShape([2, 0, 3], 0, 5)).toEqual([5, 0, 3]);
+    expect(calculateShapes(x, indices, [3, 0])).toEqual({
+      sliceRank: 1, numUpdates: 2, sliceSize: 0, strides: [1], outputSize: 0
+    });
+    expect(() => collectGatherOpShapeInfo(x, indices, 3, 0)).toThrowError();
+  });
+});
+
+describe('checked einsum metadata', () => {
+  it('preserves label order, contraction and scalar equations', () => {
+    const decoded = decodeEinsumEquation('ij,jk -> ik', 2);
+    expect(decoded).toEqual({
+      allDims: ['i', 'k', 'j'], summedDims: [2], idDims: [[0, 2], [2, 1]]
+    });
+    expect(getEinsumPermutation(3, [2, 1])).toEqual({
+      permutationIndices: [1, 0], expandDims: [0]
+    });
+    expect(getEinsumComputePath(decoded.summedDims, decoded.idDims))
+        .toEqual({path: [2], steps: [[0, 1], []]});
+    expect(decodeEinsumEquation('->', 1)).toEqual({
+      allDims: [], summedDims: [], idDims: [[]]
+    });
+    expect(() => decodeEinsumEquation('ii->i', 1)).toThrowError();
   });
 });

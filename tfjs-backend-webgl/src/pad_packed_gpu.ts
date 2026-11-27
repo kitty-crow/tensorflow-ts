@@ -16,7 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
-import {getChannels} from './packing_util';
+import {getChannels, shaderEntry} from './packing_util';
 import {getCoordsDataType, UniformType} from './shader_compiler';
 
 export class PadPackedProgram implements GPGPUProgram {
@@ -31,27 +31,27 @@ export class PadPackedProgram implements GPGPUProgram {
       xShape: number[], paddings: Array<[number, number]>,
       constantValue: number) {
     this.outputShape = paddings.map(
-        (p, i) => p[0] /* beforePad */ + xShape[i] + p[1] /* afterPad */);
+        (p, i) => p[0] /* beforePad */ + shaderEntry(xShape, i) + p[1] /* afterPad */);
     const rank = xShape.length;
     const dtype = getCoordsDataType(rank);
 
     const start = paddings.map(p => p[0]).join(',');
-    const end = paddings.map((p, i) => p[0] + xShape[i]).join(',');
+    const end = paddings.map((p, i) => p[0] + shaderEntry(xShape, i)).join(',');
     const coords = getChannels('rc', rank);
     const source = getChannels('source', rank);
-    const cLimit = `${coords[rank - 1]} < ${this.outputShape[rank - 1]}`;
+    const cLimit = `${shaderEntry(coords, rank - 1)} < ${shaderEntry(this.outputShape, rank - 1)}`;
     const innerDims =
         rank === 1 ? 'source' : `vec2(${source.slice(-2).join()})`;
 
     const componentSetup = [
-      `${dtype} rc = outputLoc;`, `${coords[rank - 1]} += 1;
+      `${dtype} rc = outputLoc;`, `${shaderEntry(coords, rank - 1)} += 1;
        if(${cLimit}) {
       `,
       rank === 1 ? '' : `}
        rc = outputLoc;
-       ${coords[rank - 2]} += 1;
-       if(${coords[rank - 2]} < ${this.outputShape[rank - 2]}) {`,
-      rank === 1 ? '' : `  ${coords[rank - 1]} += 1;
+       ${shaderEntry(coords, rank - 2)} += 1;
+       if(${shaderEntry(coords, rank - 2)} < ${shaderEntry(this.outputShape, rank - 2)}) {`,
+      rank === 1 ? '' : `  ${shaderEntry(coords, rank - 1)} += 1;
          if(${cLimit}) {`
     ];
 
@@ -61,7 +61,7 @@ export class PadPackedProgram implements GPGPUProgram {
     let mainLoop = '';
     for (let i = 0, j = rank === 1 ? 2 : 4; i < j; i++) {
       mainLoop += `
-        ${componentSetup[i]}
+        ${shaderEntry(componentSetup, i)}
         if (${paddingArea}) {
           result[${i}] = float(value);
         } else {

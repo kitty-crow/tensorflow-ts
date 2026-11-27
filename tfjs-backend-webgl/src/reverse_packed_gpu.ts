@@ -16,7 +16,7 @@
  */
 
 import {GPGPUProgram} from './gpgpu_math';
-import {getChannels} from './packing_util';
+import {getChannels, shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export class ReversePackedProgram implements GPGPUProgram {
@@ -35,24 +35,24 @@ export class ReversePackedProgram implements GPGPUProgram {
     this.outputShape = xShape;
     const channels = getChannels('rc', rank);
     const nextColumn =
-        `${channels[rank - 1]} + 1 < ${this.outputShape[rank - 1]}`;
-    const nextRow = `${channels[rank - 2]} + 1 < ${this.outputShape[rank - 2]}`;
+        `${shaderEntry(channels, rank - 1)} + 1 < ${shaderEntry(this.outputShape, rank - 1)}`;
     const type = getCoordsDataType(rank);
     if (rank === 1) {
       this.userCode = `
         void main(){
           int rc = getOutputCoords();
           vec4 result = vec4(0.);
-          result.r = getChannel(getX(${xShape[0]} - rc - 1),
-            ${xShape[0]} - rc - 1);
+          result.r = getChannel(getX(${shaderEntry(xShape, 0)} - rc - 1),
+            ${shaderEntry(xShape, 0)} - rc - 1);
           if(${nextColumn}){
-              result.g = getChannel(getX(${xShape[0]} - (rc  + 1) - 1),
-                ${xShape[0]} - (rc  + 1) - 1);
+              result.g = getChannel(getX(${shaderEntry(xShape, 0)} - (rc  + 1) - 1),
+                ${shaderEntry(xShape, 0)} - (rc  + 1) - 1);
           }
           setOutput(result);
         }
       `;
     } else {
+      const nextRow = `${shaderEntry(channels, rank - 2)} + 1 < ${shaderEntry(this.outputShape, rank - 2)}`;
       this.userCode = `
         void main() {
           ${type} rc = getOutputCoords();
@@ -77,18 +77,18 @@ export class ReversePackedProgram implements GPGPUProgram {
     }
 
     function getG(channels: string[]): string {
-      channels[rank - 1] = '(' + channels[rank - 1] + ` + 1)`;
+      channels[rank - 1] = '(' + shaderEntry(channels, rank - 1) + ` + 1)`;
       return getChannel(channels);
     }
 
     function getB(channels: string[]): string {
-      channels[rank - 2] = '(' + channels[rank - 2] + ` + 1)`;
+      channels[rank - 2] = '(' + shaderEntry(channels, rank - 2) + ` + 1)`;
       return getChannel(channels);
     }
 
     function getA(channels: string[]): string {
-      channels[rank - 1] = '(' + channels[rank - 1] + ` + 1)`;
-      channels[rank - 2] = '(' + channels[rank - 2] + ` + 1)`;
+      channels[rank - 1] = '(' + shaderEntry(channels, rank - 1) + ` + 1)`;
+      channels[rank - 2] = '(' + shaderEntry(channels, rank - 2) + ` + 1)`;
       return getChannel(channels);
     }
 
@@ -100,10 +100,10 @@ export class ReversePackedProgram implements GPGPUProgram {
     }
 
     function getInCoord(i: number, channels1: string[]): string {
-      if (axis.indexOf(i) !== -1 && xShape[i] !== 1) {
-        return `${xShape[i]} - ${channels1[i]} - 1`;
+      if (axis.indexOf(i) !== -1 && shaderEntry(xShape, i) !== 1) {
+        return `${shaderEntry(xShape, i)} - ${shaderEntry(channels1, i)} - 1`;
       } else {
-        return `${channels1[i]}`;
+        return `${shaderEntry(channels1, i)}`;
       }
     }
   }

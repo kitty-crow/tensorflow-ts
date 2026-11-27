@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {requiredDimension} from './shape_dimension';
+
 /**
  * Gets the new shape of the input Tensor after it's been reshaped
  * to:
@@ -29,14 +31,14 @@ export function getReshaped(
   let reshaped: number[] = [];
   if (batchToSpace) {
     reshaped = reshaped.concat(blockShape.slice(0));
-    reshaped.push(inputShape[0] / prod);
+    reshaped.push(requiredDimension(inputShape, 0) / prod);
     reshaped = reshaped.concat(inputShape.slice(1));
   } else {
-    reshaped = reshaped.concat(inputShape[0]);
+    reshaped = reshaped.concat(requiredDimension(inputShape, 0));
     const spatialLength = blockShape.length;
     for (let i = 0; i < spatialLength; ++i) {
       reshaped =
-          reshaped.concat([inputShape[i + 1] / blockShape[i], blockShape[i]]);
+          reshaped.concat([requiredDimension(inputShape, i + 1) / requiredDimension(blockShape, i), requiredDimension(blockShape, i)]);
     }
     reshaped = reshaped.concat(inputShape.slice(spatialLength + 1));
   }
@@ -100,18 +102,18 @@ export function getPermuted(
 export function getReshapedPermuted(
     inputShape: number[], blockShape: number[], prod: number,
     batchToSpace = true): number[] {
-  const reshapedPermuted = [];
+  const reshapedPermuted: number[] = [];
 
   if (batchToSpace) {
-    reshapedPermuted.push(inputShape[0] / prod);
+    reshapedPermuted.push(requiredDimension(inputShape, 0) / prod);
   } else {
-    reshapedPermuted.push(inputShape[0] * prod);
+    reshapedPermuted.push(requiredDimension(inputShape, 0) * prod);
   }
 
   for (let i = 1; i < inputShape.length; ++i) {
-    const dimension = i > blockShape.length ? inputShape[i] :
-        batchToSpace ? blockShape[i - 1] * inputShape[i] :
-                       inputShape[i] / blockShape[i - 1];
+    const dimension = i > blockShape.length ? requiredDimension(inputShape, i) :
+        batchToSpace ? requiredDimension(blockShape, i - 1) * requiredDimension(inputShape, i) :
+                       requiredDimension(inputShape, i) / requiredDimension(blockShape, i - 1);
     reshapedPermuted.push(dimension);
   }
 
@@ -126,7 +128,11 @@ export function getSliceBeginCoords(
     crops: number[][], blockShape: number): number[] {
   const sliceBeginCoords = [0];
   for (let i = 0; i < blockShape; ++i) {
-    sliceBeginCoords.push(crops[i][0]);
+    const crop = crops[i];
+    if (crop == null) {
+      throw new Error(`Missing crop at index ${i}.`);
+    }
+    sliceBeginCoords.push(requiredDimension(crop, 0));
   }
   return sliceBeginCoords;
 }
@@ -146,7 +152,12 @@ export function getSliceSize(
     uncroppedShape: number[], crops: number[][], blockShape: number): number[] {
   const sliceSize = uncroppedShape.slice(0, 1);
   for (let i = 0; i < blockShape; ++i) {
-    sliceSize.push(uncroppedShape[i + 1] - crops[i][0] - crops[i][1]);
+    const crop = crops[i];
+    if (crop == null) {
+      throw new Error(`Missing crop at index ${i}.`);
+    }
+    sliceSize.push(requiredDimension(uncroppedShape, i + 1) - requiredDimension(crop, 0) -
+        requiredDimension(crop, 1));
   }
 
   return sliceSize;

@@ -16,6 +16,7 @@
  */
 
 import {util} from '@tensorflow/tfjs-core';
+import {shaderEntry} from './packing_util';
 
 /**
  * Produces GLSL code that derives logical coordinates from a flat
@@ -27,10 +28,10 @@ export function getLogicalCoordinatesFromFlatIndex(
   const strides = util.computeStrides(shape);
   return strides
       .map((stride, i) => {
-        const line1 = `int ${coords[i]} = ${index} / ${stride}`;
+        const line1 = `int ${shaderEntry(coords, i)} = ${index} / ${stride}`;
         const line2 = i === strides.length - 1 ?
-            `int ${coords[i + 1]} = ${index} - ${coords[i]} * ${stride}` :
-            `index -= ${coords[i]} * ${stride}`;
+            `int ${shaderEntry(coords, i + 1)} = ${index} - ${shaderEntry(coords, i)} * ${stride}` :
+            `index -= ${shaderEntry(coords, i)} * ${stride}`;
         return `${line1}; ${line2};`;
       })
       .join('');
@@ -41,11 +42,11 @@ export function getOutputLogicalCoordinatesFromFlatIndexByUniform(
   const strides = util.computeStrides(shape);
   return strides
       .map((_, i) => {
-        const line1 = `int ${coords[i]} = ${index} / outShapeStrides[${i}]`;
+        const line1 = `int ${shaderEntry(coords, i)} = ${index} / outShapeStrides[${i}]`;
         const line2 = i === strides.length - 1 ?
-            `int ${coords[i + 1]} = ${index} - ${coords[i]} * outShapeStrides[${
+            `int ${shaderEntry(coords, i + 1)} = ${index} - ${shaderEntry(coords, i)} * outShapeStrides[${
                 i}]` :
-            `index -= ${coords[i]} * outShapeStrides[${i}]`;
+            `index -= ${shaderEntry(coords, i)} * outShapeStrides[${i}]`;
         return `${line1}; ${line2};`;
       })
       .join('');
@@ -56,10 +57,13 @@ function symbolicallyComputeStrides(
     indicesArr: number[], variableName: string): string[] {
   const numCoords = indicesArr.length;
   const shape = indicesArr.map(d => `${variableName}[${d}]`);
-  const strides = new Array(numCoords - 1);
-  strides[numCoords - 2] = shape[numCoords - 1];
+  if (numCoords === 1) {
+    return [];
+  }
+  const strides = new Array<string>(numCoords - 1);
+  strides[numCoords - 2] = shaderEntry(shape, numCoords - 1);
   for (let i = numCoords - 3; i >= 0; --i) {
-    strides[i] = `(${strides[i + 1]} * ${shape[i + 1]})`;
+    strides[i] = `(${shaderEntry(strides, i + 1)} * ${shaderEntry(shape, i + 1)})`;
   }
 
   return strides;
@@ -71,10 +75,10 @@ export function getLogicalCoordinatesFromFlatIndexByUniform(
   const strides = symbolicallyComputeStrides(indicesArray, variableName);
   return strides
       .map((_, i) => {
-        const line1 = `int ${coords[i]} = ${index} / ${strides[i]}`;
+        const line1 = `int ${shaderEntry(coords, i)} = ${index} / ${shaderEntry(strides, i)}`;
         const line2 = i === strides.length - 1 ?
-            `int ${coords[i + 1]} = ${index} - ${coords[i]} * ${strides[i]}` :
-            `index -= ${coords[i]} * ${strides[i]}`;
+            `int ${shaderEntry(coords, i + 1)} = ${index} - ${shaderEntry(coords, i)} * ${shaderEntry(strides, i)}` :
+            `index -= ${shaderEntry(coords, i)} * ${shaderEntry(strides, i)}`;
         return `${line1}; ${line2};`;
       })
       .join('');
@@ -82,7 +86,7 @@ export function getLogicalCoordinatesFromFlatIndexByUniform(
 
 function buildVec(x: string[]): string {
   if (x.length === 1) {
-    return `${x[0]}`;
+    return `${shaderEntry(x, 0)}`;
   }
   return `vec${x.length}(${x.join(',')})`;
 }
@@ -129,7 +133,7 @@ export function getFlatIndexFrom3D(shape: [number, number, number]): string {
 
   return `
   int getFlatIndex(ivec3 coords) {
-    return coords.x * ${strides[0]} + coords.y * ${strides[1]} + coords.z;
+    return coords.x * ${shaderEntry(strides, 0)} + coords.y * ${shaderEntry(strides, 1)} + coords.z;
   }
 `;
 }

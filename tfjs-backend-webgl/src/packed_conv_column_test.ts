@@ -15,6 +15,10 @@
  * =============================================================================
  */
 
+import {ConcatPackedProgram} from './concat_packed_gpu';
+import {ReversePackedProgram} from './reverse_packed_gpu';
+import {shaderEntry} from './packing_util';
+import {getLogicalCoordinatesFromFlatIndexByUniform} from './shader_compiler_util';
 import {getRowsCols, getShapeAs3D, isReshapeFree} from './webgl_util';
 import {TensorInfo} from '@tensorflow/tfjs-core';
 import {makeSelectedIndices, readNonMaxSuppressionInputs} from './kernels/non_max_suppression_util';
@@ -204,5 +208,33 @@ describe('checked WebGL texture dimensions', () => {
     expect(isReshapeFree([2, 3], [4, 3])).toBe(true);
     expect(isReshapeFree([2, 3], [2, 4])).toBe(false);
     expect(isReshapeFree([0, 3], [1, 2])).toBe(true);
+  });
+});
+
+describe('checked packed shader metadata', () => {
+  it('preserves rank-one and rank-two reverse coordinates', () => {
+    const vector = new ReversePackedProgram([3], [0]);
+    expect(vector.outputShape).toEqual([3]);
+    expect(vector.userCode).toContain('if(rc + 1 < 3)');
+    expect(vector.userCode).not.toContain('undefined');
+    const matrix = new ReversePackedProgram([2, 3], [1]);
+    expect(matrix.userCode).toContain('rc.y + 1 < 3');
+    expect(matrix.userCode).toContain('rc.x + 1 < 2');
+    expect(matrix.userCode).not.toContain('undefined');
+  });
+  it('preserves concatenation offsets and dimensions', () => {
+    const program = new ConcatPackedProgram([[2, 3], [2, 4]], 1);
+    expect(program.outputShape).toEqual([2, 7]);
+    expect(program.userCode).toContain('if (y < 3)');
+    expect(program.userCode).toContain('coords.y < 7');
+    expect(program.userCode).not.toContain('undefined');
+  });
+  it('retains symbolic strides and checks missing entries', () => {
+    expect(getLogicalCoordinatesFromFlatIndexByUniform(['x'], 'shape')).toBe('');
+    expect(getLogicalCoordinatesFromFlatIndexByUniform(['x', 'y'], 'shape'))
+        .toBe('int x = index / shape[1]; int y = index - x * shape[1];');
+    expect(shaderEntry([0], 0)).toBe(0);
+    expect(shaderEntry([''], 0)).toBe('');
+    expect(() => shaderEntry([], 0)).toThrowError();
   });
 });

@@ -19,6 +19,7 @@
 // mapped if any shader source code is changed in this file.
 
 import {backend_util, util} from '@tensorflow/tfjs-core';
+import {shaderEntry} from './packing_util';
 const {getBroadcastDims} = backend_util;
 import {getGlslDifferences, GLSL} from './glsl_version';
 import * as shader_util from './shader_compiler_util';
@@ -616,15 +617,15 @@ function getOutputPackedNDCoords(
   const packedTexShape: [number, number] =
       [Math.ceil(texShape[0] / 2), Math.ceil(texShape[1] / 2)];
 
-  const texelsInLogicalRow = Math.ceil(shape[shape.length - 1] / 2);
+  const texelsInLogicalRow = Math.ceil(shaderEntry(shape, shape.length - 1) / 2);
   const texelsInBatch =
-      texelsInLogicalRow * Math.ceil(shape[shape.length - 2] / 2);
+      texelsInLogicalRow * Math.ceil(shaderEntry(shape, shape.length - 2) / 2);
   let texelsInBatchN = texelsInBatch;
   let batches = ``;
   let coords = 'b, r, c';
 
   for (let b = 2; b < shape.length - 1; b++) {
-    texelsInBatchN *= shape[shape.length - b - 1];
+    texelsInBatchN *= shaderEntry(shape, shape.length - b - 1);
     batches = `
       int b${b} = index / ${texelsInBatchN};
       index -= b${b} * ${texelsInBatchN};
@@ -1369,13 +1370,13 @@ function getPackedSamplerND(
   const texNumR = packedTexShape[0];
   const texNumC = packedTexShape[1];
 
-  const valuesPerRow = Math.ceil(shape[rank - 1] / 2);
-  let texelsInBatch = valuesPerRow * Math.ceil(shape[rank - 2] / 2);
+  const valuesPerRow = Math.ceil(shaderEntry(shape, rank - 1) / 2);
+  let texelsInBatch = valuesPerRow * Math.ceil(shaderEntry(shape, rank - 2) / 2);
   let params = `int b, int row, int col`;
   let index = `b * ${texelsInBatch} + (row / 2) * ${valuesPerRow} + (col / 2)`;
   for (let b = 2; b < rank - 1; b++) {
     params = `int b${b}, ` + params;
-    texelsInBatch *= shape[rank - b - 1];
+    texelsInBatch *= shaderEntry(shape, rank - b - 1);
     index = `b${b} * ${texelsInBatch} + ` + index;
   }
   return `
@@ -1722,7 +1723,7 @@ function getPackedSamplerAtOutputCoords(
     coordsSnippet = 'coords = 0;';
   } else {
     coordsSnippet =
-        broadcastDims.map(d => `coords.${fields[d + rankDiff]} = 0;`)
+        broadcastDims.map(d => `coords.${shaderEntry(fields, d + rankDiff)} = 0;`)
             .join('\n');
   }
   let unpackedCoordsSnippet = '';
@@ -1730,7 +1731,7 @@ function getPackedSamplerAtOutputCoords(
     unpackedCoordsSnippet = 'coords';
   } else {
     unpackedCoordsSnippet = inputInfo.shapeInfo.logicalShape
-                                .map((s, i) => `coords.${fields[i + rankDiff]}`)
+                                .map((s, i) => `coords.${shaderEntry(fields, i + rankDiff)}`)
                                 .join(', ');
   }
 
@@ -1811,7 +1812,7 @@ function getSamplerAtOutputCoords(
     coordsSnippet = 'coords = 0;';
   } else {
     coordsSnippet =
-        broadcastDims.map(d => `coords.${fields[d + rankDiff]} = 0;`)
+        broadcastDims.map(d => `coords.${shaderEntry(fields, d + rankDiff)} = 0;`)
             .join('\n');
   }
   let unpackedCoordsSnippet = '';
@@ -1819,7 +1820,7 @@ function getSamplerAtOutputCoords(
     unpackedCoordsSnippet = 'coords';
   } else {
     unpackedCoordsSnippet = inputInfo.shapeInfo.logicalShape
-                                .map((s, i) => `coords.${fields[i + rankDiff]}`)
+                                .map((s, i) => `coords.${shaderEntry(fields, i + rankDiff)}`)
                                 .join(', ');
   }
 
@@ -1862,7 +1863,7 @@ export function getUniformInfoFromShape(
     isPacked: boolean, shape: number[], texShape: number[]) {
   const {newShape, keptDims} = util.squeezeShape(shape);
   const rank = shape.length;
-  const useSqueezePackedShape = isPacked && rank === 3 && shape[0] === 1;
+  const useSqueezePackedShape = isPacked && rank === 3 && shaderEntry(shape, 0) === 1;
   const squeezeShape = useSqueezePackedShape ? shape.slice(1) : newShape;
   const useSqueezeShape =
       (!isPacked && rank > 1 && !util.arraysEqual(shape, texShape) &&
@@ -1882,5 +1883,5 @@ export function squeezeInputInfo(
 }
 
 function getSqueezedParams(params: string[], keptDims: number[]): string {
-  return keptDims.map(d => params[d]).join(', ');
+  return keptDims.map(d => shaderEntry(params, d)).join(', ');
 }

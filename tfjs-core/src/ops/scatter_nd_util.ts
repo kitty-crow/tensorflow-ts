@@ -15,6 +15,8 @@
  * =============================================================================
  */
 import { TensorInfo } from '../tensor_info';
+
+import {requiredDimension} from './shape_dimension';
 import {Tensor} from '../tensor';
 import {computeStrides, sizeFromShape} from '../util';
 
@@ -26,7 +28,7 @@ import {computeStrides, sizeFromShape} from '../util';
  */
 export function validateUpdateShape(
     shape: number[], indices: Tensor, updates: Tensor) {
-  const sliceDim = (indices.rank > 1) ? indices.shape[indices.rank - 1] : 1;
+  const sliceDim = (indices.rank > 1) ? requiredDimension(indices.shape, indices.rank - 1) : 1;
   const batchDim = (indices.rank > 1) ? indices.rank - 1 : 1;
 
   const shapeError = 'Must have updates.shape = indices.shape[:batchDim] + ' +
@@ -47,19 +49,19 @@ export function validateUpdateShape(
         shapeError + ` update.rank != ${batchDim + shape.length - sliceDim}`);
   }
   for (let d = 0; d < batchDim; ++d) {
-    if (updates.shape[d] !== indices.shape[d]) {
+    if (requiredDimension(updates.shape, d) !== requiredDimension(indices.shape, d)) {
       throw new Error(
           shapeError +
-          ` updates.shape[${d}] (${updates.shape[d]}) != indices.shape[${d}] (${
-              indices.shape[d]}).`);
+          ` updates.shape[${d}] (${requiredDimension(updates.shape, d)}) != indices.shape[${d}] (${
+              requiredDimension(indices.shape, d)}).`);
     }
   }
   for (let d = 0; d < updates.rank - batchDim; ++d) {
-    if (updates.shape[d + batchDim] !== shape[d + sliceDim]) {
+    if (requiredDimension(updates.shape, d + batchDim) !== requiredDimension(shape, d + sliceDim)) {
       throw new Error(
           shapeError +
           ` updates.shape[${d + batchDim}] (${
-              updates.shape[d + batchDim]}) != shape[${d + batchDim}] (${
+              requiredDimension(updates.shape, d + batchDim)}) != shape[${d + batchDim}] (${
               shape[d + batchDim]})`);
     }
   }
@@ -117,7 +119,7 @@ export function calculateShapes(
     shape: number[]): ScatterShapeInfo {
   // Calculate the number of dimensions in indices
   const indicesRank = indices.shape.length;
-  const sliceRank = (indicesRank > 1) ? indices.shape[indicesRank - 1] : 1;
+  const sliceRank = (indicesRank > 1) ? requiredDimension(indices.shape, indicesRank - 1) : 1;
 
   // Calculate the number of elements that make up each slice of our updated
   // tensor. This allows us to work with flattened tensors and copy over whole
@@ -126,7 +128,7 @@ export function calculateShapes(
 
   let sliceSize = 1;
   for (let i = sliceRank; i < totalNd; ++i) {
-    sliceSize *= shape[i];
+    sliceSize *= requiredDimension(shape, i);
   }
 
   const safeSliceDim = (sliceRank < 1) ? 1 : sliceRank;

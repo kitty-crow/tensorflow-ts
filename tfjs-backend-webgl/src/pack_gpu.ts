@@ -16,7 +16,7 @@
  */
 
 import {GPGPUProgram, useShapeUniforms} from './gpgpu_math';
-import {getChannels} from './packing_util';
+import {getChannels, shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export class PackProgram implements GPGPUProgram {
@@ -66,14 +66,14 @@ export class PackProgram implements GPGPUProgram {
   }
 
   private getSourceCoordsArr(dims: string[]): string[] {
-    const coords = [];
+    const coords: string[] = [];
 
     for (let row = 0; row <= 1; row++) {
       for (let col = 0; col <= 1; col++) {
         let coord = `${row === 0 ? 'r' : 'rp1'}, ${col === 0 ? 'c' : 'cp1'}`;
 
         for (let d = 2; d < this.rank; d++) {
-          coord = `${dims[dims.length - 1 - d]},` + coord;
+          coord = `${shaderEntry(dims, dims.length - 1 - d)},` + coord;
         }
 
         coords.push(coord);
@@ -85,13 +85,13 @@ export class PackProgram implements GPGPUProgram {
   private getOutOfBoundsCondition(dims: string[]): string {
     if (this.rank === 1) {
       return `rc > ${
-          this.enableShapeUniforms ? 'outShape' : this.outputShape[0]}`;
+          this.enableShapeUniforms ? 'outShape' : shaderEntry(this.outputShape, 0)}`;
     }
 
     let cond = '';
     for (let i = this.rank - 2; i < this.rank; i++) {
-      cond += `${dims[i]} >= ${
-          this.enableShapeUniforms ? `outShape[${i}]` : this.outputShape[i]}`;
+      cond += `${shaderEntry(dims, i)} >= ${
+          this.enableShapeUniforms ? `outShape[${i}]` : shaderEntry(this.outputShape, i)}`;
       if (i < this.rank - 1) {
         cond += '||';
       }
@@ -107,13 +107,13 @@ export class PackProgram implements GPGPUProgram {
 
     const innerDims = dims.slice(-2);
     const col = this.enableShapeUniforms ? `outShape[${this.rank} - 1]` :
-                                           this.outputShape[this.rank - 1];
+                                           shaderEntry(this.outputShape, this.rank - 1);
     const row = this.enableShapeUniforms ? `outShape[${this.rank} - 2]` :
-                                           this.outputShape[this.rank - 2];
+                                           shaderEntry(this.outputShape, this.rank - 2);
 
     return `
-      int r = ${innerDims[0]};
-      int c = ${innerDims[1]};
+      int r = ${shaderEntry(innerDims, 0)};
+      int c = ${shaderEntry(innerDims, 1)};
       int rp1 = r + 1;
       int cp1 = c + 1;
 
@@ -126,13 +126,13 @@ export class PackProgram implements GPGPUProgram {
     const sourceCoords = this.getSourceCoordsArr(dims);
     if (this.rank === 1) {
       const outShape =
-          this.enableShapeUniforms ? 'outShape' : this.outputShape[0];
+          this.enableShapeUniforms ? 'outShape' : shaderEntry(this.outputShape, 0);
       return `getA(rc), (rc + 1 >= ${outShape} ? 0. : getA(rc + 1)), 0, 0`;
     }
 
-    return `getA(${sourceCoords[0]}),
-            cEdge ? 0. : getA(${sourceCoords[1]}),
-            rEdge ? 0. : getA(${sourceCoords[2]}),
-            rEdge || cEdge ? 0. : getA(${sourceCoords[3]})`;
+    return `getA(${shaderEntry(sourceCoords, 0)}),
+            cEdge ? 0. : getA(${shaderEntry(sourceCoords, 1)}),
+            rEdge ? 0. : getA(${shaderEntry(sourceCoords, 2)}),
+            rEdge || cEdge ? 0. : getA(${shaderEntry(sourceCoords, 3)})`;
   }
 }

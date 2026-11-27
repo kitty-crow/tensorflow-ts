@@ -15,6 +15,8 @@
  * =============================================================================
  */
 
+import {symbolicallyComputeStrides} from './shader_util';
+import {getCoordsFromIndexSnippet} from './webgpu_program';
 import {SoftmaxProgram} from './softmax_webgpu';
 import {CropAndResizeProgram} from './crop_and_resize_webgpu';
 import {backend_util, TensorInfo} from '@tensorflow/tfjs-core';
@@ -221,5 +223,21 @@ describe('checked WebGPU program dimensions', () => {
     expect(program.cropHeightBiggerThan1).toBe(false);
     expect(program.cropWidthBiggerThan1).toBe(true);
     expect(program.shaderKey).toBe('cropAndResize_1_false_true');
+  });
+});
+
+describe('checked WebGPU shader strides', () => {
+  it('preserves symbolic order and singleton dispatch axes', () => {
+    expect(symbolicallyComputeStrides([2], 'shape')).toEqual([]);
+    expect(symbolicallyComputeStrides([2, 0, 1], 'shape'))
+        .toEqual(['(shape.y * shape.x)', 'shape.y']);
+    expect(() => symbolicallyComputeStrides([0, 6], 'shape')).toThrowError();
+  });
+  it('preserves coordinate names and uniform strides for rank three', () => {
+    const source = getCoordsFromIndexSnippet([2, 3, 4]);
+    expect(source).toContain('let d0 = index2 / uniforms.outShapeStrides.x');
+    expect(source).toContain('let d2 = index2 - d1 * uniforms.outShapeStrides.y');
+    expect(source).toContain('return vec3<i32>(d0,d1,d2)');
+    expect(source).not.toContain('undefined');
   });
 });

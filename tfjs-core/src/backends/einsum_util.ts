@@ -20,6 +20,7 @@
  * based on Einstein summation.)
  */
 
+import {requiredDimension} from '../ops/shape_dimension';
 import {Tensor} from '../tensor';
 import {assert} from '../util_base';
 
@@ -57,6 +58,9 @@ export function decodeEinsumEquation(equation: string, numTensors: number): {
     throw new Error(`Equation must contain exactly one arrow ("${ARROW}").`);
   }
   const [inputString, outputString] = equation.split(ARROW);
+  if (inputString == null || outputString == null) {
+    throw new Error('Invalid einsum equation.');
+  }
   assert(
       inputString.indexOf(ELLIPSIS) === -1,
       () => `The ellipsis notation ("${ELLIPSIS}") is not supported yet.`);
@@ -73,7 +77,7 @@ export function decodeEinsumEquation(equation: string, numTensors: number): {
 
   const allDims: string[] = [];
   for (let i = 0; i < outputString.length; ++i) {
-    const dimName = outputString[i];
+    const dimName = outputString.charAt(i);
     if (!inputTerms.some(inputTerm => inputTerm.indexOf(dimName) !== -1)) {
       throw new Error(
           `Output subscripts contain the label ${dimName} ` +
@@ -84,23 +88,24 @@ export function decodeEinsumEquation(equation: string, numTensors: number): {
     }
   }
   for (let i = 0; i < inputString.length; ++i) {
-    const dimName = inputString[i];
+    const dimName = inputString.charAt(i);
     if (allDims.indexOf(dimName) === -1 && dimName !== COMMA) {
       allDims.push(dimName);
     }
   }
 
-  const idDims: number[][] = new Array<number[]>(inputTerms.length);
-  for (let i = 0; i < numInputs; ++i) {
-    if (new Set(inputTerms[i].split('')).size !== inputTerms[i].length) {
+  const idDims: number[][] = [];
+  for (const term of inputTerms) {
+    if (new Set(term.split('')).size !== term.length) {
       throw new Error(
-          `Found duplicate axes in input component ${inputTerms[i]}. ` +
+          `Found duplicate axes in input component ${term}. ` +
           `Support for duplicate axes in input is not implemented yet.`);
     }
-    idDims[i] = [];
-    for (let j = 0; j < inputTerms[i].length; ++j) {
-      idDims[i].push(allDims.indexOf(inputTerms[i][j]));
+    const dims: number[] = [];
+    for (let j = 0; j < term.length; ++j) {
+      dims.push(allDims.indexOf(term.charAt(j)));
     }
+    idDims.push(dims);
   }
 
   const numDims = allDims.length;          // Number of unique dimensions.
@@ -128,7 +133,7 @@ export function getEinsumPermutation(nDims: number, idDims: number[]):
   let permutationIndices: number[] = new Array<number>(nDims);
   permutationIndices.fill(-1);
   for (let i = 0; i < idDims.length; ++i) {
-    permutationIndices[idDims[i]] = i;
+    permutationIndices[requiredDimension(idDims, i)] = i;
   }
   const expandDims: number[] = [];
   for (let i = 0; i < nDims; ++i) {
@@ -148,16 +153,24 @@ export function checkEinsumDimSizes(
     nDims: number, idDims: number[][], tensors: Tensor[]) {
   const dimSizes: number[] = new Array<number>(nDims);
   for (let i = 0; i < tensors.length; ++i) {
-    const shape: number[] = tensors[i].shape;
-    for (let j = 0; j < idDims[i].length; ++j) {
-      if (dimSizes[idDims[i][j]] === undefined) {
-        dimSizes[idDims[i][j]] = shape[j];
+    const tensor = tensors[i];
+    const dims = idDims[i];
+    if (tensor == null || dims == null) {
+      throw new Error(`Missing einsum tensor or dimensions at index ${i}.`);
+    }
+    const shape = tensor.shape;
+    for (let j = 0; j < dims.length; ++j) {
+      const axis = requiredDimension(dims, j);
+      const size = requiredDimension(shape, j);
+      const knownSize = dimSizes[axis];
+      if (knownSize === undefined) {
+        dimSizes[axis] = size;
       } else {
         assert(
-            dimSizes[idDims[i][j]] === shape[j],
-            () => `Expected dimension ${dimSizes[idDims[i][j]]} at axis ${j} ` +
+            knownSize === size,
+            () => `Expected dimension ${knownSize} at axis ${j} ` +
                 `of input shaped ${JSON.stringify(shape)}, ` +
-                `but got dimension ${shape[j]}`);
+                `but got dimension ${size}`);
       }
     }
   }
@@ -193,11 +206,15 @@ export function getEinsumComputePath(summedDims: number[], idDims: number[][]):
   }
   const computedTermIndices: number[] = [];
   for (let i = 0; i < path.length; ++i) {
-    const summedDim = path[i];
+    const summedDim = requiredDimension(path, i);
+    const step = steps[i];
+    if (step == null) {
+      throw new Error(`Missing einsum step at index ${i}.`);
+    }
     const termIndices = findTermsWithDim(idDims, summedDim);
     for (const termIndex of termIndices) {
       if (computedTermIndices.indexOf(termIndex) === -1) {
-        steps[i].push(termIndex);
+        step.push(termIndex);
         computedTermIndices.push(termIndex);
       }
     }
@@ -213,7 +230,11 @@ export function isIdentityPermutation(perm: number[]): boolean {
 function findTermsWithDim(idDims: number[][], dim: number): number[] {
   const termIndices: number[] = [];
   for (let i = 0; i < idDims.length; ++i) {
-    if (idDims[i].length === 0 || idDims[i].indexOf(dim) !== -1 || dim === -1) {
+    const dims = idDims[i];
+    if (dims == null) {
+      throw new Error(`Missing einsum term at index ${i}.`);
+    }
+    if (dims.length === 0 || dims.indexOf(dim) !== -1 || dim === -1) {
       termIndices.push(i);
     }
   }

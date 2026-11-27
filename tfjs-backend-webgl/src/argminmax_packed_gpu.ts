@@ -18,7 +18,7 @@
 import {util} from '@tensorflow/tfjs-core';
 
 import {GPGPUProgram} from './gpgpu_math';
-import {getChannels} from './packing_util';
+import {getChannels, shaderEntry} from './packing_util';
 import {getCoordsDataType} from './shader_compiler';
 
 export class ArgMinMaxPackedProgram implements GPGPUProgram {
@@ -36,7 +36,7 @@ export class ArgMinMaxPackedProgram implements GPGPUProgram {
         () => `Packed arg${
             op.charAt(0).toUpperCase() +
             op.slice(1)} supports only inputs with rank above 2.`);
-    const inSize = shape[shape.length - 1];
+    const inSize = shaderEntry(shape, shape.length - 1);
     const outSize = Math.ceil(inSize / windowSize);
     this.outputShape = shape.slice(0, -1);
     if (outSize > 1) {
@@ -50,34 +50,34 @@ export class ArgMinMaxPackedProgram implements GPGPUProgram {
     const dtype = getCoordsDataType(rank);
     const coords = getChannels('coords', rank);
 
-    let sourceLocSetup;
-    let sourceRank;
+    let sourceLocSetup: string;
+    let sourceRank: number;
     if (outSize === 1) {
       sourceRank = rank + 1;
       const sourceLocDType = getCoordsDataType(sourceRank);
       sourceLocSetup = `
         ${sourceLocDType} sourceLocR = ${sourceLocDType}(${coords.join()}, 0);
-        ++${coords[rank - 1]};
+        ++${shaderEntry(coords, rank - 1)};
         ${sourceLocDType} sourceLocG = ${sourceLocDType}(${coords.join()}, 0);
-        ++${coords[rank - 2]};
+        ++${shaderEntry(coords, rank - 2)};
         ${sourceLocDType} sourceLocA = ${sourceLocDType}(${coords.join()}, 0);
-        --${coords[rank - 1]};
+        --${shaderEntry(coords, rank - 1)};
         ${sourceLocDType} sourceLocB = ${sourceLocDType}(${coords.join()}, 0);
-        --${coords[rank - 2]};`;
+        --${shaderEntry(coords, rank - 2)};`;
     } else {
       sourceRank = rank;
       sourceLocSetup = `
         ${dtype} sourceLocR = coords;
-        ++${coords[rank - 1]};
+        ++${shaderEntry(coords, rank - 1)};
         ${dtype} sourceLocG = coords;
-        ++${coords[rank - 2]};
+        ++${shaderEntry(coords, rank - 2)};
         ${dtype} sourceLocA = coords;
-        --${coords[rank - 1]};
+        --${shaderEntry(coords, rank - 1)};
         ${dtype} sourceLocB = coords;
-        --${coords[rank - 2]};`;
+        --${shaderEntry(coords, rank - 2)};`;
     }
     const channels = ['x', 'y', 'z', 'w', 'u', 'v'].slice(0, sourceRank);
-    const inChannel = '.' + channels[sourceRank - 1];  // e.g. ".b" for rank 3.
+    const inChannel = '.' + shaderEntry(channels, sourceRank - 1);  // e.g. ".b" for rank 3.
     const intChannels = channels.map(x => 'int ' + x);
     const srcRCoords =
         getChannels('sourceLocR', sourceRank - 1).concat('inIdx.r');
@@ -115,8 +115,8 @@ export class ArgMinMaxPackedProgram implements GPGPUProgram {
       ${getBestIndicesAChannelSnippet}
       void main() {
         ${dtype} coords = getOutputCoords();
-        bool hasNextCol = ${coords[rank - 1]} < ${outShape[rank - 1] - 1};
-        bool hasNextRow = ${coords[rank - 2]} < ${outShape[rank - 2] - 1};
+        bool hasNextCol = ${shaderEntry(coords, rank - 1)} < ${shaderEntry(outShape, rank - 1) - 1};
+        bool hasNextRow = ${shaderEntry(coords, rank - 2)} < ${shaderEntry(outShape, rank - 2) - 1};
         ${sourceLocSetup}
         ivec4 srcIdx = ivec4(sourceLocR${inChannel}, sourceLocG${inChannel},
           sourceLocB${inChannel}, sourceLocA${inChannel}) * ${windowSize};

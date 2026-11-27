@@ -33,10 +33,18 @@ export function getSourceCoords(rank: number, dims: string[]): string {
 
   let coords = '';
   for (let i = 0; i < rank; i++) {
-    coords += dims[i];
+    coords += shaderEntry(dims, i);
     if (i < rank - 1) {
       coords += ',';
     }
   }
   return coords;
+}
+/** Reads a required shader-building entry, preserving zero and empty strings. */
+export function shaderEntry<T>(entries: readonly T[], index: number): T {
+  const entry = entries[index];
+  if (entry == null) {
+    throw new Error(`Missing shader entry at index ${index}.`);
+  }
+  return entry;
 }
