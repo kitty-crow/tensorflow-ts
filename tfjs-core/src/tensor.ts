@@ -103,32 +103,25 @@ export class TensorBuffer<R extends Rank, D extends DataType = 'float32'> {
     }
     let i = 0;
     for (const loc of locs) {
-      if (loc < 0 || loc >= this.shape[i]) {
+      const dimension = this.rank === 0 && i === 0 ? 1 :
+          util.requiredNumericEntry(this.shape, i);
+      if (loc < 0 || loc >= dimension) {
         const msg = `Requested out of range element at ${locs}. ` +
             `  Buffer shape=${this.shape}`;
         throw new Error(msg);
       }
       i++;
     }
-    let index = locs[locs.length - 1];
-    for (let i = 0; i < locs.length - 1; ++i) {
-      index += this.strides[i] * locs[i];
+    const index = util.locToIndex(locs, locs.length, this.strides);
+    const value = this.values[index];
+    if (value == null) {
+      throw new Error(`Missing buffer value at index ${index}.`);
     }
-    return this.values[index] as SingleValueMap[D];
+    return value as SingleValueMap[D];
   }
 
   locToIndex(locs: number[]): number {
-    if (this.rank === 0) {
-      return 0;
-    }
-    if (this.rank === 1) {
-      return locs[0];
-    }
-    let index = locs[locs.length - 1];
-    for (let i = 0; i < locs.length - 1; ++i) {
-      index += this.strides[i] * locs[i];
-    }
-    return index;
+    return util.locToIndex(locs, this.rank, this.strides);
   }
 
   indexToLoc(index: number): number[] {

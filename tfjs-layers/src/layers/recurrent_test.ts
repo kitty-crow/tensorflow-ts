@@ -1649,10 +1649,16 @@ describeMathCPU('GRU-deserialization', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.gru(tsConfig);
-    const yPrime = layer.apply(x) as Tensor;
+    layerPrime.build(x.shape);
+    layerPrime.setWeights(layer.getWeights());
+    const yPrime = layerPrime.apply(x) as Tensor;
     expectTensorsClose(yPrime, y);
-    expect(layerPrime.getConfig()['recurrentActivation'])
-        .toEqual(layer.getConfig()['recurrentActivation']);
+    expect(requiredTestValue(
+        layerPrime.getConfig()['recurrentActivation'], 'round-trip activation'))
+        .toEqual('hardSigmoid');
+    expect(requiredTestValue(
+        layer.getConfig()['recurrentActivation'], 'original activation'))
+        .toEqual('hardSigmoid');
   });
 
   it('Non-default recurrentActivation round trip', () => {
@@ -1663,10 +1669,16 @@ describeMathCPU('GRU-deserialization', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.gru(tsConfig);
-    const yPrime = layer.apply(x) as Tensor;
+    layerPrime.build(x.shape);
+    layerPrime.setWeights(layer.getWeights());
+    const yPrime = layerPrime.apply(x) as Tensor;
     expectTensorsClose(yPrime, y);
-    expect(layerPrime.getConfig()['recurrentActivation'])
-        .toEqual(layer.getConfig()['recurrentActivation']);
+    expect(requiredTestValue(
+        layerPrime.getConfig()['recurrentActivation'], 'round-trip activation'))
+        .toEqual('tanh');
+    expect(requiredTestValue(
+        layer.getConfig()['recurrentActivation'], 'original activation'))
+        .toEqual('tanh');
   });
 });
 
@@ -2718,10 +2730,16 @@ describeMathCPU('LSTM-deserialization', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.lstm(tsConfig);
-    const yPrime = layer.apply(x) as Tensor;
+    layerPrime.build(x.shape);
+    layerPrime.setWeights(layer.getWeights());
+    const yPrime = layerPrime.apply(x) as Tensor;
     expectTensorsClose(yPrime, y);
-    expect(layerPrime.getConfig()['recurrentActivation'])
-        .toEqual(layer.getConfig()['recurrentActivation']);
+    expect(requiredTestValue(
+        layerPrime.getConfig()['recurrentActivation'], 'round-trip activation'))
+        .toEqual('hardSigmoid');
+    expect(requiredTestValue(
+        layer.getConfig()['recurrentActivation'], 'original activation'))
+        .toEqual('hardSigmoid');
   });
 
   it('Non-default recurrentActivation round trip', () => {
@@ -2732,10 +2750,16 @@ describeMathCPU('LSTM-deserialization', () => {
     // tslint:disable-next-line:no-any
     const tsConfig = convertPythonicToTs(pythonicConfig) as any;
     const layerPrime = tfl.layers.lstm(tsConfig);
-    const yPrime = layer.apply(x) as Tensor;
+    layerPrime.build(x.shape);
+    layerPrime.setWeights(layer.getWeights());
+    const yPrime = layerPrime.apply(x) as Tensor;
     expectTensorsClose(yPrime, y);
-    expect(layerPrime.getConfig()['recurrentActivation'])
-        .toEqual(layer.getConfig()['recurrentActivation']);
+    expect(requiredTestValue(
+        layerPrime.getConfig()['recurrentActivation'], 'round-trip activation'))
+        .toEqual('tanh');
+    expect(requiredTestValue(
+        layer.getConfig()['recurrentActivation'], 'original activation'))
+        .toEqual('tanh');
   });
 });
 

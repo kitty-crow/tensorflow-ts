@@ -616,7 +616,7 @@ describe('Model', () => {
     beforeEach(() => {
       spyIo.getLoadHandlers.and.callFake((_url: string|string[],
                                           loadOptions?: io.LoadOptions) => {
-        if (loadOptions.streamWeights) {
+        if (loadOptions != null && loadOptions.streamWeights) {
           return [SIMPLE_STREAMING_MODEL_LOADER];
         }
         return [SIMPLE_HTTP_MODEL_LOADER];
@@ -940,8 +940,8 @@ describe('Model', () => {
         });
         expect(requiredTestValue(handler.savedArtifacts.weightSpecs, 'weightSpecs')).toEqual(weightsManifest);
         tfc.test_util.expectArraysClose(
-            new Int32Array(io.CompositeArrayBuffer.join(handler.savedArtifacts
-                .weightData)), bias.dataSync());
+            new Int32Array(io.CompositeArrayBuffer.join(requiredTestValue(
+                handler.savedArtifacts.weightData, 'weightData'))), bias.dataSync());
       });
     });
 

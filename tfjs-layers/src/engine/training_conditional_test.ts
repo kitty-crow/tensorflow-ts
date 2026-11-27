@@ -22,10 +22,12 @@ import '../flags_layers';
 import {ReLULayerConfig} from '../keras_format/layers/advanced_activation_serialization';
 import {LayerMetadata} from '../keras_format/topology_config';
 import {ReLU} from '../layers/advanced_activations';
+import {Dropout} from '../layers/core';
+import {TimeDistributed} from '../layers/wrappers';
 import {LayerNormalization} from '../layers/normalization';
 import {LSTMCell, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
 import {requiredElement, requiredEntry} from '../utils/generic_utils';
-import {cloneTestJsonDict, parseTestJsonDict, requireTestJsonDict} from '../utils/test_utils';
+import {cloneTestJsonDict, LayerForTest, parseTestJsonDict, requireTestJsonDict} from '../utils/test_utils';
 import {min, max, sum, variance} from '../utils/math_utils';
 import {Conv2D} from '../layers/convolutional';
 import {DepthwiseConv2D} from '../layers/convolutional_depthwise';
@@ -413,5 +415,36 @@ describe('stacked RNN weight assignment', () => {
     expect(a.write).toHaveBeenCalledOnceWith(firstValue);
     expect(b.write).toHaveBeenCalledOnceWith(secondValue);
     expect(weights).toEqual([firstValue, secondValue]);
+  });
+});
+
+describe('layer boundary contracts', () => {
+  it('uses input dimensions only for absent dropout noise dimensions', () => {
+    class InspectableDropout extends Dropout {
+      noiseShapeFor(input: Tensor) {
+        return this.getNoiseShape(input);
+      }
+    }
+    const input = new Tensor<Rank.R2>([2, 3], 'float32', {}, 0);
+    expect(new InspectableDropout({rate: 0.5, noiseShape: [null, 1]})
+               .noiseShapeFor(input)).toEqual([2, 1]);
+    expect(new InspectableDropout({rate: 0.5, noiseShape: [0, 1]})
+               .noiseShapeFor(input)).toEqual([0, 1]);
+    expect(() => new InspectableDropout(
+        {rate: 0.5, noiseShape: [1, 1, null]}).noiseShapeFor(input))
+        .toThrowError();
+  });
+
+  it('forwards the public updates contract through nested wrappers', () => {
+    const updates = [new Tensor<Rank.R1>([1], 'float32', {}, 0)];
+    class UpdatedLayer extends LayerForTest {
+      override get updates(): Tensor[] {
+        return updates;
+      }
+    }
+    const inner = new TimeDistributed({layer: new UpdatedLayer()});
+    const outer = new TimeDistributed({layer: inner});
+    expect(inner.updates).toBe(updates);
+    expect(outer.updates).toBe(updates);
   });
 });

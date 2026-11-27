@@ -94,8 +94,7 @@ export abstract class Wrapper extends Layer {
   // TODO(cais): Implement setter for nonTrainableWeights.
 
   override get updates(): Tensor[] {
-    // tslint:disable-next-line:no-any
-    return (this.layer as any)._updates;
+    return this.layer.updates;
   }
 
   // TODO(cais): Implement getUpdatesFor().

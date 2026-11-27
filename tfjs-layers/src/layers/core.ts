@@ -71,8 +71,9 @@ export class Dropout extends Layer {
     const inputShape = input.shape;
     const noiseShape: Shape = [];
     for (let i = 0; i < this.noiseShape.length; ++i) {
+      const dimension = this.noiseShape[i] ?? null;
       noiseShape.push(
-          this.noiseShape[i] == null ? inputShape[i] : this.noiseShape[i]);
+          dimension == null ? requiredElement(inputShape, i) : dimension);
     }
     return noiseShape;
   }

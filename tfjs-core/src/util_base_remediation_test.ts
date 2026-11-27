@@ -19,6 +19,8 @@
 import './base_side_effects';
 
 import {flatten} from './util';
+import {TensorBuffer} from './tensor';
+import {Rank} from './types';
 import {env} from './environment';
 import {basename, concatenateTypedArrays, decodeWeights} from './io/io_utils';
 import {requiredTestElement, requiredTestEntry, requiredTestValue} from './test_util';
@@ -247,5 +249,31 @@ describe('required nested test fixtures', () => {
         .toThrowError();
     expect(() => requiredTestEntry({x: {name: 'x:0'}}, 'missing'))
         .toThrowError();
+  });
+});
+
+describe('TensorBuffer coordinate contracts', () => {
+  it('preserves scalar, zero, NaN and empty string values', () => {
+    const scalar = new TensorBuffer<Rank.R0, 'float32'>(
+        [], 'float32', new Float32Array([7]));
+    expect(scalar.get()).toBe(7);
+    expect(scalar.get(0)).toBe(7);
+    const matrix = new TensorBuffer<Rank.R2, 'float32'>(
+        [2, 2], 'float32', new Float32Array([0, NaN, 2, 3]));
+    expect(matrix.get(0, 0)).toBe(0);
+    expect(Number.isNaN(matrix.get(0, 1))).toBe(true);
+    expect(matrix.locToIndex([1, 1])).toBe(3);
+    expect(matrix.get(1, 1)).toBe(3);
+    const strings = new TensorBuffer<Rank.R1, 'string'>([1], 'string', ['']);
+    expect(strings.get(0)).toBe('');
+  });
+
+  it('rejects missing coordinates and inaccessible buffer entries', () => {
+    const matrix = new TensorBuffer<Rank.R2, 'float32'>(
+        [2, 2], 'float32', new Float32Array(4));
+    expect(() => matrix.get(2, 0)).toThrowError();
+    expect(() => matrix.get(0, 0, 0)).toThrowError();
+    expect(() => matrix.get(0, 0.5)).toThrowError();
+    expect(() => matrix.locToIndex([])).toThrowError();
   });
 });

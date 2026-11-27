@@ -693,14 +693,14 @@ describeMathCPU('Layer', () => {
        const layer = new LayerForTest();
        const outputShapes = [[1], [2, 3]];
        const input = new tfl.SymbolicTensor('float32', [1], null, [], {});
-       // tslint:disable-next-line:no-any
-       spyOn((layer as any), 'computeOutputShape').and.callFake(() => {
+       spyOn(layer, 'computeOutputShape').and.callFake(() => {
          return outputShapes;
        });
        const results = layer.apply(input) as tfl.SymbolicTensor[];
        expect(results.length).toEqual(2);
        expect(results.map(x => x.shape)).toEqual(outputShapes);
-       expect(results.map(x => x.outputTensorIndex)).toEqual([0, 1]);
+       expect(results.map(x => requiredTestValue(x.outputTensorIndex, 'outputTensorIndex')))
+            .toEqual([0, 1]);
      });
 
   describe('apply() passed 1+ Tensors', () => {
@@ -719,7 +719,7 @@ describeMathCPU('Layer', () => {
         if (result instanceof Array) {
           const inputArray = inputs as Tensor[];
           for (let i = 0; i < result.length; i++) {
-            expectTensorsClose(result[i], inputArray[i]);
+            expectTensorsClose(requiredTestElement(result, i), requiredTestElement(inputArray, i));
           }
         } else {
           expectTensorsClose(result, inputs as Tensor);
@@ -739,8 +739,7 @@ describeMathCPU('Layer', () => {
       for (const inputs of [arrayInput, symbolicInput]) {
         const layer = new LayerForTest({weights: [initialWeights]});
         // Fake the build() method to test assignment to initialWeights.
-        // tslint:disable-next-line:no-any
-        spyOn((layer as any), 'build').and.callFake(() => {
+        spyOn(layer, 'build').and.callFake(() => {
           layer.built = true;
           layer.trainableWeights = [new LayerVariable(zeros([2, 2]))];
         });

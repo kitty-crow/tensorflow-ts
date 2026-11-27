@@ -2834,15 +2834,15 @@ describe('LayersModel trainable setter and getter', () => {
         tfl.layers.dense({units: 3, activation: 'relu', inputShape: [4]}));
     model.add(tfl.layers.dense({units: 1, kernelInitializer: 'ones'}));
     model.trainable = false;
-    expect(requiredTestElement(model.layers, 0).weights[0].trainable).toEqual(false);
-    expect(requiredTestElement(model.layers, 0).weights[1].trainable).toEqual(false);
-    expect(requiredTestElement(model.layers, 1).weights[0].trainable).toEqual(false);
-    expect(requiredTestElement(model.layers, 1).weights[1].trainable).toEqual(false);
+    expect(requiredTestElement(requiredTestElement(model.layers, 0).weights, 0).trainable).toEqual(false);
+    expect(requiredTestElement(requiredTestElement(model.layers, 0).weights, 1).trainable).toEqual(false);
+    expect(requiredTestElement(requiredTestElement(model.layers, 1).weights, 0).trainable).toEqual(false);
+    expect(requiredTestElement(requiredTestElement(model.layers, 1).weights, 1).trainable).toEqual(false);
     model.trainable = true;
-    expect(requiredTestElement(model.layers, 0).weights[0].trainable).toEqual(true);
-    expect(requiredTestElement(model.layers, 0).weights[1].trainable).toEqual(true);
-    expect(requiredTestElement(model.layers, 1).weights[0].trainable).toEqual(true);
-    expect(requiredTestElement(model.layers, 1).weights[1].trainable).toEqual(true);
+    expect(requiredTestElement(requiredTestElement(model.layers, 0).weights, 0).trainable).toEqual(true);
+    expect(requiredTestElement(requiredTestElement(model.layers, 0).weights, 1).trainable).toEqual(true);
+    expect(requiredTestElement(requiredTestElement(model.layers, 1).weights, 0).trainable).toEqual(true);
+    expect(requiredTestElement(requiredTestElement(model.layers, 1).weights, 1).trainable).toEqual(true);
   });
 
   it('model.trainable respects layer.trainable', async () => {
