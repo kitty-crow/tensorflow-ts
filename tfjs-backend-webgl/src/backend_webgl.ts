@@ -1100,6 +1100,8 @@ export class MathBackendWebGL extends KernelBackend {
     const shapeAs3D = webgl_util.getShapeAs3D(shape);
 
     let program: GPGPUProgram;
+    // CG313: packed texture sizing reassigns both bindings by destructuring.
+    //@cg-expect-error
     let width = texShape[1], height = texShape[0];
     const isByteArray =
         values instanceof Uint8Array || values instanceof Uint8ClampedArray;

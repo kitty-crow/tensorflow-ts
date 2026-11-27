@@ -623,6 +623,8 @@ export class GraphExecutor implements FunctionExecutor {
         throw new Error('Missing pending graph node');
       }
       context.currentContext = item.contexts;
+      // CG313: destructuring assigns nodeName in both graph-context paths.
+      //@cg-expect-error
       let nodeName = '';
       // The tensor of the Enter op with isConstant set should be set
       // in the parent scope, so it will be available as constant for the

@@ -18,6 +18,7 @@ import { generateCloudbuild, CloudbuildYaml} from './generate_cloudbuild';
 import * as yaml from 'js-yaml';
 import * as fs from 'fs';
 import * as path from 'path';
+import {findSubgraph, parseDependencyGraph, topologicalSort, transposeGraph} from './graph_utils';
 
 // These tests only detect changes in the generated file, and may need to be
 // updated if the project structure changes. To update them, run
@@ -39,5 +40,22 @@ describe('generateCloudbuild', () => {
     const cloudbuild = generateCloudbuild(['tfjs-node'], /* nightly */ false,
                                           /* print */ false);
     expect(cloudbuild).toEqual(expectedCloudbuild as CloudbuildYaml);
+  });
+});
+
+
+describe('dependency graph contracts', () => {
+  it('preserves traversal and reverse dependency order', () => {
+    const graph = parseDependencyGraph('{"a":["b","c"],"b":["c"],"c":[]}');
+    expect([...findSubgraph('a', graph)]).toEqual(['b', 'c']);
+    expect(topologicalSort(graph)).toEqual(['c', 'b', 'a']);
+    expect([...findSubgraph('c', transposeGraph(graph))]).toEqual(['a', 'b']);
+    expect([...findSubgraph('missing', graph)]).toEqual([]);
+  });
+
+  it('rejects malformed JSON graph shapes and missing edges', () => {
+    expect(() => parseDependencyGraph('[]')).toThrowError('Dependency graph must be an object');
+    expect(() => parseDependencyGraph('{"a":[1]}')).toThrowError('Dependency graph edges for a must be strings');
+    expect(() => parseDependencyGraph('{"a":["b"]}')).toThrowError('Graph edge b of node a not found in the graph');
   });
 });

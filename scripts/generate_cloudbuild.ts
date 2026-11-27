@@ -30,16 +30,16 @@ interface CloudbuildStep {
   secretEnv?: string[];
 }
 
-const CUSTOM_PROPS = new Set(['nightlyOnly', 'waitedForByPackages']);
 interface CustomCloudbuildStep extends CloudbuildStep {
   nightlyOnly?: boolean; // Only run during nightly tests
   waitedForByPackages?: boolean; // Other non-bazel packages `waitFor` this step
 }
 
 function removeCustomProps(step: CustomCloudbuildStep): CloudbuildStep {
-  return Object.fromEntries(
-    Object.entries(step).filter(([k, ]) => !CUSTOM_PROPS.has(k))
-  ) as CloudbuildStep;
+  const result = {...step};
+  delete result.nightlyOnly;
+  delete result.waitedForByPackages;
+  return result;
 }
 
 interface CloudbuildSecret {
@@ -84,7 +84,7 @@ export function generateCloudbuild(packages: Iterable<string>, nightly = false, 
 
   if (print) {
     // Log what will be built and tested
-    const buildTestTable = [];
+    const buildTestTable: Array<Record<string, string>> = [];
     for (const packageName of allPackages) {
       const bazel = BAZEL_PACKAGES.has(packageName);
       const bazelStr = 'bazel      '; // Spaces for left alignment
@@ -108,7 +108,7 @@ export function generateCloudbuild(packages: Iterable<string>, nightly = false, 
 
   // Steps that are waited for by non-bazel packages.
   const waitedForByPackages = customSteps
-    .filter(step => step.waitedForByPackages)
+    .filter(step => step.waitedForByPackages ?? false)
     .map(step => step.id);
 
   const steps = customSteps.map(removeCustomProps);
@@ -153,8 +153,9 @@ export function generateCloudbuild(packages: Iterable<string>, nightly = false, 
       }
 
       // Append package names to step ids in the 'waitFor' field.
-      if (step.waitFor) {
-        step.waitFor = step.waitFor.filter(id => id && !EXCLUDE_STEPS.has(id))
+      const waitFor = step.waitFor ?? null;
+      if (waitFor !== null) {
+        step.waitFor = waitFor.filter(id => id && !EXCLUDE_STEPS.has(id))
                            .map(id => makeStepId(id, packageName));
       }
     }
@@ -166,9 +167,9 @@ export function generateCloudbuild(packages: Iterable<string>, nightly = false, 
     // All packages depend on 'yarn-common' and 'yarn-link-package-build', so
     // we special-case them here.
     const waitForSteps = new Set(waitedForByPackages);
-    for (const dependencyName of (DEPENDENCY_GRAPH[packageName] || new Set())) {
+    for (const dependencyName of (DEPENDENCY_GRAPH[packageName] ?? [])) {
       const cloudbuildSteps =
-          packageCloudbuildSteps.get(dependencyName) || new Set();
+          packageCloudbuildSteps.get(dependencyName) ?? new Set<CloudbuildStep>();
 
       for (const step of cloudbuildSteps) {
         if (!isTestStep(step.id)) {
@@ -185,7 +186,7 @@ export function generateCloudbuild(packages: Iterable<string>, nightly = false, 
 
   // Arrange steps in dependency order
   for (const packageName of DEPENDENCY_ORDER) {
-    const packageSteps = packageCloudbuildSteps.get(packageName);
+    const packageSteps = packageCloudbuildSteps.get(packageName) ?? null;
     if (packageSteps) {
       for (const step of packageSteps) {
         steps.push(step);
@@ -194,13 +195,17 @@ export function generateCloudbuild(packages: Iterable<string>, nightly = false, 
   }
 
   // Remove unused secrets. Cloudbuild fails if extra secrets are included.
-  const usedSecrets = new Set();
+  const usedSecrets = new Set<string>();
   for (const step of steps) {
-    for (const secret of step.secretEnv || []) {
+    for (const secret of step.secretEnv ?? []) {
       usedSecrets.add(secret);
     }
   }
-  const secretEnv = baseCloudbuild.secrets[0].secretEnv;
+  const firstSecret = baseCloudbuild.secrets[0] ?? null;
+  if (firstSecret === null) {
+    throw new Error('General Cloudbuild configuration is missing its secrets');
+  }
+  const secretEnv = firstSecret.secretEnv;
   for (const secret of Object.keys(secretEnv)) {
     if (!usedSecrets.has(secret)) {
       delete secretEnv[secret];

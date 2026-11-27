@@ -454,7 +454,11 @@ export class BytePairTokenizer extends Tokenizer {
 
     const initialMask: boolean[] = Array<boolean>(numWords).fill(true);
 
+    // CG313: the byte-pair merge loop reassigns mergedWords by destructuring.
+    //@cg-expect-error
     let mergedWords = words;
+    // CG313: the merge step also replaces the mask by destructuring.
+    //@cg-expect-error
     let mask = initialMask;
     while (loopCondition(mask)) {
       [mergedWords, mask] = this.bpeMergeOneStep(mergedWords, mask);
