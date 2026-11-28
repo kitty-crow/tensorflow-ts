@@ -14,6 +14,9 @@
  * limitations under the License.
  * =============================================================================
  */
+// Initialise the real platform for standalone Jasmine execution.
+import '../base_side_effects';
+
 import {expectArraysEqual} from '../test_util';
 import {CompositeArrayBuffer, search} from './composite_array_buffer';
 
@@ -141,6 +144,13 @@ describe('CompositeArrayBuffer', () => {
     ]);
     expect(composite.byteLength).toBe(3);
     expectArraysEqual(new Uint8Array(composite.slice(1, 3)), [2, 3]);
+  });
+
+  it('slices across typed array shards with the registered platform', () => {
+    const composite = new CompositeArrayBuffer([
+      new Uint8Array([1, 2]), new Uint8Array([3, 4, 5])
+    ]);
+    expectArraysEqual(new Uint8Array(composite.slice(1, 4)), [2, 3, 4]);
   });
 
   it('supports TypedArray input', () => {
