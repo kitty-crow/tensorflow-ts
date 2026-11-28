@@ -17,24 +17,19 @@
 
 import {RealDiv} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
-import * as broadcast_util from '../ops/broadcast_util';
 import {cast} from '../ops/cast';
 import {div} from '../ops/div';
 import {mul} from '../ops/mul';
 import {neg} from '../ops/neg';
 import {square} from '../ops/square';
 import {Tensor} from '../tensor';
-import {assertArrayLength} from '../util_base';
-import {reduceBroadcastGradient} from './broadcast_grad_util';
+import {reduceBroadcastGradient, savedBroadcastOperands} from './broadcast_grad_util';
 
 export const divGradConfig: GradConfig = {
   kernelName: RealDiv,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
-    assertArrayLength(saved, 2);
-    const [a, b] = saved;
-    const outShape =
-        broadcast_util.assertAndGetBroadcastShape(a.shape, b.shape);
+    const {a, b, outShape} = savedBroadcastOperands(saved);
     const derA = () => {
       const res = div(dy, cast(b, 'float32'));
       return reduceBroadcastGradient(res, a.shape, outShape);

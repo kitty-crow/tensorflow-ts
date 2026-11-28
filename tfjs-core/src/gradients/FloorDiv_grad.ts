@@ -17,7 +17,7 @@
 
 import {FloorDiv} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
-import {assertAndGetBroadcastShape, getReductionAxes} from '../ops/broadcast_util';
+import {getReductionAxes} from '../ops/broadcast_util';
 import {cast} from '../ops/cast';
 import {div} from '../ops/div';
 import {mul} from '../ops/mul';
@@ -26,15 +26,13 @@ import {reshape} from '../ops/reshape';
 import {square} from '../ops/square';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
-import {assertArrayLength} from '../util_base';
+import {savedBroadcastOperands} from './broadcast_grad_util';
 
 export const floorDivGradConfig: GradConfig = {
   kernelName: FloorDiv,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
-    assertArrayLength(saved, 2);
-    const [a, b] = saved;
-    const outShape = assertAndGetBroadcastShape(a.shape, b.shape);
+    const {a, b, outShape} = savedBroadcastOperands(saved);
 
     const derA = () => {
       const res = div(dy, cast(b, 'float32'));

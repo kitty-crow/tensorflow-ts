@@ -17,20 +17,16 @@
 
 import {Multiply} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
-import {assertAndGetBroadcastShape} from '../ops/broadcast_util';
 import {cast} from '../ops/cast';
 import {mul} from '../ops/mul';
 import {Tensor} from '../tensor';
-import {assertArrayLength} from '../util_base';
-import {reduceBroadcastGradient} from './broadcast_grad_util';
+import {reduceBroadcastGradient, savedBroadcastOperands} from './broadcast_grad_util';
 
 export const multiplyGradConfig: GradConfig = {
   kernelName: Multiply,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
-    assertArrayLength(saved, 2);
-    const [a, b] = saved;
-    const outShape = assertAndGetBroadcastShape(a.shape, b.shape);
+    const {a, b, outShape} = savedBroadcastOperands(saved);
 
     const derA = () => {
       const res = mul(dy, cast(b, 'float32'));

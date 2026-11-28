@@ -18,23 +18,19 @@
 import {Atan2} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
 import {add} from '../ops/add';
-import {assertAndGetBroadcastShape} from '../ops/broadcast_util';
 import {div} from '../ops/div';
 import {mul} from '../ops/mul';
 import {neg} from '../ops/neg';
 import {reshape} from '../ops/reshape';
 import {square} from '../ops/square';
 import {Tensor} from '../tensor';
-import {assertArrayLength} from '../util_base';
-import {sumBroadcastGradient} from './broadcast_grad_util';
+import {sumBroadcastGradient, savedBroadcastOperands} from './broadcast_grad_util';
 
 export const atan2GradConfig: GradConfig = {
   kernelName: Atan2,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
-    assertArrayLength(saved, 2);
-    const [a, b] = saved;
-    const outShape = assertAndGetBroadcastShape(a.shape, b.shape);
+    const {a, b, outShape} = savedBroadcastOperands(saved);
 
     const derA = () => {
       const d = add(square(a), square(b));

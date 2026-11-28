@@ -14,10 +14,11 @@
  * limitations under the License.
  * =============================================================================
  */
-import {getReductionAxes} from '../ops/broadcast_util';
+import {assertAndGetBroadcastShape, getReductionAxes} from '../ops/broadcast_util';
 import {reshape} from '../ops/reshape';
 import {sum} from '../ops/sum';
 import {Tensor} from '../tensor';
+import {assertArrayLength} from '../util_base';
 
 /** Sum only broadcasted axes; retain the original tensor when no sum is needed. */
 export function sumBroadcastGradient(
@@ -37,4 +38,12 @@ export function reduceBroadcastGradient(
     return gradient;
   }
   return reshape(sum(gradient, axes), inputShape);
+}
+
+/** Checks saved operands and calculates their common broadcast shape. */
+export function savedBroadcastOperands(saved: Tensor[]):
+    {a: Tensor, b: Tensor, outShape: number[]} {
+  assertArrayLength(saved, 2);
+  const [a, b] = saved;
+  return {a, b, outShape: assertAndGetBroadcastShape(a.shape, b.shape)};
 }

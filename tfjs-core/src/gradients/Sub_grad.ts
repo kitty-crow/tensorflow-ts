@@ -16,21 +16,16 @@
  */
 import {Sub} from '../kernel_names';
 import {GradConfig} from '../kernel_registry';
-import * as broadcast_util from '../ops/broadcast_util';
 import {neg} from '../ops/neg';
 import {reshape} from '../ops/reshape';
 import {Tensor} from '../tensor';
-import {assertArrayLength} from '../util_base';
-import {sumBroadcastGradient} from './broadcast_grad_util';
+import {sumBroadcastGradient, savedBroadcastOperands} from './broadcast_grad_util';
 
 export const subGradConfig: GradConfig = {
   kernelName: Sub,
   inputsToSave: ['a', 'b'],
   gradFunc: (dy: Tensor, saved: Tensor[]) => {
-    assertArrayLength(saved, 2);
-    const [a, b] = saved;
-    const outShape =
-        broadcast_util.assertAndGetBroadcastShape(a.shape, b.shape);
+    const {a, b, outShape} = savedBroadcastOperands(saved);
 
     const derA = () => {
       const res = dy;
