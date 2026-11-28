@@ -289,13 +289,14 @@ export function requiredTestErrorMessage(error: unknown): string {
 
 /** Reports rejected promises without assuming that the reason is an Error. */
 export function testFailureDescription(error: unknown): string {
-  if (typeof error === 'object' && error !== null) {
-    if ('stack' in error && typeof error.stack === 'string') {
-      return error.stack;
-    }
-    if ('message' in error && typeof error.message === 'string') {
-      return error.message;
-    }
+  if (typeof error !== 'object' || error === null) {
+    return String(error);
+  }
+  if ('stack' in error && typeof error.stack === 'string') {
+    return error.stack;
+  }
+  if ('message' in error && typeof error.message === 'string') {
+    return error.message;
   }
   return String(error);
 }

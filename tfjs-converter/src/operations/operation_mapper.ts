@@ -522,16 +522,16 @@ export function getNumericArrayParam(
     attrs: {[key: string]: tensorflow.IAttrValue}, name: string,
     def: number[]): number[] {
   const param = attrs[name] ?? null;
-  if (param != null) {
-    const list = param.list ?? null;
-    if (list == null) {
-      throw new Error(`Numeric array attribute "${name}" is missing its list.`);
-    }
-    const floats = list.f ?? [];
-    const values = floats.length ? floats : (list.i ?? []);
-    return values.map(v => (typeof v === 'number') ? v : parseInt(v, 10));
+  if (param == null) {
+    return def;
   }
-  return def;
+  const list = param.list ?? null;
+  if (list == null) {
+    throw new Error(`Numeric array attribute "${name}" is missing its list.`);
+  }
+  const floats = list.f ?? [];
+  const values = floats.length ? floats : (list.i ?? []);
+  return values.map(v => typeof v === 'number' ? v : parseInt(v, 10));
 }
 
 export function getStringArrayParam(

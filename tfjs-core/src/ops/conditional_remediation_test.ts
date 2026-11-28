@@ -20,7 +20,7 @@ import {getEinsumPermutation} from '../backends/einsum_util';
 import {Environment} from '../environment';
 import {tensorToString} from '../tensor_format';
 import {assertArrayLength} from '../util_base';
-import {sequentialConvolutionTestInputs, requiredTestElement, requiredTestEntry} from '../test_util';
+import {sequentialConvolutionTestInputs, requiredTestElement, requiredTestEntry, testFailureDescription} from '../test_util';
 
 import {prepareSplitSize} from './split_util';
 import {checkPadOnDimRoundingMode, reshapeForBatchMatMul} from './conv_util';
@@ -133,6 +133,15 @@ describe('optional batched matmul operands', () => {
     expect(nhwc.dataId).toBe(input.dataId);
     expect(intermediates).toEqual([nchw, nhwc]);
     expect(input.shape).toEqual([2, 3, 4]);
+  });
+});
+
+describe('test failure descriptions', () => {
+  it('prefers the stack, then message, then the string representation', () => {
+    expect(testFailureDescription({stack: 'stack', message: 'message'})).toBe('stack');
+    expect(testFailureDescription({stack: 7, message: 'message'})).toBe('message');
+    expect(testFailureDescription(null)).toBe('null');
+    expect(testFailureDescription('failure')).toBe('failure');
   });
 });
 

@@ -237,10 +237,7 @@ export class Dense extends Layer {
         args.inputDim != null) {
       // This logic is copied from Layer's constructor, since we can't
       // do exactly what the Python constructor does for Dense().
-      let batchSize: number = null;
-      if (args.batchSize != null) {
-        batchSize = args.batchSize;
-      }
+      const batchSize = args.batchSize ?? null;
       this.batchInputShape = [batchSize, args.inputDim];
     }
 

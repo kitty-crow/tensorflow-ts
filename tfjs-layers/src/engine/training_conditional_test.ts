@@ -23,7 +23,10 @@ import '../flags_layers';
 import {ReLULayerConfig} from '../keras_format/layers/advanced_activation_serialization';
 import {LayerMetadata} from '../keras_format/topology_config';
 import {ReLU} from '../layers/advanced_activations';
-import {Dropout} from '../layers/core';
+import {Dense, Dropout} from '../layers/core';
+import {Embedding} from '../layers/embeddings';
+import {getLossOrMetricName, metricsMap} from '../metrics';
+import {lossesMap} from '../losses';
 import {MaxPooling1D, MaxPooling2D, MaxPooling3D} from '../layers/pooling';
 import {ZeroPadding2D} from '../layers/padding';
 import {Dot} from '../layers/merge';
@@ -528,6 +531,30 @@ describe('pooling and padding shape contracts', () => {
     });
     expect(first.computeOutputShape([null, 2, 4, null]))
         .toEqual([null, 2, 7, null]);
+  });
+});
+
+describe('layer shape defaults and metric names', () => {
+  it('preserves explicit zero batch size and omitted batch size', () => {
+    expect(new Dense({units: 2, inputDim: 3, batchSize: 0}).batchInputShape)
+        .toEqual([0, 3]);
+    expect(new Dense({units: 2, inputDim: 3}).batchInputShape)
+        .toEqual([null, 3]);
+    const embedding = new Embedding({inputDim: 8, outputDim: 2, inputLength: [3, 4]});
+    expect(embedding.batchInputShape).toEqual([null, 3, 4]);
+    expect(embedding.computeOutputShape([null, 3, 4])).toEqual([null, 3, 4, 2]);
+    expect(() => embedding.computeOutputShape([null, 3, 5])).toThrowError();
+  });
+  it('preserves the first registered loss or metric name and custom names', () => {
+    for (const [key, fn] of Object.entries(lossesMap)) {
+      const first = Object.entries(lossesMap).find(([, loss]) => loss === fn);
+      expect(getLossOrMetricName(fn)).toBe(first == null ? key : first[0]);
+    }
+    expect(getLossOrMetricName(requiredEntry(metricsMap, 'binaryAccuracy')))
+        .toBe('binaryAccuracy');
+    const customMetric = (actual: Tensor, predicted: Tensor) => actual;
+    expect(getLossOrMetricName(customMetric)).toBe('customMetric');
+    expect(getLossOrMetricName('custom')).toBe('custom');
   });
 });
 

@@ -96,20 +96,11 @@ export class Embedding extends Layer {
       // can't do exactly what the Python constructor does for Embedding().
       // Specifically, the super constructor can not be called after the
       // mutation of the `config` argument.
-      let batchSize: number = null;
-      if (args.batchSize != null) {
-        batchSize = args.batchSize;
-      }
-      if (args.inputLength == null) {
-        // Fix super-constructor to what it would have done if
-        // 'config.inputShape' were (None, )
-        this.batchInputShape = [batchSize, null];
-      } else {
-        // Fix super-constructor to what it would have done if
-        // 'config.inputShape' were (config.inputLength, )
-        this.batchInputShape =
-            [batchSize].concat(generic_utils.toList(args.inputLength));
-      }
+      const batchSize = args.batchSize ?? null;
+      const inputLength = args.inputLength;
+      // Match Layer's shape inference for an unspecified or explicit length.
+      this.batchInputShape = inputLength == null ? [batchSize, null] :
+          [batchSize].concat(generic_utils.toList(inputLength));
     }
     this.inputDim = args.inputDim;
     generic_utils.assertPositiveInteger(this.inputDim, 'inputDim');
@@ -160,20 +151,17 @@ export class Embedding extends Layer {
       throw new ValueError(
           `"inputLength" is ${this.inputLength}, but received ` +
           `input shape has shape ${inputShape}`);
-    } else {
-      let i = 0;
-      for (let k = 0; k < inLens.length; ++k) {
-        const s1 = inLens[k];
-        const s2 = inputShape[k + 1];
-        if ((s1 != null) && (s2 != null) && (s1 !== s2)) {
-          throw new ValueError(
-              `"inputLength" is ${this.inputLength}, but received ` +
-              `input shape has shape ${inputShape}`);
-        }
-        if (s1 == null) {
-          inLens[i] = s2;
-        }
-        i++;
+    }
+    for (let k = 0; k < inLens.length; ++k) {
+      const s1 = inLens[k];
+      const s2 = inputShape[k + 1];
+      if (s1 != null && s2 != null && s1 !== s2) {
+        throw new ValueError(
+            `"inputLength" is ${this.inputLength}, but received ` +
+            `input shape has shape ${inputShape}`);
+      }
+      if (s1 == null) {
+        inLens[k] = s2;
       }
     }
     return [inputShape[0], ...inLens, this.outputDim];
