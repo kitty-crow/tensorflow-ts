@@ -516,6 +516,35 @@ export function isReshapeFree(shape1: number[], shape2: number[]): boolean {
   return sameSecondDimension && isEven(first1) && isEven(first2);
 }
 
+/** Validate numeric values returned by the loosely typed WebGL API. */
+function requireGLNumber(value: unknown, name: string): number {
+  if (typeof value !== 'number') {
+    throw new Error(`Expected numeric WebGL parameter ${name}.`);
+  }
+  return value;
+}
+
+export function getNumericParameter(
+    gl: Pick<WebGLRenderingContext, 'getParameter'>, name: number): number {
+  return requireGLNumber(gl.getParameter(name), String(name));
+}
+
+export function getNumericTextureParameter(
+    gl: Pick<WebGLRenderingContext, 'getTexParameter'>, target: number,
+    name: number): number {
+  return requireGLNumber(gl.getTexParameter(target, name), String(name));
+}
+
+export function getInt32Parameter(
+    gl: Pick<WebGLRenderingContext, 'getParameter'>, name: number):
+    Int32Array {
+  const value: unknown = gl.getParameter(name);
+  if (!(value instanceof Int32Array)) {
+    throw new Error(`Expected Int32Array WebGL parameter ${name}.`);
+  }
+  return value;
+}
+
 // We cache webgl params because the environment gets reset between
 // unit tests and we don't want to constantly query the WebGLContext for
 // MAX_TEXTURE_SIZE.
@@ -525,7 +554,7 @@ let MAX_TEXTURES_IN_SHADER: number;
 export function getWebGLMaxTextureSize(webGLVersion: number): number {
   if (MAX_TEXTURE_SIZE == null) {
     const gl = getWebGLContext(webGLVersion);
-    MAX_TEXTURE_SIZE = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    MAX_TEXTURE_SIZE = getNumericParameter(gl, gl.MAX_TEXTURE_SIZE);
   }
   return MAX_TEXTURE_SIZE;
 }
@@ -540,7 +569,7 @@ export function resetMaxTexturesInShader() {
 export function getMaxTexturesInShader(webGLVersion: number): number {
   if (MAX_TEXTURES_IN_SHADER == null) {
     const gl = getWebGLContext(webGLVersion);
-    MAX_TEXTURES_IN_SHADER = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+    MAX_TEXTURES_IN_SHADER = getNumericParameter(gl, gl.MAX_TEXTURE_IMAGE_UNITS);
   }
   // We cap at 16 to avoid spurious runtime "memory exhausted" error.
   return Math.min(16, MAX_TEXTURES_IN_SHADER);

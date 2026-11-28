@@ -335,10 +335,9 @@ export class Bidirectional extends Wrapper {
     if (this.mergeMode === 'concat') {
       outputShape[outputShape.length - 1] *= 2;
       outputShapes = [outputShape];
-    } else if (this.mergeMode == null) {
-      outputShapes = [outputShape, outputShape.slice()];
     } else {
-      outputShapes = [outputShape];
+      outputShapes = this.mergeMode == null ?
+          [outputShape, outputShape.slice()] : [outputShape];
     }
 
     if (this.returnState) {
@@ -374,14 +373,14 @@ export class Bidirectional extends Wrapper {
     }
     const additionalInputs: Array<Tensor|SymbolicTensor> = [];
     const additionalSpecs: InputSpec[] = [];
+    const numStates = initialState == null ? 0 : initialState.length;
+    if (numStates % 2 > 0) {
+      throw new ValueError(
+          'When passing `initialState` to a Bidrectional RNN, ' +
+          'the state should be an Array containing the states of ' +
+          'the underlying RNNs.');
+    }
     if (initialState != null) {
-      const numStates = initialState.length;
-      if (numStates % 2 > 0) {
-        throw new ValueError(
-            'When passing `initialState` to a Bidrectional RNN, ' +
-            'the state should be an Array containing the states of ' +
-            'the underlying RNNs.');
-      }
       kwargs['initialState'] = initialState;
       additionalInputs.push(...initialState);
       const stateSpecs = (initialState as Array<Tensor|SymbolicTensor>)
@@ -448,11 +447,10 @@ export class Bidirectional extends Wrapper {
       }
 
       let states: Tensor[];
+      if (this.returnState && Array.isArray(y)) {
+        states = y.slice(1).concat((yRev as Tensor[]).slice(1));
+      }
       if (this.returnState) {
-        if (Array.isArray(y)) {
-          states = y.slice(1).concat((yRev as Tensor[]).slice(1));
-        } else {
-        }
         y = generic_utils.requiredElement((y as Tensor[]), 0);
         yRev = generic_utils.requiredElement((yRev as Tensor[]), 0);
       }
@@ -509,20 +507,9 @@ export class Bidirectional extends Wrapper {
     if (Array.isArray(mask)) {
       mask = mask[0];
     }
-    let outputMask: Tensor|Tensor[];
-    if (this.returnSequences) {
-      if (this.mergeMode == null) {
-        outputMask = [mask, mask];
-      } else {
-        outputMask = mask;
-      }
-    } else {
-      if (this.mergeMode == null) {
-        outputMask = [null, null];
-      } else {
-        outputMask = null;
-      }
-    }
+    const sequenceMask = this.returnSequences ? mask : null;
+    const outputMask: Tensor|Tensor[] = this.mergeMode == null ?
+        [sequenceMask, sequenceMask] : sequenceMask;
     if (!(this.returnState)) {
       return outputMask;
     }

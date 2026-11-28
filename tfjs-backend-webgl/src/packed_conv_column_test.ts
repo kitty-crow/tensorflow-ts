@@ -25,7 +25,8 @@ import {shaderEntry} from './packing_util';
 import {requireWebGL2TextureEnums} from './tex_util';
 import {shaderKeyShapeFlags} from './gpgpu_math';
 import {getLogicalCoordinatesFromFlatIndexByUniform} from './shader_compiler_util';
-import {getRowsCols, getShapeAs3D, isReshapeFree} from './webgl_util';
+import {samplerCoords, packedBroadcastReturn} from './shader_compiler';
+import {getRowsCols, getShapeAs3D, isReshapeFree, getNumericParameter, getNumericTextureParameter, getInt32Parameter} from './webgl_util';
 import {TensorInfo} from '@tensorflow/tfjs-core';
 import {makeSelectedIndices, readNonMaxSuppressionInputs} from './kernels/non_max_suppression_util';
 import {selectActivationSource} from './activation_source';
@@ -297,5 +298,63 @@ describe('checked WebGL 2 texture constants', () => {
     expect(() => requireWebGL2TextureEnums({RGBA32F: 0x8814})).toThrowError();
     expect(() => requireWebGL2TextureEnums({...constants, RED: 'red'}))
         .toThrowError();
+  });
+});
+
+describe('checked WebGL parameter values', () => {
+  it('preserves numeric zero and forwards the parameter and target', () => {
+    const gl = {
+      getParameter: (name: number) => name === 5 ? 0 : 17,
+      getTexParameter: (target: number, name: number) => target + name
+    };
+    expect(getNumericParameter(gl, 5)).toBe(0);
+    expect(getNumericParameter(gl, 6)).toBe(17);
+    expect(getNumericTextureParameter(gl, 10, 3)).toBe(13);
+  });
+
+  it('preserves Int32Array identity and rejects invalid API results', () => {
+    const dimensions = new Int32Array([0, 0, 3, 4]);
+    expect(getInt32Parameter({getParameter: () => dimensions}, 1))
+        .toBe(dimensions);
+    expect(() => getNumericParameter({getParameter: () => '4'}, 1))
+        .toThrowError(/Expected numeric WebGL parameter/);
+    expect(() => getNumericTextureParameter(
+        {getTexParameter: () => null}, 2, 1))
+        .toThrowError(/Expected numeric WebGL parameter/);
+    expect(() => getInt32Parameter({getParameter: () => [0, 0, 3, 4]}, 1))
+        .toThrowError(/Expected Int32Array WebGL parameter/);
+  });
+});
+
+describe('shared shader broadcast coordinate generation', () => {
+  it('keeps scalar, vector and rank-expanded coordinates', () => {
+    expect(samplerCoords([], 3, [])).toEqual({
+      coordsSnippet: '', unpackedCoordsSnippet: ''
+    });
+    expect(samplerCoords([1], 1, [0])).toEqual({
+      coordsSnippet: 'coords = 0;', unpackedCoordsSnippet: 'coords'
+    });
+    expect(samplerCoords([1, 3], 3, [0])).toEqual({
+      coordsSnippet: 'coords.y = 0;', unpackedCoordsSnippet: 'coords.y, coords.z'
+    });
+    expect(samplerCoords([1, 1], 2, [0, 1]).coordsSnippet)
+        .toBe('coords.x = 0;\ncoords.y = 0;');
+  });
+
+  it('preserves all packed scalar, row and column replication branches', () => {
+    expect(packedBroadcastReturn(1, 2, 3, 6, []).trim())
+        .toBe('return vec4(outputValue.xy, outputValue.xy);');
+    expect(packedBroadcastReturn(0, 1, 1, 3, []).trim())
+        .toBe('return vec4(outputValue.x, outputValue.x, 0., 0.);');
+    expect(packedBroadcastReturn(0, 2, 1, 4, []).trim())
+        .toBe('return vec4(outputValue.x);');
+    expect(packedBroadcastReturn(2, 2, 4, 8, [0, 1]))
+        .toBe('return vec4(outputValue.x);');
+    expect(packedBroadcastReturn(2, 2, 4, 8, [0]))
+        .toBe('return vec4(outputValue.x, outputValue.y, outputValue.x, outputValue.y);');
+    expect(packedBroadcastReturn(2, 2, 4, 8, [1]))
+        .toBe('return vec4(outputValue.xx, outputValue.zz);');
+    expect(packedBroadcastReturn(2, 2, 4, 4, []))
+        .toBe('return outputValue;');
   });
 });

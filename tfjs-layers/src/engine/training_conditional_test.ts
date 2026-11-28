@@ -30,15 +30,16 @@ import {lossesMap} from '../losses';
 import {MaxPooling1D, MaxPooling2D, MaxPooling3D} from '../layers/pooling';
 import {ZeroPadding2D} from '../layers/padding';
 import {Dot} from '../layers/merge';
-import {TimeDistributed} from '../layers/wrappers';
+import {TimeDistributed, Bidirectional} from '../layers/wrappers';
 import {LayerNormalization} from '../layers/normalization';
-import {LSTMCell, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
+import {LSTMCell, SimpleRNN, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
 import {requiredElement, requiredEntry} from '../utils/generic_utils';
 import {cloneTestJsonDict, LayerForTest, parseTestJsonDict, requireTestJsonDict} from '../utils/test_utils';
 import {min, max, sum, variance} from '../utils/math_utils';
 import {Conv2D} from '../layers/convolutional';
 import {DepthwiseConv2D} from '../layers/convolutional_depthwise';
 import {Sequential} from '../models';
+import {plainObjectCheck, checkUserDefinedMetadata} from '../user_defined_metadata';
 import {getOptimizer} from '../optimizers';
 import {collectMetrics, LayersModel, standardizeInputData} from './training';
 import {standardizeClassWeights} from './training_utils';
@@ -610,5 +611,64 @@ describe('reshape dimension validation regressions', () => {
     expect(() => new Reshape({targetShape: [4, 2]})
         .computeOutputShape([2, 2, 3]))
         .toThrowError('Total size of new array must be unchanged.');
+  });
+});
+
+describe('metadata and sequential serialization contracts', () => {
+  it('retains valid nested values and rejects sparse and non-plain values', () => {
+    const metadata = {labels: ['zero', null, false], count: 0};
+    expect(plainObjectCheck(metadata)).toBe(true);
+    expect(() => checkUserDefinedMetadata(metadata, 'regression')).not.toThrow();
+    expect(plainObjectCheck(new Array<number>(1))).toBe(false);
+    expect(plainObjectCheck(new Date(0))).toBe(false);
+  });
+
+  it('stops reading object properties at the first invalid value', () => {
+    let laterReads = 0;
+    const metadata = {
+      first: new Date(0),
+      get later() {
+        laterReads++;
+        return 0;
+      }
+    };
+    expect(plainObjectCheck(metadata)).toBe(false);
+    expect(laterReads).toBe(0);
+  });
+
+  it('serialises a sequential model name and layer configuration order', () => {
+    const model = new Sequential({name: 'ordered_config', layers: [
+      new ReLU({name: 'first_relu', inputShape: [2]}),
+      new ReLU({name: 'second_relu'})
+    ]});
+    const config = model.getConfig();
+    expect(config.name).toBe('ordered_config');
+    expect(config.layers.length).toBe(2);
+    expect(config.layers.map(layer => layer['className'] === 'ReLU'))
+        .toEqual([true, true]);
+    expect(config.layers.map(layer => JSON.stringify(layer['config'])))
+        .toEqual(model.layers.map(layer => JSON.stringify(layer.getConfig())));
+  });
+});
+
+describe('bidirectional output and mask contracts', () => {
+  it('preserves merged and separate output shapes and sequence masks', () => {
+    const input = new Tensor([1, 2, 3], 'float32', {}, 201);
+    const mask = new Tensor([1, 2], 'bool', {}, 202);
+    const merged = new Bidirectional({
+      layer: new SimpleRNN({units: 4, returnSequences: true}), mergeMode: 'concat'
+    });
+    expect(merged.computeOutputShape([1, 2, 3])).toEqual([1, 2, 8]);
+    expect(merged.computeMask(input, mask) === mask).toBe(true);
+    const separate = new Bidirectional({
+      layer: new SimpleRNN({units: 4, returnSequences: true}), mergeMode: null
+    });
+    expect(separate.computeOutputShape([1, 2, 3]))
+        .toEqual([[1, 2, 4], [1, 2, 4]]);
+    expect(separate.computeMask(input, mask)).toEqual([mask, mask]);
+    const last = new Bidirectional({
+      layer: new SimpleRNN({units: 4}), mergeMode: null
+    });
+    expect(last.computeMask(input, mask)).toEqual([null, null]);
   });
 });

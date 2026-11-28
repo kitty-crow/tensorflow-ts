@@ -1069,17 +1069,17 @@ function getSampler2D(
   const funcName = 'get' + texName.charAt(0).toUpperCase() + texName.slice(1);
   const texShape = inputInfo.shapeInfo.texShape;
 
-  if (texShape != null && util.arraysEqual(shape, texShape)) {
-    if (enableShapeUniforms) {
-      return `
+  const matchesTexture = texShape != null && util.arraysEqual(shape, texShape);
+  if (matchesTexture && enableShapeUniforms) {
+    return `
       float ${funcName}(int row, int col) {
         vec2 uv = (vec2(col, row) + halfCR) / vec2(${texName}TexShape[1], ${
           texName}TexShape[0]);
         return sampleTexture(${texName}, uv);
       }
     `;
-    }
-
+  }
+  if (matchesTexture) {
     const texNumR = texShape[0];
     const texNumC = texShape[1];
     return `
@@ -1699,6 +1699,61 @@ function getUniformSampler(inputInfo: InputInfo): string {
   `;
 }
 
+/** Shared output-coordinate mapping for both packed and unpacked samplers. */
+export function samplerCoords(
+    inputShape: number[], outRank: number, broadcastDims: number[]):
+    {coordsSnippet: string; unpackedCoordsSnippet: string} {
+  const inRank = inputShape.length;
+  const rankDiff = outRank - inRank;
+  const fields = ['x', 'y', 'z', 'w', 'u', 'v'];
+  const coordsSnippet = inRank === 0 ? '' :
+      (outRank < 2 && broadcastDims.length >= 1 ? 'coords = 0;' :
+       broadcastDims.map(d => `coords.${shaderEntry(fields, d + rankDiff)} = 0;`)
+           .join('\n'));
+  const unpackedCoordsSnippet = outRank < 2 && inRank > 0 ? 'coords' :
+      inputShape.map((_s, i) => `coords.${shaderEntry(fields, i + rankDiff)}`)
+          .join(', ');
+  return {coordsSnippet, unpackedCoordsSnippet};
+}
+
+/** Preserve the lane replication required by packed broadcast sampling. */
+export function packedBroadcastReturn(
+    inRank: number, outRank: number, inSize: number, outSize: number,
+    broadcastDims: number[]): string {
+  const isInputScalar = inSize === 1;
+  const isOutputScalar = outSize === 1;
+  if (inRank === 1 && !isInputScalar && !isOutputScalar) {
+    return `
+      return vec4(outputValue.xy, outputValue.xy);
+    `;
+  }
+  if (isInputScalar && !isOutputScalar) {
+    return outRank === 1 ? `
+        return vec4(outputValue.x, outputValue.x, 0., 0.);
+      ` : `
+        return vec4(outputValue.x);
+      `;
+  }
+  if (broadcastDims.length === 0) {
+    return 'return outputValue;';
+  }
+  const rows = inRank - 2;
+  const cols = inRank - 1;
+  const broadcastRows = broadcastDims.indexOf(rows) > -1;
+  const broadcastCols = broadcastDims.indexOf(cols) > -1;
+  if (broadcastRows && broadcastCols) {
+    return 'return vec4(outputValue.x);';
+  }
+  if (broadcastRows) {
+    return 'return vec4(outputValue.x, outputValue.y, ' +
+        'outputValue.x, outputValue.y);';
+  }
+  if (broadcastCols) {
+    return 'return vec4(outputValue.xx, outputValue.zz);';
+  }
+  return 'return outputValue;';
+}
+
 function getPackedSamplerAtOutputCoords(
     inputInfo: InputInfo, outShapeInfo: ShapeInfo) {
   const texName = inputInfo.name;
@@ -1711,61 +1766,12 @@ function getPackedSamplerAtOutputCoords(
       inputInfo.shapeInfo.logicalShape, outShapeInfo.logicalShape);
 
   const type = getCoordsDataType(outRank);
-  const rankDiff = outRank - inRank;
-  let coordsSnippet: string;
-  const fields = ['x', 'y', 'z', 'w', 'u', 'v'];
+  const {coordsSnippet, unpackedCoordsSnippet} = samplerCoords(
+      inputInfo.shapeInfo.logicalShape, outRank, broadcastDims);
 
-  if (inRank === 0) {
-    coordsSnippet = '';
-  } else if (outRank < 2 && broadcastDims.length >= 1) {
-    coordsSnippet = 'coords = 0;';
-  } else {
-    coordsSnippet =
-        broadcastDims.map(d => `coords.${shaderEntry(fields, d + rankDiff)} = 0;`)
-            .join('\n');
-  }
-  let unpackedCoordsSnippet = '';
-  if (outRank < 2 && inRank > 0) {
-    unpackedCoordsSnippet = 'coords';
-  } else {
-    unpackedCoordsSnippet = inputInfo.shapeInfo.logicalShape
-                                .map((s, i) => `coords.${shaderEntry(fields, i + rankDiff)}`)
-                                .join(', ');
-  }
-
-  let output = `return outputValue;`;
-  const inSize = util.sizeFromShape(inputInfo.shapeInfo.logicalShape);
-  const isInputScalar = inSize === 1;
-  const outSize = util.sizeFromShape(outShapeInfo.logicalShape);
-  const isOutputScalar = outSize === 1;
-
-  if (inRank === 1 && !isInputScalar && !isOutputScalar) {
-    output = `
-      return vec4(outputValue.xy, outputValue.xy);
-    `;
-  } else if (isInputScalar && !isOutputScalar) {
-    if (outRank === 1) {
-      output = `
-        return vec4(outputValue.x, outputValue.x, 0., 0.);
-      `;
-    } else {
-      output = `
-        return vec4(outputValue.x);
-      `;
-    }
-  } else if (broadcastDims.length) {
-    const rows = inRank - 2;
-    const cols = inRank - 1;
-
-    if (broadcastDims.indexOf(rows) > -1 && broadcastDims.indexOf(cols) > -1) {
-      output = `return vec4(outputValue.x);`;
-    } else if (broadcastDims.indexOf(rows) > -1) {
-      output = `return vec4(outputValue.x, outputValue.y, ` +
-          `outputValue.x, outputValue.y);`;
-    } else if (broadcastDims.indexOf(cols) > -1) {
-      output = `return vec4(outputValue.xx, outputValue.zz);`;
-    }
-  }
+  const output = packedBroadcastReturn(
+      inRank, outRank, util.sizeFromShape(inputInfo.shapeInfo.logicalShape),
+      util.sizeFromShape(outShapeInfo.logicalShape), broadcastDims);
 
   return `
     vec4 ${funcName}() {
@@ -1800,27 +1806,8 @@ function getSamplerAtOutputCoords(
   const type = getCoordsDataType(outRank);
   const broadcastDims = getBroadcastDims(
       inputInfo.shapeInfo.logicalShape, outShapeInfo.logicalShape);
-  const rankDiff = outRank - inRank;
-  let coordsSnippet: string;
-  const fields = ['x', 'y', 'z', 'w', 'u', 'v'];
-
-  if (inRank === 0) {
-    coordsSnippet = '';
-  } else if (outRank < 2 && broadcastDims.length >= 1) {
-    coordsSnippet = 'coords = 0;';
-  } else {
-    coordsSnippet =
-        broadcastDims.map(d => `coords.${shaderEntry(fields, d + rankDiff)} = 0;`)
-            .join('\n');
-  }
-  let unpackedCoordsSnippet = '';
-  if (outRank < 2 && inRank > 0) {
-    unpackedCoordsSnippet = 'coords';
-  } else {
-    unpackedCoordsSnippet = inputInfo.shapeInfo.logicalShape
-                                .map((s, i) => `coords.${shaderEntry(fields, i + rankDiff)}`)
-                                .join(', ');
-  }
+  const {coordsSnippet, unpackedCoordsSnippet} = samplerCoords(
+      inputInfo.shapeInfo.logicalShape, outRank, broadcastDims);
 
   return `
     float ${funcName}() {

@@ -1076,12 +1076,10 @@ export class Sequential extends LayersModel {
 
   // TODO(cais): Override get trainableWeights() here
 
-  // tslint:disable-next-line:no-any
-  override getConfig(): any {
-    // NOTE(cais): We override the return type of getConfig() to `any` here,
-    //   because the `Sequential` class is a special case among `Container`
-    //   subtypes in that its getConfig() method returns an Array (not a
-    //   dict).
+  override getConfig(): serialization.ConfigDict & {
+    name: string; layers: serialization.ConfigDict[];
+  } {
+    // Sequential serialises as a named configuration with ordered layers.
     const layers: serialization.ConfigDict[] = [];
     for (const layer of this.layers) {
       const dict: serialization.ConfigDict = {};

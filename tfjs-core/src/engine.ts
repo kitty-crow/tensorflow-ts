@@ -284,13 +284,14 @@ export class Engine implements TensorTracker, DataMover {
       throw new Error(`Backend name '${backendName}' not found in registry`);
     }
     this.backendName = backendName;
+    let initialised = true;
     if (this.registry[backendName] == null) {
       this.backendInstance = null;
       const {success, asyncInit} = this.initializeBackend(backendName);
-      const result = asyncInit ? await success : success;
-      if (!result) {
-        return false;
-      }
+      initialised = Boolean(asyncInit ? await success : success);
+    }
+    if (!initialised) {
+      return false;
     }
     this.backendInstance = this.registry[backendName];
     this.setupRegisteredKernels();
@@ -726,14 +727,14 @@ export class Engine implements TensorTracker, DataMover {
         () => this.state.kernelDepth++, () => this.state.kernelDepth--, () => {
           if (!this.ENV.getBool('DEBUG') && !this.state.profiling) {
             outputs = kernelFunc();
-          } else {
-            kernelProfile = this.profiler.profileKernel(
-                kernelOrScopeName, inputs, () => kernelFunc());
-            if (this.ENV.getBool('DEBUG')) {
-              this.profiler.logKernelProfile(kernelProfile);
-            }
-            outputs = kernelProfile.outputs;
+            return;
           }
+          kernelProfile = this.profiler.profileKernel(
+              kernelOrScopeName, inputs, () => kernelFunc());
+          if (this.ENV.getBool('DEBUG')) {
+            this.profiler.logKernelProfile(kernelProfile);
+          }
+          outputs = kernelProfile.outputs;
         });
 
     if (isTapeOn) {
@@ -1030,15 +1031,15 @@ export class Engine implements TensorTracker, DataMover {
         // TODO(smilkov): To optimize back-prop, pass dys that are not used in
         // the backprop graph to the user as null instead of zeros
         dys = dys.map((dy, i) => {
-          if (dy == null) {
-            const output = outputs[i];
-            if (output == null) {
-              throw new Error(`Missing gradient output at index ${i}.`);
-            }
-            const vals = util.makeZerosTypedArray(output.size, output.dtype);
-            return this.makeTensor(vals, output.shape, output.dtype);
+          if (dy != null) {
+            return dy;
           }
-          return dy;
+          const output = outputs[i];
+          if (output == null) {
+            throw new Error(`Missing gradient output at index ${i}.`);
+          }
+          const vals = util.makeZerosTypedArray(output.size, output.dtype);
+          return this.makeTensor(vals, output.shape, output.dtype);
         });
         // Grad functions of ops with single outputs expect a dy, while ops
         // with multiple outputs expect dys (array of dy).

@@ -21,6 +21,7 @@ import {WEBGL_ENVS} from './backend_webgl_test_registry';
 import {GPGPUContext} from './gpgpu_context';
 import * as gpgpu_util from './gpgpu_util';
 import * as tex_util from './tex_util';
+import {getNumericParameter, getNumericTextureParameter} from './webgl_util';
 
 describeWithFlags('gpgpu_util createWebGLContext', WEBGL_ENVS, () => {
   let gpgpu: GPGPUContext;
@@ -49,7 +50,7 @@ describeWithFlags('gpgpu_util createWebGLContext', WEBGL_ENVS, () => {
 
   it('enables CULL_FACE with BACK', () => {
     expect(gpgpu.gl.isEnabled(gpgpu.gl.CULL_FACE)).toEqual(true);
-    expect(gpgpu.gl.getParameter(gpgpu.gl.CULL_FACE_MODE))
+    expect(getNumericParameter(gpgpu.gl, gpgpu.gl.CULL_FACE_MODE))
         .toEqual(gpgpu.gl.BACK);
   });
 
@@ -67,10 +68,12 @@ describeWithFlags('gpgpu_util createFloat32MatrixTexture', WEBGL_ENVS, () => {
             .texture;
     gpgpu.gl.bindTexture(gpgpu.gl.TEXTURE_2D, tex);
     expect(
-        gpgpu.gl.getTexParameter(gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_WRAP_S))
+        getNumericTextureParameter(
+            gpgpu.gl, gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_WRAP_S))
         .toEqual(gpgpu.gl.CLAMP_TO_EDGE);
     expect(
-        gpgpu.gl.getTexParameter(gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_WRAP_T))
+        getNumericTextureParameter(
+            gpgpu.gl, gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_WRAP_T))
         .toEqual(gpgpu.gl.CLAMP_TO_EDGE);
     gpgpu.gl.bindTexture(gpgpu.gl.TEXTURE_2D, null);
     gpgpu.deleteMatrixTexture(tex);
@@ -84,11 +87,11 @@ describeWithFlags('gpgpu_util createFloat32MatrixTexture', WEBGL_ENVS, () => {
         gpgpu_util.createFloat32MatrixTexture(gpgpu.gl, 32, 32, textureConfig)
             .texture;
     gpgpu.gl.bindTexture(gpgpu.gl.TEXTURE_2D, tex);
-    expect(gpgpu.gl.getTexParameter(
-               gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_MIN_FILTER))
+    expect(getNumericTextureParameter(
+            gpgpu.gl, gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_MIN_FILTER))
         .toEqual(gpgpu.gl.NEAREST);
-    expect(gpgpu.gl.getTexParameter(
-               gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_MAG_FILTER))
+    expect(getNumericTextureParameter(
+            gpgpu.gl, gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_MAG_FILTER))
         .toEqual(gpgpu.gl.NEAREST);
     gpgpu.gl.bindTexture(gpgpu.gl.TEXTURE_2D, null);
     gpgpu.deleteMatrixTexture(tex);
@@ -104,10 +107,12 @@ describeWithFlags('gpgpu_util createPackedMatrixTexture', WEBGL_ENVS, () => {
         gpgpu_util.createPackedMatrixTexture(gpgpu.gl, 32, 32, textureConfig);
     gpgpu.gl.bindTexture(gpgpu.gl.TEXTURE_2D, tex.texture);
     expect(
-        gpgpu.gl.getTexParameter(gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_WRAP_S))
+        getNumericTextureParameter(
+            gpgpu.gl, gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_WRAP_S))
         .toEqual(gpgpu.gl.CLAMP_TO_EDGE);
     expect(
-        gpgpu.gl.getTexParameter(gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_WRAP_T))
+        getNumericTextureParameter(
+            gpgpu.gl, gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_WRAP_T))
         .toEqual(gpgpu.gl.CLAMP_TO_EDGE);
     gpgpu.gl.bindTexture(gpgpu.gl.TEXTURE_2D, null);
     gpgpu.deleteMatrixTexture(tex.texture);
@@ -120,11 +125,11 @@ describeWithFlags('gpgpu_util createPackedMatrixTexture', WEBGL_ENVS, () => {
     const tex =
         gpgpu_util.createPackedMatrixTexture(gpgpu.gl, 32, 32, textureConfig);
     gpgpu.gl.bindTexture(gpgpu.gl.TEXTURE_2D, tex.texture);
-    expect(gpgpu.gl.getTexParameter(
-               gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_MIN_FILTER))
+    expect(getNumericTextureParameter(
+            gpgpu.gl, gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_MIN_FILTER))
         .toEqual(gpgpu.gl.NEAREST);
-    expect(gpgpu.gl.getTexParameter(
-               gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_MAG_FILTER))
+    expect(getNumericTextureParameter(
+            gpgpu.gl, gpgpu.gl.TEXTURE_2D, gpgpu.gl.TEXTURE_MAG_FILTER))
         .toEqual(gpgpu.gl.NEAREST);
     gpgpu.gl.bindTexture(gpgpu.gl.TEXTURE_2D, null);
     gpgpu.deleteMatrixTexture(tex.texture);

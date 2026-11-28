@@ -27,7 +27,7 @@ import {getGlslDifferences} from './glsl_version';
 import {GPGPUContext, GPGPUContextProgram, linearSearchLastTrue} from './gpgpu_context';
 import * as tex_util from './tex_util';
 import {Texture} from './tex_util';
-import {createFragmentShader} from './webgl_util';
+import {createFragmentShader, getInt32Parameter} from './webgl_util';
 
 const DOWNLOAD_FLOAT_ENVS = {
   flags: {'WEBGL_DOWNLOAD_FLOAT_ENABLED': true},
@@ -68,7 +68,7 @@ describeWithFlags(
         texture = gpgpu.createFloat32MatrixTexture(rows, columns).texture;
         gpgpu.setOutputMatrixTexture(texture, rows, columns);
         const expected = new Int32Array([0, 0, columns, rows]);
-        expect(gpgpu.gl.getParameter(gpgpu.gl.VIEWPORT)).toEqual(expected);
+        expect(getInt32Parameter(gpgpu.gl, gpgpu.gl.VIEWPORT)).toEqual(expected);
       });
     });
 
@@ -109,7 +109,7 @@ describeWithFlags(
         const [width, height] =
             tex_util.getPackedMatrixTextureShapeWidthHeight(rows, columns);
         const expected = new Int32Array([0, 0, width, height]);
-        expect(gpgpu.gl.getParameter(gpgpu.gl.VIEWPORT)).toEqual(expected);
+        expect(getInt32Parameter(gpgpu.gl, gpgpu.gl.VIEWPORT)).toEqual(expected);
         expectArraysEqual(texture.texShape, [height, width]);
       });
     });
@@ -150,11 +150,8 @@ describeWithFlags(
 
       it('sets the scissor box to the requested parameters', () => {
         gpgpu.setOutputMatrixWriteRegion(0, 1, 2, 3);
-        const scissorBox = gpgpu.gl.getParameter(gpgpu.gl.SCISSOR_BOX);
-        expect(scissorBox[0]).toEqual(2);
-        expect(scissorBox[1]).toEqual(0);
-        expect(scissorBox[2]).toEqual(3);
-        expect(scissorBox[3]).toEqual(1);
+        const scissorBox = getInt32Parameter(gpgpu.gl, gpgpu.gl.SCISSOR_BOX);
+        expect(scissorBox).toEqual(new Int32Array([2, 0, 3, 1]));
       });
     });
 

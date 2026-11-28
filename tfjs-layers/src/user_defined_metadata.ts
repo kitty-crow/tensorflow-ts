@@ -61,48 +61,28 @@ export function checkUserDefinedMetadata(
  *   a JSON-valid primitive including string, number, boolean and null,
  *   or an array of the said types.
  */
-// tslint:disable-next-line:no-any
-export function plainObjectCheck(x: any): boolean {
+export function plainObjectCheck(x: unknown): boolean {
   if (x === null) {
-    // Note: typeof `null` is 'object', and `null` is valid in JSON.
+    // Note: typeof null is 'object', and null is valid in JSON.
     return true;
   }
-  if (!(typeof x === 'object')) {
-    // `x` is not a JavaScript object or `null`.
+  if (typeof x !== 'object') {
     const xType = typeof x;
     return xType === 'string' || xType === 'number' || xType === 'boolean';
   }
-  {
-    if (Object.getPrototypeOf(x) === Object.prototype) {
-      // `x` is a JavaScript object and its prototype is Object.
-      const keys = Object.keys(x);
-      for (const key of keys) {
-        if (typeof key !== 'string') {
-          // JSON keys must be strings.
-          return false;
-        }
-        if (!plainObjectCheck(x[key])) {  // Recursive call.
-          return false;
-        }
-      }
-      return true;
-    } else {
-      // `x` is a JavaScript object but its prototype is not Object.
-      if (!(Array.isArray(x))) {
-        // `x` is a JavaScript object and its prototype is not Object,
-        // and it's not an Array. I.e., it's a complex object such as
-        // `Error` and `Date`.
-        return false;
-      }
-      {
-        // `x` is a JavaScript array.
-        for (const item of x) {
-          if (!plainObjectCheck(item)) {  // Recursive call.
-            return false;
-          }
-        }
-        return true;
-      }
+  if (Object.getPrototypeOf(x) === Object.prototype) {
+    // Object.keys yields string keys. Read each value only when visited:
+    // later getters must not run after the first invalid value.
+    return Object.keys(x).every(key => plainObjectCheck(Reflect.get(x, key)));
+  }
+  if (!Array.isArray(x)) {
+    return false;
+  }
+  // for...of deliberately visits sparse slots, which are not JSON values.
+  for (const item of x) {
+    if (!plainObjectCheck(item)) {
+      return false;
     }
   }
+  return true;
 }
