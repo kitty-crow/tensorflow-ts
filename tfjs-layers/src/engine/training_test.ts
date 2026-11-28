@@ -2232,7 +2232,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
     let counter = 0;
     let prevTime = 0;
     const nowFunc = jasmine.createSpy('now').and.callFake(() => {
-      prevTime += timeBetweenCalls[counter++];
+      prevTime += requiredTestElement(timeBetweenCalls, counter++);
       return prevTime;
     });
     let nextFrameCallCount = 0;
@@ -2285,7 +2285,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
     let counter = 0;
     let prevTime = 0;
     const nowFunc = jasmine.createSpy('now').and.callFake(() => {
-      prevTime += timeBetweenCalls[counter++];
+      prevTime += requiredTestElement(timeBetweenCalls, counter++);
       return prevTime;
     });
     let nextFrameCallCount = 0;
@@ -2334,7 +2334,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
     let counter = 0;
     let prevTime = 0;
     const nowFunc = jasmine.createSpy('now').and.callFake(() => {
-      prevTime += timeBetweenCalls[counter++];
+      prevTime += requiredTestElement(timeBetweenCalls, counter++);
       return prevTime;
     });
     let nextFrameCallCount = 0;
@@ -2395,7 +2395,7 @@ describeMathGPU('LayersModel.fit: yieldEvery', () => {
     const presetBatchTimestamps = [0, 2, 4, 6, 8, 10];
     let counter = 0;
     const nowFunc = jasmine.createSpy('now').and.callFake(
-        () => presetBatchTimestamps[counter++]);
+        () => requiredTestElement(presetBatchTimestamps, counter++));
     let nextFrameCallCount = 0;
     const nextFrameFunc =
         jasmine.createSpy('nextFrame').and.callFake(async () => {

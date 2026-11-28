@@ -139,7 +139,7 @@ export class MicrophoneIterator extends LazyIterator<MicrophoneFrame> {
     return;
   }
 
-  async next(): Promise<IteratorResult<MicrophoneFrame, null>> {
+  async next(): Promise<{value: MicrophoneFrame, done: false}|{value: null, done: true}> {
     if (this.isClosed) {
       return {value: null, done: true};
     }

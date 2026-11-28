@@ -146,7 +146,7 @@ export class WebcamIterator extends LazyIterator<Tensor3D> {
     });
   }
 
-  async next(): Promise<IteratorResult<Tensor3D, null>> {
+  async next(): Promise<{value: Tensor3D, done: false}|{value: null, done: true}> {
     if (this.isClosed) {
       return {value: null, done: true};
     }

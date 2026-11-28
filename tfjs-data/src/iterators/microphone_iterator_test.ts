@@ -124,9 +124,10 @@ describeWithFlags('MicrophoneIterator', MEDIA_ENVS, () => {
     const result2 = await microphoneIterator.next();
     expect(result2.done).toBeTruthy();
     expect(result2.value).toBeNull();
-    microphoneIterator.start();
-    expect(result1.done).toBeFalsy();
-    expect(test_util.requiredTestValue(result1.value.spectrogram, 'spectrogram').shape).toEqual([43, 16, 1]);
+    await microphoneIterator.start();
+    const restarted = await microphoneIterator.next();
+    expect(restarted.done).toBeFalsy();
+    expect(test_util.requiredTestValue(restarted.value.spectrogram, 'spectrogram').shape).toEqual([43, 16, 1]);
   });
 
   it('stops microphone multiple times', async () => {
