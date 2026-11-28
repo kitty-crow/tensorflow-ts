@@ -16,8 +16,6 @@
  */
 
 import {requireComplexTensorInfos, requireTensorDataValues} from './tensor_data_values';
-import {stringSplitImpl} from './kernels/StringSplit_impl';
-import {sparseSegmentReductionImpl} from './kernels/SparseSegmentReduction_impl';
 import {transpose} from './kernels/Transpose';
 import {unpack} from './kernels/Unpack';
 import {splitV} from './kernels/SplitV';

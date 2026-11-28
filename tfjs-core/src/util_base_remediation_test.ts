@@ -289,7 +289,8 @@ describe('gradient registry conditional warning', () => {
     try {
       expect(debug).not.toHaveBeenCalled();
       registerGradient(replacement);
-      expect(debug).toHaveBeenCalledOnceWith('DEBUG');
+      expect(debug).toHaveBeenCalledTimes(1);
+      expect(debug).toHaveBeenCalledWith('DEBUG');
       expect(getGradient(kernelName)).toBe(replacement);
     } finally {
       unregisterGradient(kernelName);

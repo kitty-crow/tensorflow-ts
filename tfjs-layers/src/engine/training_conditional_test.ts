@@ -41,6 +41,7 @@ import {DepthwiseConv2D} from '../layers/convolutional_depthwise';
 import {Sequential} from '../models';
 import {getOptimizer} from '../optimizers';
 import {collectMetrics, LayersModel, standardizeInputData} from './training';
+import {standardizeClassWeights} from './training_utils';
 import {disposeNewTensors, ensureTensorsRank2OrHigher} from './training_tensors';
 
 describe('training conditional regression coverage', () => {
@@ -570,5 +571,21 @@ describe('dot shape validation', () => {
     expect(negative.computeOutputShape([[null, 3], [null, 3]])).toEqual([null, 1]);
     expect(() => dot.computeOutputShape([null, 3]))
         .toThrowError(/exactly 2 inputs/);
+  });
+});
+
+
+describe('class weight normalization branches', () => {
+  it('preserves a single array, named weights, and output ordering', () => {
+    const first = {0: 2};
+    const second = {1: 3};
+    const single = [first];
+    expect(standardizeClassWeights(single, ['first'])).toBe(single);
+    expect(standardizeClassWeights({first}, ['first'])).toEqual([first]);
+    expect(standardizeClassWeights(first, ['first'])).toEqual([first]);
+    expect(standardizeClassWeights({second, first}, ['first', 'second']))
+        .toEqual([first, second]);
+    expect(() => standardizeClassWeights(single, ['first', 'second']))
+        .toThrowError(/model has 2 outputs/);
   });
 });
