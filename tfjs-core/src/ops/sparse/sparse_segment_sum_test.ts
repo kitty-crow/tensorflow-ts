@@ -167,6 +167,22 @@ describeWithFlags('sparseSegmentSum', ALL_ENVS, () => {
     ])).toThrowError('segment ids must be >= 0');
   });
 
+  it('retains distinct rank errors for sum and mean', () => {
+    const data = TensorValue10x4();
+    try {
+      expect(() => tf.sparse.sparseSegmentSum(data, [[0, 1]], [0, 1]))
+          .toThrowError('Indices should be Tensor1D but received shape\n         1,2');
+      expect(() => tf.sparse.sparseSegmentMean(data, [[0, 1]], [0, 1]))
+          .toThrowError('Indices should be Tensor1D but received shape\n          1,2');
+      expect(() => tf.sparse.sparseSegmentSum(data, [0, 1], [[0, 1]]))
+          .toThrowError('Segment ids should be Tensor1D but received shape\n         1,2');
+      expect(() => tf.sparse.sparseSegmentMean(data, [0, 1], [[0, 1]]))
+          .toThrowError('Segment ids should be Tensor1D but received shape\n          1,2');
+    } finally {
+      data.dispose();
+    }
+  });
+
   it('indices invalid rank', async () => {
     expect(() => tf.sparse.sparseSegmentSum(TensorValue10x4(), [[8, 3, 0, 9]], [
       0, 0, 0, -2

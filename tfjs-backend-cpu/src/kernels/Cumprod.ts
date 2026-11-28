@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2022 Google LLC. All Rights Reserved.
+ * Copyright 2020 Google LLC. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,70 +15,15 @@
  * =============================================================================
  */
 
-import {backend_util, Cumprod, CumprodAttrs, CumprodInputs, KernelConfig, KernelAttributes, TensorInfo, TypedArray, upcastType, util} from '@tensorflow/tfjs-core';
+import {Cumprod, CumprodAttrs, CumprodInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendCPU} from '../backend_cpu';
-import {assertNotComplex, requiredCpuEntry} from '../cpu_util';
-import {transpose} from './Transpose';
+import {cumulativeReduction} from './cumulative_reduction';
 
 export function cumprod(
     args: {inputs: CumprodInputs, backend: MathBackendCPU,
            attrs: KernelAttributes<CumprodAttrs>}): TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {axis, exclusive, reverse} = attrs;
-
-  assertNotComplex(x, 'cumprod');
-
-  const permutation = backend_util.getAxesPermutation([axis], x.shape.length);
-  let $x = x;
-  if (permutation != null) {
-    $x = transpose({inputs: {x}, backend, attrs: {perm: permutation}});
-  }
-  const permutedAxis = requiredCpuEntry(backend_util.getInnerMostAxes(1, x.shape.length), 0);
-
-  if (permutedAxis !== $x.shape.length - 1) {
-    throw new Error(
-        `backend.cumprod in CPU expects an inner-most ` +
-        `axis=${$x.shape.length - 1} but got axis=${permutedAxis}`);
-  }
-
-  const resultDtype = upcastType($x.dtype, 'int32');
-  const vals = util.makeOnesTypedArray(
-                   util.sizeFromShape($x.shape), resultDtype) as TypedArray;
-
-  const aVals = backend.requireValues($x.dataId) as TypedArray;
-  const finalDim = requiredCpuEntry($x.shape, $x.shape.length - 1);
-  const indexAdjuster = reverse ?
-      (i: number, j: number) => i + finalDim - j - 1 :
-      (i: number, j: number) => i + j;
-  for (let i = 0; i < aVals.length; i += finalDim) {
-    for (let j = 0; j < finalDim; j++) {
-      const idx = indexAdjuster(i, j);
-      if (j === 0) {
-        vals[idx] = exclusive ? 1 : requiredCpuEntry(aVals, idx);
-      } else {
-        const prevIdx = indexAdjuster(i, j - 1);
-        vals[idx] = exclusive ? requiredCpuEntry(aVals, prevIdx) * requiredCpuEntry(vals, prevIdx) :
-                                requiredCpuEntry(aVals, idx) * requiredCpuEntry(vals, prevIdx);
-      }
-    }
-  }
-
-  const result = backend.makeTensorInfo($x.shape, resultDtype, vals);
-
-  if (permutation != null) {
-    const reversePermutation = backend_util.getUndoAxesPermutation(permutation);
-    const reverseTransposedResult = transpose(
-        {inputs: {x: result}, backend, attrs: {perm: reversePermutation}});
-
-    backend.disposeIntermediateTensorInfo(result);
-    backend.disposeIntermediateTensorInfo($x);
-
-    return reverseTransposedResult;
-  }
-
-  return result;
+  return cumulativeReduction(args, 'cumprod');
 }
 
 export const cumprodConfig: KernelConfig = {

@@ -62,7 +62,7 @@ async function expectWeightedLoss(
     expect(Array.isArray(evaluated)).toBe(true);
     const tensors = evaluated as tfc.Scalar[];
     const values = await Promise.all(tensors.map(async value => {
-      return (await value.data())[0];
+      return tfc.util.requiredNumericEntry(await value.data(), 0);
     }));
     expect(values.length).toBe(3);
     expect(fixtureTestUtil.requiredTestElement(values, 0)).toBeCloseTo(expected, 5);

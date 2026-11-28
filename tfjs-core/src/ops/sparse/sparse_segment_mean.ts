@@ -16,11 +16,11 @@
  */
 
 import {ENGINE} from '../../engine';
-import {SparseSegmentMean, SparseSegmentMeanInputs} from '../../kernel_names';
+import {SparseSegmentMean} from '../../kernel_names';
 import {Tensor, Tensor1D} from '../../tensor';
-import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import {op} from '../operation';
+import {sparseSegmentInputs} from './sparse_segment_inputs';
 
 /**
  * Computes the mean along sparse segments of a tensor.
@@ -59,30 +59,7 @@ import {op} from '../operation';
 function sparseSegmentMean_(
     data: Tensor|TensorLike, indices: Tensor1D|TensorLike,
     segmentIds: Tensor1D|TensorLike): Tensor {
-  const $data = convertToTensor(data, 'data', 'sparseSegmentMean');
-  const $indices =
-      convertToTensor(indices, 'indices', 'sparseSegmentMean', 'int32');
-  const $segmentIds =
-      convertToTensor(segmentIds, 'segmentIds', 'sparseSegmentMean', 'int32');
-
-  if ($data.rank < 1) {
-    throw new Error(
-        `Data should be at least 1 dimensional but received scalar`);
-  }
-  if ($indices.rank !== 1) {
-    throw new Error(`Indices should be Tensor1D but received shape
-          ${$indices.shape}`);
-  }
-  if ($segmentIds.rank !== 1) {
-    throw new Error(`Segment ids should be Tensor1D but received shape
-          ${$segmentIds.shape}`);
-  }
-
-  const inputs: SparseSegmentMeanInputs = {
-    data: $data,
-    indices: $indices,
-    segmentIds: $segmentIds
-  };
+  const inputs = sparseSegmentInputs(data, indices, segmentIds, 'sparseSegmentMean');
 
   return ENGINE.runKernel(SparseSegmentMean, inputs as {});
 }

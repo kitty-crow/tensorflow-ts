@@ -15,56 +15,15 @@
  * =============================================================================
  */
 
-import {Any, AnyAttrs, AnyInputs, backend_util, KernelConfig, KernelAttributes, TensorInfo, util} from '@tensorflow/tfjs-core';
+import {Any, AnyAttrs, AnyInputs, KernelConfig, KernelAttributes, TensorInfo} from '@tensorflow/tfjs-core';
 
 import {MathBackendWebGL} from '../backend_webgl';
-import {reduce} from '../kernel_utils/reduce';
-import {reshape} from './Reshape';
-import {transpose} from './Transpose';
+import {axisReduction} from './axis_reduction';
 
 export function any(
     args: {inputs: AnyInputs, backend: MathBackendWebGL, attrs: KernelAttributes<AnyAttrs>}):
     TensorInfo {
-  const {inputs, backend, attrs} = args;
-  const {x} = inputs;
-  const {axis, keepDims} = attrs;
-
-  const xRank = x.shape.length;
-
-  const origAxes = util.parseAxisParam(axis, x.shape);
-  let axes = origAxes;
-  const permutedAxes = backend_util.getAxesPermutation(axes, xRank);
-  let permutedX = x;
-  if (permutedAxes != null) {
-    permutedX = transpose({inputs: {x}, backend, attrs: {perm: permutedAxes}});
-    axes = backend_util.getInnerMostAxes(axes.length, xRank);
-  }
-
-  backend_util.assertAxesAreInnerMostDims('any', axes, xRank);
-  const [outShape, reduceShape] =
-      backend_util.computeOutAndReduceShapes(permutedX.shape, axes);
-  const inSize = util.sizeFromShape(reduceShape);
-
-  const a2D =
-      reshape({inputs: {x: permutedX}, backend, attrs: {shape: [-1, inSize]}});
-  const reduced = reduce(a2D, a2D.dtype, 'any', backend);
-
-  let res: TensorInfo;
-  if (keepDims) {
-    const newShape = backend_util.expandShapeToKeepDim(outShape, origAxes);
-    res = reshape({inputs: {x: reduced}, backend, attrs: {shape: newShape}});
-  } else {
-    res = reshape({inputs: {x: reduced}, backend, attrs: {shape: outShape}});
-  }
-
-  backend.disposeIntermediateTensorInfo(a2D);
-  backend.disposeIntermediateTensorInfo(reduced);
-
-  if (permutedAxes != null) {
-    backend.disposeIntermediateTensorInfo(permutedX);
-  }
-
-  return res;
+  return axisReduction(args, 'any');
 }
 
 export const anyConfig: KernelConfig = {

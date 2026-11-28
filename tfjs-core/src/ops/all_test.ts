@@ -85,6 +85,24 @@ describeWithFlags('all', ALL_ENVS, () => {
     expectArraysClose(await r.data(), [0, 0]);
   });
 
+  it('retains reduction-specific values and shapes on a non-final axis', async () => {
+    const x = tf.tensor2d([1, 1, 0, 0, 1, 0], [2, 3], 'bool');
+    const y = tf.tensor2d([1, -2, 3, 4, 5, -6], [2, 3]);
+    const allResult = tf.all(x, 0, true);
+    const anyResult = tf.any(x, 0, true);
+    const minResult = tf.min(y, 0, true);
+    try {
+      expect(allResult.shape).toEqual([1, 3]);
+      expect(anyResult.shape).toEqual([1, 3]);
+      expect(minResult.shape).toEqual([1, 3]);
+      expectArraysEqual(await allResult.data(), [0, 1, 0]);
+      expectArraysEqual(await anyResult.data(), [1, 1, 0]);
+      expectArraysClose(await minResult.data(), [1, -2, -6]);
+    } finally {
+      tf.dispose([x, y, allResult, anyResult, minResult]);
+    }
+  });
+
   it('throws when dtype is not boolean', () => {
     const a = tf.tensor2d([1, 1, 0, 0], [2, 2]);
     expect(() => tf.all(a))

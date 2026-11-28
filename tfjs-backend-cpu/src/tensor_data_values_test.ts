@@ -90,6 +90,8 @@ import {stringNGramsImpl} from './kernels/StringNGrams_impl';
 import {stringSplitImpl} from './kernels/StringSplit_impl';
 import {sparseReshapeImpl} from './kernels/SparseReshape_impl';
 import {sparseSegmentReductionImpl} from './kernels/SparseSegmentReduction_impl';
+import {sparseSegmentSum} from './kernels/SparseSegmentSum';
+import {sparseSegmentMean} from './kernels/SparseSegmentMean';
 import {uniqueImpl} from './kernels/Unique_impl';
 import {topKImpl} from './kernels/TopK_impl';
 import {raggedRangeImpl} from './kernels/RaggedRange_impl';
@@ -1112,5 +1114,52 @@ describe('string split and sparse segment branch regressions', () => {
     expect(() => sparseSegmentReductionImpl(
         input, [3, 1], 'float32', new Int32Array([0, 1, 2]),
         new Int32Array([1, 0, 2]))).toThrowError();
+  });
+});
+
+describe('CPU shared cumulative and sparse segment dispatch', () => {
+  it('preserves reverse exclusive scans across a non-final axis', () => {
+    const backend = new MathBackendCPU();
+    const x = backend.makeTensorInfo([2, 3], 'float32',
+        new Float32Array([2, 3, 4, 5, 6, 7]));
+    const args = {inputs: {x}, backend,
+      attrs: {axis: 0, exclusive: true, reverse: true}};
+    const sum = cumsum(args);
+    const product = cumprod(args);
+    expect(sum.shape).toEqual([2, 3]);
+    expect(product.shape).toEqual([2, 3]);
+    expect(backend.readSync(sum.dataId))
+        .toEqual(new Float32Array([5, 6, 7, 0, 0, 0]));
+    expect(backend.readSync(product.dataId))
+        .toEqual(new Float32Array([5, 6, 7, 1, 1, 1]));
+    [x, sum, product].forEach(t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
+  });
+
+  it('keeps sparse mean distinct from sum and checks index shape', () => {
+    const backend = new MathBackendCPU();
+    const data = backend.makeTensorInfo([3, 1], 'float32',
+        new Float32Array([2, 4, 8]));
+    const indices = backend.makeTensorInfo([3], 'int32',
+        new Int32Array([0, 1, 2]));
+    const segmentIds = backend.makeTensorInfo([3], 'int32',
+        new Int32Array([0, 0, 2]));
+    const args = {inputs: {data, indices, segmentIds}, backend};
+    const sum = sparseSegmentSum(args);
+    const mean = sparseSegmentMean(args);
+    expect(sum.shape).toEqual([3, 1]);
+    expect(mean.shape).toEqual([3, 1]);
+    expect(backend.readSync(sum.dataId)).toEqual(new Float32Array([6, 0, 8]));
+    expect(backend.readSync(mean.dataId)).toEqual(new Float32Array([3, 0, 8]));
+    const wrongIndices = backend.makeTensorInfo([1, 3], 'int32',
+        new Int32Array([0, 1, 2]));
+    const badArgs = {inputs: {data, indices: wrongIndices, segmentIds}, backend};
+    expect(() => sparseSegmentSum(badArgs)).toThrowError(
+        'Indices should be a vector but received shape\n         1,3');
+    expect(() => sparseSegmentMean(badArgs)).toThrowError(
+        'Indices should be a vector but received shape\n          1,3');
+    [data, indices, segmentIds, sum, mean, wrongIndices].forEach(
+        t => backend.disposeData(t.dataId));
+    expect(backend.numDataIds()).toBe(0);
   });
 });
