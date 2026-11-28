@@ -728,7 +728,7 @@ describe('util.decodeString', () => {
   });
 
   it('assert promise', () => {
-    const promise = new Promise(() => {});
+    const promise = new Promise<void>(() => {});
     expect(util.isPromise(promise)).toBeTruthy();
     const promise2 = {then: () => {}};
     expect(util.isPromise(promise2)).toBeTruthy();

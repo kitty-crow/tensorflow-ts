@@ -44,7 +44,7 @@ export class TestIntegerIterator extends LazyIterator<number> {
     // to demonstrate that the various methods still process the stream
     // in the correct order.
     if (Math.random() < 0.1) {
-      await new Promise(res => setTimeout(res, 1));
+      await new Promise<void>(res => setTimeout(res, 1));
     }
     return {value: result, done: false};
   }
@@ -91,7 +91,7 @@ describe('LazyIterator', () => {
       // resolved, to demonstrate that we still process the
       // stream in the correct order.
       if (Math.random() < 0.1) {
-        await new Promise(res => setTimeout(res, 1));
+        await new Promise<void>(res => setTimeout(res, 1));
       }
       return Promise.resolve(`item ${x}`);
     });

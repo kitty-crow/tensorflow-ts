@@ -15,17 +15,8 @@
  * =============================================================================
  */
 
-import {Erf, ErfInputs, KernelConfig} from '@tensorflow/tfjs';
+import {KernelConfig, Erf} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createUnaryKernelConfig} from './native_dispatch';
 
-export const erfConfig: KernelConfig = {
-  kernelName: Erf,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as ErfInputs;
-    const backend = args.backend as NodeJSKernelBackend;
-
-    return backend.executeSingleInput(Erf, x);
-  }
-};
+export const erfConfig: KernelConfig = createUnaryKernelConfig(Erf);

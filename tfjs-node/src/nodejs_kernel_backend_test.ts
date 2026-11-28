@@ -28,6 +28,12 @@ import {cosConfig} from './kernels/Cos';
 import {FFTConfig} from './kernels/FFT';
 import {IFFTConfig} from './kernels/IFFT';
 import {sinConfig} from './kernels/Sin';
+import {logicalAndConfig} from './kernels/LogicalAnd';
+import {logicalOrConfig} from './kernels/LogicalOr';
+import {onesLikeConfig} from './kernels/OnesLike';
+import {zerosLikeConfig} from './kernels/ZerosLike';
+import {erfConfig} from './kernels/Erf';
+import {squareConfig} from './kernels/Square';
 import {conv3DAttrs, dilation2DAttrs, executeWithInt32Vector, indexedTensorAttrs, localResponseAttrs, pool2DAttrs, pool3DAttrs, resizeGradientAttrs, withNmsInputs} from './kernels/native_dispatch';
 import {addConfig} from './kernels/Add';
 import {atan2Config} from './kernels/Atan2';
@@ -411,6 +417,47 @@ describe('native spatial and NMS contracts', () => {
     } finally {
       boxes.dispose();
       scores.dispose();
+    }
+  });
+});
+
+
+describe('logical and like-shaped native dispatch', () => {
+  it('preserves logical op names, empty attributes and operand order', () => {
+    const backend = nodeBackend();
+    const a = tf.scalar(true, 'bool');
+    const b = tf.scalar(false, 'bool');
+    try {
+      const dispatch = spyOn(backend, 'executeSingleOutput').and.returnValue(a);
+      expect(logicalAndConfig.kernelFunc({backend, inputs: {a, b}})).toBe(a);
+      expect(logicalOrConfig.kernelFunc({backend, inputs: {a, b}})).toBe(a);
+      expect(dispatch.calls.allArgs()).toEqual([
+        ['LogicalAnd', [], [a, b]], ['LogicalOr', [], [a, b]]
+      ]);
+    } finally {
+      a.dispose();
+      b.dispose();
+    }
+  });
+
+  it('preserves selected-backend dtype mapping and the unary op names', () => {
+    const backend = nodeBackend();
+    const x = tf.scalar(2, 'int32');
+    try {
+      const dispatch = spyOn(backend, 'executeSingleOutput').and.returnValue(x);
+      const attrs = [{name: 'T', type: backend.binding.TF_ATTR_TYPE,
+        value: backend.getDTypeInteger(x.dtype)}];
+      expect(onesLikeConfig.kernelFunc({backend, inputs: {x}})).toBe(x);
+      expect(zerosLikeConfig.kernelFunc({backend, inputs: {x}})).toBe(x);
+      expect(erfConfig.kernelFunc({backend, inputs: {x}})).toBe(x);
+      expect(squareConfig.kernelFunc({backend, inputs: {x}})).toBe(x);
+      expect(dispatch.calls.allArgs()).toEqual([
+        ['OnesLike', attrs, [x]], ['ZerosLike', attrs, [x]],
+        ['Erf', [createTensorsTypeOpAttr('T', x.dtype)], [x]],
+        ['Square', [createTensorsTypeOpAttr('T', x.dtype)], [x]]
+      ]);
+    } finally {
+      x.dispose();
     }
   });
 });

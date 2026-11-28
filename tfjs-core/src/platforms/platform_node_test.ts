@@ -146,7 +146,7 @@ describe('PlatformNode', () => {
     }
 
     it('works on values created in a new node context', async () => {
-      const array = await new Promise((resolve) => {
+      const array = await new Promise<Uint8Array>((resolve) => {
         const code = `resolve(new Uint8Array([1, 2, 3]));`;
         vm.runInNewContext(code, {resolve});
       });

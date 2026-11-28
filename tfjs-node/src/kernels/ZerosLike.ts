@@ -15,21 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, ZerosLike, ZerosLikeInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, ZerosLike} from '@tensorflow/tfjs';
 
-export const zerosLikeConfig: KernelConfig = {
-  kernelName: ZerosLike,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as ZerosLikeInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createLikeKernelConfig} from './native_dispatch';
 
-    const opAttrs = [{
-      name: 'T',
-      type: backend.binding.TF_ATTR_TYPE,
-      value: backend.getDTypeInteger(x.dtype)
-    }];
-    return backend.executeSingleOutput(ZerosLike, opAttrs, [x]);
-  }
-};
+export const zerosLikeConfig: KernelConfig = createLikeKernelConfig(ZerosLike);

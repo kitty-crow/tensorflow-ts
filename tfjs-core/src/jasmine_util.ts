@@ -126,8 +126,7 @@ export function setupTestFilters(
    * include list. Thus, if a test matches both the exclude and the include
    * list, it will be excluded.
    */
-  // tslint:disable-next-line: no-any
-  const specFilter = (spec: any) => {
+  const specFilter: typeof grepFilter = spec => {
     // Filter out tests if the --grep flag is passed.
     if (!grepFilter(spec)) {
       return false;
@@ -139,33 +138,31 @@ export function setupTestFilters(
       return true;
     }
 
-    // Include tests of a test suite unless tests are in excludes list.
-    for (let i = 0; i < testFilters.length; ++i) {
-      const testFilter = testFilters[i];
-      if (!((testFilter.include != null &&
-           name.indexOf(testFilter.include) > -1) ||
-          (testFilter.startsWith != null &&
-           name.startsWith(testFilter.startsWith)))) continue;
-      {
-        if (!(testFilter.excludes != null)) {
-          return true;
-        }
-        {
-          for (let j = 0; j < testFilter.excludes.length; j++) {
-            if (name.indexOf(testFilter.excludes[j]) > -1) {
-              return false;
-            }
-          }
-        }
-        return true;
-      }
-    }
-
-    // Otherwise ignore the test.
-    return false;
+    return matchesTestFilters(name, testFilters);
   };
 
   env.configure({...config, specFilter});
+}
+
+/** Evaluate filters in order, retaining the first matching filter's exclusion policy. */
+export function matchesTestFilters(name: string, testFilters: TestFilter[]): boolean {
+  for (const filter of testFilters) {
+    const {include, startsWith, excludes} = filter;
+    if (!((include != null && name.indexOf(include) > -1) ||
+          (startsWith != null && name.startsWith(startsWith)))) {
+      continue;
+    }
+    if (excludes == null) {
+      return true;
+    }
+    for (const excluded of excludes) {
+      if (name.indexOf(excluded) > -1) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 export function parseTestEnvFromKarmaFlags(

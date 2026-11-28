@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, LogicalOr, LogicalOrInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, LogicalOr} from '@tensorflow/tfjs';
 
-export const logicalOrConfig: KernelConfig = {
-  kernelName: LogicalOr,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as LogicalOrInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createLogicalBinaryConfig} from './native_dispatch';
 
-    return backend.executeSingleOutput(LogicalOr, [], [a, b]);
-  }
-};
+export const logicalOrConfig: KernelConfig = createLogicalBinaryConfig(LogicalOr);

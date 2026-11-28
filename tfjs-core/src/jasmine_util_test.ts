@@ -16,7 +16,7 @@
  */
 
 import {Environment} from './environment';
-import {envSatisfiesConstraints, parseTestEnvFromKarmaFlags, TestEnv} from './jasmine_util';
+import {envSatisfiesConstraints, matchesTestFilters, parseTestEnvFromKarmaFlags, TestEnv} from './jasmine_util';
 
 describe('jasmine_util.envSatisfiesConstraints', () => {
   it('ENV satisfies empty constraints', () => {
@@ -144,5 +144,26 @@ describe('jasmine_util.parseKarmaFlags', () => {
             ['--testEnv', 'test-env', '--flags', 'notJson'],
             registeredTestEnvs))
         .toThrowError();
+  });
+});
+
+
+describe('jasmine_util.matchesTestFilters', () => {
+  it('matches inclusion and prefixes while rejecting unmatched names', () => {
+    const filters = [{include: 'math'}, {startsWith: 'io '}];
+    expect(matchesTestFilters('tensor math add', filters)).toBeTrue();
+    expect(matchesTestFilters('io load', filters)).toBeTrue();
+    expect(matchesTestFilters('tensor io load', filters)).toBeFalse();
+    expect(matchesTestFilters('anything', [])).toBeFalse();
+  });
+
+  it('retains first-match exclusion priority and empty exclusions', () => {
+    const filters = [
+      {include: 'math', excludes: ['slow']}, {startsWith: 'math'}
+    ];
+    expect(matchesTestFilters('math slow', filters)).toBeFalse();
+    expect(matchesTestFilters('math fast', filters)).toBeTrue();
+    expect(matchesTestFilters('math slow', [{include: 'math', excludes: []}]))
+        .toBeTrue();
   });
 });

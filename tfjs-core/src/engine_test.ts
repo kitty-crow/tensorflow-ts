@@ -460,7 +460,7 @@ describeWithFlags('profile', ALL_ENVS, () => {
 
   it('squaring in async query', async () => {
     const profile = await tf.profile(async () => {
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise<void>(resolve => setTimeout(resolve, 1));
       const x = tf.tensor1d([1, 2, 3]);
       const x2 = x.square();
       x2.dispose();

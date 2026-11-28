@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, LogicalAnd, LogicalAndInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, LogicalAnd} from '@tensorflow/tfjs';
 
-export const logicalAndConfig: KernelConfig = {
-  kernelName: LogicalAnd,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {a, b} = args.inputs as LogicalAndInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createLogicalBinaryConfig} from './native_dispatch';
 
-    return backend.executeSingleOutput(LogicalAnd, [], [a, b]);
-  }
-};
+export const logicalAndConfig: KernelConfig = createLogicalBinaryConfig(LogicalAnd);

@@ -15,16 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, Square, SquareInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, Square} from '@tensorflow/tfjs';
 
-export const squareConfig: KernelConfig = {
-  kernelName: Square,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as SquareInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createUnaryKernelConfig} from './native_dispatch';
 
-    return backend.executeSingleInput(Square, x);
-  }
-};
+export const squareConfig: KernelConfig = createUnaryKernelConfig(Square);

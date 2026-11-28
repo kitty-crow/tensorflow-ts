@@ -15,21 +15,8 @@
  * =============================================================================
  */
 
-import {KernelConfig, OnesLike, OnesLikeInputs} from '@tensorflow/tfjs';
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {KernelConfig, OnesLike} from '@tensorflow/tfjs';
 
-export const onesLikeConfig: KernelConfig = {
-  kernelName: OnesLike,
-  backendName: 'tensorflow',
-  kernelFunc: (args) => {
-    const {x} = args.inputs as OnesLikeInputs;
-    const backend = args.backend as NodeJSKernelBackend;
+import {createLikeKernelConfig} from './native_dispatch';
 
-    const opAttrs = [{
-      name: 'T',
-      type: backend.binding.TF_ATTR_TYPE,
-      value: backend.getDTypeInteger(x.dtype)
-    }];
-    return backend.executeSingleOutput(OnesLike, opAttrs, [x]);
-  }
-};
+export const onesLikeConfig: KernelConfig = createLikeKernelConfig(OnesLike);

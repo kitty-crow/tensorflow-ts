@@ -33,7 +33,7 @@ const DEFAULT_JSON_EXTENSION_NAME = '.json';
 const DEFAULT_WEIGHT_DATA_EXTENSION_NAME = '.weights.bin';
 
 function defer<T>(f: () => T): Promise<T> {
-  return new Promise(resolve => setTimeout(resolve)).then(f);
+  return new Promise<void>(resolve => setTimeout(resolve)).then(f);
 }
 
 export class BrowserDownloads implements IOHandler {

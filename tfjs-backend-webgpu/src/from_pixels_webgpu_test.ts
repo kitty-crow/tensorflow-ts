@@ -95,7 +95,7 @@ describeWebGPU('fromPixels', () => {
       img.src = 'data:image/gif;base64' +
           ',R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
 
-      await new Promise(resolve => {
+      await new Promise<HTMLImageElement>(resolve => {
         img.onload = () => resolve(img);
       });
 
@@ -115,7 +115,7 @@ describeWebGPU('fromPixels', () => {
       const img = new Image(10, 10);
       img.src =
           'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAABfSURBVChTY/gPBu8NLd/KqLxT1oZw4QAqDZSDoPeWDj9WrYUIAgG6NBAhm4FFGoIgxuCUBiKgMfikv1bW4pQGav334wdUGshBk/6SVQAUh0p/mzIDTQ6oFSGNHfz/DwAwi8mNzTi6rwAAAABJRU5ErkJggg==';
-      await new Promise(resolve => {
+      await new Promise<HTMLImageElement>(resolve => {
         img.onload = () => resolve(img);
       });
       const resImage = tf.browser.fromPixels(img);

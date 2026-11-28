@@ -297,3 +297,33 @@ export function resizeGradientAttrs(
     {name: 'align_corners', type: backend.binding.TF_ATTR_BOOL, value: alignCorners}
   ];
 }
+
+/** Native logical binary ops have no explicit dtype attributes. */
+export function createLogicalBinaryConfig(kernelName: 'LogicalAnd'|'LogicalOr'): KernelConfig {
+  return {
+    kernelName,
+    backendName: 'tensorflow',
+    kernelFunc: (args: {inputs: {a: TensorInfo, b: TensorInfo}, backend: NodeJSKernelBackend}) => {
+      const {a, b} = args.inputs;
+      return args.backend.executeSingleOutput(kernelName, [], [a, b]);
+    }
+  };
+}
+
+/** Like-shaped constant ops use the selected backend's dtype mapping. */
+export function createLikeKernelConfig(kernelName: 'OnesLike'|'ZerosLike'): KernelConfig {
+  return {
+    kernelName,
+    backendName: 'tensorflow',
+    kernelFunc: (args: {inputs: {x: TensorInfo}, backend: NodeJSKernelBackend}) => {
+      const {x} = args.inputs;
+      const backend = args.backend;
+      const attrs = [{
+        name: 'T',
+        type: backend.binding.TF_ATTR_TYPE,
+        value: backend.getDTypeInteger(x.dtype)
+      }];
+      return backend.executeSingleOutput(kernelName, attrs, [x]);
+    }
+  };
+}

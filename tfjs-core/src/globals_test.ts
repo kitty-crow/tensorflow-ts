@@ -281,15 +281,14 @@ describeWithFlags('tidy', ALL_ENVS, () => {
   it('works with arbitrary depth of result', async () => {
     tf.tidy(() => {
       const res = tf.tidy(() => {
-        return [tf.scalar(1), [[tf.scalar(2)]], {list: [tf.scalar(3)]}];
+        return [tf.scalar(1), [[tf.scalar(2)]], {list: [tf.scalar(3)]}] satisfies
+            [tf.Tensor, [[tf.Tensor]], {list: [tf.Tensor]}];
       });
-      expect((requiredTestElement(res, 0) as tf.Tensor).isDisposed).toBe(false);
-      // tslint:disable-next-line:no-any
-      expect((requiredTestElement(res, 1) as any)[0][0].isDisposed).toBe(false);
-      // tslint:disable-next-line:no-any
-      expect((requiredTestElement(res, 2) as any).list[0].isDisposed).toBe(false);
+      expect(res[0].isDisposed).toBe(false);
+      expect(res[1][0][0].isDisposed).toBe(false);
+      expect(res[2].list[0].isDisposed).toBe(false);
       expect(tf.memory().numTensors).toBe(3);
-      return requiredTestElement(res, 0);
+      return res[0];
     });
     // Everything but scalar(1) got disposed.
     expect(tf.memory().numTensors).toBe(1);

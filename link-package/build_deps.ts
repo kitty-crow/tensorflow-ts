@@ -71,7 +71,7 @@ async function main() {
     if (process.platform === 'win32') {
       const child = exec('yarn bazel build --color=yes '
         + `${args.bazel_options} ${targets.join(' ')}`);
-      await new Promise((resolve, reject) => {
+      await new Promise<number|null>((resolve, reject) => {
         child.stdout.pipe(process.stdout);
         child.stderr.pipe(process.stderr);
         child.on('exit', code => {

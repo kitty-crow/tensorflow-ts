@@ -55,7 +55,7 @@ describe('SavedModel metadata', () => {
 
   it('rejects unsupported dtypes and malformed generated messages', () => {
     expect(() => inspectSavedModelMetadata(
-        graph(new Map([['input', tensor('x:0', [], 42)]]), new Map()), types))
+        graph(new Map([['input', tensor('x:0', [], 42)]]), new Map<string, ReturnType<typeof tensor>>()), types))
         .toThrowError(/Unsupported tensor DataType/);
     expect(() => inspectSavedModelMetadata({}, types))
         .toThrowError('Missing protobuf method getMetaGraphsList');
