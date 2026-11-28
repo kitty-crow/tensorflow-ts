@@ -114,7 +114,7 @@ export abstract class Merge extends Layer {
       if (shape == null) {
         continue;
       }
-      const batchSize = shape[0];
+      const batchSize = generic_utils.requiredElement(shape, 0);
       if (batchSize !== null) {
         batchSizes.push(batchSize);
       }
@@ -126,10 +126,11 @@ export abstract class Merge extends Layer {
           `Got tensors with shapes: ${JSON.stringify(inputShape)}.`);
     }
 
-    let outputShape: Shape =
-        inputShape[0] == null ? null : inputShape[0].slice(1);
+    const firstShape = generic_utils.requiredElement(inputShape, 0);
+    let outputShape: Shape = firstShape == null ? null : firstShape.slice(1);
     for (let i = 1; i < inputShape.length; ++i) {
-      const shape = inputShape[i] == null ? null : inputShape[i].slice(1);
+      const input = generic_utils.requiredElement(inputShape, i);
+      const shape = input == null ? null : input.slice(1);
       outputShape = this.computeElementwiseOpOutputShape(outputShape, shape);
     }
     // If the inputs have different ranks, we have to reshape them to make them
@@ -223,7 +224,8 @@ export abstract class Merge extends Layer {
       outputShape = inputShape[0].slice(1);
     }
     for (let i = 1; i < inputShape.length; ++i) {
-      const shape = inputShape[i] == null ? null : inputShape[i].slice(1);
+      const input = generic_utils.requiredElement(inputShape, i);
+      const shape = input == null ? null : input.slice(1);
       outputShape = this.computeElementwiseOpOutputShape(outputShape, shape);
     }
 
@@ -232,7 +234,7 @@ export abstract class Merge extends Layer {
       if (shape == null) {
         continue;
       }
-      const batchSize = shape[0];
+      const batchSize = generic_utils.requiredElement(shape, 0);
       if (batchSize !== null) {
         batchSizes.push(batchSize);
       }
@@ -979,23 +981,32 @@ export class Dot extends Merge {
     this.reshapeRequired = false;
   }
 
+  private inputShapePair(inputShape: Shape|Shape[]): [Shape, Shape] {
+    const message = 'A `Dot` layer should be called on a list of exactly 2 inputs.';
+    if (!Array.isArray(inputShape) || inputShape.length !== 2) {
+      throw new Error(message);
+    }
+    const [left, right] = inputShape;
+    if (!Array.isArray(left) || !Array.isArray(right)) {
+      throw new Error(message);
+    }
+    return [left, right];
+  }
+
   override build(inputShape: Shape|Shape[]): void {
-    tfc.util.assert(
-        Array.isArray(inputShape) && inputShape.length === 2 &&
-            Array.isArray(inputShape[0]) && Array.isArray(inputShape[1]),
-        () => 'A `Dot` layer should be called on a list of exactly 2 inputs.');
-    const shape1 = inputShape[0] as Shape;
-    const shape2 = inputShape[1] as Shape;
+    const [shape1, shape2] = this.inputShapePair(inputShape);
     if (shape1.length > 3 || shape2.length > 3) {
       throw new NotImplementedError(
           'Dot layer does not support tensors of 4D or higher rank yet.');
     }
 
     const axes = this.interpretAxes(shape1, shape2);
-    if (shape1[axes[0]] !== shape2[axes[1]]) {
-      throw new ValueError(
-          `Dimension incompatibility: ` +
-          `${shape1[axes[0]]} !== ${shape2[axes[1]]}`);
+    const dim1 = generic_utils.requiredElement(
+        shape1, generic_utils.requiredElement(axes, 0));
+    const dim2 = generic_utils.requiredElement(
+        shape2, generic_utils.requiredElement(axes, 1));
+    if (dim1 !== dim2) {
+      throw new ValueError(`Dimension incompatibility: ${dim1} !== ${dim2}`);
     }
   }
 
@@ -1042,12 +1053,9 @@ export class Dot extends Merge {
   }
 
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
-    tfc.util.assert(
-        Array.isArray(inputShape) && inputShape.length === 2 &&
-            Array.isArray(inputShape[0]) && Array.isArray(inputShape[1]),
-        () => 'A `Dot` layer should be called on a list of exactly 2 inputs.');
-    const shape1 = (inputShape[0] as Shape).slice();
-    const shape2 = (inputShape[1] as Shape).slice();
+    const [left, right] = this.inputShapePair(inputShape);
+    const shape1 = left.slice();
+    const shape2 = right.slice();
     if (shape1.length > 3 || shape2.length > 3) {
       throw new NotImplementedError(
           'Dot layer does not support tensors of 4D or higher rank yet.');

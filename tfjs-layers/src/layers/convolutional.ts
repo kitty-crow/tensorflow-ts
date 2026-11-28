@@ -546,12 +546,12 @@ export abstract class Conv extends BaseConv {
     inputShape = getExactlyOneShape(inputShape);
     const channelAxis =
         this.dataFormat === 'channelsFirst' ? 1 : inputShape.length - 1;
-    if (inputShape[channelAxis] == null) {
+    const inputDim = inputShape[channelAxis];
+    if (inputDim == null) {
       throw new ValueError(
           `The channel dimension of the input should be defined. ` +
-          `Found ${inputShape[channelAxis]}`);
+          `Found ${inputDim}`);
     }
-    const inputDim = inputShape[channelAxis];
 
     const kernelShape = this.kernelSize.concat([inputDim, this.filters]);
 
@@ -739,12 +739,12 @@ export class Conv2DTranspose extends Conv2D {
 
     const channelAxis =
         this.dataFormat === 'channelsFirst' ? 1 : inputShape.length - 1;
-    if (inputShape[channelAxis] == null) {
+    const inputDim = inputShape[channelAxis];
+    if (inputDim == null) {
       throw new ValueError(
           'The channel dimension of the inputs should be defined. ' +
           'Found `None`.');
     }
-    const inputDim = inputShape[channelAxis];
     const kernelShape = this.kernelSize.concat([this.filters, inputDim]);
 
     this.kernel = this.addWeight(
@@ -887,12 +887,12 @@ export class Conv3DTranspose extends Conv3D {
 
     const channelAxis =
         this.dataFormat === 'channelsFirst' ? 1 : inputShape.length - 1;
-    if (inputShape[channelAxis] == null) {
+    const inputDim = inputShape[channelAxis];
+    if (inputDim == null) {
       throw new ValueError(
           'The channel dimension of the inputs should be defined. ' +
           'Found `None`.');
     }
-    const inputDim = inputShape[channelAxis];
     const kernelShape = this.kernelSize.concat([this.filters, inputDim]);
 
     this.kernel = this.addWeight(
@@ -1141,13 +1141,12 @@ export class SeparableConv extends Conv {
     }
     const channelAxis =
         this.dataFormat === 'channelsFirst' ? 1 : inputShape.length - 1;
-    if (inputShape[channelAxis] == null || inputShape[channelAxis] < 0) {
+    const inputDim = inputShape[channelAxis];
+    if (inputDim == null || inputDim < 0) {
       throw new ValueError(
           `The channel dimension of the inputs should be defined, ` +
-          `but found ${JSON.stringify(inputShape[channelAxis])}`);
+          `but found ${JSON.stringify(inputDim)}`);
     }
-
-    const inputDim = inputShape[channelAxis];
     const depthwiseKernelShape =
         this.kernelSize.concat([inputDim, this.depthMultiplier]);
     const pointwiseKernelShape: number[] = [];

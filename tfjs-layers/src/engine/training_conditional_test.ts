@@ -26,6 +26,7 @@ import {ReLU} from '../layers/advanced_activations';
 import {Dropout} from '../layers/core';
 import {MaxPooling1D, MaxPooling2D, MaxPooling3D} from '../layers/pooling';
 import {ZeroPadding2D} from '../layers/padding';
+import {Dot} from '../layers/merge';
 import {TimeDistributed} from '../layers/wrappers';
 import {LayerNormalization} from '../layers/normalization';
 import {LSTMCell, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
@@ -527,5 +528,17 @@ describe('pooling and padding shape contracts', () => {
     });
     expect(first.computeOutputShape([null, 2, 4, null]))
         .toEqual([null, 2, 7, null]);
+  });
+});
+
+describe('dot shape validation', () => {
+  it('shares shape validation between build and inference', () => {
+    const dot = new Dot({axes: 1});
+    dot.build([[null, 3], [null, 3]]);
+    expect(dot.computeOutputShape([[null, 3], [null, 3]])).toEqual([null, 1]);
+    expect(() => dot.build([[null, 2], [null, 3]]))
+        .toThrowError(/Dimension incompatibility/);
+    expect(() => dot.computeOutputShape([null, 3]))
+        .toThrowError(/exactly 2 inputs/);
   });
 });

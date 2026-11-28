@@ -16,6 +16,8 @@
  */
 
 import {TensorInfo} from '../tensor_info';
+import {getEinsumPermutation} from '../backends/einsum_util';
+import {Environment} from '../environment';
 import {tensorToString} from '../tensor_format';
 import {assertArrayLength} from '../util_base';
 import {sequentialConvolutionTestInputs, requiredTestElement, requiredTestEntry} from '../test_util';
@@ -131,5 +133,25 @@ describe('optional batched matmul operands', () => {
     expect(nhwc.dataId).toBe(input.dataId);
     expect(intermediates).toEqual([nchw, nhwc]);
     expect(input.shape).toEqual([2, 3, 4]);
+  });
+});
+
+describe('checked permutation and environment entries', () => {
+  it('retains zero axes and identifies unassigned einsum dimensions', () => {
+    expect(getEinsumPermutation(4, [2, 0]))
+        .toEqual({permutationIndices: [1, 0], expandDims: [1, 3]});
+  });
+
+  it('retains cached falsy flag values and registered set hooks', async () => {
+    const environment = new Environment({});
+    const hook = jasmine.createSpy('setHook');
+    environment.registerFlag('CHECKED_FLAG', () => 0, hook);
+    expect(environment.get('CHECKED_FLAG')).toBe(0);
+    expect(await environment.getAsync('CHECKED_FLAG')).toBe(0);
+    environment.set('CHECKED_FLAG', false);
+    expect(environment.get('CHECKED_FLAG')).toBe(false);
+    expect(hook).toHaveBeenCalledWith(false);
+    expect(() => environment.set('MISSING_FLAG', true)).toThrowError(
+        /has not been registered/);
   });
 });

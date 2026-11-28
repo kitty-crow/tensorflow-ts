@@ -16,7 +16,7 @@
  */
 
 import {Platform} from './platforms/platform';
-import {isPromise} from './util_base';
+import {isPromise, requiredNamedEntry} from './util_base';
 
 // Expects flags from URL in the format ?tfjsflags=FLAG1:1,FLAG2:true.
 const TENSORFLOWJS_FLAGS_PREFIX = 'tfjsflags';
@@ -73,10 +73,10 @@ export class Environment {
 
     // Override the flag value from the URL. This has to happen here because
     // the environment is initialized before flags get registered.
-    if (this.urlFlags[flagName] == null) {
+    const flagValue = this.urlFlags[flagName];
+    if (flagValue == null) {
       return;
     }
-    const flagValue = this.urlFlags[flagName];
     if (!(env().getBool('IS_TEST') || env().getBool('PROD'))) {
       console.warn(
           `Setting feature override from URL ${flagName}: ${flagValue}.`);
@@ -86,16 +86,17 @@ export class Environment {
 
   async getAsync(flagName: string): Promise<FlagValue> {
     if (flagName in this.flags) {
-      return this.flags[flagName];
+      return requiredNamedEntry(this.flags, flagName);
     }
 
-    this.flags[flagName] = await this.evaluateFlag(flagName);
-    return this.flags[flagName];
+    const flagValue = await this.evaluateFlag(flagName);
+    this.flags[flagName] = flagValue;
+    return flagValue;
   }
 
   get(flagName: string): FlagValue {
     if (flagName in this.flags) {
-      return this.flags[flagName];
+      return requiredNamedEntry(this.flags, flagName);
     }
 
     const flagValue = this.evaluateFlag(flagName);
@@ -130,22 +131,24 @@ export class Environment {
   }
 
   set(flagName: string, value: FlagValue): void {
-    if (this.flagRegistry[flagName] == null) {
+    const entry = this.flagRegistry[flagName];
+    if (entry == null) {
       throw new Error(
           `Cannot set flag ${flagName} as it has not been registered.`);
     }
     this.flags[flagName] = value;
-    if (this.flagRegistry[flagName].setHook != null) {
-      this.flagRegistry[flagName].setHook(value);
+    if (entry.setHook != null) {
+      entry.setHook(value);
     }
   }
 
   private evaluateFlag(flagName: string): FlagValue|Promise<FlagValue> {
-    if (this.flagRegistry[flagName] == null) {
+    const entry = this.flagRegistry[flagName];
+    if (entry == null) {
       throw new Error(
           `Cannot evaluate flag '${flagName}': no evaluation function found.`);
     }
-    return this.flagRegistry[flagName].evaluationFn();
+    return entry.evaluationFn();
   }
 
   setFlags(flags: Flags) {
