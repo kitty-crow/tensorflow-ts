@@ -91,6 +91,17 @@ describe('File system IOHandler', () => {
     await rimrafPromise(testDir);
   });
 
+
+  it('rejects binary topology before writing model and weight files', async () => {
+    const handler = new NodeFileSystem(testDir);
+    await expectAsync(handler.save({
+      modelTopology: new ArrayBuffer(1),
+      weightSpecs: weightSpecs1,
+      weightData: weightData1
+    })).toBeRejectedWithError(/does not support saving model topology/);
+    expect(fs.readdirSync(testDir)).toEqual([]);
+  });
+
   it('save succeeds with newly created directory', async () => {
     const t0 = new Date();
     const dir = path.join(testDir, 'save-destination');

@@ -23,7 +23,7 @@ import '../flags_layers';
 import {ReLULayerConfig} from '../keras_format/layers/advanced_activation_serialization';
 import {LayerMetadata} from '../keras_format/topology_config';
 import {ReLU} from '../layers/advanced_activations';
-import {Dense, Dropout} from '../layers/core';
+import {Dense, Dropout, Reshape} from '../layers/core';
 import {Embedding} from '../layers/embeddings';
 import {getLossOrMetricName, metricsMap} from '../metrics';
 import {lossesMap} from '../losses';
@@ -587,5 +587,28 @@ describe('class weight normalization branches', () => {
         .toEqual([first, second]);
     expect(() => standardizeClassWeights(single, ['first', 'second']))
         .toThrowError(/model has 2 outputs/);
+  });
+});
+
+describe('reshape dimension validation regressions', () => {
+  it('infers one unknown dimension and preserves fully known shapes', () => {
+    expect(new Reshape({targetShape: [-1, 2]}).computeOutputShape([2, 2, 3]))
+        .toEqual([2, 3, 2]);
+    expect(new Reshape({targetShape: [3, 2]}).computeOutputShape([2, 2, 3]))
+        .toEqual([2, 3, 2]);
+    expect(new Reshape({targetShape: [0, 2]}).computeOutputShape([2, 0, 3]))
+        .toEqual([2, 0, 2]);
+  });
+
+  it('rejects multiple unknown dimensions and mismatched total sizes', () => {
+    expect(() => new Reshape({targetShape: [-1, -1]})
+        .computeOutputShape([2, 2, 3]))
+        .toThrowError('Can only specifiy one unknown dimension.');
+    expect(() => new Reshape({targetShape: [-1, 4]})
+        .computeOutputShape([2, 2, 3]))
+        .toThrowError('Total size of new array must be unchanged.');
+    expect(() => new Reshape({targetShape: [4, 2]})
+        .computeOutputShape([2, 2, 3]))
+        .toThrowError('Total size of new array must be unchanged.');
   });
 });

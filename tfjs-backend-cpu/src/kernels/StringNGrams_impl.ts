@@ -134,26 +134,7 @@ class StringNGramsOp {
     // splits specified.
     const inputDataSize = data.length;
     const splitsSize = splits.length;
-    if (splitsSize > 0) {
-      let prevSplit = requiredCpuEntry(splits, 0);
-      if (prevSplit !== 0) {
-        throw new Error(`First split value must be 0, got ${prevSplit}`);
-      }
-      for (let i = 1; i < splitsSize; ++i) {
-        const currentSplit = requiredCpuEntry(splits, i);
-        let validSplits = currentSplit >= prevSplit;
-        validSplits = validSplits && (currentSplit <= inputDataSize);
-        if (!validSplits) {
-          throw new Error(`Invalid split value ${currentSplit}, must be in [${
-              prevSplit}, ${inputDataSize}]`);
-        }
-        prevSplit = currentSplit;
-      }
-      if (prevSplit !== inputDataSize) {
-        throw new Error(`Last split value must be data size. Expected ${
-            inputDataSize}, got ${prevSplit}`);
-      }
-    }
+    validateSplits(splits, inputDataSize);
 
     const numBatchItems = splitsSize - 1;
     const nGramsSplits = new Int32Array(splitsSize);
@@ -215,6 +196,30 @@ class StringNGramsOp {
       }
     }
     return [nGrams, nGramsSplits];
+  }
+}
+
+function validateSplits(splits: Int32Array, inputDataSize: number): void {
+  if (splits.length === 0) {
+    return;
+  }
+  let prevSplit = requiredCpuEntry(splits, 0);
+  if (prevSplit !== 0) {
+    throw new Error(`First split value must be 0, got ${prevSplit}`);
+  }
+  for (let i = 1; i < splits.length; ++i) {
+    const currentSplit = requiredCpuEntry(splits, i);
+    let validSplits = currentSplit >= prevSplit;
+    validSplits = validSplits && (currentSplit <= inputDataSize);
+    if (!validSplits) {
+      throw new Error(`Invalid split value ${currentSplit}, must be in [${
+          prevSplit}, ${inputDataSize}]`);
+    }
+    prevSplit = currentSplit;
+  }
+  if (prevSplit !== inputDataSize) {
+    throw new Error(`Last split value must be data size. Expected ${
+        inputDataSize}, got ${prevSplit}`);
   }
 }
 

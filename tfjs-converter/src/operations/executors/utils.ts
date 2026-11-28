@@ -26,39 +26,39 @@ export function getParamValue(
     paramName: string, node: Node, tensorMap: NamedTensorsMap,
     context: ExecutionContext, resourceManager?: ResourceManager): ValueType {
   const inputParam = node.inputParams[paramName];
-  if (inputParam && inputParam.inputIndexStart !== undefined) {
-    const start = inputParam.inputIndexStart;
-    const end = inputParam.inputIndexEnd === 0 ?
-        undefined :
-        (inputParam.inputIndexEnd === undefined ? start + 1 :
-                                                  inputParam.inputIndexEnd);
-    const shiftedStart = start < 0 ? node.inputNames.length + start : start;
-    if (inputParam.type === 'tensor') {
-      return getTensor(
-          node.inputNames[shiftedStart], tensorMap, context, resourceManager);
-    }
-    if (inputParam.type === 'tensors') {
-      // TODO(mattSoulanille): This filters out NoOp nodes during execution, but
-      // these should really never be in the execution graph in the first place.
-      // They're necessary for ordering the graph, but should not be visible
-      // during execution. Perhaps have different sets of children, one for
-      // control dependencies and another for real dependencies.
-      const inputs = node.inputs.slice(start, end);
-      const inputNames = node.inputNames.slice(start, end)
-        .filter((_name, index) => inputs[index]?.op !== 'NoOp');
-
-      return inputNames.map(
-          name => getTensor(name, tensorMap, context, resourceManager));
-    }
-    const tensor = getTensor(
-        node.inputNames[shiftedStart], tensorMap, context, resourceManager);
-    const data = tensor.dataSync();
-    return inputParam.type === 'number' ?
-        data[0] :
-        util.toNestedArray(tensor.shape, data);
+  if (!inputParam || inputParam.inputIndexStart === undefined) {
+    const attrParam = node.attrParams[paramName];
+    return attrParam && attrParam.value;
   }
-  const attrParam = node.attrParams[paramName];
-  return attrParam && attrParam.value;
+  const start = inputParam.inputIndexStart;
+  const end = inputParam.inputIndexEnd === 0 ?
+      undefined :
+      (inputParam.inputIndexEnd === undefined ? start + 1 :
+                                                inputParam.inputIndexEnd);
+  const shiftedStart = start < 0 ? node.inputNames.length + start : start;
+  if (inputParam.type === 'tensor') {
+    return getTensor(
+        node.inputNames[shiftedStart], tensorMap, context, resourceManager);
+  }
+  if (inputParam.type === 'tensors') {
+    // TODO(mattSoulanille): This filters out NoOp nodes during execution, but
+    // these should really never be in the execution graph in the first place.
+    // They're necessary for ordering the graph, but should not be visible
+    // during execution. Perhaps have different sets of children, one for
+    // control dependencies and another for real dependencies.
+    const inputs = node.inputs.slice(start, end);
+    const inputNames = node.inputNames.slice(start, end)
+      .filter((_name, index) => inputs[index]?.op !== 'NoOp');
+
+    return inputNames.map(
+        name => getTensor(name, tensorMap, context, resourceManager));
+  }
+  const tensor = getTensor(
+      node.inputNames[shiftedStart], tensorMap, context, resourceManager);
+  const data = tensor.dataSync();
+  return inputParam.type === 'number' ?
+      data[0] :
+      util.toNestedArray(tensor.shape, data);
 }
 
 /**
@@ -73,11 +73,10 @@ export function getTensor(
     resourceManager?: ResourceManager): Tensor {
   const [nodeName, index] = parseNodeName(name, context);
 
-  if (resourceManager != null) {
-    const tensor = resourceManager.getHashTableHandleByName(nodeName);
-    if (tensor != null) {
-      return tensor;
-    }
+  const resourceTensor = resourceManager == null ?
+      null : resourceManager.getHashTableHandleByName(nodeName);
+  if (resourceTensor != null) {
+    return resourceTensor;
   }
 
   const contextId = context.currentContextIds.find(contextId => {
@@ -129,30 +128,31 @@ export function parseNodeName(
   }
 
   const isCacheEnabled = context != null && context.parseNodeNameCache != null;
-  if (isCacheEnabled) {
-    const cachedResult = context.parseNodeNameCache.get(name);
-    if (cachedResult != null) {
-      return cachedResult;
-    }
+  const cachedResult = isCacheEnabled ?
+      context.parseNodeNameCache.get(name) : null;
+  if (cachedResult != null) {
+    return cachedResult;
   }
-  const parts = name.split(':');
-  let result: [string, number, string?];
-  if (parts.length === 1) {
-    result = [name, 0, undefined];
-  } else {
-    const nodeName = parts.shift();
-    const lastPart = parts.pop();
-    if (nodeName == null || lastPart == null) {
-      throw new Error(`Invalid node name: ${name}`);
-    }
-    const outputName = parts.length === 1 ? parts.shift() : undefined;
-    const index = Number(lastPart);
-    result = [nodeName, index, outputName];
-  }
+
+  const result = parseUncachedNodeName(name);
   if (isCacheEnabled) {
     context.parseNodeNameCache.set(name, result);
   }
   return result;
+}
+
+function parseUncachedNodeName(name: string): [string, number, string?] {
+  const parts = name.split(':');
+  if (parts.length === 1) {
+    return [name, 0, undefined];
+  }
+  const nodeName = parts.shift();
+  const lastPart = parts.pop();
+  if (nodeName == null || lastPart == null) {
+    throw new Error(`Invalid node name: ${name}`);
+  }
+  const outputName = parts.length === 1 ? parts.shift() : undefined;
+  return [nodeName, Number(lastPart), outputName];
 }
 
 export function split(arr: number[], size: number): number[][] {
@@ -165,28 +165,28 @@ export function split(arr: number[], size: number): number[][] {
 export function getPadding(
     node: Node, tensorMap: NamedTensorsMap,
     context: ExecutionContext): ValueType {
-  let pad = getParamValue('pad', node, tensorMap, context);
-  if (pad === 'explicit') {
-    // This is 1d array, we need to convert it to 2d array
-    pad = getParamValue('explicitPaddings', node, tensorMap, context);
-    const explicitPadding: [
-      [number, number], [number, number], [number, number], [number, number]
-    ] = [[0, 0], [0, 0], [0, 0], [0, 0]];
-    if (!Array.isArray(pad)) {
-      throw new Error('Explicit padding must be an array of numbers.');
-    }
-    for (const [i, pair] of explicitPadding.entries()) {
-      const before = pad[i * 2];
-      const after = pad[i * 2 + 1];
-      if (typeof before !== 'number' || typeof after !== 'number') {
-        throw new Error(`Missing or invalid explicit padding for dimension ${i}.`);
-      }
-      pair[0] = before;
-      pair[1] = after;
-    }
-    return explicitPadding;
+  const pad = getParamValue('pad', node, tensorMap, context);
+  if (pad !== 'explicit') {
+    return pad;
   }
-  return pad;
+  // This is 1d array, we need to convert it to 2d array
+  const explicitPaddings = getParamValue('explicitPaddings', node, tensorMap, context);
+  const explicitPadding: [
+    [number, number], [number, number], [number, number], [number, number]
+  ] = [[0, 0], [0, 0], [0, 0], [0, 0]];
+  if (!Array.isArray(explicitPaddings)) {
+    throw new Error('Explicit padding must be an array of numbers.');
+  }
+  for (const [i, pair] of explicitPadding.entries()) {
+    const before = explicitPaddings[i * 2];
+    const after = explicitPaddings[i * 2 + 1];
+    if (typeof before !== 'number' || typeof after !== 'number') {
+      throw new Error(`Missing or invalid explicit padding for dimension ${i}.`);
+    }
+    pair[0] = before;
+    pair[1] = after;
+  }
+  return explicitPadding;
 }
 
 /**

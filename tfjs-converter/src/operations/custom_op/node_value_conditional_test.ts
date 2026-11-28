@@ -26,7 +26,7 @@ import {getNumericArrayParam, OperationMapper, parseStringParam} from '../operat
 
 import {NodeValueImpl} from './node_value_impl';
 import {spyOnAllFunctions} from '../executors/spy_ops';
-import {getPadding, parseNodeName} from '../executors/utils';
+import {getPadding, parseNodeName, getParamValue} from '../executors/utils';
 import {validateParam} from '../executors/test_helper';
 
 describe('custom node attribute conditional dispatch', () => {
@@ -277,5 +277,28 @@ describe('protobuf JSON presence contracts', () => {
     const raw: tensorflow.IAttrValue = {b: false};
     expect(raw).toEqual({b: false});
     expect('i' in raw).toBe(false);
+  });
+});
+
+describe('converter cache and attribute fallback regressions', () => {
+  it('reuses cached tuple identity and preserves the empty-name bypass', () => {
+    const cache = new Map<string, [string, number, string?]>();
+    const context = new ExecutionContext({}, {}, {}, {}, cache);
+    const first = parseNodeName('op:output:3', context);
+    expect(first).toEqual(['op', 3, 'output']);
+    expect(parseNodeName('op:output:3', context)).toBe(first);
+    expect(cache.get('op:output:3')).toBe(first);
+    expect(parseNodeName('', context)).toEqual(['', 0, undefined]);
+    expect(cache.has('')).toBe(false);
+  });
+
+  it('retains attribute fallback and non-explicit padding', () => {
+    const node: Node = {name: 'pad', op: 'Conv2D', category: 'convolution',
+      inputNames: [], inputs: [], children: [], inputParams: {},
+      attrParams: {pad: {value: 'same', type: 'string'}}};
+    const context = new ExecutionContext();
+    expect(getParamValue('pad', node, {}, context)).toBe('same');
+    expect(getParamValue('absent', node, {}, context)).toBeUndefined();
+    expect(getPadding(node, {}, context)).toBe('same');
   });
 });

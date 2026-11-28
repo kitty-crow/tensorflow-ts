@@ -90,53 +90,52 @@ export class NodeFileSystem implements tf.io.IOHandler {
           'in binary format yet.');
       // TODO(cais, nkreeger): Implement this. See
       //   https://github.com/tensorflow/tfjs/issues/343
-    } else {
-      const weightsBinPath = join(this.path, this.WEIGHTS_BINARY_FILENAME);
-      const weightsManifest = [{
-        paths: [this.WEIGHTS_BINARY_FILENAME],
-        weights: modelArtifacts.weightSpecs
-      }];
-      const modelJSON: tf.io.ModelJSON = {
-        modelTopology: modelArtifacts.modelTopology,
-        weightsManifest,
-        format: modelArtifacts.format,
-        generatedBy: modelArtifacts.generatedBy,
-        convertedBy: modelArtifacts.convertedBy
-      };
-      if (modelArtifacts.trainingConfig != null) {
-        modelJSON.trainingConfig = modelArtifacts.trainingConfig;
-      }
-      if (modelArtifacts.signature != null) {
-        modelJSON.signature = modelArtifacts.signature;
-      }
-      if (modelArtifacts.userDefinedMetadata != null) {
-        modelJSON.userDefinedMetadata = modelArtifacts.userDefinedMetadata;
-      }
-      const modelJSONPath = join(this.path, this.MODEL_JSON_FILENAME);
-      await writeFile(modelJSONPath, JSON.stringify(modelJSON), 'utf8');
-      const weightData = modelArtifacts.weightData;
-      const shards = Array.isArray(weightData) ? weightData : [weightData];
-      // Write shards in order without allocating a second, contiguous copy
-      // of the entire model's weights.
-      const weightsFile = await fs.promises.open(weightsBinPath, 'w');
-      try {
-        for (const shard of shards) {
-          if (shard == null) {
-            throw new Error('Cannot save a model with missing weight data.');
-          }
-          await weightsFile.writeFile(Buffer.from(shard));
-        }
-      } finally {
-        await weightsFile.close();
-      }
-
-      return {
-        // TODO(cais): Use explicit tf.io.ModelArtifactsInfo type below once it
-        // is available.
-        // tslint:disable-next-line:no-any
-        modelArtifactsInfo: tf.io.getModelArtifactsInfoForJSON(modelArtifacts),
-      };
     }
+    const weightsBinPath = join(this.path, this.WEIGHTS_BINARY_FILENAME);
+    const weightsManifest = [{
+      paths: [this.WEIGHTS_BINARY_FILENAME],
+      weights: modelArtifacts.weightSpecs
+    }];
+    const modelJSON: tf.io.ModelJSON = {
+      modelTopology: modelArtifacts.modelTopology,
+      weightsManifest,
+      format: modelArtifacts.format,
+      generatedBy: modelArtifacts.generatedBy,
+      convertedBy: modelArtifacts.convertedBy
+    };
+    if (modelArtifacts.trainingConfig != null) {
+      modelJSON.trainingConfig = modelArtifacts.trainingConfig;
+    }
+    if (modelArtifacts.signature != null) {
+      modelJSON.signature = modelArtifacts.signature;
+    }
+    if (modelArtifacts.userDefinedMetadata != null) {
+      modelJSON.userDefinedMetadata = modelArtifacts.userDefinedMetadata;
+    }
+    const modelJSONPath = join(this.path, this.MODEL_JSON_FILENAME);
+    await writeFile(modelJSONPath, JSON.stringify(modelJSON), 'utf8');
+    const weightData = modelArtifacts.weightData;
+    const shards = Array.isArray(weightData) ? weightData : [weightData];
+    // Write shards in order without allocating a second, contiguous copy
+    // of the entire model's weights.
+    const weightsFile = await fs.promises.open(weightsBinPath, 'w');
+    try {
+      for (const shard of shards) {
+        if (shard == null) {
+          throw new Error('Cannot save a model with missing weight data.');
+        }
+        await weightsFile.writeFile(Buffer.from(shard));
+      }
+    } finally {
+      await weightsFile.close();
+    }
+
+    return {
+      // TODO(cais): Use explicit tf.io.ModelArtifactsInfo type below once it
+      // is available.
+      // tslint:disable-next-line:no-any
+      modelArtifactsInfo: tf.io.getModelArtifactsInfoForJSON(modelArtifacts),
+    };
   }
   async load(): Promise<tf.io.ModelArtifacts> {
     return Array.isArray(this.path) ? this.loadBinaryModel() :
@@ -240,20 +239,14 @@ export class NodeFileSystem implements tf.io.IOHandler {
 
 export const nodeFileSystemRouter = (url: string|string[]) => {
   if (Array.isArray(url)) {
-    if (url.every(
-            urlElement => urlElement.startsWith(NodeFileSystem.URL_SCHEME))) {
-      return new NodeFileSystem(url.map(
-          urlElement => urlElement.slice(NodeFileSystem.URL_SCHEME.length)));
-    } else {
-      return null;
-    }
-  } else {
-    if (url.startsWith(NodeFileSystem.URL_SCHEME)) {
-      return new NodeFileSystem(url.slice(NodeFileSystem.URL_SCHEME.length));
-    } else {
-      return null;
-    }
+    return url.every(
+        urlElement => urlElement.startsWith(NodeFileSystem.URL_SCHEME)) ?
+        new NodeFileSystem(url.map(
+            urlElement => urlElement.slice(NodeFileSystem.URL_SCHEME.length))) :
+        null;
   }
+  return url.startsWith(NodeFileSystem.URL_SCHEME) ?
+      new NodeFileSystem(url.slice(NodeFileSystem.URL_SCHEME.length)) : null;
 };
 // Registration of `nodeFileSystemRouter` is done in index.ts.
 

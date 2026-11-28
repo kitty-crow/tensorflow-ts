@@ -1163,3 +1163,24 @@ describe('CPU shared cumulative and sparse segment dispatch', () => {
     expect(backend.numDataIds()).toBe(0);
   });
 });
+
+describe('CPU bounds and ragged validation regressions', () => {
+  it('retains gather defaults for negative and oversized indices', () => {
+    const x = buffer([1, 1, 2, 1], 'int32', new Int32Array([0, 4]));
+    const indices = buffer([1, 4], 'int32', new Int32Array([-1, 1, 2, 0]));
+    expect(gatherV2Impl(x, indices, [1, 1, 4, 1]).values)
+        .toEqual(new Int32Array([0, 4, 0, 0]));
+  });
+
+  it('retains the first, intermediate and final split validation errors', () => {
+    const data = [new Uint8Array([97]), new Uint8Array([98])];
+    const run = (splits: number[]) => stringNGramsImpl(
+        data, new Int32Array(splits), ' ', [2], '', '', 0, true);
+    expect(() => run([1, 2])).toThrowError('First split value must be 0, got 1');
+    expect(() => run([0, 3, 2]))
+        .toThrowError('Invalid split value 3, must be in [0, 2]');
+    expect(() => run([0, 1]))
+        .toThrowError('Last split value must be data size. Expected 2, got 1');
+    expect(run([])).toEqual([new Array<Uint8Array>(2), new Int32Array(0)]);
+  });
+});

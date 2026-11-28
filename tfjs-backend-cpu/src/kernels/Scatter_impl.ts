@@ -72,14 +72,14 @@ scatterImpl<R extends Rank, D extends 'float32'|'int32'|'bool'|'string'>(
         outputValues[outputIndex] =
             util.requiredNumericEntry(outputValues, outputIndex) +
             util.requiredNumericEntry(updatesData as TypedArray, i * sliceSize + k);
-      } else {
-        const updateIndex = updates.rank === 0 ? 0 : i * sliceSize + k;
-        const value = updatesData[updateIndex];
-        if (value == null) {
-          throw new Error(`Missing scatter update at index ${updateIndex}.`);
-        }
-        outBuf.values[outputIndex] = value;
+        continue;
       }
+      const updateIndex = updates.rank === 0 ? 0 : i * sliceSize + k;
+      const value = updatesData[updateIndex];
+      if (value == null) {
+        throw new Error(`Missing scatter update at index ${updateIndex}.`);
+      }
+      outBuf.values[outputIndex] = value;
     }
   }
 

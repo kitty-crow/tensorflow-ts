@@ -518,25 +518,25 @@ export class Reshape extends Layer {
     let unknown = null;
     for (let i = 0; i < finalShape.length; ++i) {
       const dim = finalShape[i];
-      if (this.isUnknown(dim)) {
-        if (unknown === null) {
-          unknown = i;
-        } else {
-          throw new ValueError('Can only specifiy one unknown dimension.');
-        }
-      } else {
+      if (!this.isUnknown(dim)) {
         known *= dim;
+        continue;
       }
+      if (unknown !== null) {
+        throw new ValueError('Can only specifiy one unknown dimension.');
+      }
+      unknown = i;
     }
 
     const originalSize = arrayProd(inputShape);
-    if (unknown !== null) {
-      if (known === 0 || originalSize % known !== 0) {
-        throw new ValueError(errorMsg);
-      }
-      finalShape[unknown] = originalSize / known;
-    } else if (originalSize !== known) {
+    if (unknown === null && originalSize !== known) {
       throw new ValueError(errorMsg);
+    }
+    if (unknown !== null && (known === 0 || originalSize % known !== 0)) {
+      throw new ValueError(errorMsg);
+    }
+    if (unknown !== null) {
+      finalShape[unknown] = originalSize / known;
     }
 
     return finalShape;

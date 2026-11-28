@@ -38,13 +38,15 @@ export function gatherV2Impl<R extends Rank, D extends DataType>(
 
     const originalIndex = xBuf.locToIndex(originalLoc);
 
-    if (0 <= originalIndex && originalIndex < xBuf.values.length) {
-      const value = xBuf.values[originalIndex];
-      if (value == null) {
-        throw new Error(`Missing gather value at index ${originalIndex}.`);
-      }
-      outBuf.values[i] = value;
-    } // Else, index is out of bounds, so leave the default zero val in outBuf.
+    // Out-of-bounds indices leave the default zero value in outBuf.
+    if (!(0 <= originalIndex && originalIndex < xBuf.values.length)) {
+      continue;
+    }
+    const value = xBuf.values[originalIndex];
+    if (value == null) {
+      throw new Error(`Missing gather value at index ${originalIndex}.`);
+    }
+    outBuf.values[i] = value;
   }
 
   return outBuf as TensorBuffer<R, D>;
