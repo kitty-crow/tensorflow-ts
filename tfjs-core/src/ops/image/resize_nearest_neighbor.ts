@@ -22,6 +22,7 @@ import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
 import * as util from '../../util';
 
+import {batchImage4D} from '../batch_image';
 import {op} from '../operation';
 import {reshape} from '../reshape';
 import {unbatchedShape} from '../shape_dimension';
@@ -65,13 +66,7 @@ function resizeNearestNeighbor_<T extends Tensor3D|Tensor4D>(
       halfPixelCenters === false || alignCorners === false,
       () => `Error in resizeNearestNeighbor: If halfPixelCenters is true, ` +
           `alignCorners must be false.`);
-  let batchImages = $images as Tensor4D;
-  let reshapedTo4D = false;
-  if ($images.rank === 3) {
-    reshapedTo4D = true;
-    batchImages = reshape(
-        $images, [1, $images.shape[0], $images.shape[1], $images.shape[2]]);
-  }
+  const {tensor: batchImages, reshaped: reshapedTo4D} = batchImage4D($images);
   const [] = size;
 
   const inputs = {images: batchImages} satisfies ResizeNearestNeighborInputs;

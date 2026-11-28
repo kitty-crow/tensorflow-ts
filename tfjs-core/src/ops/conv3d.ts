@@ -22,6 +22,7 @@ import {TensorLike} from '../types';
 import * as util from '../util';
 
 import {eitherStridesOrDilationsAreOne, stridesOrDilationsArePositive} from './conv_util';
+import {batchImage5D} from './batch_image';
 import {op} from './operation';
 import {reshape} from './reshape';
 import {unbatchedShape} from './shape_dimension';
@@ -66,13 +67,7 @@ function conv3d_<T extends Tensor4D|Tensor5D>(
   const $x = convertToTensor(x, 'x', 'conv3d');
   const $filter = convertToTensor(filter, 'filter', 'conv3d');
 
-  let x5D = $x as Tensor5D;
-  let reshapedTo5D = false;
-
-  if ($x.rank === 4) {
-    reshapedTo5D = true;
-    x5D = reshape($x, [1, $x.shape[0], $x.shape[1], $x.shape[2], $x.shape[3]]);
-  }
+  const {tensor: x5D, reshaped: reshapedTo5D} = batchImage5D($x);
   util.assert(
       x5D.rank === 5,
       () => `Error in conv3d: input must be rank 5, but got rank ${x5D.rank}.`);

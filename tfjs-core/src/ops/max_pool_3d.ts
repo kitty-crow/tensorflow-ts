@@ -23,6 +23,7 @@ import {TensorLike} from '../types';
 import * as util from '../util';
 
 import {checkPadOnDimRoundingMode} from './conv_util';
+import {batchImage5D} from './batch_image';
 import {op} from './operation';
 import {reshape} from './reshape';
 import {unbatchedShape} from './shape_dimension';
@@ -69,12 +70,7 @@ function maxPool3d_<T extends Tensor4D|Tensor5D>(
     dataFormat: 'NDHWC'|'NCDHW' = 'NDHWC'): T {
   const $x = convertToTensor(x, 'x', 'maxPool3d');
 
-  let x5D = $x as Tensor5D;
-  let reshapedTo5D = false;
-  if ($x.rank === 4) {
-    reshapedTo5D = true;
-    x5D = reshape($x, [1, $x.shape[0], $x.shape[1], $x.shape[2], $x.shape[3]]);
-  }
+  const {tensor: x5D, reshaped: reshapedTo5D} = batchImage5D($x);
 
   util.assert(
       x5D.rank === 5,

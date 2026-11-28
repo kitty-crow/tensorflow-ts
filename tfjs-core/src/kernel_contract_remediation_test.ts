@@ -19,7 +19,7 @@ import {IOHandler, ModelArtifacts, WeightsManifestEntry} from './io/types';
 import {ArgMax, ArgMin, Max, MaxAttrs, Reshape, Sum} from './kernel_names';
 import {Engine, ENGINE} from './engine';
 import {Environment} from './environment';
-import {reduceBroadcastGradient, sumBroadcastGradient} from './gradients/broadcast_grad_util';
+import {reduceBroadcastGradient, sumBroadcastGradient, savedBroadcastOperands} from './gradients/broadcast_grad_util';
 import {GradConfig, KernelAttributes, KernelConfig, KernelFunc} from './kernel_registry';
 import {argMaxGradConfig} from './gradients/ArgMax_grad';
 import {argMinGradConfig} from './gradients/ArgMin_grad';
@@ -369,5 +369,18 @@ describe('checked engine storage and tape membership', () => {
     ];
     expect(getFilteredNodesXToY(tape, [x], y).map(node => node.id)).toEqual([0, 2]);
     expect(getFilteredNodesXToY(tape, [], y)).toEqual([]);
+  });
+});
+
+describe('saved broadcast operands', () => {
+  it('preserves operand identity and computes the broadcast output shape', () => {
+    const a = new Tensor<Rank.R2>([1, 3], 'float32', {}, 71);
+    const b = new Tensor<Rank.R2>([2, 1], 'float32', {}, 72);
+    const operands = savedBroadcastOperands([a, b]);
+    expect(operands.a).toBe(a);
+    expect(operands.b).toBe(b);
+    expect(operands.outShape).toEqual([2, 3]);
+    expect(() => savedBroadcastOperands([a])).toThrowError();
+    expect(() => savedBroadcastOperands([a, b, a])).toThrowError();
   });
 });
