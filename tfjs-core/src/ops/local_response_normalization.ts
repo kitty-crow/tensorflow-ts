@@ -22,6 +22,7 @@ import {convertToTensor} from '../tensor_util_env';
 import {TensorLike} from '../types';
 import * as util from '../util';
 
+import {batchImage4D} from './batch_image';
 import {op} from './operation';
 import {reshape} from './reshape';
 import {unbatchedShape} from './shape_dimension';
@@ -53,12 +54,7 @@ function localResponseNormalization_<T extends Tensor3D|Tensor4D>(
       () => `Error in localResponseNormalization: depthRadius must be an ` +
           `integer but got depthRadius ${depthRadius}.`);
 
-  let x4D = $x as Tensor4D;
-  let reshapedTo4D = false;
-  if ($x.rank === 3) {
-    reshapedTo4D = true;
-    x4D = reshape($x, [1, $x.shape[0], $x.shape[1], $x.shape[2]]);
-  }
+  const {tensor: x4D, reshaped: reshapedTo4D} = batchImage4D($x);
 
   const inputs = {x: x4D} satisfies LRNInputs;
 

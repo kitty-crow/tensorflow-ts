@@ -111,3 +111,23 @@ export function unbatchedShape(shape: readonly number[], rank: 4|5):
   }
   return [...spatial, requiredDimension(shape, 4)];
 }
+
+/** Insert a singleton batch axis while checking spatial dimensions. */
+export function batchedImageShape(shape: readonly number[], rank: 4):
+    [number, number, number, number];
+export function batchedImageShape(shape: readonly number[], rank: 5):
+    [number, number, number, number, number];
+export function batchedImageShape(shape: readonly number[], rank: 4|5):
+    [number, number, number, number]|[number, number, number, number, number] {
+  if (shape.length !== rank - 1) {
+    throw new Error(`Expected a rank-${rank - 1} unbatched image.`);
+  }
+  const spatial: [number, number, number, number] = [
+    1, requiredDimension(shape, 0), requiredDimension(shape, 1),
+    requiredDimension(shape, 2)
+  ];
+  if (rank === 4) {
+    return spatial;
+  }
+  return [...spatial, requiredDimension(shape, 3)];
+}

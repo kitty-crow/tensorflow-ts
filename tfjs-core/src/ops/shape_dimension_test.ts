@@ -29,7 +29,7 @@ import {calculateShapes} from './scatter_nd_util';
 import {collectGatherOpShapeInfo, computeOutShape} from './segment_util';
 import * as concat from './concat_util';
 import * as slice from './slice_util';
-import {depthToSpaceOutputShape, imageDimensions, matrixDimensions, permutedShape, unpackShape, requiredKernelEntry, unbatchedShape} from './shape_dimension';
+import {depthToSpaceOutputShape, imageDimensions, matrixDimensions, permutedShape, unpackShape, requiredKernelEntry, unbatchedShape, batchedImageShape} from './shape_dimension';
 
 describe('checked shape utility regressions', () => {
   it('interleaves coordinates including zero', () => {
@@ -294,5 +294,18 @@ describe('checked ragged metadata', () => {
     delete missing[1];
     expect(() => combineRaggedTensorToTensorShapes(1, [-1, -1, -1], missing))
         .toThrowError(/Missing dimension/);
+  });
+});
+
+describe('checked image batching dimensions', () => {
+  it('inserts a batch axis without mutating the original spatial shape', () => {
+    const shape = [0, 3, 4];
+    expect(batchedImageShape(shape, 4)).toEqual([1, 0, 3, 4]);
+    expect(shape).toEqual([0, 3, 4]);
+    expect(batchedImageShape([2, 0, 3, 4], 5)).toEqual([1, 2, 0, 3, 4]);
+  });
+  it('rejects invalid rank and missing spatial coordinates', () => {
+    expect(() => batchedImageShape([2, 3], 4)).toThrowError();
+    expect(() => batchedImageShape(new Array<number>(4), 5)).toThrowError();
   });
 });

@@ -22,6 +22,7 @@ import {TensorLike} from '../types';
 import * as util from '../util';
 
 import * as conv_util from './conv_util';
+import {batchImage4D} from './batch_image';
 import {op} from './operation';
 import {reshape} from './reshape';
 import {unbatchedShape} from './shape_dimension';
@@ -68,13 +69,7 @@ function conv2d_<T extends Tensor3D|Tensor4D>(
   const $x = convertToTensor(x, 'x', 'conv2d', 'float32');
   const $filter = convertToTensor(filter, 'filter', 'conv2d', 'float32');
 
-  let x4D = $x as Tensor4D;
-  let reshapedTo4D = false;
-
-  if ($x.rank === 3) {
-    reshapedTo4D = true;
-    x4D = reshape($x, [1, $x.shape[0], $x.shape[1], $x.shape[2]]);
-  }
+  const {tensor: x4D, reshaped: reshapedTo4D} = batchImage4D($x);
 
   util.assert(
       x4D.rank === 4,
