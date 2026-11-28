@@ -16,7 +16,6 @@
  */
 
 import {fingerPrint64, hexToLong} from './hash_util';
-import {ALL_ENVS, describeWithFlags} from './jasmine_util';
 import {requiredNumericEntry} from './util_base';
 
 /**
@@ -65,7 +64,8 @@ class ACMRandom {
   }
 }
 
-describeWithFlags('hash_util', ALL_ENVS, () => {
+// Hash arithmetic is independent of TensorFlow backends and test flags.
+describe('hash_util', () => {
   it('check incremental hashes', () => {
     const buf = new Uint8Array(1000);
     const r = new ACMRandom(10);
