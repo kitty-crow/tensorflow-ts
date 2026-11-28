@@ -21,8 +21,24 @@ import {scalar} from '../ops/ops';
 import {requiredKernelEntry} from '../ops/shape_dimension';
 import {requiredNumericEntry} from '../util_base';
 import {Serializable} from '../serialization';
-import {Scalar, Variable} from '../tensor';
+import {Scalar, Tensor, Variable} from '../tensor';
 import {NamedTensor, NamedTensorMap} from '../tensor_types';
+
+/** Preserve list order and map key enumeration when applying gradients. */
+export function gradientNames(gradients: NamedTensorMap|NamedTensor[]): string[] {
+  return Array.isArray(gradients) ? gradients.map(item => item.name) :
+      Object.keys(gradients);
+}
+
+/** Read at the original position, preserving missing-gradient skip semantics. */
+export function gradientAt(
+    gradients: NamedTensorMap|NamedTensor[], name: string,
+    index: number): Tensor|null {
+  if (Array.isArray(gradients)) {
+    return requiredKernelEntry(gradients, index).tensor ?? null;
+  }
+  return gradients[name] ?? null;
+}
 
 /**
  * A variable that belongs to an optimizer.

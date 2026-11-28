@@ -14,8 +14,10 @@
  * limitations under the License.
  * =============================================================================
  */
-import {Tensor, Tensor4D} from '../tensor';
-import {Rank, ShapeMap} from '../types';
+import {Tensor, Tensor1D, Tensor4D} from '../tensor';
+import {convertToTensor} from '../tensor_util_env';
+import {Rank, ShapeMap, TensorLike} from '../types';
+import * as util from '../util';
 import {reshape} from './reshape';
 
 /**
@@ -53,4 +55,48 @@ export function xAs4D<R extends Rank>(x: Tensor<R>): Tensor4D {
     return x as Tensor4D;
   }
   return reshape<Rank.R4>(x, shape);
+}
+
+/** Check a rank-specific batch normalisation input with the original error text. */
+export function assertBatchNormInputRank(
+    rank: number, name: 'x'|'mean'|'variance'|'scale'|'offset',
+    actualRank: number): void {
+  if (name === 'x') {
+    util.assert(
+        actualRank === rank,
+        () => `Error in batchNorm${rank}D: x must be rank ${rank} but got rank ${actualRank}.`);
+    return;
+  }
+  util.assert(
+      actualRank === rank || actualRank === 1,
+      () => `Error in batchNorm${rank}D: ${name} must be rank ${rank} or rank 1 but got rank ${actualRank}.`);
+}
+
+/** Convert and validate in the same order for all three rank-specific ops. */
+export function prepareRankedBatchNormInputs<R extends Rank>(
+    rank: number, x: Tensor<R>|TensorLike, mean: Tensor<R>|Tensor1D|TensorLike,
+    variance: Tensor<R>|Tensor1D|TensorLike,
+    offset: Tensor<R>|Tensor1D|TensorLike,
+    scale: Tensor<R>|Tensor1D|TensorLike) {
+  const $x = convertToTensor(x, 'x', 'batchNorm');
+  const $mean = convertToTensor(mean, 'mean', 'batchNorm');
+  const $variance = convertToTensor(variance, 'variance', 'batchNorm');
+  let $scale: Tensor<R>|Tensor1D;
+  if (scale != null) {
+    $scale = convertToTensor(scale, 'scale', 'batchNorm');
+  }
+  let $offset: Tensor<R>|Tensor1D;
+  if (offset != null) {
+    $offset = convertToTensor(offset, 'offset', 'batchNorm');
+  }
+  assertBatchNormInputRank(rank, 'x', $x.rank);
+  assertBatchNormInputRank(rank, 'mean', $mean.rank);
+  assertBatchNormInputRank(rank, 'variance', $variance.rank);
+  if ($scale != null) {
+    assertBatchNormInputRank(rank, 'scale', $scale.rank);
+  }
+  if ($offset != null) {
+    assertBatchNormInputRank(rank, 'offset', $offset.rank);
+  }
+  return {x: $x, mean: $mean, variance: $variance, offset: $offset, scale: $scale};
 }

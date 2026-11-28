@@ -34,6 +34,7 @@ import {Rank} from './types';
 import {sparseReshape} from './ops/sparse/sparse_reshape';
 import {maxPoolWithArgmax} from './ops/max_pool_with_argmax';
 import {NamedTensorMap} from './tensor_types';
+import {gradientAt, gradientNames} from './optimizers/optimizer';
 import {requiredTestElement, requiredTestErrorMessage, testFailureDescription} from './test_util';
 
 describe('kernel signature and saved-tensor contracts', () => {
@@ -382,5 +383,27 @@ describe('saved broadcast operands', () => {
     expect(operands.outShape).toEqual([2, 3]);
     expect(() => savedBroadcastOperands([a])).toThrowError();
     expect(() => savedBroadcastOperands([a, b, a])).toThrowError();
+  });
+});
+
+describe('optimizer gradient lookup', () => {
+  it('retains list order and uses the original position rather than the name', () => {
+    const a = new Tensor<Rank.R1>([1], 'float32', {}, 81);
+    const b = new Tensor<Rank.R1>([1], 'float32', {}, 82);
+    const list = [{name: 'b', tensor: b}, {name: 'a', tensor: a}];
+    expect(gradientNames(list)).toEqual(['b', 'a']);
+    expect(gradientAt(list, 'a', 0)).toBe(b);
+    expect(gradientAt(list, 'b', 1)).toBe(a);
+    expect(() => gradientAt(list, 'missing', 2)).toThrowError(
+        'Missing kernel entry at index 2.');
+  });
+
+  it('looks up map values by name and retains missing-gradient skips', () => {
+    const a = new Tensor<Rank.R1>([1], 'float32', {}, 83);
+    const map: NamedTensorMap = {a, skipped: null};
+    expect(gradientNames(map)).toEqual(['a', 'skipped']);
+    expect(gradientAt(map, 'a', 99)).toBe(a);
+    expect(gradientAt(map, 'skipped', 0)).toBeNull();
+    expect(gradientAt(map, 'missing', 0)).toBeNull();
   });
 });

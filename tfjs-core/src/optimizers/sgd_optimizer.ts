@@ -15,7 +15,6 @@
  * =============================================================================
  */
 
-import {requiredKernelEntry} from '../ops/shape_dimension';
 import {requiredNamedEntry} from '../util_base';
 import {ENGINE} from '../engine';
 import {keep, tidy} from '../globals';
@@ -26,7 +25,7 @@ import {ConfigDict, Serializable, SerializableConstructor} from '../serializatio
 import {Scalar} from '../tensor';
 import {NamedTensor, NamedTensorMap} from '../tensor_types';
 
-import {Optimizer} from './optimizer';
+import {Optimizer, gradientNames, gradientAt} from './optimizer';
 
 /** @doclink Optimizer */
 export class SGDOptimizer extends Optimizer {
@@ -45,13 +44,9 @@ export class SGDOptimizer extends Optimizer {
   }
 
   applyGradients(variableGradients: NamedTensorMap|NamedTensor[]) {
-    const varNames = Array.isArray(variableGradients) ?
-        variableGradients.map(v => v.name) :
-        Object.keys(variableGradients);
+    const varNames = gradientNames(variableGradients);
     varNames.forEach((name, i) => {
-      const gradient = Array.isArray(variableGradients) ?
-          requiredKernelEntry(variableGradients, i).tensor :
-          variableGradients[name];
+      const gradient = gradientAt(variableGradients, name, i);
       if (gradient == null) {
         return;
       }

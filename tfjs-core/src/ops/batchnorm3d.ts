@@ -15,11 +15,10 @@
  * =============================================================================
  */
 import {Tensor1D, Tensor3D} from '../tensor';
-import {convertToTensor} from '../tensor_util_env';
-import {TensorLike} from '../types';
-import * as util from '../util';
+import {Rank, TensorLike} from '../types';
 
 import {batchNorm} from './batchnorm';
+import {prepareRankedBatchNormInputs} from './batchnorm_util';
 import {op} from './operation';
 
 /**
@@ -38,43 +37,10 @@ function batchNorm3d_(
     variance: Tensor3D|Tensor1D|TensorLike,
     offset?: Tensor3D|Tensor1D|TensorLike, scale?: Tensor3D|Tensor1D|TensorLike,
     varianceEpsilon?: number): Tensor3D {
-  const $x = convertToTensor(x, 'x', 'batchNorm');
-  const $mean = convertToTensor(mean, 'mean', 'batchNorm');
-  const $variance = convertToTensor(variance, 'variance', 'batchNorm');
-  let $scale: Tensor3D|Tensor1D;
-  if (scale != null) {
-    $scale = convertToTensor(scale, 'scale', 'batchNorm');
-  }
-  let $offset: Tensor3D|Tensor1D;
-  if (offset != null) {
-    $offset = convertToTensor(offset, 'offset', 'batchNorm');
-  }
-  util.assert(
-      $x.rank === 3,
-      () => `Error in batchNorm3D: x must be rank 3 but got rank ` +
-          `${$x.rank}.`);
-  util.assert(
-      $mean.rank === 3 || $mean.rank === 1,
-      () => `Error in batchNorm3D: mean must be rank 3 or rank 1 but ` +
-          `got rank ${$mean.rank}.`);
-  util.assert(
-      $variance.rank === 3 || $variance.rank === 1,
-      () => `Error in batchNorm3D: variance must be rank 3 or rank 1 ` +
-          `but got rank ${$variance.rank}.`);
-  if ($scale != null) {
-    util.assert(
-        $scale.rank === 3 || $scale.rank === 1,
-        () => `Error in batchNorm3D: scale must be rank 3 or rank 1 ` +
-            `but got rank ${$scale.rank}.`);
-  }
-  if ($offset != null) {
-    util.assert(
-        $offset.rank === 3 || $offset.rank === 1,
-        () => `Error in batchNorm3D: offset must be rank 3 or rank 1 ` +
-            `but got rank ${$offset.rank}.`);
-  }
-
-  return batchNorm($x, $mean, $variance, $offset, $scale, varianceEpsilon);
+  const inputs = prepareRankedBatchNormInputs<Rank.R3>(
+      3, x, mean, variance, offset, scale);
+  return batchNorm(inputs.x, inputs.mean, inputs.variance, inputs.offset,
+      inputs.scale, varianceEpsilon);
 }
 
 export const batchNorm3d = /* @__PURE__ */ op({batchNorm3d_});

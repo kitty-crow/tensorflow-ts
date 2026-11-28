@@ -31,7 +31,7 @@ import {ConfigDict, Serializable, SerializableConstructor} from '../serializatio
 import {Variable} from '../tensor';
 import {NamedTensor, NamedVariableMap} from '../tensor_types';
 
-import {Optimizer, OptimizerVariable} from './optimizer';
+import {Optimizer, OptimizerVariable, gradientNames, gradientAt} from './optimizer';
 
 export class AdamaxOptimizer extends Optimizer {
   /** @nocollapse */
@@ -64,9 +64,7 @@ export class AdamaxOptimizer extends Optimizer {
   }
 
   applyGradients(variableGradients: NamedVariableMap|NamedTensor[]) {
-    const variableNames = Array.isArray(variableGradients) ?
-        variableGradients.map(item => item.name) :
-        Object.keys(variableGradients);
+    const variableNames = gradientNames(variableGradients);
 
     tidy(() => {
       const oneMinusAccBeta1 = sub(1, this.accBeta1);
@@ -89,9 +87,7 @@ export class AdamaxOptimizer extends Optimizer {
           };
         }
 
-        const gradient = Array.isArray(variableGradients) ?
-            requiredKernelEntry(variableGradients, i).tensor :
-            variableGradients[name];
+        const gradient = gradientAt(variableGradients, name, i);
         if (gradient == null) {
           return;
         }

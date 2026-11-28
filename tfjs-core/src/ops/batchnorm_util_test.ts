@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import {getBatchNormReshapeShape} from './batchnorm_util';
+import {assertBatchNormInputRank, getBatchNormReshapeShape} from './batchnorm_util';
 
 describe('batchnorm_util.getBatchNormReshapeShape', () => {
   it('uses size for scalar and vector inputs', () => {
@@ -52,5 +52,21 @@ describe('batchnorm_util.getBatchNormReshapeShape', () => {
         .toThrowError(message);
     expect(() => getBatchNormReshapeShape(missingThird, 0))
         .toThrowError(message);
+  });
+});
+
+describe('rank-specific batch normalization validation', () => {
+  it('accepts vectors for parameters but requires the exact input rank', () => {
+    for (const rank of [2, 3, 4]) {
+      expect(() => assertBatchNormInputRank(rank, 'x', rank)).not.toThrow();
+      expect(() => assertBatchNormInputRank(rank, 'mean', 1)).not.toThrow();
+      expect(() => assertBatchNormInputRank(rank, 'variance', rank)).not.toThrow();
+      expect(() => assertBatchNormInputRank(rank, 'scale', 1)).not.toThrow();
+      expect(() => assertBatchNormInputRank(rank, 'offset', rank)).not.toThrow();
+      expect(() => assertBatchNormInputRank(rank, 'x', 1)).toThrowError(
+          `Error in batchNorm${rank}D: x must be rank ${rank} but got rank 1.`);
+      expect(() => assertBatchNormInputRank(rank, 'scale', 0)).toThrowError(
+          `Error in batchNorm${rank}D: scale must be rank ${rank} or rank 1 but got rank 0.`);
+    }
   });
 });

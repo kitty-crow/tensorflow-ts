@@ -24,6 +24,23 @@ import {IORouter, IORouterRegistry} from './router_registry';
 import {IOHandler, LoadingAndSavingIOHandler, ModelArtifacts, ModelArtifactsInfo, ModelStoreManager, SaveResult} from './types';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 
+interface IndexedDBScope {
+  indexedDB: IDBFactory;
+  mozIndexedDB?: IDBFactory;
+  webkitIndexedDB?: IDBFactory;
+  msIndexedDB?: IDBFactory;
+  shimIndexedDB?: IDBFactory;
+}
+
+interface StoredModelInfo {
+  modelPath: string;
+  modelArtifactsInfo: ModelArtifactsInfo;
+}
+
+interface StoredModel extends StoredModelInfo {
+  modelArtifacts: ModelArtifacts;
+}
+
 const DATABASE_NAME = 'tensorflowjs';
 const DATABASE_VERSION = 1;
 
@@ -58,8 +75,7 @@ function getIndexedDBFactory(): IDBFactory {
         'Failed to obtain IndexedDB factory because the current environment' +
         'is not a web browser.');
   }
-  // tslint:disable-next-line:no-any
-  const theWindow: any = typeof window === 'undefined' ? self : window;
+  const theWindow: IndexedDBScope = typeof window === 'undefined' ? self : window;
   const factory = theWindow.indexedDB || theWindow.mozIndexedDB ||
       theWindow.webkitIndexedDB || theWindow.msIndexedDB ||
       theWindow.shimIndexedDB;
@@ -70,8 +86,8 @@ function getIndexedDBFactory(): IDBFactory {
   return factory;
 }
 
-function setUpDatabase(openRequest: IDBRequest) {
-  const db = openRequest.result as IDBDatabase;
+function setUpDatabase(openRequest: IDBOpenDBRequest) {
+  const db = openRequest.result;
   db.createObjectStore(MODEL_STORE_NAME, {keyPath: 'modelPath'});
   db.createObjectStore(INFO_STORE_NAME, {keyPath: 'modelPath'});
 }
@@ -140,7 +156,8 @@ export class BrowserIndexedDB implements IOHandler {
           // Read model out from object store.
           const modelTx = db.transaction(MODEL_STORE_NAME, 'readonly');
           const modelStore = modelTx.objectStore(MODEL_STORE_NAME);
-          const getRequest = modelStore.get(this.modelPath);
+          const getRequest: IDBRequest<StoredModel|undefined> =
+              modelStore.get(this.modelPath);
           getRequest.onsuccess = () => {
             if (getRequest.result == null) {
               db.close();
@@ -173,7 +190,7 @@ export class BrowserIndexedDB implements IOHandler {
           let putInfoRequest: IDBRequest<IDBValidKey>;
           try {
             putInfoRequest =
-              infoStore.put({modelPath: this.modelPath, modelArtifactsInfo});
+              infoStore.put({modelPath: this.modelPath, modelArtifactsInfo} satisfies StoredModelInfo);
           } catch (error) {
             return reject(error);
           }
@@ -188,7 +205,7 @@ export class BrowserIndexedDB implements IOHandler {
                 modelPath: this.modelPath,
                 modelArtifacts,
                 modelArtifactsInfo
-              });
+              } satisfies StoredModel);
             } catch (error) {
               // Sometimes, the serialized value is too large to store.
               return reject(error);
@@ -287,15 +304,7 @@ export class BrowserIndexedDBManager implements ModelStoreManager {
             const db = openRequest.result;
             const tx = db.transaction(INFO_STORE_NAME, 'readonly');
             const store = tx.objectStore(INFO_STORE_NAME);
-            // tslint:disable:max-line-length
-            // Need to cast `store` as `any` here because TypeScript's DOM
-            // library does not have the `getAll()` method even though the
-            // method is supported in the latest version of most mainstream
-            // browsers:
-            // https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/getAll
-            // tslint:enable:max-line-length
-            // tslint:disable-next-line:no-any
-            const getAllInfoRequest = (store as any).getAll() as IDBRequest;
+            const getAllInfoRequest: IDBRequest<StoredModelInfo[]> = store.getAll();
             getAllInfoRequest.onsuccess = () => {
               const out: {[path: string]: ModelArtifactsInfo} = {};
               for (const item of getAllInfoRequest.result) {
@@ -324,7 +333,8 @@ export class BrowserIndexedDBManager implements ModelStoreManager {
         const infoTx = db.transaction(INFO_STORE_NAME, 'readwrite');
         const infoStore = infoTx.objectStore(INFO_STORE_NAME);
 
-        const getInfoRequest = infoStore.get(path);
+        const getInfoRequest: IDBRequest<StoredModelInfo|undefined> =
+            infoStore.get(path);
         let modelTx: IDBTransaction;
         getInfoRequest.onsuccess = () => {
           if (getInfoRequest.result == null) {

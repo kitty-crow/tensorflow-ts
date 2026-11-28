@@ -334,7 +334,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
   it('Manager: Successful removeModel', runWithLock(async () => {
        // First, save a model.
        const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://QuxModel'), 0);
-       await handler1.save(artifacts1);
+       const saveResult = await handler1.save(artifacts1);
 
        // Then, save the model under another path.
        const handler2 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://repeat/QuxModel'), 0);
@@ -343,7 +343,8 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
        // After successful saving, delete the first save, and then
        // `listModel` should give only one result.
        const manager = new BrowserIndexedDBManager();
-       await manager.removeModel('QuxModel');
+       const removed = await manager.removeModel('QuxModel');
+       expect(removed).toEqual(saveResult.modelArtifactsInfo);
 
        const models = await manager.listModels();
        expect(Object.keys(models)).toEqual(['repeat/QuxModel']);
@@ -353,7 +354,7 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
      runWithLock(async () => {
        // First, save a model.
        const handler1 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://QuxModel'), 0);
-       await handler1.save(artifacts1);
+       const saveResult = await handler1.save(artifacts1);
 
        // Then, save the model under another path.
        const handler2 = tf.test_util.requiredTestElement(tf.io.getSaveHandlers('indexeddb://repeat/QuxModel'), 0);
@@ -365,7 +366,8 @@ describeWithFlags('IndexedDB', BROWSER_ENVS, () => {
 
        // Delete a model specified with a path that includes the
        // indexeddb:// scheme prefix should work.
-       manager.removeModel('indexeddb://QuxModel');
+       const removed = await manager.removeModel('indexeddb://QuxModel');
+       expect(removed).toEqual(saveResult.modelArtifactsInfo);
 
        const models = await manager.listModels();
        expect(Object.keys(models)).toEqual(['repeat/QuxModel']);

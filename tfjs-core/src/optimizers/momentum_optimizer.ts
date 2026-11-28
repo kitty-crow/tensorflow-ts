@@ -27,7 +27,7 @@ import {ConfigDict, Serializable, SerializableConstructor} from '../serializatio
 import {Scalar, Tensor} from '../tensor';
 import {NamedTensor, NamedVariableMap} from '../tensor_types';
 
-import {OptimizerVariable} from './optimizer';
+import {OptimizerVariable, gradientNames, gradientAt} from './optimizer';
 import {SGDOptimizer} from './sgd_optimizer';
 
 /** @doclink Optimizer */
@@ -51,9 +51,7 @@ export class MomentumOptimizer extends SGDOptimizer {
   }
 
   override applyGradients(variableGradients: NamedVariableMap|NamedTensor[]) {
-    const variableNames = Array.isArray(variableGradients) ?
-        variableGradients.map(item => item.name) :
-        Object.keys(variableGradients);
+    const variableNames = gradientNames(variableGradients);
 
     variableNames.forEach((name, i) => {
       const value = requiredNamedEntry(ENGINE.registeredVariables, name);
@@ -66,9 +64,7 @@ export class MomentumOptimizer extends SGDOptimizer {
       }
 
       const accumulation = requiredKernelEntry(this.accumulations, i).variable;
-      const gradient = Array.isArray(variableGradients) ?
-          requiredKernelEntry(variableGradients, i).tensor :
-          variableGradients[name];
+      const gradient = gradientAt(variableGradients, name, i);
       if (gradient == null) {
         return;
       }

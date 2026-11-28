@@ -32,7 +32,7 @@ import {ConfigDict, Serializable, SerializableConstructor} from '../serializatio
 import {Variable} from '../tensor';
 import {NamedTensor, NamedVariableMap} from '../tensor_types';
 
-import {Optimizer, OptimizerVariable} from './optimizer';
+import {Optimizer, OptimizerVariable, gradientNames, gradientAt} from './optimizer';
 
 export class AdamOptimizer extends Optimizer {
   /** @nocollapse */
@@ -64,9 +64,7 @@ export class AdamOptimizer extends Optimizer {
   }
 
   applyGradients(variableGradients: NamedVariableMap|NamedTensor[]) {
-    const varNames = Array.isArray(variableGradients) ?
-        variableGradients.map(v => v.name) :
-        Object.keys(variableGradients);
+    const varNames = gradientNames(variableGradients);
     tidy(() => {
       const oneMinusAccBeta1 = sub(1, this.accBeta1);
       const oneMinusAccBeta2 = sub(1, this.accBeta2);
@@ -87,9 +85,7 @@ export class AdamOptimizer extends Optimizer {
           };
         }
 
-        const gradient = Array.isArray(variableGradients) ?
-            requiredKernelEntry(variableGradients, i).tensor :
-            variableGradients[name];
+        const gradient = gradientAt(variableGradients, name, i);
         if (gradient == null) {
           return;
         }

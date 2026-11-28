@@ -28,7 +28,7 @@ import {zerosLike} from '../ops/zeros_like';
 import {ConfigDict, Serializable, SerializableConstructor} from '../serialization';
 import {NamedTensor, NamedVariableMap} from '../tensor_types';
 
-import {Optimizer, OptimizerVariable} from './optimizer';
+import {Optimizer, OptimizerVariable, gradientNames, gradientAt} from './optimizer';
 
 /** @doclink Optimizer */
 export class AdadeltaOptimizer extends Optimizer {
@@ -53,9 +53,7 @@ export class AdadeltaOptimizer extends Optimizer {
   }
 
   applyGradients(variableGradients: NamedVariableMap|NamedTensor[]) {
-    const variableNames = Array.isArray(variableGradients) ?
-        variableGradients.map(item => item.name) :
-        Object.keys(variableGradients);
+    const variableNames = gradientNames(variableGradients);
 
     variableNames.forEach((name, i) => {
       const value = requiredNamedEntry(ENGINE.registeredVariables, name);
@@ -73,9 +71,7 @@ export class AdadeltaOptimizer extends Optimizer {
         };
       }
 
-      const gradient = Array.isArray(variableGradients) ?
-          requiredKernelEntry(variableGradients, i).tensor :
-          variableGradients[name];
+      const gradient = gradientAt(variableGradients, name, i);
       if (gradient == null) {
         return;
       }
