@@ -431,108 +431,109 @@ export class Sequential extends LayersModel {
    * @doc {heading: 'Models', subheading: 'Classes'}
    */
   add(layer: Layer): void {
-    const isLayerModelInstance =
-        layer instanceof Sequential || layer instanceof LayersModel;
-    let modelLayer: LayersModel;
-    if (isLayerModelInstance) {
-      modelLayer = layer as LayersModel;
-      if (modelLayer.outputs.length !== 1) {
-        throw new ValueError(
-            'All layers in a Sequential model ' +
-            'should have a single output tensor. ' +
-            'For multi-output layers, ' +
-            'use the functional API.');
-      }
-      if (modelLayer.inputs.length !== 1) {
-        throw new ValueError(
-            'All layers in a Sequential model ' +
-            'should have a single input tensor. ' +
-            'For multi-input layers, ' +
-            'use the functional API.');
-      }
+    const modelLayer = layer instanceof Sequential || layer instanceof LayersModel ?
+        layer : null;
+    if (modelLayer != null) {
+      this.assertSingleModelIO(modelLayer);
     }
-
     if (this.outputs.length === 0) {
-      // first layer in model: check that it is an input layer
-      if (layer.inboundNodes.length === 0) {
-        // create an input layer
-        if (layer.batchInputShape == null) {
-          throw new ValueError(
-              'The first layer in a Sequential model must ' +
-              'get an `inputShape` or `batchInputShape` argument.');
-        }
-        // Instantiate the input layer.
-        const x = Input({
-          batchShape: layer.batchInputShape,
-          dtype: layer.dtype,
-          name: layer.name + '_input'
-        });
-        // This will build the current layer and create the node connecting
-        // the current layer to the input layer we just created.
-        layer.apply(x);
-      }
-
-      if (isLayerModelInstance) {
-        this.outputs = modelLayer.outputs;
-        this.inputs = modelLayer.inputs;
-      } else {
-        if (layer.inboundNodes.length !== 1) {
-          throw new ValueError(
-              'A layer added to a Sequential model must not already be ' +
-              `connected somewhere else. LayersModel received layer ${
-                  layer.name} ` +
-              `which has ${layer.inboundNodes.length} pre-existing inbound ` +
-              'connections.');
-        }
-
-        if (generic_utils.requiredElement(layer.inboundNodes, 0).outputTensors.length !== 1) {
-          throw new ValueError(
-              'All layers in a Sequential model ' +
-              'should have a single output tensor. ' +
-              'For multi-output layers, ' +
-              'use the functional API.');
-        }
-        this.checkShape(layer);
-        this.outputs = [generic_utils.requiredElement(generic_utils.requiredElement(layer.inboundNodes, 0).outputTensors, 0)];
-        this.inputs = getSourceInputs(generic_utils.requiredElement(this.outputs, 0));
-      }
-
-      this.inboundNodes = [];
-      // We create an input node, which we will keep updated
-      // as we add more layers.
-      // (This call has side effects.)
-      // tslint:disable-next-line:no-unused-expression
-      new Node({
-        outboundLayer: this,
-        inboundLayers: [],
-        nodeIndices: [],
-        tensorIndices: [],
-        inputTensors: this.inputs,
-        outputTensors: this.outputs,
-        // no model-level masking for now
-        inputMasks: generic_utils.pyListRepeat(null, this.inputs.length),
-        outputMasks: [null],
-        inputShapes: this.inputs.map(x => x.shape),
-        outputShapes: generic_utils.requiredElement(this.outputs, 0).shape
-      });
+      this.connectFirstLayer(layer, modelLayer);
     } else {
-      const outputTensor = layer.apply(generic_utils.requiredElement(this.outputs, 0));
-      if (Array.isArray(outputTensor)) {
-        throw new TypeError(
-            'All layers in a Sequential model ' +
-            'should have a single output tensor. ' +
-            'For multi-output layers, ' +
-            'use the functional API.');
-      }
-      this.checkShape(layer);
-      this.outputs = [outputTensor as SymbolicTensor];
-      // update self.inbound_nodes
-      generic_utils.requiredElement(this.inboundNodes, 0).outputTensors = this.outputs;
-      generic_utils.requiredElement(this.inboundNodes, 0).outputShapes = [generic_utils.requiredElement(this.outputs, 0).shape];
+      this.connectAdditionalLayer(layer);
     }
-
     this.layers.push(layer);
     this.built = false;
+  }
+
+  private assertSingleModelIO(modelLayer: LayersModel): void {
+    if (modelLayer.outputs.length !== 1) {
+      throw new ValueError(
+          'All layers in a Sequential model ' +
+          'should have a single output tensor. ' +
+          'For multi-output layers, ' +
+          'use the functional API.');
+    }
+    if (modelLayer.inputs.length !== 1) {
+      throw new ValueError(
+          'All layers in a Sequential model ' +
+          'should have a single input tensor. ' +
+          'For multi-input layers, ' +
+          'use the functional API.');
+    }
+  }
+
+  private connectFirstLayer(layer: Layer, modelLayer: LayersModel|null): void {
+    if (layer.inboundNodes.length === 0 && layer.batchInputShape == null) {
+      throw new ValueError(
+          'The first layer in a Sequential model must ' +
+          'get an `inputShape` or `batchInputShape` argument.');
+    }
+    if (layer.inboundNodes.length === 0) {
+      const x = Input({
+        batchShape: layer.batchInputShape,
+        dtype: layer.dtype,
+        name: layer.name + '_input'
+      });
+      layer.apply(x);
+    }
+    if (modelLayer != null) {
+      this.outputs = modelLayer.outputs;
+      this.inputs = modelLayer.inputs;
+    } else {
+      this.connectFirstNonModelLayer(layer);
+    }
+    this.inboundNodes = [];
+    // Create the input node that is updated as more layers are added.
+    // tslint:disable-next-line:no-unused-expression
+    new Node({
+      outboundLayer: this,
+      inboundLayers: [],
+      nodeIndices: [],
+      tensorIndices: [],
+      inputTensors: this.inputs,
+      outputTensors: this.outputs,
+      inputMasks: generic_utils.pyListRepeat(null, this.inputs.length),
+      outputMasks: [null],
+      inputShapes: this.inputs.map(x => x.shape),
+      outputShapes: generic_utils.requiredElement(this.outputs, 0).shape
+    });
+  }
+
+  private connectFirstNonModelLayer(layer: Layer): void {
+    if (layer.inboundNodes.length !== 1) {
+      throw new ValueError(
+          'A layer added to a Sequential model must not already be ' +
+          `connected somewhere else. LayersModel received layer ${layer.name} ` +
+          `which has ${layer.inboundNodes.length} pre-existing inbound ` +
+          'connections.');
+    }
+    const node = generic_utils.requiredElement(layer.inboundNodes, 0);
+    if (node.outputTensors.length !== 1) {
+      throw new ValueError(
+          'All layers in a Sequential model ' +
+          'should have a single output tensor. ' +
+          'For multi-output layers, ' +
+          'use the functional API.');
+    }
+    this.checkShape(layer);
+    this.outputs = [generic_utils.requiredElement(node.outputTensors, 0)];
+    this.inputs = getSourceInputs(generic_utils.requiredElement(this.outputs, 0));
+  }
+
+  private connectAdditionalLayer(layer: Layer): void {
+    const outputTensor = layer.apply(generic_utils.requiredElement(this.outputs, 0));
+    if (Array.isArray(outputTensor)) {
+      throw new TypeError(
+          'All layers in a Sequential model ' +
+          'should have a single output tensor. ' +
+          'For multi-output layers, ' +
+          'use the functional API.');
+    }
+    this.checkShape(layer);
+    this.outputs = [outputTensor as SymbolicTensor];
+    const node = generic_utils.requiredElement(this.inboundNodes, 0);
+    node.outputTensors = this.outputs;
+    node.outputShapes = [generic_utils.requiredElement(this.outputs, 0).shape];
   }
 
   /**

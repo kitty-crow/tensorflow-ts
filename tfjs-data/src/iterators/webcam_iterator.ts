@@ -74,16 +74,7 @@ export class WebcamIterator extends LazyIterator<Tensor3D> {
     }
 
     if (!webcamVideoElement) {
-      // If webcam video element is not provided, create a hidden video element
-      // with provided width and height.
-      webcamVideoElement = document.createElement('video');
-      if (!webcamConfig.resizeWidth || !webcamConfig.resizeHeight) {
-        throw new Error(
-            'Please provide webcam video element, or resizeWidth and ' +
-            'resizeHeight to create a hidden video element.');
-      }
-      webcamVideoElement.width = webcamConfig.resizeWidth;
-      webcamVideoElement.height = webcamConfig.resizeHeight;
+      webcamVideoElement = createHiddenWebcamVideo(webcamConfig);
     }
     const webcamIterator = new WebcamIterator(webcamVideoElement, webcamConfig);
 
@@ -221,4 +212,18 @@ export class WebcamIterator extends LazyIterator<Tensor3D> {
   override toArray(): Promise<Tensor3D[]> {
     throw new Error('Can not convert infinite video stream to array.');
   }
+}
+
+/** Create the implicit video element only when both dimensions are supplied. */
+function createHiddenWebcamVideo(config: WebcamConfig): HTMLVideoElement {
+  const video = document.createElement('video');
+  const {resizeWidth, resizeHeight} = config;
+  if (!resizeWidth || !resizeHeight) {
+    throw new Error(
+        'Please provide webcam video element, or resizeWidth and ' +
+        'resizeHeight to create a hidden video element.');
+  }
+  video.width = resizeWidth;
+  video.height = resizeHeight;
+  return video;
 }

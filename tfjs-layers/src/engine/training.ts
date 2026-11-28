@@ -2276,13 +2276,13 @@ function resolveSaveHandler(url: string): io.IOHandler {
 function resolveLossFunctions(
     loss: ModelCompileArgs['loss'], outputNames: string[],
     outputs: SymbolicTensor[]): LossOrMetricFn[] {
+  if (Array.isArray(loss) && loss.length !== outputs.length) {
+    throw new ValueError(
+        `When passing an Array as loss, it should have one entry per ` +
+        `model output. The model has ${outputs.length} output(s), ` +
+        `but you passed loss=${loss}.`);
+  }
   if (Array.isArray(loss)) {
-    if (loss.length !== outputs.length) {
-      throw new ValueError(
-          `When passing an Array as loss, it should have one entry per ` +
-          `model output. The model has ${outputs.length} output(s), ` +
-          `but you passed loss=${loss}.`);
-    }
     const configuredLosses: Array<string|LossOrMetricFn> = loss;
     return configuredLosses.map(l => losses.get(l));
   }

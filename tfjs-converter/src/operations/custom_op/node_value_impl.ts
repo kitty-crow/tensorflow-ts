@@ -16,6 +16,7 @@
  */
 
 import {DataType, Tensor} from '@tensorflow/tfjs-core';
+import * as tensorflow from '../../data/compiled_api';
 
 import {NamedTensorsMap} from '../../data/types';
 import {ExecutionContext} from '../../executor/execution_context';
@@ -30,13 +31,14 @@ export class NodeValueImpl implements GraphNode {
   public readonly inputs: Tensor[] = [];
   public readonly attrs: {[key: string]: AttributeValue} = {};
   constructor(
-      private node: Node, private tensorMap: NamedTensorsMap,
+      node: Node, private tensorMap: NamedTensorsMap,
       private context: ExecutionContext) {
     this.inputs = node.inputNames.map(name => this.getInput(name));
-    if (node.rawAttrs != null) {
-      this.attrs = Object.keys(node.rawAttrs)
+    const rawAttrs = node.rawAttrs;
+    if (rawAttrs != null) {
+      this.attrs = Object.keys(rawAttrs)
                        .reduce((attrs: {[key: string]: AttributeValue}, key) => {
-                         attrs[key] = this.getAttr(key);
+                         attrs[key] = this.getAttr(rawAttrs, key);
                          return attrs;
                        }, {});
     }
@@ -54,26 +56,31 @@ export class NodeValueImpl implements GraphNode {
    * Return the value of the attribute or input param.
    * @param name String: name of attribute or input param.
    */
-  private getAttr(name: string, defaultValue?: AttributeValue): AttributeValue {
-    const value = this.node.rawAttrs[name];
+  private getAttr(
+      rawAttrs: {[key: string]: tensorflow.IAttrValue}, name: string,
+      defaultValue?: AttributeValue): AttributeValue {
+    const value = rawAttrs[name];
+    if (value == null) {
+      throw new Error(`Missing raw attribute '${name}'.`);
+    }
     if (value.tensor != null) {
       return getTensor(name, this.tensorMap, this.context);
     }
     if (value.i != null || value.f != null) {
-      return getNumberParam(this.node.rawAttrs, name, defaultValue as number);
+      return getNumberParam(rawAttrs, name, defaultValue as number);
     }
     if (value.s != null) {
-      return getStringParam(this.node.rawAttrs, name, defaultValue as string);
+      return getStringParam(rawAttrs, name, defaultValue as string);
     }
     if (value.b != null) {
-      return getBoolParam(this.node.rawAttrs, name, defaultValue as boolean);
+      return getBoolParam(rawAttrs, name, defaultValue as boolean);
     }
     if (value.shape != null) {
       return getTensorShapeParam(
-          this.node.rawAttrs, name, defaultValue as number[]);
+          rawAttrs, name, defaultValue as number[]);
     }
     if (value.type != null) {
-      return getDtypeParam(this.node.rawAttrs, name, defaultValue as DataType);
+      return getDtypeParam(rawAttrs, name, defaultValue as DataType);
     }
     // List attributes are the final supported representation.
     if (value.list == null) {
@@ -81,23 +88,23 @@ export class NodeValueImpl implements GraphNode {
     }
     if (value.list.i != null || value.list.f != null) {
       return getNumericArrayParam(
-          this.node.rawAttrs, name, defaultValue as number[]);
+          rawAttrs, name, defaultValue as number[]);
     }
     if (value.list.s != null) {
       return getStringArrayParam(
-          this.node.rawAttrs, name, defaultValue as string[]);
+          rawAttrs, name, defaultValue as string[]);
     }
     if (value.list.shape != null) {
       return getTensorShapeArrayParam(
-          this.node.rawAttrs, name, defaultValue as number[][]);
+          rawAttrs, name, defaultValue as number[][]);
     }
     if (value.list.b != null) {
       return getBoolArrayParam(
-          this.node.rawAttrs, name, defaultValue as boolean[]);
+          rawAttrs, name, defaultValue as boolean[]);
     }
     if (value.list.type != null) {
       return getDtypeArrayParam(
-          this.node.rawAttrs, name, defaultValue as DataType[]);
+          rawAttrs, name, defaultValue as DataType[]);
     }
 
     return defaultValue;

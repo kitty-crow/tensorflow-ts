@@ -211,3 +211,23 @@ export enum MatMulProgramType {
   MatMulPackedProgram,
   MatMulMax
 }
+
+/** Select the existing matrix multiplication heuristic from the output geometry. */
+export function selectMatMulProgramType(
+    shape: [number, number, number], innerSize: number,
+    workgroupThreshold: number): MatMulProgramType {
+  const [batch, rows, columns] = shape;
+  const workgroups = batch * Math.ceil(rows / 32) * Math.ceil(columns / 32);
+  const few = workgroups <= workgroupThreshold ||
+      (rows <= 8 && workgroups <= workgroupThreshold * 2);
+  if (!few) {
+    return MatMulProgramType.MatMulPackedProgram;
+  }
+  if (batch * rows * columns <= 128) {
+    return MatMulProgramType.MatMulReduceProgram;
+  }
+  if (batch === 1 && innerSize >= 2000) {
+    return MatMulProgramType.MatMulSplitKProgram;
+  }
+  return MatMulProgramType.MatMulSmallOutputSizeProgram;
+}

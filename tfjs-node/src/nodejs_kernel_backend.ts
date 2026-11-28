@@ -134,18 +134,17 @@ export class NodeJSKernelBackend extends KernelBackend {
         const value = tensor.valueArray;
         const id = this.binding.createTensor([], this.binding.TF_INT64, value);
         ids.push(id);
-      } else {
-        const info = this.tensorMap.get(tensor.dataId);
-        // TODO - what about ID in this case? Handle in write()??
-        if (info.values != null) {
-          // Values were delayed to write into the TensorHandle. Do that before
-          // Op execution and clear stored values.
-          info.id =
-              this.binding.createTensor(info.shape, info.dtype, info.values);
-          info.values = null;
-        }
-        ids.push(info.id);
+        continue;
       }
+      const info = this.tensorMap.get(tensor.dataId);
+      // Values were delayed to write into the TensorHandle. Do that before
+      // op execution and clear stored values.
+      if (info.values != null) {
+        info.id =
+            this.binding.createTensor(info.shape, info.dtype, info.values);
+        info.values = null;
+      }
+      ids.push(info.id);
     }
     return ids;
   }
@@ -252,18 +251,19 @@ export class NodeJSKernelBackend extends KernelBackend {
    */
   disposeData(dataId: DataId, force = false): boolean {
     // No-op if already disposed.
-    if (this.tensorMap.has(dataId)) {
-      const id = this.tensorMap.get(dataId).id;
-      this.tensorMap.get(dataId).refCount--;
-      if (!force && this.tensorMap.get(dataId).refCount > 0) {
-        return false;
-      }
-
-      if (id != null && id >= 0) {
-        this.binding.deleteTensor(id);
-      }
-      this.tensorMap.delete(dataId);
+    if (!this.tensorMap.has(dataId)) {
+      return true;
     }
+    const info = this.tensorMap.get(dataId);
+    const id = info.id;
+    info.refCount--;
+    if (!force && info.refCount > 0) {
+      return false;
+    }
+    if (id != null && id >= 0) {
+      this.binding.deleteTensor(id);
+    }
+    this.tensorMap.delete(dataId);
     return true;
   }
   /** Return refCount of a `TensorData`. */
@@ -502,7 +502,9 @@ export class NodeJSKernelBackend extends KernelBackend {
               input.shape, this.binding.TF_UINT8, data);
           tensorIds[i] = inputTensorId;
           newTensors.push(i);
-        } else if (tensorInfo.tfDtype === 'DT_INT64') {
+          continue;
+        }
+        if (tensorInfo.tfDtype === 'DT_INT64') {
           const data =
               encodeInt32ArrayAsInt64(input.dataSync() as Int32Array);
           const inputTensorId = this.binding.createTensor(

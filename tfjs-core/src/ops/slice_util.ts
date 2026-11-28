@@ -499,8 +499,8 @@ export function sliceInfo(
         !!((denseSpec.beginMask & (1 << i)) && (denseSpec.endMask & (1 << i)));
 
     if (denseSpec.beginValid && denseSpec.endValid) {
-      canonicalizeDenseBounds(denseSpec, i, shrinkI, dimI, stride,
-          masks, validRange);
+      canonicalizeDenseBounds(denseSpec, {axis: i, shrink: shrinkI,
+        dimension: dimI, stride, masks, validRange});
       // Update optimization values
       const takeAllInDimension = stride === 1 &&
           requiredDimension(denseSpec.begin, i) === 0 &&
@@ -673,13 +673,22 @@ function appendDenseSliceAxis(
   return fullIndex + 1;
 }
 
+interface DenseAxisBounds {
+  axis: number;
+  shrink: boolean;
+  dimension: number;
+  stride: number;
+  masks: number[];
+  validRange: number[];
+}
+
 /** Canonicalise one dense slice axis while retaining masked omissions. */
 function canonicalizeDenseBounds(
-    dense: StridedSliceDenseSpec, i: number, shrink: boolean,
-    dimI: number, stride: number, masks: number[], validRange: number[]): void {
+    dense: StridedSliceDenseSpec, bounds: DenseAxisBounds): void {
+  const {axis: i, shrink, dimension: dimI} = bounds;
   if (!shrink) {
-    dense.begin[i] = canonicalAt(dense.begin, i, 0, stride, dimI, masks, validRange);
-    dense.end[i] = canonicalAt(dense.end, i, 1, stride, dimI, masks, validRange);
+    dense.begin[i] = canonicalAt(dense.begin, 0, bounds);
+    dense.end[i] = canonicalAt(dense.end, 1, bounds);
     return;
   }
   // A shrink interval is exactly one element, including negative indices.
@@ -693,8 +702,8 @@ function canonicalizeDenseBounds(
 }
 
 function canonicalAt(
-    indices: number[], axis: number, c: number, stride: number,
-    dim: number, masks: number[], validRange: number[]): number {
+    indices: number[], c: number, bounds: DenseAxisBounds): number {
+  const {axis, stride, dimension: dim, masks, validRange} = bounds;
   // Masked values are ignored; they need not be present in the sparse input.
   if (requiredDimension(masks, c)) {
     return requiredDimension(validRange, stride > 0 ? c : (c + 1) & 1);

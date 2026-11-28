@@ -297,24 +297,19 @@ export function conv2DImpl({
 
   const intermediates: TensorInfo[] = [];
   const inputVar: TensorInfo[] = [x, filter];
-  if (hasBias) {
-    if (!isChannelsLast && bias.shape.length === 1) {
-      bias = reshape(
-          {inputs: {x: bias}, backend, attrs: {shape: [util.requiredNumericEntry(bias.shape, 0), 1, 1]}});
-      intermediates.push(bias);
+  for (const fusedInput of [bias, preluActivationWeights]) {
+    if (fusedInput == null) {
+      continue;
     }
-    inputVar.push(bias);
-  }
-  if (hasPreluActivationWeights) {
-    if (!isChannelsLast && preluActivationWeights.shape.length === 1) {
-      preluActivationWeights = reshape({
-        inputs: {x: preluActivationWeights},
-        backend,
-        attrs: {shape: [util.requiredNumericEntry(preluActivationWeights.shape, 0), 1, 1]}
-      });
-      intermediates.push(preluActivationWeights);
+    const needsChannelShape = !isChannelsLast && fusedInput.shape.length === 1;
+    const input = needsChannelShape ? reshape({
+      inputs: {x: fusedInput}, backend,
+      attrs: {shape: [util.requiredNumericEntry(fusedInput.shape, 0), 1, 1]}
+    }) : fusedInput;
+    if (needsChannelShape) {
+      intermediates.push(input);
     }
-    inputVar.push(preluActivationWeights);
+    inputVar.push(input);
   }
   if (activation === 'leakyrelu') {
     dimensions.push({type: 'float32', data: [leakyreluAlpha]});

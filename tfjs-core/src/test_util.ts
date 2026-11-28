@@ -90,6 +90,26 @@ export function testEpsilon() {
                                                   TEST_EPSILON_FLOAT16;
 }
 
+function assertMatchingArrayType(actual: TensorLike, expected: TensorLike): void {
+  const aType = actual.constructor.name;
+  const bType = expected.constructor.name;
+  if (aType !== bType) {
+    throw new Error(
+        `Arrays are of different type. Actual: ${aType}. ` +
+        `Expected: ${bType}`);
+  }
+}
+
+function assertMatchingArrayShape(actual: TensorLike, expected: TensorLike): void {
+  const actualShape = inferShape(actual);
+  const expectedShape = inferShape(expected);
+  if (!arraysEqual(actualShape, expectedShape)) {
+    throw new Error(
+        `Arrays have different shapes. ` +
+        `Actual: [${actualShape}]. Expected: [${expectedShape}]`);
+  }
+}
+
 function expectArraysPredicate(
     actual: TensorLike, expected: TensorLike,
     predicate: (a: {}, b: {}) => boolean) {
@@ -101,24 +121,10 @@ function expectArraysPredicate(
     checkClassType = true;
   }
   if (checkClassType) {
-    const aType = actual.constructor.name;
-    const bType = expected.constructor.name;
-
-    if (aType !== bType) {
-      throw new Error(
-          `Arrays are of different type. Actual: ${aType}. ` +
-          `Expected: ${bType}`);
-    }
+    assertMatchingArrayType(actual, expected);
   }
-
   if (Array.isArray(actual) && Array.isArray(expected)) {
-    const actualShape = inferShape(actual);
-    const expectedShape = inferShape(expected);
-    if (!arraysEqual(actualShape, expectedShape)) {
-      throw new Error(
-          `Arrays have different shapes. ` +
-          `Actual: [${actualShape}]. Expected: [${expectedShape}]`);
-    }
+    assertMatchingArrayShape(actual, expected);
   }
 
   const actualFlat =

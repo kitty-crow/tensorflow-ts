@@ -19,7 +19,7 @@ import {shaderEntry, symbolicallyComputeStrides} from './shader_util';
 import {concatOffsetUniforms} from './kernels/Concat_impl';
 import {MatMulPackedProgram} from './matmul_packed_webgpu';
 import {MatMulSplitKProgram} from './matmul_splitK_webgpu';
-import {computeWorkgroupInfoForMatMul, requiredWebGPUFeatures} from './webgpu_util';
+import {computeWorkgroupInfoForMatMul, MatMulProgramType, requiredWebGPUFeatures, selectMatMulProgramType} from './webgpu_util';
 import {TileProgram} from './tile_webgpu';
 import {TransposeSharedProgram} from './transpose_shared_webgpu';
 import {TransposeProgram} from './transpose_webgpu';
@@ -321,5 +321,20 @@ describe('optional WebGPU device features', () => {
     expect(requiredWebGPUFeatures(new Set<GPUFeatureName>([
       'bgra8unorm-storage', 'timestamp-query'
     ]))).toEqual(['timestamp-query', 'bgra8unorm-storage']);
+  });
+});
+
+describe('matrix multiplication program selection', () => {
+  it('retains reduction, split-K, small-output and packed thresholds', () => {
+    expect(selectMatMulProgramType([1, 8, 16], 2000, 1))
+        .toBe(MatMulProgramType.MatMulReduceProgram);
+    expect(selectMatMulProgramType([1, 8, 32], 2000, 1))
+        .toBe(MatMulProgramType.MatMulSplitKProgram);
+    expect(selectMatMulProgramType([1, 8, 32], 1999, 1))
+        .toBe(MatMulProgramType.MatMulSmallOutputSizeProgram);
+    expect(selectMatMulProgramType([2, 8, 32], 2000, 1))
+        .toBe(MatMulProgramType.MatMulSmallOutputSizeProgram);
+    expect(selectMatMulProgramType([1, 64, 64], 2000, 1))
+        .toBe(MatMulProgramType.MatMulPackedProgram);
   });
 });

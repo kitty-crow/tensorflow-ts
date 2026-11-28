@@ -32,7 +32,7 @@ import {ZeroPadding2D} from '../layers/padding';
 import {Dot} from '../layers/merge';
 import {TimeDistributed, Bidirectional} from '../layers/wrappers';
 import {LayerNormalization} from '../layers/normalization';
-import {LSTMCell, SimpleRNN, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
+import {LSTMCell, readRnnInitialState, readRnnMask, SimpleRNN, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
 import {requiredElement, requiredEntry} from '../utils/generic_utils';
 import {cloneTestJsonDict, LayerForTest, parseTestJsonDict, requireTestJsonDict} from '../utils/test_utils';
 import {min, max, sum, variance} from '../utils/math_utils';
@@ -683,5 +683,24 @@ describe('layer normalization axis validation', () => {
         .toThrowError(/Expected axis to be an array of integers/);
     expect(() => new LayerNormalization({axis: new Array<number>(1)}))
         .toThrowError(/Expected axis to be an array of integers/);
+  });
+});
+
+describe('checked recurrent keyword arguments', () => {
+  it('preserves concrete tensors and the original state array', () => {
+    const mask = new Tensor([1, 2], 'bool', {}, 310);
+    const state = new Tensor([1, 2], 'float32', {}, 311);
+    const states = [state];
+    expect(readRnnMask({mask})).toBe(mask);
+    expect(readRnnInitialState({initialState: states})).toBe(states);
+    expect(readRnnInitialState({initialState: []})).toEqual([]);
+    expect(readRnnInitialState({})).toBeNull();
+    expect(readRnnMask(null)).toBeNull();
+  });
+  it('rejects malformed concrete states and masks', () => {
+    expect(() => readRnnMask({mask: 'invalid'}))
+        .toThrowError(/mask must be a Tensor/);
+    expect(() => readRnnInitialState({initialState: [1]}))
+        .toThrowError(/initialState must be an array of Tensors/);
   });
 });

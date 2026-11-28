@@ -328,3 +328,16 @@ describe('checked elided slice bounds', () => {
         .toThrowError(/Missing dimension/);
   });
 });
+
+describe('dense axis bound contracts', () => {
+  it('retains masked reverse bounds and negative shrink coordinates', () => {
+    const reversed = slice.sliceInfo([4], [0], [0], [-1], 1, 1, 0, 0, 0);
+    expect(reversed.begin).toEqual([3]);
+    expect(reversed.end).toEqual([-1]);
+    expect(reversed.finalShape).toEqual([4]);
+    const shrunk = slice.sliceInfo([4], [-1], [0], [1], 0, 0, 0, 0, 1);
+    expect(shrunk.begin).toEqual([3]);
+    expect(shrunk.end).toEqual([4]);
+    expect(shrunk.finalShape).toEqual([]);
+  });
+});

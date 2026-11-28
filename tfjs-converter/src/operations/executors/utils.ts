@@ -38,7 +38,7 @@ export function getParamValue(
   const shiftedStart = start < 0 ? node.inputNames.length + start : start;
   if (inputParam.type === 'tensor') {
     return getTensor(
-        node.inputNames[shiftedStart], tensorMap, context, resourceManager);
+        requiredInputName(node, shiftedStart), tensorMap, context, resourceManager);
   }
   if (inputParam.type === 'tensors') {
     // TODO(mattSoulanille): This filters out NoOp nodes during execution, but
@@ -54,11 +54,20 @@ export function getParamValue(
         name => getTensor(name, tensorMap, context, resourceManager));
   }
   const tensor = getTensor(
-      node.inputNames[shiftedStart], tensorMap, context, resourceManager);
+      requiredInputName(node, shiftedStart), tensorMap, context, resourceManager);
   const data = tensor.dataSync();
   return inputParam.type === 'number' ?
-      data[0] :
+      util.requiredNumericEntry(data, 0) :
       util.toNestedArray(tensor.shape, data);
+}
+
+/** A mapped single-input parameter must identify an existing input. */
+function requiredInputName(node: Node, index: number): string {
+  const name = node.inputNames[index];
+  if (name == null) {
+    throw new Error(`Missing input name at index ${index} for node '${node.name}'.`);
+  }
+  return name;
 }
 
 /**

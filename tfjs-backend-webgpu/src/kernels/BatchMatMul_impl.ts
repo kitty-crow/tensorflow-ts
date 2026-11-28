@@ -23,7 +23,7 @@ import {MatMulReduceProgram} from '../matmul_reduce_webgpu';
 import {MatMulSmallOutputSizeProgram} from '../matmul_small_output_size_webgpu';
 import {BiasActivationProgram, MatMulSplitKProgram} from '../matmul_splitK_webgpu';
 import {WebGPUProgram} from '../webgpu_program';
-import {MatMulProgramType} from '../webgpu_util';
+import {MatMulProgramType, selectMatMulProgramType} from '../webgpu_util';
 
 import {fill} from './Fill';
 import {reshape} from './Reshape';
@@ -116,23 +116,8 @@ export function batchMatMulImpl({
     const thresholdToIncreaseWorkgroups = thresholdFlagValue > 0 ?
         thresholdFlagValue :
         backend.thresholdToIncreaseWorkgroups;
-    const workgroupsBy32x32 =
-        batchDim * Math.ceil(outerShapeA / 32) * Math.ceil(outerShapeB / 32);
-    const hasFewWorkgroups =
-        workgroupsBy32x32 <= thresholdToIncreaseWorkgroups ||
-        (outerShapeA <= 8 &&
-         workgroupsBy32x32 <= thresholdToIncreaseWorkgroups * 2);
-    if (hasFewWorkgroups) {
-      if (batchDim * outerShapeA * outerShapeB <= 128) {
-        matmulProgramType = MatMulProgramType.MatMulReduceProgram;
-      } else if (batchDim === 1 && innerShapeB >= 2000) {
-        matmulProgramType = MatMulProgramType.MatMulSplitKProgram;
-      } else {
-        matmulProgramType = MatMulProgramType.MatMulSmallOutputSizeProgram;
-      }
-    } else {
-      matmulProgramType = MatMulProgramType.MatMulPackedProgram;
-    }
+    matmulProgramType = selectMatMulProgramType(
+        outputShape, innerShapeB, thresholdToIncreaseWorkgroups);
   }
 
   switch (matmulProgramType) {
@@ -148,35 +133,35 @@ export function batchMatMulImpl({
           {backend, attrs: {shape: outputShape, value: 0, dtype: a.dtype}});
       program = new MatMulSplitKProgram(
           outputShape, innerShapeB, transposeA, transposeB);
-      if (bias || activation) {
-        out =
-            backend.runWebGPUProgram(program, inputs, a.dtype, dimensions, out);
-        const biasActivationProgram = new BiasActivationProgram(
-            out.shape, bias, activation, preluActivationWeights);
-        let uniformData = null;
-        const activationInputs: TensorInfo[] = [out];
-        if (bias) {
-          activationInputs.push(bias);
-        }
-        if (preluActivationWeights) {
-          activationInputs.push(preluActivationWeights);
-        }
-        if (activation === 'leakyrelu') {
-          uniformData = [{type: 'float32', data: [leakyreluAlpha]}];
-          biasActivationProgram.uniforms += ' alpha : f32,';
-        }
-        const outActivated = backend.runWebGPUProgram(
-            biasActivationProgram, activationInputs, out.dtype, uniformData);
-        intermediates.push(out);
-        const outReshaped = reshape(
-            {inputs: {x: outActivated}, backend, attrs: {shape: outShape}});
-        intermediates.push(outActivated);
-        for (const i of intermediates) {
-          backend.disposeData(i.dataId);
-        }
-        return outReshaped;
+      if (!bias && !activation) {
+        break;
       }
-      break;
+      out =
+          backend.runWebGPUProgram(program, inputs, a.dtype, dimensions, out);
+      const biasActivationProgram = new BiasActivationProgram(
+          out.shape, bias, activation, preluActivationWeights);
+      let uniformData = null;
+      const activationInputs: TensorInfo[] = [out];
+      if (bias) {
+        activationInputs.push(bias);
+      }
+      if (preluActivationWeights) {
+        activationInputs.push(preluActivationWeights);
+      }
+      if (activation === 'leakyrelu') {
+        uniformData = [{type: 'float32', data: [leakyreluAlpha]}];
+        biasActivationProgram.uniforms += ' alpha : f32,';
+      }
+      const outActivated = backend.runWebGPUProgram(
+          biasActivationProgram, activationInputs, out.dtype, uniformData);
+      intermediates.push(out);
+      const outReshaped = reshape(
+          {inputs: {x: outActivated}, backend, attrs: {shape: outShape}});
+      intermediates.push(outActivated);
+      for (const i of intermediates) {
+        backend.disposeData(i.dataId);
+      }
+      return outReshaped;
     }
     case MatMulProgramType.MatMulSmallOutputSizeProgram:
       program = new MatMulSmallOutputSizeProgram(

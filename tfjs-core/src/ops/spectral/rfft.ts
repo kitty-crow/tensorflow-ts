@@ -54,22 +54,22 @@ function rfft_(input: Tensor, fftLength?: number): Tensor {
   let innerDimensionSize = requiredDimension(input.shape, input.rank - 1);
   const batch = input.size / innerDimensionSize;
 
-  let adjustedInput: Tensor;
-  if (fftLength != null && fftLength < innerDimensionSize) {
+  let adjustedInput = input;
+  const originalInnerSize = innerDimensionSize;
+  if (fftLength != null && fftLength < originalInnerSize) {
     // Need to crop
     const begin = input.shape.map(v => 0);
     const size = input.shape.map(v => v);
     size[input.shape.length - 1] = fftLength;
     adjustedInput = slice(input, begin, size);
     innerDimensionSize = fftLength;
-  } else if (fftLength != null && fftLength > innerDimensionSize) {
+  }
+  if (fftLength != null && fftLength > originalInnerSize) {
     // Need to pad with zeros
     const zerosShape = input.shape.map(v => v);
     zerosShape[input.shape.length - 1] = fftLength - innerDimensionSize;
     adjustedInput = concat([input, zeros(zerosShape)], input.shape.length - 1);
     innerDimensionSize = fftLength;
-  } else {
-    adjustedInput = input;
   }
 
   // Complement the input with zero imaginary numbers.

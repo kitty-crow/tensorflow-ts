@@ -85,11 +85,10 @@ class SplitIteratorImpl extends OneToManyIterator<string> {
 
   async pump(): Promise<boolean> {
     const chunkResult = await this.upstream.next();
+    if (chunkResult.done && this.carryover === '') {
+      return false;
+    }
     if (chunkResult.done) {
-      if (this.carryover === '') {
-        return false;
-      }
-
       // Pretend that the pump succeeded in order to emit the small last batch.
       // The next pump() call will actually fail.
       this.outputQueue.push(this.carryover);
@@ -101,11 +100,19 @@ class SplitIteratorImpl extends OneToManyIterator<string> {
     // Thus the carryover may be '' if the separator falls on a chunk
     // boundary; this produces the correct result.
 
-    lines[0] = this.carryover + lines[0];
+    const firstLine = lines[0];
+    if (firstLine == null) {
+      throw new Error('String split did not return a first segment.');
+    }
+    lines[0] = this.carryover + firstLine;
     for (const line of lines.slice(0, -1)) {
       this.outputQueue.push(line);
     }
-    this.carryover = lines[lines.length - 1];
+    const lastLine = lines[lines.length - 1];
+    if (lastLine == null) {
+      throw new Error('String split did not return a last segment.');
+    }
+    this.carryover = lastLine;
 
     return true;
   }

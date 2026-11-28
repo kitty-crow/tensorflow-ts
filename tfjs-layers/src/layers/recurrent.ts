@@ -745,10 +745,9 @@ export class RNN extends Layer {
     // Note that the .build() method of subclasses **must** define
     // this.inputSpec and this.stateSpec owith complete input shapes.
     return tidy(() => {
-      const mask = kwargs == null ? null : kwargs['mask'] as Tensor;
+      const mask = readRnnMask(kwargs);
       const training = trainingMode(kwargs);
-      let initialState: Tensor[] =
-          kwargs == null ? null : kwargs['initialState'];
+      let initialState = readRnnInitialState(kwargs);
 
       inputs = getExactlyOneTensor(inputs);
       if (initialState == null) {
@@ -905,6 +904,43 @@ export abstract class RNNCell extends Layer {
   public abstract stateSize: number|number[];
   public dropoutMask: Tensor|Tensor[];
   public recurrentDropoutMask: Tensor|Tensor[];
+}
+
+/** Release cached dropout tensors before a new recurrent sequence. */
+export function clearRnnDropoutMasks(cell: RNNCell): void {
+  if (cell.dropoutMask != null) {
+    tfc.dispose(cell.dropoutMask);
+    cell.dropoutMask = null;
+  }
+  if (cell.recurrentDropoutMask != null) {
+    tfc.dispose(cell.recurrentDropoutMask);
+    cell.recurrentDropoutMask = null;
+  }
+}
+
+/** Read the concrete mask at the untyped layer keyword boundary. */
+export function readRnnMask(kwargs: Kwargs): Tensor {
+  const value: {}|null|undefined = kwargs == null ? null : kwargs['mask'];
+  if (value == null) {
+    return null;
+  }
+  if (!(value instanceof Tensor)) {
+    throw new ValueError('RNN mask must be a Tensor.');
+  }
+  return value;
+}
+
+/** Read concrete initial state tensors without losing array identity. */
+export function readRnnInitialState(kwargs: Kwargs): Tensor[] {
+  const value: {}|null|undefined = kwargs == null ? null : kwargs['initialState'];
+  if (value == null) {
+    return null;
+  }
+  if (Array.isArray(value) && value.every(
+      (entry: {}): entry is Tensor => entry instanceof Tensor)) {
+    return value;
+  }
+  throw new ValueError('RNN initialState must be an array of Tensors.');
 }
 
 export declare interface SimpleRNNCellLayerArgs extends LayerArgs {
@@ -1327,19 +1363,8 @@ export class SimpleRNN extends RNN {
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tidy(() => {
-      if (this.cell.dropoutMask != null) {
-        tfc.dispose(this.cell.dropoutMask);
-        this.cell.dropoutMask = null;
-      }
-      if (this.cell.recurrentDropoutMask != null) {
-        tfc.dispose(this.cell.recurrentDropoutMask);
-        this.cell.recurrentDropoutMask = null;
-      }
-      const mask = kwargs == null ? null : kwargs['mask'];
-      const training = trainingMode(kwargs);
-      const initialState: Tensor[] =
-          kwargs == null ? null : kwargs['initialState'];
-      return super.call(inputs, {mask, training, initialState});
+      clearRnnDropoutMasks(this.cell);
+      return super.call(inputs, kwargs);
     });
   }
 
@@ -1656,19 +1681,8 @@ export class GRU extends RNN {
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tidy(() => {
-      if (this.cell.dropoutMask != null) {
-        tfc.dispose(this.cell.dropoutMask);
-        this.cell.dropoutMask = null;
-      }
-      if (this.cell.recurrentDropoutMask != null) {
-        tfc.dispose(this.cell.recurrentDropoutMask);
-        this.cell.recurrentDropoutMask = null;
-      }
-      const mask = kwargs == null ? null : kwargs['mask'];
-      const training = trainingMode(kwargs);
-      const initialState: Tensor[] =
-          kwargs == null ? null : kwargs['initialState'];
-      return super.call(inputs, {mask, training, initialState});
+      clearRnnDropoutMasks(this.cell);
+      return super.call(inputs, kwargs);
     });
   }
 
@@ -2008,19 +2022,8 @@ export class LSTM extends RNN {
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tidy(() => {
-      if (this.cell.dropoutMask != null) {
-        tfc.dispose(this.cell.dropoutMask);
-        this.cell.dropoutMask = null;
-      }
-      if (this.cell.recurrentDropoutMask != null) {
-        tfc.dispose(this.cell.recurrentDropoutMask);
-        this.cell.recurrentDropoutMask = null;
-      }
-      const mask = kwargs == null ? null : kwargs['mask'];
-      const training = trainingMode(kwargs);
-      const initialState: Tensor[] =
-          kwargs == null ? null : kwargs['initialState'];
-      return super.call(inputs, {mask, training, initialState});
+      clearRnnDropoutMasks(this.cell);
+      return super.call(inputs, kwargs);
     });
   }
 

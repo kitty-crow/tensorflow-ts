@@ -57,15 +57,12 @@ export function convertPythonicToTs(
     const tsDict: serialization.ConfigDict = {};
     for (const pythonicKey of Object.keys(pythonicConfig)) {
       const pythonicValue = pythonicConfig[pythonicKey];
-      if (pythonicKey === 'name' && typeof pythonicValue === 'string') {
-        // Special case the 'name' key with a string value. Name values, such as
-        // the names of LayersModel and Layer instances, should not undergo the
-        // camel-case conversion.
-        tsDict[pythonicKey] = pythonicValue;
-      } else {
-        const tsKey = generic_utils.toCamelCase(pythonicKey);
-        tsDict[tsKey] = convertPythonicToTs(pythonicValue, tsKey);
-      }
+      const preserveName = pythonicKey === 'name' &&
+          typeof pythonicValue === 'string';
+      const tsKey = preserveName ? pythonicKey :
+          generic_utils.toCamelCase(pythonicKey);
+      tsDict[tsKey] = preserveName ? pythonicValue :
+          convertPythonicToTs(pythonicValue, tsKey);
     }
     return tsDict;
   }
@@ -106,15 +103,10 @@ export function convertTsToPythonic(
     for (const tsKey of Object.keys(tsConfig)) {
       const tsValue = tsConfig[tsKey];
       const pyKey = generic_utils.toSnakeCase(tsKey);
-      if ((tsKey === 'name' || tsKey === 'className') &&
-          typeof tsValue === 'string') {
-        // Special case the 'name' key with a string value. Name values, such as
-        // the names of LayersModel and Layer instances, should not undergo the
-        // snake-case conversion.
-        pyDict[pyKey] = tsValue;
-      } else {
-        pyDict[pyKey] = convertTsToPythonic(tsValue, tsKey);
-      }
+      const preserveName = (tsKey === 'name' || tsKey === 'className') &&
+          typeof tsValue === 'string';
+      pyDict[pyKey] = preserveName ? tsValue :
+          convertTsToPythonic(tsValue, tsKey);
     }
     return pyDict;
   }

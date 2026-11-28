@@ -96,9 +96,13 @@ export class OperationMapper {
       map[mapped.name] = mapped;
       if (mapped.op.startsWith('Placeholder')) {
         placeholders.push(mapped);
-      } else if (mapped.op === 'Const') {
+        return map;
+      }
+      if (mapped.op === 'Const') {
         weights.push(mapped);
-      } else if (mapped.inputNames.length === 0) {
+        return map;
+      }
+      if (mapped.inputNames.length === 0) {
         initNodes.push(mapped);
       }
       return map;
@@ -147,14 +151,13 @@ export class OperationMapper {
     }
 
     const functions: {[key: string]: Graph} = {};
-    if (graph.library != null && graph.library.function != null) {
-      for (const func of graph.library.function) {
-        const signature = func.signature ?? null;
-        if (signature == null || signature.name == null) {
-          throw new Error('Graph function is missing its signature name.');
-        }
-        functions[signature.name] = this.mapFunction(func, signature, signature.name);
+    const definitions = graph.library == null ? [] : graph.library.function ?? [];
+    for (const func of definitions) {
+      const signature = func.signature ?? null;
+      if (signature == null || signature.name == null) {
+        throw new Error('Graph function is missing its signature name.');
       }
+      functions[signature.name] = this.mapFunction(func, signature, signature.name);
     }
 
     const result: Graph =
@@ -176,11 +179,10 @@ export class OperationMapper {
         if (inputNode == null) {
           throw new Error(`Missing input node "${nodeName}" for "${node.name}".`);
         }
-        if (inputNode.outputs != null) {
-          const outputIndex = inputNode.outputs.indexOf(outputName);
-          if (outputIndex !== -1) {
-            node.inputNames[index] = `${nodeName}:${outputIndex}`;
-          }
+        const outputIndex = inputNode.outputs == null ? -1 :
+            inputNode.outputs.indexOf(outputName);
+        if (outputIndex !== -1) {
+          node.inputNames[index] = `${nodeName}:${outputIndex}`;
         }
         node.inputs.push(inputNode);
         inputNode.children.push(node);
@@ -433,14 +435,12 @@ export function getNumberParam(
 }
 
 export function parseDtypeParam(value: string|tensorflow.DataType): DataType {
-  if (typeof value === 'string') {
-    const resolved = tensorflow.DataType[value as keyof typeof tensorflow.DataType];
-    if (typeof resolved !== 'number') {
-      return null;
-    }
-    value = resolved;
+  const resolved = typeof value === 'string' ?
+      tensorflow.DataType[value as keyof typeof tensorflow.DataType] : value;
+  if (typeof resolved !== 'number') {
+    return null;
   }
-  switch (value) {
+  switch (resolved) {
     case tensorflow.DataType.DT_FLOAT:
     case tensorflow.DataType.DT_HALF:
       return 'float32';

@@ -206,62 +206,53 @@ export class TFSavedModel implements InferenceModel {
       Tensor|Tensor[]|NamedTensorMap {
     if (this.disposed) {
       throw new Error('The TFSavedModel has already been deleted!');
-    } else {
-      let inputTensors: Tensor[] = [];
-      if (inputs instanceof Tensor) {
-        inputTensors.push(inputs);
-        const result = this.backend.runSavedModel(
-            this.sessionId, inputTensors, Object.values(this.signature.inputs),
-            Object.values(this.outputNodeNames));
-        if (result.length > 1) {
-          return result;
-        }
-        const output = result[0];
-        if (output == null) {
-          throw new Error('SavedModel inference returned no output tensor.');
-        }
-        return output;
-      }
-      if (Array.isArray(inputs)) {
-        inputTensors = inputs;
-        return this.backend.runSavedModel(
-            this.sessionId, inputTensors, Object.values(this.signature.inputs),
-            Object.values(this.outputNodeNames));
-      } else {
-        const inputTensorNames = Object.keys(this.signature.inputs);
-        const providedInputNames = Object.keys(inputs);
-        if (!stringArraysHaveSameElements(
-                inputTensorNames, providedInputNames)) {
-          throw new Error(`The model signatureDef input names are ${
-              inputTensorNames.join()}, however the provided input names are ${
-              providedInputNames.join()}.`);
-        }
-        const inputNodeNamesArray: ModelTensorInfo[] = [];
-        for (const name of inputTensorNames) {
-          inputTensors.push(util.requiredNamedEntry(inputs, name));
-          inputNodeNamesArray.push(util.requiredNamedEntry(this.signature.inputs, name));
-        }
-        const outputTensorNames = Object.keys(this.outputNodeNames);
-        const outputNodeNamesArray = Object.values(this.outputNodeNames);
-        const outputTensors = this.backend.runSavedModel(
-            this.sessionId, inputTensors, inputNodeNamesArray,
-            outputNodeNamesArray);
-        util.assert(
-            outputTensors.length === outputNodeNamesArray.length,
-            () => 'Output tensors do not match output node names, ' +
-                `receive ${outputTensors.length}) output tensors but ` +
-                `there are ${this.outputNodeNames.length} output nodes.`);
-        const outputMap: NamedTensorMap = {};
-        for (const [i, name] of outputTensorNames.entries()) {
-          const output = outputTensors[i];
-          if (output == null) {
-            throw new Error(`Missing output tensor ${name}`);
-          }
-          outputMap[name] = output;
-        }
-        return outputMap;
-      }
     }
+    if (inputs instanceof Tensor) {
+      const result = this.backend.runSavedModel(
+          this.sessionId, [inputs], Object.values(this.signature.inputs),
+          Object.values(this.outputNodeNames));
+      return singleOrMultipleSavedModelOutputs(result);
+    }
+    if (Array.isArray(inputs)) {
+      return this.backend.runSavedModel(
+          this.sessionId, inputs, Object.values(this.signature.inputs),
+          Object.values(this.outputNodeNames));
+    }
+    return this.predictNamed(inputs);
+  }
+
+  private predictNamed(inputs: NamedTensorMap): NamedTensorMap {
+    const inputTensorNames = Object.keys(this.signature.inputs);
+    const providedInputNames = Object.keys(inputs);
+    if (!stringArraysHaveSameElements(inputTensorNames, providedInputNames)) {
+      throw new Error(`The model signatureDef input names are ${
+          inputTensorNames.join()}, however the provided input names are ${
+          providedInputNames.join()}.`);
+    }
+    const inputTensors: Tensor[] = [];
+    const inputNodeNamesArray: ModelTensorInfo[] = [];
+    for (const name of inputTensorNames) {
+      inputTensors.push(util.requiredNamedEntry(inputs, name));
+      inputNodeNamesArray.push(util.requiredNamedEntry(this.signature.inputs, name));
+    }
+    const outputTensorNames = Object.keys(this.outputNodeNames);
+    const outputNodeNamesArray = Object.values(this.outputNodeNames);
+    const outputTensors = this.backend.runSavedModel(
+        this.sessionId, inputTensors, inputNodeNamesArray, outputNodeNamesArray);
+    util.assert(
+        outputTensors.length === outputNodeNamesArray.length,
+        () => 'Output tensors do not match output node names, ' +
+            `receive ${outputTensors.length}) output tensors but ` +
+            `there are ${this.outputNodeNames.length} output nodes.`);
+    const outputMap: NamedTensorMap = {};
+    for (const [i, name] of outputTensorNames.entries()) {
+      const output = outputTensors[i];
+      if (output == null) {
+        throw new Error(`Missing output tensor ${name}`);
+      }
+      outputMap[name] = output;
+    }
+    return outputMap;
   }
 
   /**
@@ -362,4 +353,16 @@ export function getNumOfSavedModels() {
   ensureTensorflowBackend();
   const backend = nodeBackend();
   return backend.getNumOfSavedModels();
+}
+
+/** Preserve the single-input prediction result convention. */
+function singleOrMultipleSavedModelOutputs(result: Tensor[]): Tensor|Tensor[] {
+  if (result.length > 1) {
+    return result;
+  }
+  const output = result[0];
+  if (output == null) {
+    throw new Error('SavedModel inference returned no output tensor.');
+  }
+  return output;
 }

@@ -41,14 +41,10 @@ export function setWebGLContext(
 export function getWebGLContext(
     webGLVersion: number,
     customCanvas?: HTMLCanvasElement|OffscreenCanvas): WebGLRenderingContext {
-  if (!(webGLVersion in contexts) || customCanvas != null) {
-    const newCtx = getWebGLRenderingContext(webGLVersion, customCanvas);
-    if (newCtx !== null) {
-      contexts[webGLVersion] = newCtx;
-    } else {
-      console.log('Could not get context for WebGL version', webGLVersion);
-      return null;
-    }
+  const needsContext = !(webGLVersion in contexts) || customCanvas != null;
+  if (needsContext && !cacheWebGLContext(
+      webGLVersion, getWebGLRenderingContext(webGLVersion, customCanvas))) {
+    return null;
   }
   const gl = contexts[webGLVersion];
   if (gl == null || gl.isContextLost()) {
@@ -110,4 +106,14 @@ function getWebGLRenderingContext(
                         WEBGL_ATTRIBUTES) as WebGLRenderingContext);
   }
   return canvas.getContext('webgl2', WEBGL_ATTRIBUTES) as WebGLRenderingContext;
+}
+
+/** Retain an existing cached context if a new context cannot be created. */
+function cacheWebGLContext(version: number, context: WebGLRenderingContext): boolean {
+  if (context === null) {
+    console.log('Could not get context for WebGL version', version);
+    return false;
+  }
+  contexts[version] = context;
+  return true;
 }

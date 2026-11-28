@@ -25,7 +25,7 @@ import * as generic_utils from '../utils/generic_utils';
 import {getExactlyOneShape, getExactlyOneTensor} from '../utils/types_utils';
 import {LayerVariable} from '../variables';
 
-import {rnn, RNN, standardizeArgs} from './recurrent';
+import {readRnnInitialState, rnn, RNN, standardizeArgs} from './recurrent';
 import {deserialize} from './serialization';
 
 export declare interface WrapperLayerArgs extends LayerArgs {
@@ -430,7 +430,7 @@ export class Bidirectional extends Wrapper {
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tidy(() => {
-      const initialState = kwargs['initialState'];
+      const initialState = readRnnInitialState(kwargs);
 
       let y: Tensor|Tensor[];
       let yRev: Tensor|Tensor[];

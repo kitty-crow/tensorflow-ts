@@ -25,7 +25,7 @@ import {convOutputLength, normalizeArray} from '../utils/conv_utils';
 import {assertPositiveInteger, requiredElement} from '../utils/generic_utils';
 import {getExactlyOneShape} from '../utils/types_utils';
 
-import {BaseRNNLayerArgs, generateDropoutMask, LSTMCell, LSTMCellLayerArgs, LSTMLayerArgs, RNN, RNNCell, RNNLayerArgs, SimpleRNNCellLayerArgs} from './recurrent';
+import {BaseRNNLayerArgs, clearRnnDropoutMasks, generateDropoutMask, LSTMCell, LSTMCellLayerArgs, LSTMLayerArgs, RNN, RNNCell, RNNLayerArgs, SimpleRNNCellLayerArgs} from './recurrent';
 
 declare interface ConvRNN2DCellArgs extends
     Omit<SimpleRNNCellLayerArgs, 'units'> {
@@ -136,30 +136,13 @@ class ConvRNN2D extends RNN {
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {
     return tfc.tidy(() => {
-      if (this.cell.dropoutMask != null) {
-        tfc.dispose(this.cell.dropoutMask);
-
-        this.cell.dropoutMask = null;
-      }
-
-      if (this.cell.recurrentDropoutMask != null) {
-        tfc.dispose(this.cell.recurrentDropoutMask);
-
-        this.cell.recurrentDropoutMask = null;
-      }
+      clearRnnDropoutMasks(this.cell);
 
       if (kwargs && kwargs['constants']) {
         throw new ValueError('ConvRNN2D cell does not support constants');
       }
 
-      const mask = kwargs == null ? null : kwargs['mask'];
-
-      const training = trainingMode(kwargs);
-
-      const initialState: Tensor[] =
-          kwargs == null ? null : kwargs['initialState'];
-
-      return super.call(inputs, {mask, training, initialState});
+      return super.call(inputs, kwargs);
     });
   }
 
@@ -426,11 +409,11 @@ export class ConvLSTM2DCell extends LSTMCell implements ConvRNN2DCell {
 
       const kernelChannelAxis = 3;
 
-      const [kernelI, kernelF, kernelC, kernelO]: tfc.Tensor[] =
-          tfc.split(this.kernel.read(), numOfKernels, kernelChannelAxis);
+      const [kernelI, kernelF, kernelC, kernelO] =
+          splitConvLstmGates(this.kernel.read(), kernelChannelAxis);
 
-      const [biasI, biasF, biasC, biasO]: tfc.Tensor[] = this.useBias ?
-          tfc.split(this.bias.read(), numOfKernels) :
+      const [biasI, biasF, biasC, biasO]: [Tensor, Tensor, Tensor, Tensor] = this.useBias ?
+          splitConvLstmGates(this.bias.read(), 0) :
           [null, null, null, null];
 
       xI = this.inputConv(xI, kernelI, biasI, this.padding);
@@ -438,9 +421,8 @@ export class ConvLSTM2DCell extends LSTMCell implements ConvRNN2DCell {
       xC = this.inputConv(xC, kernelC, biasC, this.padding);
       xO = this.inputConv(xO, kernelO, biasO, this.padding);
 
-      const [recKernelI, recKernelF, recKernelC, recKernelO]: tfc.Tensor[] =
-          tfc.split(
-              this.recurrentKernel.read(), numOfKernels, kernelChannelAxis);
+      const [recKernelI, recKernelF, recKernelC, recKernelO] =
+          splitConvLstmGates(this.recurrentKernel.read(), kernelChannelAxis);
 
       hI = this.recurrentConv(hI, recKernelI);
       hF = this.recurrentConv(hF, recKernelF);
@@ -522,3 +504,11 @@ export class ConvLSTM2D extends ConvRNN2D {
 }
 
 tfc.serialization.registerClass(ConvLSTM2D);
+
+/** A convolutional LSTM always has four aligned gate tensors. */
+function splitConvLstmGates(tensor: Tensor, axis: number):
+    [Tensor, Tensor, Tensor, Tensor] {
+  const gates = tfc.split(tensor, 4, axis);
+  return [requiredElement(gates, 0), requiredElement(gates, 1),
+    requiredElement(gates, 2), requiredElement(gates, 3)];
+}

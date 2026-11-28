@@ -22,7 +22,7 @@ import {assertShapesMatchAllowUndefinedSize, mergeElementShape} from '../../exec
 import {Graph, Node} from '../types';
 import {getExecutionSubgraph, getNodesInTopologicalOrder, getNodeLiveUntilMap} from '../../executor/model_analysis';
 import {GraphExecutor} from '../../executor/graph_executor';
-import {getNumericArrayParam, OperationMapper, parseStringParam} from '../operation_mapper';
+import {getNumericArrayParam, OperationMapper, parseDtypeParam, parseStringParam} from '../operation_mapper';
 
 import {NodeValueImpl} from './node_value_impl';
 import {spyOnAllFunctions} from '../executors/spy_ops';
@@ -301,5 +301,31 @@ describe('converter cache and attribute fallback regressions', () => {
     expect(getParamValue('pad', node, {}, context) === 'same').toBe(true);
     expect(getParamValue('absent', node, {}, context) === undefined).toBe(true);
     expect(getPadding(node, {}, context) === 'same').toBe(true);
+  });
+});
+
+describe('graph classification and dtype dispatch', () => {
+  it('classifies placeholders, constants and other zero-input nodes separately', () => {
+    const graph = OperationMapper.Instance.transformGraph({node: [
+      {name: 'placeholder', op: 'Placeholder'},
+      {name: 'weight', op: 'Const'},
+      {name: 'init', op: 'NoOp'},
+      {name: 'consumer', op: 'Identity', input: ['placeholder']}
+    ]});
+    expect(graph.placeholders.map(node => node.name)).toEqual(['placeholder']);
+    expect(graph.weights.map(node => node.name)).toEqual(['weight']);
+    expect(test_util.requiredTestValue(graph.initNodes, 'initNodes')
+        .map(node => node.name)).toEqual(['init']);
+  });
+  it('keeps numeric and string dtype aliases and rejects unknown names', () => {
+    expect(parseDtypeParam(tensorflow.DataType.DT_FLOAT)).toBe('float32');
+    expect(parseDtypeParam('DT_FLOAT')).toBe('float32');
+    expect(parseDtypeParam('DT_INT64')).toBe('int32');
+    expect(parseDtypeParam('invalid')).toBeNull();
+  });
+  it('rejects a function definition without its signature name', () => {
+    expect(() => OperationMapper.Instance.transformGraph({
+      node: [], library: {function: [{signature: {}}]}
+    })).toThrowError(/missing its signature name/);
   });
 });
