@@ -1128,10 +1128,7 @@ export abstract class Container extends Layer {
       if (!this.containerNodes.has(nodeKey)) {
         continue;
       }
-      let newNodeIndex = nodeConversionMap[nodeKey];
-      if (newNodeIndex === null || newNodeIndex === undefined) {
-        newNodeIndex = 0;
-      }
+      const newNodeIndex = nodeConversionMap[nodeKey] ?? 0;
       const tensorIndex = generic_utils.requiredElement(this.inputLayersTensorIndices, i);
       modelInputs.push([layer.name, newNodeIndex, tensorIndex]);
     }
@@ -1146,10 +1143,7 @@ export abstract class Container extends Layer {
       if (!this.containerNodes.has(nodeKey)) {
         continue;
       }
-      let newNodeIndex = nodeConversionMap[nodeKey];
-      if (newNodeIndex === null || newNodeIndex === undefined) {
-        newNodeIndex = 0;
-      }
+      const newNodeIndex = nodeConversionMap[nodeKey] ?? 0;
       const tensorIndex = generic_utils.requiredElement(this.outputLayersTensorIndices, i);
       modelOutputs.push([layer.name, newNodeIndex, tensorIndex]);
     }

@@ -26,6 +26,7 @@ describe('sorted buffer search', () => {
     expect(search(values, value => 6 - value)).toBe(-1);
     expect(search(values, value => 1 - value)).toBe(0);
     expect(search(values, value => 5 - value)).toBe(2);
+    expect(search([null], value => value === null ? 0 : -1)).toBe(0);
   });
 });
 

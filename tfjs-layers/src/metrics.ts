@@ -179,13 +179,13 @@ export function getLossOrMetricName(fn: string|LossOrMetricFn): string {
   if (typeof fn === 'string') {
     return fn;
   }
-  for (const [key, loss] of Object.entries(lossesMap)) {
-    if (loss === fn) {
+  for (const key of Object.keys(lossesMap)) {
+    if (lossesMap[key] === fn) {
       return key;
     }
   }
-  for (const [key, metric] of Object.entries(metricsMap)) {
-    if (metric === fn) {
+  for (const key of Object.keys(metricsMap)) {
+    if (metricsMap[key] === fn) {
       return key;
     }
   }
