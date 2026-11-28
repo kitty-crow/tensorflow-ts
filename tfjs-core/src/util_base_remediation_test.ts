@@ -22,7 +22,7 @@ import {flatten} from './util';
 import {TensorBuffer} from './tensor';
 import {Rank} from './types';
 import {env} from './environment';
-import {getGradient, registerGradient, unregisterGradient} from './kernel_registry';
+import {getGradient, GradConfig, registerGradient, unregisterGradient} from './kernel_registry';
 import {basename, concatenateTypedArrays, decodeWeights} from './io/io_utils';
 import {requiredTestElement, requiredTestEntry, requiredTestValue} from './test_util';
 import {requiredNamedEntry, assertArrayLength, inferFromImplicitShape, indexToLoc, locToIndex, roundUpToPow2, sizeFromShape, squeezeShape, sum, toNestedArray} from './util_base';
@@ -282,8 +282,8 @@ describe('TensorBuffer coordinate contracts', () => {
 describe('gradient registry conditional warning', () => {
   it('consults DEBUG only for an existing gradient and still replaces it', () => {
     const kernelName = 'RemediationGradientDebugCheck';
-    const initial = {kernelName, gradFunc: () => null};
-    const replacement = {kernelName, gradFunc: () => ({})};
+    const initial: GradConfig = {kernelName, gradFunc: () => ({})};
+    const replacement: GradConfig = {kernelName, gradFunc: () => ({})};
     const debug = spyOn(env(), 'getBool').and.returnValue(false);
     registerGradient(initial);
     try {
