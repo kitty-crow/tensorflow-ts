@@ -297,8 +297,9 @@ describe('converter cache and attribute fallback regressions', () => {
       inputNames: [], inputs: [], children: [], inputParams: {},
       attrParams: {pad: {value: 'same', type: 'string'}}};
     const context = new ExecutionContext();
-    expect(getParamValue('pad', node, {}, context)).toBe('same');
-    expect(getParamValue('absent', node, {}, context)).toBeUndefined();
-    expect(getPadding(node, {}, context)).toBe('same');
+    // Compare before invoking Jasmine to avoid expanding recursive ValueType.
+    expect(getParamValue('pad', node, {}, context) === 'same').toBe(true);
+    expect(getParamValue('absent', node, {}, context) === undefined).toBe(true);
+    expect(getPadding(node, {}, context) === 'same').toBe(true);
   });
 });
