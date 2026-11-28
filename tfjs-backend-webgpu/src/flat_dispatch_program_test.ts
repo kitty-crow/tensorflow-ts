@@ -19,7 +19,7 @@ import {shaderEntry, symbolicallyComputeStrides} from './shader_util';
 import {concatOffsetUniforms} from './kernels/Concat_impl';
 import {MatMulPackedProgram} from './matmul_packed_webgpu';
 import {MatMulSplitKProgram} from './matmul_splitK_webgpu';
-import {computeWorkgroupInfoForMatMul} from './webgpu_util';
+import {computeWorkgroupInfoForMatMul, requiredWebGPUFeatures} from './webgpu_util';
 import {TileProgram} from './tile_webgpu';
 import {TransposeSharedProgram} from './transpose_shared_webgpu';
 import {TransposeProgram} from './transpose_webgpu';
@@ -308,5 +308,18 @@ describe('matmul dispatch branch regression', () => {
     const vector = new MatMulSplitKProgram([1, 4, 8], 8);
     expect(vector.outputComponent).toBe(4);
     expect(vector.elementsPerThread).toEqual([4, 4, 128]);
+  });
+});
+
+describe('optional WebGPU device features', () => {
+  it('requests only supported feature strings in stable order', () => {
+    expect(requiredWebGPUFeatures(new Set<GPUFeatureName>())).toEqual([]);
+    expect(requiredWebGPUFeatures(new Set<GPUFeatureName>(['timestamp-query'])))
+        .toEqual(['timestamp-query']);
+    expect(requiredWebGPUFeatures(new Set<GPUFeatureName>(['bgra8unorm-storage'])))
+        .toEqual(['bgra8unorm-storage']);
+    expect(requiredWebGPUFeatures(new Set<GPUFeatureName>([
+      'bgra8unorm-storage', 'timestamp-query'
+    ]))).toEqual(['timestamp-query', 'bgra8unorm-storage']);
   });
 });

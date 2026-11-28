@@ -37,13 +37,8 @@ describe('ShuffleIterator', () => {
     const result = await shuffleIterator.toArrayForTest();
     expect(result).not.toEqual(notExpectedResult);
     expect(result.length).toEqual(LONG_STREAM_LENGTH);
-    const counts = new Array<number>(LONG_STREAM_LENGTH);
-    result.forEach((x) => {
-      counts[x] = (counts[x] || 0) + 1;
-    });
-    for (let i = 0; i < LONG_STREAM_LENGTH; i++) {
-      expect(counts[i]).toEqual(1);
-    }
+    expect(result.slice().sort((a, b) => a - b))
+        .toEqual(notExpectedResult.slice().sort((a, b) => a - b));
   });
 
   it('shuffles a single chained stream without replacement', async () => {
@@ -59,13 +54,8 @@ describe('ShuffleIterator', () => {
     const result = await shuffleIterator.toArrayForTest();
     expect(result).not.toEqual(notExpectedResult);
     expect(result.length).toEqual(SHORT_STREAM_LENGTH);
-    const counts = new Array<number>(SHORT_STREAM_LENGTH);
-    result.forEach((x) => {
-      counts[x] = (counts[x] || 0) + 1;
-    });
-    for (let i = 0; i < SHORT_STREAM_LENGTH; i++) {
-      expect(counts[i]).toEqual(1);
-    }
+    expect(result.slice().sort((a, b) => a - b))
+        .toEqual(notExpectedResult.slice().sort((a, b) => a - b));
   });
 
   it('shuffles multiple chained streams without replacement', async () => {
@@ -83,12 +73,7 @@ describe('ShuffleIterator', () => {
     const result = await shuffleIterator.toArrayForTest();
     expect(result).not.toEqual(notExpectedResult);
     expect(result.length).toEqual(3 * SHORT_STREAM_LENGTH);
-    const counts = new Array<number>(SHORT_STREAM_LENGTH);
-    result.forEach((x) => {
-      counts[x] = (counts[x] || 0) + 1;
-    });
-    for (let i = 0; i < SHORT_STREAM_LENGTH; i++) {
-      expect(counts[i]).toEqual(3);
-    }
+    expect(result.slice().sort((a, b) => a - b))
+        .toEqual(notExpectedResult.slice().sort((a, b) => a - b));
   });
 });

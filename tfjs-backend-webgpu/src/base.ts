@@ -20,7 +20,7 @@ import './flags_webgpu';
 import {env, registerBackend} from '@tensorflow/tfjs-core';
 
 import {WebGPUBackend} from './backend_webgpu';
-import {isWebGPUSupported} from './webgpu_util';
+import {isWebGPUSupported, requiredWebGPUFeatures} from './webgpu_util';
 
 if (isWebGPUSupported()) {
   registerBackend('webgpu', async () => {
@@ -33,15 +33,7 @@ if (isWebGPUSupported()) {
     const adapter = await navigator.gpu.requestAdapter(gpuDescriptor);
     const deviceDescriptor: GPUDeviceDescriptor = {};
 
-    const requiredFeatures = [];
-    if (adapter.features.has('timestamp-query')) {
-      requiredFeatures.push('timestamp-query');
-    }
-    if (adapter.features.has('bgra8unorm-storage')) {
-      requiredFeatures.push(['bgra8unorm-storage']);
-    }
-    deviceDescriptor.requiredFeatures =
-        requiredFeatures as Iterable<GPUFeatureName>;
+    deviceDescriptor.requiredFeatures = requiredWebGPUFeatures(adapter.features);
 
     const adapterLimits = adapter.limits;
     deviceDescriptor.requiredLimits = {

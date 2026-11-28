@@ -17,6 +17,7 @@
 
 import {fingerPrint64, hexToLong} from './hash_util';
 import {ALL_ENVS, describeWithFlags} from './jasmine_util';
+import {requiredNumericEntry} from './util_base';
 
 /**
  * The ACMRandom generator is for situations where extreme statistical quality
@@ -131,12 +132,14 @@ describeWithFlags('hash_util', ALL_ENVS, () => {
       s[len++] = remix();
       h = h.xor(fingerPrint64(s, len));
       s[len++] = remix();
-      const x0 = s[len - 1];
-      const x1 = s[len - 2];
-      const x2 = s[len - 3];
-      const x3 = s[len >> 1];
-      s[((x0 << 16) + (x1 << 8) + x2) % len] ^= x3;
-      s[((x1 << 16) + (x2 << 8) + x3) % len] ^= i % 256;
+      const x0 = requiredNumericEntry(s, len - 1);
+      const x1 = requiredNumericEntry(s, len - 2);
+      const x2 = requiredNumericEntry(s, len - 3);
+      const x3 = requiredNumericEntry(s, len >> 1);
+      const index0 = ((x0 << 16) + (x1 << 8) + x2) % len;
+      const index1 = ((x1 << 16) + (x2 << 8) + x3) % len;
+      s[index0] = requiredNumericEntry(s, index0) ^ x3;
+      s[index1] = requiredNumericEntry(s, index1) ^ (i % 256);
     }
 
     expect(h).toEqual(hexToLong('7a1d67c50ec7e167'));

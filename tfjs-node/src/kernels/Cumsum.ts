@@ -15,30 +15,8 @@
  * =============================================================================
  */
 
-import {Cumsum, CumsumAttrs, CumsumInputs, KernelAttributes, KernelConfig, scalar} from '@tensorflow/tfjs';
+import {Cumsum, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createCumulativeConfig} from './native_dispatch';
 
-export const cumsumConfig: KernelConfig = {
-  kernelName: Cumsum,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: CumsumInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<CumsumAttrs>
-  }) => {
-    const {x} = args.inputs;
-    const backend = args.backend;
-    const {axis, exclusive, reverse} = args.attrs;
-
-    const axisTensor = scalar(axis, 'int32');
-    const opAttrs = [
-      {name: 'exclusive', type: backend.binding.TF_ATTR_BOOL, value: exclusive},
-      {name: 'reverse', type: backend.binding.TF_ATTR_BOOL, value: reverse},
-      createTensorsTypeOpAttr('T', x.dtype),
-      createTensorsTypeOpAttr('Tidx', 'int32')
-    ];
-    const res = backend.executeSingleOutput(Cumsum, opAttrs, [x, axisTensor]);
-    axisTensor.dispose();
-    return res;
-  }
-};
+export const cumsumConfig: KernelConfig = createCumulativeConfig(Cumsum);

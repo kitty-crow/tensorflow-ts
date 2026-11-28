@@ -19,6 +19,14 @@ import * as tf from '@tensorflow/tfjs';
 // tslint:disable-next-line: no-imports-from-dist
 import {TestKernelBackend} from '@tensorflow/tfjs-core/dist/jasmine_util';
 
+import {avgPoolConfig} from './kernels/AvgPool';
+import {avgPool3DConfig} from './kernels/AvgPool3D';
+import {maxPoolConfig} from './kernels/MaxPool';
+import {maxPool3DConfig} from './kernels/MaxPool3D';
+import {cumsumConfig} from './kernels/Cumsum';
+import {cumprodConfig} from './kernels/Cumprod';
+import {dilation2dBackpropInputConfig} from './kernels/Dilation2DBackpropInput';
+import {dilation2dBackpropFilterConfig} from './kernels/Dilation2DBackpropFilter';
 import {absConfig} from './kernels/Abs';
 import {argMaxConfig} from './kernels/ArgMax';
 import {argMinConfig} from './kernels/ArgMin';
@@ -456,6 +464,92 @@ describe('logical and like-shaped native dispatch', () => {
         ['Erf', [createTensorsTypeOpAttr('T', x.dtype)], [x]],
         ['Square', [createTensorsTypeOpAttr('T', x.dtype)], [x]]
       ]);
+    } finally {
+      x.dispose();
+    }
+  });
+});
+
+describe('shared native pooling and cumulative dispatch', () => {
+  it('retains pooling rank, operation name, input and attributes', () => {
+    const backend = nodeBackend();
+    const x: tf.TensorInfo = {shape: [1, 5, 5, 2], dtype: 'float32', dataId: {}};
+    const x3: tf.TensorInfo = {shape: [1, 3, 4, 5, 2], dtype: 'float32', dataId: {}};
+    const result = tf.scalar(0);
+    try {
+      const dispatch = spyOn(backend, 'executeSingleOutput').and.returnValue(result);
+      const attrs = {filterSize: 2, strides: 1, pad: 'same'};
+      const attrs3 = {...attrs, dataFormat: 'NDHWC'};
+      for (const config of [avgPoolConfig, maxPoolConfig]) {
+        expect(config.kernelFunc({backend, inputs: {x}, attrs})).toBe(result);
+      }
+      for (const config of [avgPool3DConfig, maxPool3DConfig]) {
+        expect(config.kernelFunc({backend, inputs: {x: x3}, attrs: attrs3})).toBe(result);
+      }
+      const attrs2D = pool2DAttrs(backend, 'float32',
+          tf.backend_util.computePool2DInfo([1, 5, 5, 2], 2, 1, 1, 'same'), 'padding');
+      const attrs3D = pool3DAttrs(backend, 'float32',
+          tf.backend_util.computePool3DInfo([1, 3, 4, 5, 2], 2, 1, 1, 'same'), 'padding');
+      expect(dispatch.calls.allArgs()).toEqual([
+        ['AvgPool', attrs2D, [x]], ['MaxPool', attrs2D, [x]],
+        ['AvgPool3D', attrs3D, [x3]], ['MaxPool3D', attrs3D, [x3]]
+      ]);
+    } finally {
+      result.dispose();
+    }
+  });
+
+  it('preserves dilation gradient input order and operation names', () => {
+    const backend = nodeBackend();
+    const x: tf.TensorInfo = {shape: [1, 5, 5, 2], dtype: 'float32', dataId: {}};
+    const filter: tf.TensorInfo = {shape: [3, 3, 2], dtype: 'float32', dataId: {}};
+    const dy: tf.TensorInfo = {shape: [1, 5, 5, 2], dtype: 'float32', dataId: {}};
+    const attrs: tf.Dilation2DAttrs = {strides: [1, 1], pad: 'same', dilations: [1, 1]};
+    const result = tf.scalar(0);
+    try {
+      const dispatch = spyOn(backend, 'executeSingleOutput').and.returnValue(result);
+      const args = {backend, inputs: {x, filter, dy}, attrs: {...attrs}};
+      expect(dilation2dBackpropInputConfig.kernelFunc(args)).toBe(result);
+      expect(dilation2dBackpropFilterConfig.kernelFunc(args)).toBe(result);
+      const nativeAttrs = dilation2DAttrs(backend, x, filter, attrs);
+      expect(dispatch.calls.allArgs()).toEqual([
+        ['Dilation2DBackpropInput', nativeAttrs, [x, filter, dy]],
+        ['Dilation2DBackpropFilter', nativeAttrs, [x, filter, dy]]
+      ]);
+    } finally {
+      result.dispose();
+    }
+  });
+
+  it('retains cumulative flags and disposes only the owned axis scalar', () => {
+    const backend = nodeBackend();
+    const x = tf.tensor1d([2, 3]);
+    const captured: tf.Tensor[] = [];
+    try {
+      const dispatch = spyOn(backend, 'executeSingleOutput').and.callFake(
+          (name, attrs, inputs) => {
+            expect(inputs.length).toBe(2);
+            expect(tf.test_util.requiredTestElement(inputs, 0)).toBe(x);
+            const axis = tf.test_util.requiredTestElement(inputs, 1);
+            if (!(axis instanceof tf.Tensor)) {
+              throw new Error('Expected scalar axis tensor');
+            }
+            captured.push(axis);
+            expect(axis.dtype).toBe('int32');
+            expect(Array.from(axis.dataSync())).toEqual([0]);
+            expect(attrs.map(a => a.name)).toEqual(['exclusive', 'reverse', 'T', 'Tidx']);
+            expect(attrs.map(a => a.value)).toEqual([
+              true, false, backend.binding.TF_FLOAT, backend.binding.TF_INT32
+            ]);
+            return x;
+          });
+      const args = {backend, inputs: {x}, attrs: {axis: 0, exclusive: true, reverse: false}};
+      expect(cumsumConfig.kernelFunc(args)).toBe(x);
+      expect(cumprodConfig.kernelFunc(args)).toBe(x);
+      expect(dispatch.calls.allArgs().map(([name]) => name)).toEqual(['Cumsum', 'Cumprod']);
+      expect(captured.length).toBe(2);
+      expect(captured.every(axis => axis.isDisposed)).toBeTrue();
+      expect(x.isDisposed).toBeFalse();
     } finally {
       x.dispose();
     }

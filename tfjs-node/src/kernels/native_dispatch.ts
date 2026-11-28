@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {backend_util, DataType, Dilation2DAttrs, KernelAttributes, KernelConfig, ResizeBilinearAttrs, ResizeBilinearInputs, scalar, Tensor, TensorInfo, tensor1d, util} from '@tensorflow/tfjs';
+import {AvgPoolAttrs, AvgPoolInputs, AvgPool3DAttrs, AvgPool3DInputs, CumsumAttrs, CumsumInputs, Dilation2DBackpropInputInputs, backend_util, DataType, Dilation2DAttrs, KernelAttributes, KernelConfig, ResizeBilinearAttrs, ResizeBilinearInputs, scalar, Tensor, TensorInfo, tensor1d, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 import {TFEOpAttr} from '../tfjs_binding';
@@ -324,6 +324,94 @@ export function createLikeKernelConfig(kernelName: 'OnesLike'|'ZerosLike'): Kern
         value: backend.getDTypeInteger(x.dtype)
       }];
       return backend.executeSingleOutput(kernelName, attrs, [x]);
+    }
+  };
+}
+
+/** Forward average and maximum pooling share the same two-dimensional native dispatch. */
+export function createPool2DConfig(kernelName: 'AvgPool'|'MaxPool'): KernelConfig {
+  return {
+    kernelName,
+    backendName: 'tensorflow',
+    kernelFunc: (args: {
+      inputs: AvgPoolInputs, backend: NodeJSKernelBackend,
+      attrs: KernelAttributes<AvgPoolAttrs>
+    }) => {
+      const {x} = args.inputs;
+      const backend = args.backend;
+      const {filterSize, strides, pad, dimRoundingMode} = args.attrs;
+      const info = backend_util.computePool2DInfo(
+          x.shape as [number, number, number, number], filterSize, strides,
+          1 /* dilations */, pad, dimRoundingMode);
+      return backend.executeSingleOutput(
+          kernelName, pool2DAttrs(backend, x.dtype, info, 'padding'), [x]);
+    }
+  };
+}
+
+/** Forward three-dimensional pooling preserves the requested data format. */
+export function createPool3DConfig(kernelName: 'AvgPool3D'|'MaxPool3D'): KernelConfig {
+  return {
+    kernelName,
+    backendName: 'tensorflow',
+    kernelFunc: (args: {
+      inputs: AvgPool3DInputs, backend: NodeJSKernelBackend,
+      attrs: KernelAttributes<AvgPool3DAttrs>
+    }) => {
+      const {x} = args.inputs;
+      const backend = args.backend;
+      const {filterSize, strides, pad, dataFormat, dimRoundingMode} = args.attrs;
+      const info = backend_util.computePool3DInfo(
+          x.shape as [number, number, number, number, number], filterSize,
+          strides, 1 /* dilations */, pad, dimRoundingMode, dataFormat);
+      return backend.executeSingleOutput(
+          kernelName, pool3DAttrs(backend, x.dtype, info, 'padding'), [x]);
+    }
+  };
+}
+
+/** Cumulative native kernels take an owned scalar axis and the same flags. */
+export function createCumulativeConfig(kernelName: 'Cumsum'|'Cumprod'): KernelConfig {
+  return {
+    kernelName,
+    backendName: 'tensorflow',
+    kernelFunc: (args: {
+      inputs: CumsumInputs, backend: NodeJSKernelBackend,
+      attrs: KernelAttributes<CumsumAttrs>
+    }) => {
+      const {x} = args.inputs;
+      const backend = args.backend;
+      const {axis, exclusive, reverse} = args.attrs;
+      const axisTensor = scalar(axis, 'int32');
+      try {
+        const attrs = [
+          {name: 'exclusive', type: backend.binding.TF_ATTR_BOOL, value: exclusive},
+          {name: 'reverse', type: backend.binding.TF_ATTR_BOOL, value: reverse},
+          createTensorsTypeOpAttr('T', x.dtype),
+          createTensorsTypeOpAttr('Tidx', 'int32')
+        ];
+        return backend.executeSingleOutput(kernelName, attrs, [x, axisTensor]);
+      } finally {
+        axisTensor.dispose();
+      }
+    }
+  };
+}
+
+/** The dilation adjoints differ only in the native operation selected. */
+export function createDilationGradientConfig(
+    kernelName: 'Dilation2DBackpropInput'|'Dilation2DBackpropFilter'): KernelConfig {
+  return {
+    kernelName,
+    backendName: 'tensorflow',
+    kernelFunc: (args: {
+      inputs: Dilation2DBackpropInputInputs, backend: NodeJSKernelBackend,
+      attrs: KernelAttributes<Dilation2DAttrs>
+    }) => {
+      const {x, filter, dy} = args.inputs;
+      const {backend} = args;
+      const attrs = dilation2DAttrs(backend, x, filter, args.attrs);
+      return backend.executeSingleOutput(kernelName, attrs, [x, filter, dy]);
     }
   };
 }

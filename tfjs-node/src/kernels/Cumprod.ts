@@ -15,30 +15,8 @@
  * =============================================================================
  */
 
-import {Cumprod, CumprodAttrs, CumprodInputs, KernelAttributes, KernelConfig, scalar} from '@tensorflow/tfjs';
+import {Cumprod, KernelConfig} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {createCumulativeConfig} from './native_dispatch';
 
-export const cumprodConfig: KernelConfig = {
-  kernelName: Cumprod,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: CumprodInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<CumprodAttrs>
-  }) => {
-    const {x} = args.inputs;
-    const backend = args.backend;
-    const {axis, exclusive, reverse} = args.attrs;
-
-    const axisTensor = scalar(axis, 'int32');
-    const opAttrs = [
-      {name: 'exclusive', type: backend.binding.TF_ATTR_BOOL, value: exclusive},
-      {name: 'reverse', type: backend.binding.TF_ATTR_BOOL, value: reverse},
-      createTensorsTypeOpAttr('T', x.dtype),
-      createTensorsTypeOpAttr('Tidx', 'int32')
-    ];
-    const res = backend.executeSingleOutput(Cumprod, opAttrs, [x, axisTensor]);
-    axisTensor.dispose();
-    return res;
-  }
-};
+export const cumprodConfig: KernelConfig = createCumulativeConfig(Cumprod);

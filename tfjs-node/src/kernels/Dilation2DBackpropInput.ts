@@ -15,21 +15,8 @@
  * =============================================================================
  */
 
-import {Dilation2DAttrs, Dilation2DBackpropInput, Dilation2DBackpropInputInputs, KernelAttributes, KernelConfig} from '@tensorflow/tfjs';
+import {Dilation2DBackpropInput, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
-import {dilation2DAttrs} from './native_dispatch';
+import {createDilationGradientConfig} from './native_dispatch';
 
-export const dilation2dBackpropInputConfig: KernelConfig = {
-  kernelName: Dilation2DBackpropInput,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: Dilation2DBackpropInputInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<Dilation2DAttrs>
-  }) => {
-    const {x, filter, dy} = args.inputs;
-    const {backend} = args;
-    const opAttrs = dilation2DAttrs(backend, x, filter, args.attrs);
-    return backend.executeSingleOutput(Dilation2DBackpropInput, opAttrs, [x, filter, dy]);
-  }
-};
+export const dilation2dBackpropInputConfig: KernelConfig = createDilationGradientConfig(Dilation2DBackpropInput);

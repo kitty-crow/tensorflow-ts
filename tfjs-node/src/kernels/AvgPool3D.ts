@@ -15,28 +15,8 @@
  * =============================================================================
  */
 
-import {AvgPool3D, AvgPool3DAttrs, AvgPool3DInputs, backend_util, KernelAttributes, KernelConfig} from '@tensorflow/tfjs';
+import {AvgPool3D, KernelConfig} from '@tensorflow/tfjs';
 
-import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
-import {pool3DAttrs} from './native_dispatch';
+import {createPool3DConfig} from './native_dispatch';
 
-export const avgPool3DConfig: KernelConfig = {
-  kernelName: AvgPool3D,
-  backendName: 'tensorflow',
-  kernelFunc: (args: {
-    inputs: AvgPool3DInputs, backend: NodeJSKernelBackend,
-    attrs: KernelAttributes<AvgPool3DAttrs>
-  }) => {
-    const {x} = args.inputs;
-    const backend = args.backend;
-    const {filterSize, strides, pad, dimRoundingMode, dataFormat} =
-        args.attrs;
-
-    const convInfo = backend_util.computePool3DInfo(
-        x.shape as [number, number, number, number, number], filterSize,
-        strides, 1 /* dilations */, pad, dimRoundingMode, dataFormat);
-
-    const opAttrs = pool3DAttrs(backend, x.dtype, convInfo, 'padding');
-    return backend.executeSingleOutput(AvgPool3D, opAttrs, [x]);
-  }
-};
+export const avgPool3DConfig: KernelConfig = createPool3DConfig(AvgPool3D);

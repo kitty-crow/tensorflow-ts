@@ -16,6 +16,19 @@
  */
 import {DataType, TensorInfo, util} from '@tensorflow/tfjs-core';
 
+/** Select supported optional device features in request order. */
+export function requiredWebGPUFeatures(
+    features: Pick<GPUSupportedFeatures, 'has'>): GPUFeatureName[] {
+  const required: GPUFeatureName[] = [];
+  if (features.has('timestamp-query')) {
+    required.push('timestamp-query');
+  }
+  if (features.has('bgra8unorm-storage')) {
+    required.push('bgra8unorm-storage');
+  }
+  return required;
+}
+
 /** Multiply the validated dimensions selected by a dispatch axis. */
 function dispatchAxisSize(shape: number[], dimensions: number[]): number {
   let product = 1;
