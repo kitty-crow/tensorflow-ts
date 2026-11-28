@@ -114,7 +114,7 @@ export abstract class Merge extends Layer {
       if (shape == null) {
         continue;
       }
-      const batchSize = generic_utils.requiredElement(shape, 0);
+      const batchSize = shape[0];
       if (batchSize !== null) {
         batchSizes.push(batchSize);
       }
@@ -234,7 +234,7 @@ export abstract class Merge extends Layer {
       if (shape == null) {
         continue;
       }
-      const batchSize = generic_utils.requiredElement(shape, 0);
+      const batchSize = shape[0];
       if (batchSize !== null) {
         batchSizes.push(batchSize);
       }
@@ -1047,7 +1047,10 @@ export class Dot extends Merge {
       ];
     } else {
       // `this.axes` is an Array of integers.
-      axes = this.axes;
+      axes = [
+        interpretAxis(this.axes[0], shape1.length),
+        interpretAxis(this.axes[1], shape2.length)
+      ];
     }
     return axes;
   }

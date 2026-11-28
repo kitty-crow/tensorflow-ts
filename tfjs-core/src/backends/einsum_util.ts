@@ -20,7 +20,7 @@
  * based on Einstein summation.)
  */
 
-import {requiredDimension, requiredKernelEntry} from '../ops/shape_dimension';
+import {requiredDimension} from '../ops/shape_dimension';
 import {Tensor} from '../tensor';
 import {assert} from '../util_base';
 
@@ -207,7 +207,10 @@ export function getEinsumComputePath(summedDims: number[], idDims: number[][]):
   const computedTermIndices: number[] = [];
   for (let i = 0; i < path.length; ++i) {
     const summedDim = requiredDimension(path, i);
-    const step = requiredKernelEntry(steps, i);
+    const step = steps[i];
+    if (step == null) {
+      throw new Error(`Missing einsum step at index ${i}.`);
+    }
     const termIndices = findTermsWithDim(idDims, summedDim);
     for (const termIndex of termIndices) {
       if (computedTermIndices.indexOf(termIndex) === -1) {
@@ -227,7 +230,10 @@ export function isIdentityPermutation(perm: number[]): boolean {
 function findTermsWithDim(idDims: number[][], dim: number): number[] {
   const termIndices: number[] = [];
   for (let i = 0; i < idDims.length; ++i) {
-    const dims = requiredKernelEntry(idDims, i);
+    const dims = idDims[i];
+    if (dims == null) {
+      throw new Error(`Missing einsum term at index ${i}.`);
+    }
     if (dims.length === 0 || dims.indexOf(dim) !== -1 || dim === -1) {
       termIndices.push(i);
     }

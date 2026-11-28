@@ -170,7 +170,7 @@ function poolingStrides<T extends number[]>(
   if (value == null) {
     return poolSize;
   }
-  if (!Array.isArray(value)) {
+  if (typeof value === 'number') {
     return expand(value);
   }
   if (value.length !== rank) {
@@ -331,7 +331,7 @@ export abstract class Pooling2D extends Layer {
     const poolSize = args.poolSize;
     this.poolSize = Array.isArray(poolSize) ?
         poolSize : [poolSize, poolSize];
-    this.strides = poolingStrides(
+    this.strides = poolingStrides<[number, number]>(
         args.strides ?? null, this.poolSize, 2, size => [size, size]);
     assertPositiveInteger(this.poolSize, 'poolSize');
     assertPositiveInteger(this.strides, 'strides');
@@ -471,7 +471,7 @@ export abstract class Pooling3D extends Layer {
     const poolSize = args.poolSize;
     this.poolSize = Array.isArray(poolSize) ?
         poolSize : [poolSize, poolSize, poolSize];
-    this.strides = poolingStrides(
+    this.strides = poolingStrides<[number, number, number]>(
         args.strides ?? null, this.poolSize, 3, size => [size, size, size]);
     assertPositiveInteger(this.poolSize, 'poolSize');
     assertPositiveInteger(this.strides, 'strides');

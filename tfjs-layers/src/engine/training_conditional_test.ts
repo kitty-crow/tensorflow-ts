@@ -538,6 +538,9 @@ describe('dot shape validation', () => {
     expect(dot.computeOutputShape([[null, 3], [null, 3]])).toEqual([null, 1]);
     expect(() => dot.build([[null, 2], [null, 3]]))
         .toThrowError(/Dimension incompatibility/);
+    const negative = new Dot({axes: [-1, -1]});
+    negative.build([[null, 3], [null, 3]]);
+    expect(negative.computeOutputShape([[null, 3], [null, 3]])).toEqual([null, 1]);
     expect(() => dot.computeOutputShape([null, 3]))
         .toThrowError(/exactly 2 inputs/);
   });
