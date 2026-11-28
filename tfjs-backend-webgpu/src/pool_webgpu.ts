@@ -58,12 +58,7 @@ export class Pool2DProgram extends FlatDispatchProgram implements WebGPUProgram 
                `((batch * uniforms.xShape[1] + xR) * uniforms.xShape[2] + xC) * uniforms.xShape[3] + d` :
                `(xR * uniforms.xShape[2] + xC) * uniforms.xShape[3] + d`) :
           `wR * uniforms.filterDims.y + wC`;
-      updateSnippet = `let currMaxValue = mix(value, maxValue, maxValueFound);
-      if (value >= currMaxValue) {
-        maxValue = value;
-        maxValueFound = 1.0;
-        maxPosition = ${positionStr};
-      }`;
+      updateSnippet = poolMaxPositionUpdate(positionStr);
     } else {
       updateSnippet = `resultValue = max(value, resultValue);`;
     }
@@ -157,12 +152,7 @@ export class Pool3DProgram extends FlatDispatchProgram implements WebGPUProgram 
                `(((batch * uniforms.xShape.y + xD) * uniforms.xShape.z + xR) * uniforms.xShape.w + xC) * uniforms.xShape.u + ch` :
                `((xD * uniforms.xShape.z + xR) * uniforms.xShape.w + xC) * uniforms.xShape.u + ch`) :
           `wD * uniforms.filterDims.y * uniforms.filterDims.y + wR * uniforms.filterDims.z + wC`;
-      updateSnippet = `let currMaxValue = mix(value, maxValue, maxValueFound);
-      if (value >= currMaxValue) {
-        maxValue = value;
-        maxValueFound = 1.0;
-        maxPosition = ${positionStr};
-      }`;
+      updateSnippet = poolMaxPositionUpdate(positionStr);
     } else {
       updateSnippet = `resultValue = max(value, resultValue);`;
     }
@@ -225,4 +215,14 @@ export class Pool3DProgram extends FlatDispatchProgram implements WebGPUProgram 
     `;
     return userCode;
   }
+}
+
+/** The same max-position comparison applies to both spatial pooling ranks. */
+function poolMaxPositionUpdate(position: string): string {
+  return `let currMaxValue = mix(value, maxValue, maxValueFound);
+      if (value >= currMaxValue) {
+        maxValue = value;
+        maxValueFound = 1.0;
+        maxPosition = ${position};
+      }`;
 }

@@ -107,11 +107,7 @@ export function uniqueImpl(
     let element: string;
     if (is1DTensor) {
       // Fast path for 1D tensor input.
-      const value = values[i];
-      if (value == null) {
-        throw new Error(`Missing unique input value at index ${i}.`);
-      }
-      element = value.toString();
+      element = uniqueValueString(values, i);
     } else {
       const axisValues: Array<ReturnType<typeof inputBuffer.get>> = [];
       for (let m = 0; m < newShape[0]; m++) {
@@ -158,4 +154,13 @@ export function uniqueImpl(
     outputShape,
     indices,
   };
+}
+
+/** Reject a missing value before deriving a uniqueness key. */
+function uniqueValueString(values: BackendValues, index: number): string {
+  const value = values[index];
+  if (value == null) {
+    throw new Error(`Missing unique input value at index ${index}.`);
+  }
+  return value.toString();
 }

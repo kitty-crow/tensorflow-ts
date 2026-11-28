@@ -94,7 +94,7 @@ export async function modelFromJSON(
     const uniqueWeightValues: NamedTensorMap = {};
     for (const weight of model.weights) {
       uniqueWeightValues[weight.originalName] =
-          weightValues[weight.originalName];
+          util.requiredNamedEntry(weightValues, weight.originalName);
     }
 
     model.loadWeights(uniqueWeightValues);
@@ -330,9 +330,9 @@ function decodeModelAndOptimizerWeights(
   const optimizerWeights: NamedTensor[] = [];
   specs.forEach(spec => {
     if (spec.group === 'optimizer') {
-      optimizerWeights.push({name: spec.name, tensor: name2Tensor[spec.name]});
+      optimizerWeights.push({name: spec.name, tensor: util.requiredNamedEntry(name2Tensor, spec.name)});
     } else {
-      modelWeights[spec.name] = name2Tensor[spec.name];
+      modelWeights[spec.name] = util.requiredNamedEntry(name2Tensor, spec.name);
     }
   });
   return {modelWeights, optimizerWeights};

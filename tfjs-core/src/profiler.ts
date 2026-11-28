@@ -55,8 +55,7 @@ export class Profiler {
       timer = Promise.resolve({kernelMs: util.now() - start});
     }
     if (env().getBool('CHECK_COMPUTATION_FOR_ERRORS')) {
-      for (let i = 0; i < outputs.length; i++) {
-        const output = outputs[i];
+      for (const output of outputs) {
         // Dangling promise here because we don't want to propagate up
         // asynchronicity.
         output.data().then(tensorVals => {

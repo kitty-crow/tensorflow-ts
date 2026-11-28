@@ -67,17 +67,11 @@ export const compileProgram =
       const module = device.createShaderModule(
           {code: source, label: program.constructor.name});
 
-      let printShaderString = env().get('WEBGPU_PRINT_SHADER') as string;
-      if (printShaderString !== '') {
-        printShaderString = printShaderString.toLowerCase();
-        const printShaderArray = printShaderString.split(',');
-        if (printShaderString === 'all' ||
-            printShaderArray.some(
-                item => program.shaderKey.toLowerCase().includes(item))) {
-          console.group(program.shaderKey);
-          console.debug(source);
-          console.groupEnd();
-        }
+      const printShaderString = env().get('WEBGPU_PRINT_SHADER') as string;
+      if (shouldPrintShader(printShaderString, program.shaderKey)) {
+        console.group(program.shaderKey);
+        console.debug(source);
+        console.groupEnd();
       }
 
       if (parallelCompilation) {
@@ -588,8 +582,6 @@ function getInputByOutputSnippet(
       backend_util.getBroadcastDims(inputInfo.shape, outShape);
   const rankDiff = outRank - inRank;
 
-  let coordsSnippet = '';
-
   if (inRank === 0) {
     return `
     fn ${funcName}Index(globalIndex : i32) -> ${typeSnippet(component)}{
@@ -600,30 +592,15 @@ function getInputByOutputSnippet(
       return get${texFuncSnippet}();
     }
   `;
-  } else {
-    if (outRank < 2 && broadcastDims.length >= 1) {
-      coordsSnippet = 'coords = 0;';
-    } else {
-      coordsSnippet =
-          broadcastDims.map(d => `coords.${getCoordsXYZ(d + rankDiff)} = 0;`)
-              .join('\n');
-    }
   }
-
-  let unpackedCoordsSnippet = '';
-  if (outRank < 2 && inRank > 0) {
-    unpackedCoordsSnippet = 'coords';
-  } else {
-    if (outRank > 1) {
-      const coordsType = getCoordsDataType(inRank);
-      const coordsValues =
-          inputInfo.shape.map((s, i) => `coords.${getCoordsXYZ(i + rankDiff)}`)
-              .join(', ');
-      unpackedCoordsSnippet = `${coordsType}(${coordsValues})`;
-    } else {
-      unpackedCoordsSnippet = 'coords';
-    }
-  }
+  const coordsSnippet = outRank < 2 && broadcastDims.length >= 1 ?
+      'coords = 0;' :
+      broadcastDims.map(d => `coords.${getCoordsXYZ(d + rankDiff)} = 0;`)
+          .join('\n');
+  const unpackedCoordsSnippet = outRank > 1 ?
+      `${getCoordsDataType(inRank)}(${inputInfo.shape.map(
+          (_s, i) => `coords.${getCoordsXYZ(i + rankDiff)}`).join(', ')})` :
+      'coords';
 
   const shapeStr =
       `uniforms.${texName.charAt(0).toLowerCase() + texName.slice(1)}Shape`;
@@ -700,25 +677,21 @@ function getOutputCoordsSnippet(
 
     if (arr.length === 1) {
       gatherDimensionsStr += `let d${backend_util.requiredDimension(arr, 0)} = i32(globalId[${i}]);`;
-    } else {
-      const strides = symbolicallyComputeStrides(arr, 'uniforms.outShape');
-      gatherDimensionsStr += `var index${i} = i32(globalId[${i}]);`;
-      for (let j = 0; j < strides.length; j++) {
-        const axis = backend_util.requiredDimension(arr, j);
-        const stride = strides[j];
-        if (stride == null) {
-          throw new Error(`Missing WebGPU output stride ${j}.`);
-        }
-        gatherDimensionsStr += `let d${axis} = index${i} / ${stride};`;
-
-        if (j === strides.length - 1) {
-          gatherDimensionsStr += `let d${backend_util.requiredDimension(arr, j + 1)} = ` +
-              `index${i} - d${axis} * ${stride};`;
-        } else {
-          gatherDimensionsStr +=
-              `index${i} = index${i} - d${axis} * ${stride};`;
-        }
+      continue;
+    }
+    const strides = symbolicallyComputeStrides(arr, 'uniforms.outShape');
+    gatherDimensionsStr += `var index${i} = i32(globalId[${i}]);`;
+    for (let j = 0; j < strides.length; j++) {
+      const axis = backend_util.requiredDimension(arr, j);
+      const stride = strides[j];
+      if (stride == null) {
+        throw new Error(`Missing WebGPU output stride ${j}.`);
       }
+      gatherDimensionsStr += `let d${axis} = index${i} / ${stride};`;
+      const target = j === strides.length - 1 ?
+          `let d${backend_util.requiredDimension(arr, j + 1)}` : `index${i}`;
+      gatherDimensionsStr +=
+          `${target} = index${i} - d${axis} * ${stride};`;
     }
   }
 
@@ -879,4 +852,14 @@ function isFlatDispatchLayout(program: WebGPUProgram): boolean {
     return false;
   }
   return true;
+}
+
+/** Match the configured shader filter without changing comma or case semantics. */
+export function shouldPrintShader(filter: string, shaderKey: string): boolean {
+  if (filter === '') {
+    return false;
+  }
+  const normalized = filter.toLowerCase();
+  return normalized === 'all' ||
+      normalized.split(',').some(item => shaderKey.toLowerCase().includes(item));
 }

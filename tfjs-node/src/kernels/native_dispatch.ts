@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {AvgPoolAttrs, AvgPoolInputs, AvgPool3DAttrs, AvgPool3DInputs, CumsumAttrs, CumsumInputs, Dilation2DBackpropInputInputs, backend_util, DataType, Dilation2DAttrs, KernelAttributes, KernelConfig, ResizeBilinearAttrs, ResizeBilinearInputs, scalar, Tensor, TensorInfo, tensor1d, util} from '@tensorflow/tfjs';
+import {AvgPoolAttrs, AvgPoolInputs, AvgPool3DAttrs, AvgPool3DInputs, CumsumAttrs, CumsumInputs, Dilation2DBackpropInputInputs, backend_util, DataType, Dilation2DAttrs, KernelAttributes, KernelConfig, ResizeBilinearAttrs, ResizeBilinearInputs, scalar, Tensor, TensorInfo, tensor1d, tensor2d, util} from '@tensorflow/tfjs';
 
 import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
 import {TFEOpAttr} from '../tfjs_binding';
@@ -414,4 +414,26 @@ export function createDilationGradientConfig(
       return backend.executeSingleOutput(kernelName, attrs, [x, filter, dy]);
     }
   };
+}
+
+/** Dispatch a native spatial-block transform with its exact attribute names. */
+export function executeSpatialBlockTransform(
+    backend: NodeJSKernelBackend, name: 'BatchToSpaceND'|'SpaceToBatchND',
+    x: TensorInfo, blockShape: number[], borders: number[][]): TensorInfo {
+  const block = tensor1d(blockShape, 'int32');
+  const firstRow = borders[0];
+  if (firstRow == null) {
+    block.dispose();
+    throw new Error('Missing spatial border row.');
+  }
+  const border = tensor2d(borders, [borders.length, firstRow.length], 'int32');
+  const attrs = [
+    createTensorsTypeOpAttr('T', x.dtype),
+    createTensorsTypeOpAttr('Tblock_shape', 'int32'),
+    createTensorsTypeOpAttr(name === 'BatchToSpaceND' ? 'Tcrops' : 'Tpaddings', border.dtype)
+  ];
+  const result = backend.executeSingleOutput(name, attrs, [x, block, border]);
+  const order = name === 'BatchToSpaceND' ? [border, block] : [block, border];
+  order.forEach(t => t.dispose());
+  return result;
 }

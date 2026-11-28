@@ -76,15 +76,12 @@ export class ArgMinMaxProgram implements WebGPUProgram {
     };
 
     const splitOutputCoords = () => {
-      let snippet = '';
       if (this.outputShape.length === 1) {
-        if (this.inputShape.length !== 1) {
-          snippet += 'outputCoords,';
-        }
-      } else {
-        for (let i = 0; i < this.outputShape.length; i++) {
-          snippet += `outputCoords.${getCoordsXYZ(i)},`;
-        }
+        return this.inputShape.length !== 1 ? 'outputCoords,' : '';
+      }
+      let snippet = '';
+      for (let i = 0; i < this.outputShape.length; i++) {
+        snippet += `outputCoords.${getCoordsXYZ(i)},`;
       }
       return snippet;
     };

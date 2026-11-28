@@ -23,7 +23,9 @@ import {computeWorkgroupInfoForMatMul, MatMulProgramType, requiredWebGPUFeatures
 import {TileProgram} from './tile_webgpu';
 import {TransposeSharedProgram} from './transpose_shared_webgpu';
 import {TransposeProgram} from './transpose_webgpu';
-import {getCoordsFromIndexSnippet} from './webgpu_program';
+import {getCoordsFromIndexSnippet, shouldPrintShader} from './webgpu_program';
+import {binaryVariableComponents} from './binary_op_webgpu';
+import {Conv2DMMProgram} from './conv2d_mm_webgpu';
 import {SoftmaxProgram} from './softmax_webgpu';
 import {CropAndResizeProgram} from './crop_and_resize_webgpu';
 import {backend_util, TensorInfo} from '@tensorflow/tfjs-core';
@@ -336,5 +338,34 @@ describe('matrix multiplication program selection', () => {
         .toBe(MatMulProgramType.MatMulSmallOutputSizeProgram);
     expect(selectMatMulProgramType([1, 64, 64], 2000, 1))
         .toBe(MatMulProgramType.MatMulPackedProgram);
+  });
+});
+
+describe('shader selection contracts', () => {
+  it('retains aligned vector widths and scalar broadcasting', () => {
+    expect(binaryVariableComponents([2, 4], [2, 4])).toEqual([4, 4]);
+    expect(binaryVariableComponents([2, 4], [])).toEqual([4, 1]);
+    expect(binaryVariableComponents([], [2, 4])).toEqual([1, 4]);
+    expect(binaryVariableComponents([2, 3], [2, 3])).toEqual([1, 1]);
+    expect(binaryVariableComponents([2, 4], [2, 1])).toEqual([4, 1]);
+    expect(binaryVariableComponents([0], [0])).toEqual([4, 4]);
+  });
+  it('preserves case, comma and empty-filter matching semantics', () => {
+    expect(shouldPrintShader('', 'MatMul')).toBe(false);
+    expect(shouldPrintShader('ALL', 'MatMul')).toBe(true);
+    expect(shouldPrintShader('MATMUL,conv', 'MatMulPacked')).toBe(true);
+    expect(shouldPrintShader('conv', 'MatMulPacked')).toBe(false);
+    expect(shouldPrintShader('conv,', 'MatMulPacked')).toBe(true);
+    expect(shouldPrintShader(' matmul', 'MatMulPacked')).toBe(false);
+  });
+  it('keeps fused convolution input names and component widths aligned', () => {
+    const info = backend_util.computeConv2DInfo(
+        [1, 4, 4, 4], [1, 1, 4, 4], 1, 1, 'same');
+    const packed = new Conv2DMMProgram(info, 16, 4, 4, true, 'prelu', true);
+    expect(packed.variableNames).toEqual(['x', 'W', 'bias', 'preluActivationWeights']);
+    expect(packed.variableComponents).toEqual([4, 4, 4, 4]);
+    const plain = new Conv2DMMProgram(info, 16, 4, 4);
+    expect(plain.variableNames).toEqual(['x', 'W']);
+    expect(plain.variableComponents).toEqual([4, 4]);
   });
 });

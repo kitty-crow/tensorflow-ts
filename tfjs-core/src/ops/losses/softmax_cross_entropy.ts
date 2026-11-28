@@ -19,7 +19,7 @@ import {Tensor} from '../../tensor';
 import {GradSaveFunc} from '../../tensor_types';
 import {convertToTensor} from '../../tensor_util_env';
 import {TensorLike} from '../../types';
-import {assertShapesMatch} from '../../util';
+import {assertShapesMatch, requiredNumericEntry} from '../../util';
 import {add} from '../add';
 import {expandShapeToKeepDim} from '../axis_util';
 import {cast} from '../cast';
@@ -141,7 +141,7 @@ function softmaxCrossEntropy_<T extends Tensor, O extends Tensor>(
   if (labelSmoothing > 0) {
     const labelSmoothingScalar = scalar(labelSmoothing);
     const one = scalar(1);
-    const numClasses = scalar($onehotLabels.shape[1]);
+    const numClasses = scalar(requiredNumericEntry($onehotLabels.shape, 1));
 
     $onehotLabels =
         add(mul($onehotLabels, sub(one, labelSmoothingScalar)),

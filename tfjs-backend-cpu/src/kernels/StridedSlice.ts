@@ -57,14 +57,14 @@ export function stridedSlice(args: {
           x.shape, begin, end, strides, beginMask, endMask, ellipsisMask,
           newAxisMask, shrinkAxisMask);
 
-  let result: TensorInfo;
 
   // ref:
   // https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/strided_slice_op.cc
   if (isIdentity) {
     // Optimization #1, slice is a no-op plus reshape
-    result = reshape({inputs: {x}, backend, attrs: {shape: finalShape}});
-  } else if (sliceDim0 || isSimpleSlice) {
+    return reshape({inputs: {x}, backend, attrs: {shape: finalShape}});
+  }
+  if (sliceDim0 || isSimpleSlice) {
     // Optimization #2, slice is memory contiguous (only occurs in dim 0)
     util.assert(
         x.shape.length >= 1,
@@ -73,17 +73,15 @@ export function stridedSlice(args: {
     const size = slice_util.computeOutShape($begin, $end, $strides);
     // To tolerate begin[0] > end[0] (a 0-output slice), we min(begin, end).
     const sliced = slice({inputs: {x}, backend, attrs: {begin: $begin, size}});
-    result =
+    const result =
         reshape({inputs: {x: sliced}, backend, attrs: {shape: finalShape}});
     backend.disposeIntermediateTensorInfo(sliced);
-  } else {
-    const xBuf = backend.bufferSync<Rank, 'float32'>(x);
-    const outBuf = stridedSliceImpl(finalShapeSparse, xBuf, $strides, $begin);
-
-    result = backend.makeTensorInfo(finalShape, outBuf.dtype, outBuf.values);
+    return result;
   }
+  const xBuf = backend.bufferSync<Rank, 'float32'>(x);
+  const outBuf = stridedSliceImpl(finalShapeSparse, xBuf, $strides, $begin);
+  return backend.makeTensorInfo(finalShape, outBuf.dtype, outBuf.values);
 
-  return result;
 }
 
 export const stridedSliceConfig: KernelConfig = {

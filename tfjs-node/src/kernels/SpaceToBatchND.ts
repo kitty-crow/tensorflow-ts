@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {KernelAttributes, KernelConfig, SpaceToBatchND, SpaceToBatchNDAttrs, SpaceToBatchNDInputs, tensor1d, tensor2d} from '@tensorflow/tfjs';
+import {KernelAttributes, KernelConfig, SpaceToBatchND, SpaceToBatchNDAttrs, SpaceToBatchNDInputs} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeSpatialBlockTransform} from './native_dispatch';
 
 export const spaceToBatchNDConfig: KernelConfig = {
   kernelName: SpaceToBatchND,
@@ -30,20 +31,6 @@ export const spaceToBatchNDConfig: KernelConfig = {
     const backend = args.backend;
     const {blockShape, paddings} = args.attrs;
 
-    const blockShapeTensor = tensor1d(blockShape, 'int32');
-    const paddingsTensor =
-        tensor2d(paddings, [paddings.length, paddings[0].length], 'int32');
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', x.dtype),
-      createTensorsTypeOpAttr('Tblock_shape', 'int32'),
-      createTensorsTypeOpAttr('Tpaddings', paddingsTensor.dtype)
-    ];
-    const res = backend.executeSingleOutput(
-        SpaceToBatchND, opAttrs, [x, blockShapeTensor, paddingsTensor]);
-
-    blockShapeTensor.dispose();
-    paddingsTensor.dispose();
-
-    return res;
+    return executeSpatialBlockTransform(backend, SpaceToBatchND, x, blockShape, paddings);
   }
 };

@@ -62,24 +62,8 @@ export class BinaryOpProgram implements WebGPUProgram {
       // Note that the maximum of workgroup X dimension is 256.
       this.workgroupSize = [256, 1, 1];
     } else {
-      const aDivisibleBy4 =
-          aShape.length > 0 && shaderEntry(aShape, aShape.length - 1) % 4 === 0;
-      const bDivisibleBy4 =
-          bShape.length > 0 && shaderEntry(bShape, bShape.length - 1) % 4 === 0;
-      if (aDivisibleBy4 && bDivisibleBy4) {
-        this.outputComponent = 4;
-        this.variableComponents = [4, 4];
-      } else if (
-          (aDivisibleBy4 &&
-           (util.isScalarShape(bShape) || shaderEntry(bShape, bShape.length - 1) === 1)) ||
-          (bDivisibleBy4 &&
-           (util.isScalarShape(aShape) || shaderEntry(aShape, aShape.length - 1) === 1))) {
-        this.outputComponent = 4;
-        this.variableComponents = aDivisibleBy4 ? [4, 1] : [1, 4];
-      } else {
-        this.outputComponent = 1;
-        this.variableComponents = [1, 1];
-      }
+      this.variableComponents = binaryVariableComponents(aShape, bShape);
+      this.outputComponent = Math.max(...this.variableComponents);
       this.type = 'nonshared';
       this.shaderKey = `binary_${op}_${this.variableComponents}`;
       // TODO(jiajia.qin@intel.com): Heuristically select a good work group
@@ -144,4 +128,25 @@ export class BinaryOpProgram implements WebGPUProgram {
 
     return userCode;
   }
+}
+
+/** Select vector widths only for aligned or scalar-broadcast input shapes. */
+export function binaryVariableComponents(
+    aShape: number[], bShape: number[]): [number, number] {
+  const aDivisibleBy4 =
+      aShape.length > 0 && shaderEntry(aShape, aShape.length - 1) % 4 === 0;
+  const bDivisibleBy4 =
+      bShape.length > 0 && shaderEntry(bShape, bShape.length - 1) % 4 === 0;
+  if (aDivisibleBy4 && bDivisibleBy4) {
+    return [4, 4];
+  }
+  if (aDivisibleBy4 &&
+      (util.isScalarShape(bShape) || shaderEntry(bShape, bShape.length - 1) === 1)) {
+    return [4, 1];
+  }
+  if (bDivisibleBy4 &&
+      (util.isScalarShape(aShape) || shaderEntry(aShape, aShape.length - 1) === 1)) {
+    return [1, 4];
+  }
+  return [1, 1];
 }

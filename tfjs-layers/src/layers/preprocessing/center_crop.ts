@@ -14,6 +14,7 @@ import {LayerArgs, Layer} from '../../engine/topology';
 import {Kwargs} from '../../types';
 import {Shape} from '../../keras_format/common';
 import * as K from '../../backend/tfjs_backend';
+import {util} from '@tensorflow/tfjs-core';
 
 const {resizeBilinear, cropAndResize} = image;
 
@@ -88,8 +89,8 @@ export class CenterCrop extends Layer {
       const rankedInputs = getExactlyOneTensor(inputs) as Tensor3D | Tensor4D;
       const dtype       = rankedInputs.dtype;
       const inputShape  = rankedInputs.shape;
-      const inputHeight = inputShape[inputShape.length - 3];
-      const inputWidth  =  inputShape[inputShape.length - 2];
+      const inputHeight = util.requiredNumericEntry(inputShape, inputShape.length - 3);
+      const inputWidth  =  util.requiredNumericEntry(inputShape, inputShape.length - 2);
 
       let hBuffer = 0;
       if (inputHeight !== this.height) {
@@ -98,11 +99,8 @@ export class CenterCrop extends Layer {
 
       let wBuffer = 0;
       if (inputWidth !== this.width) {
-        wBuffer = Math.floor((inputWidth - this.width) / 2);
-
-        if (wBuffer === 0) {
-          wBuffer = 1;
-        }
+        const halfDifference = Math.floor((inputWidth - this.width) / 2);
+        wBuffer = halfDifference === 0 ? 1 : halfDifference;
       }
 
       if(hBuffer >= 0 && wBuffer >= 0) {

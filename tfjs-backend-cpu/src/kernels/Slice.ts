@@ -30,11 +30,9 @@ export function sliceImpl(
   if (isContinous) {
     const flatOffset = slice_util.computeFlatOffset(begin, xStrides);
 
-    if (dtype === 'string') {
-      return (vals as Uint8Array[]).slice(flatOffset, flatOffset + length);
-    }
-
-    return (vals as TypedArray).subarray(flatOffset, flatOffset + length);
+    return dtype === 'string' ?
+        (vals as Uint8Array[]).slice(flatOffset, flatOffset + length) :
+        (vals as TypedArray).subarray(flatOffset, flatOffset + length);
   }
 
   const decodedData = dtype === 'string' ?
@@ -45,7 +43,7 @@ export function sliceImpl(
   const outBuf = buffer(size, dtype);
   for (let i = 0; i < outBuf.size; ++i) {
     const outLoc = outBuf.indexToLoc(i);
-    const inLoc = outLoc.map((idx: number, j) => idx + begin[j]);
+    const inLoc = outLoc.map((idx: number, j) => idx + util.requiredNumericEntry(begin, j));
     outBuf.set(inBuf.get(...inLoc), ...outLoc);
   }
 

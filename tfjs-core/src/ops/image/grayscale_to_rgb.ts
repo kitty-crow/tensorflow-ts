@@ -36,12 +36,12 @@ function grayscaleToRGB_<T extends Tensor2D|Tensor3D|Tensor4D|Tensor5D|
   const $image = convertToTensor(image, 'image', 'grayscaleToRGB');
 
   const lastDimsIdx = $image.rank - 1;
-  const lastDims = $image.shape[lastDimsIdx];
-
   util.assert(
       $image.rank >= 2,
       () => 'Error in grayscaleToRGB: images must be at least rank 2, ' +
           `but got rank ${$image.rank}.`);
+
+  const lastDims = util.requiredNumericEntry($image.shape, lastDimsIdx);
 
   util.assert(
       lastDims === 1,

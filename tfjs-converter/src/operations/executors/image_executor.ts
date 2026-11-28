@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {Tensor, Tensor1D, Tensor2D, Tensor3D, Tensor4D} from '@tensorflow/tfjs-core';
+import {util, Tensor, Tensor1D, Tensor2D, Tensor3D, Tensor4D} from '@tensorflow/tfjs-core';
 // tslint:disable-next-line: no-imports-from-dist
 import * as tfOps from '@tensorflow/tfjs-core/dist/ops/ops_for_converter';
 
@@ -41,7 +41,7 @@ export const executeOp: InternalOpExecutor =
               getParamValue('halfPixelCenters', node, tensorMap, context) as
               boolean;
           return [ops.image.resizeBilinear(
-              images as Tensor3D | Tensor4D, [size[0], size[1]], alignCorners,
+              images as Tensor3D | Tensor4D, [util.requiredNumericEntry(size, 0), util.requiredNumericEntry(size, 1)], alignCorners,
               halfPixelCenters)];
         }
         case 'ResizeNearestNeighbor': {
@@ -56,7 +56,7 @@ export const executeOp: InternalOpExecutor =
               getParamValue('halfPixelCenters', node, tensorMap, context) as
               boolean;
           return [ops.image.resizeNearestNeighbor(
-              images as Tensor3D | Tensor4D, [size[0], size[1]], alignCorners,
+              images as Tensor3D | Tensor4D, [util.requiredNumericEntry(size, 0), util.requiredNumericEntry(size, 1)], alignCorners,
               halfPixelCenters)];
         }
         case 'CropAndResize': {

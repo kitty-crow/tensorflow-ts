@@ -263,7 +263,7 @@ export async function fromPixelsAsync(
     HTMLVideoElement|ImageBitmap,
     numChannels = 3) {
   let inputs: PixelData|ImageData|HTMLImageElement|HTMLCanvasElement|
-      HTMLVideoElement|ImageBitmap = null;
+      HTMLVideoElement|ImageBitmap = pixels;
 
   // Check whether the backend needs to wrap |pixels| to imageBitmap and
   // whether |pixels| can be wrapped to imageBitmap.
@@ -289,14 +289,8 @@ export async function fromPixelsAsync(
     // createImageBitmap will clip the size from 10 x 10 to 1 x 1, which
     // is not correct. We should avoid wrapping such resouce to
     // imageBitmap.
-    if (imageBitmap != null && imageBitmap.width === pixels.width &&
-        imageBitmap.height === pixels.height) {
-      inputs = imageBitmap;
-    } else {
-      inputs = pixels;
-    }
-  } else {
-    inputs = pixels;
+    inputs = imageBitmap != null && imageBitmap.width === pixels.width &&
+        imageBitmap.height === pixels.height ? imageBitmap : pixels;
   }
 
   return fromPixels_(inputs, numChannels);

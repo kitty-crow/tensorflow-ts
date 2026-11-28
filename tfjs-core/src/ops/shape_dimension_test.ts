@@ -341,3 +341,15 @@ describe('dense axis bound contracts', () => {
     expect(shrunk.finalShape).toEqual([]);
   });
 });
+
+import {spatialDimensionDivides} from './space_to_batch_nd';
+
+describe('spatial block divisibility', () => {
+  it('checks the selected axis and permits zero padding and dimensions', () => {
+    expect(spatialDimensionDivides(3, [[0, 1]], [2], 0)).toBe(true);
+    expect(spatialDimensionDivides(3, [[0, 0]], [2], 0)).toBe(false);
+    expect(spatialDimensionDivides(0, [[0, 0]], [2], 0)).toBe(true);
+    expect(() => spatialDimensionDivides(3, [[]], [2], 0)).toThrow();
+    expect(() => spatialDimensionDivides(3, [[0, 1]], [], 0)).toThrow();
+  });
+});

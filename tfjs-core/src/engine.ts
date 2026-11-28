@@ -1092,8 +1092,7 @@ export class Engine implements TensorTracker, DataMover {
         new Set(tensorsToTrackInParent.map(t => t.id));
 
     // Dispose the arrays tracked in this scope.
-    for (let i = 0; i < this.state.activeScope.track.length; i++) {
-      const tensor = this.state.activeScope.track[i];
+    for (const tensor of this.state.activeScope.track) {
       if (!tensor.kept && !tensorsToTrackInParentSet.has(tensor.id)) {
         tensor.dispose();
       }

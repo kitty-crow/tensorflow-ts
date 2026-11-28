@@ -23,6 +23,7 @@ import {TensorLike} from '../types';
 import * as util from '../util';
 
 import {op} from './operation';
+import {requiredKernelEntry} from './shape_dimension';
 
 /**
  * This operation divides "spatial" dimensions `[1, ..., M]` of the input into
@@ -90,10 +91,7 @@ function spaceToBatchND_<T extends Tensor>(
       $x.shape.reduce(
           (a, b, i) => {
             if (i > 0 && i <= blockShape.length) {
-              return a &&
-                  ((b + paddings[i - 1][0] + paddings[i - 1][1]) %
-                       blockShape[i - 1] ===
-                   0);
+              return a && spatialDimensionDivides(b, paddings, blockShape, i - 1);
             }
             return a;
           },
@@ -111,3 +109,13 @@ function spaceToBatchND_<T extends Tensor>(
 }
 
 export const spaceToBatchND = /* @__PURE__ */ op({spaceToBatchND_});
+
+/** Check padding and block entries before spatial divisibility arithmetic. */
+export function spatialDimensionDivides(
+    dimension: number, paddings: number[][], blockShape: number[],
+    axis: number): boolean {
+  const padding = requiredKernelEntry(paddings, axis);
+  return (dimension + util.requiredNumericEntry(padding, 0) +
+      util.requiredNumericEntry(padding, 1)) %
+      util.requiredNumericEntry(blockShape, axis) === 0;
+}

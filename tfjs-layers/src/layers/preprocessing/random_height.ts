@@ -14,7 +14,7 @@ import { Shape } from '../../keras_format/common';
 import { Kwargs } from '../../types';
 import { ValueError } from '../../errors';
 import { BaseRandomLayer } from '../../engine/base_random_layer';
-import { randomUniform } from '@tensorflow/tfjs-core';
+import { randomUniform, util } from '@tensorflow/tfjs-core';
 import type {RandomResizeArgs as RandomHeightArgs} from '../../engine/base_random_layer';
 
 export type {RandomResizeArgs as RandomHeightArgs} from '../../engine/base_random_layer';
@@ -114,15 +114,15 @@ export class RandomHeight extends BaseRandomLayer {
 
     return tidy(() => {
       const input = getExactlyOneTensor(inputs);
-      this.imgWidth = input.shape[input.shape.length - 2];
-      const imgHeight = input.shape[input.shape.length - 3];
+      this.imgWidth = util.requiredNumericEntry(input.shape, input.shape.length - 2);
+      const imgHeight = util.requiredNumericEntry(input.shape, input.shape.length - 3);
 
       this.heightFactor = randomUniform([1],
         (1.0 + this.heightLower), (1.0 + this.heightUpper),
         'float32', this.randomGenerator.next()
       );
 
-      let adjustedHeight = this.heightFactor.dataSync()[0] * imgHeight;
+      let adjustedHeight = util.requiredNumericEntry(this.heightFactor.dataSync(), 0) * imgHeight;
       adjustedHeight = Math.round(adjustedHeight);
 
       const size:[number, number] = [adjustedHeight, this.imgWidth];

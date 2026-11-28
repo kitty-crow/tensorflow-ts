@@ -59,12 +59,8 @@ export class ScatterProgram implements WebGPUProgram {
   }
 
   getUserCode(): string {
-    let indicesString = '';
-    if (this.indicesRank === 1) {
-      indicesString = 'coords[0]';
-    } else if (this.indicesRank === 2) {
-      indicesString = 'coords[0], j';
-    }
+    const indicesString = this.indicesRank === 1 ? 'coords[0]' :
+        this.indicesRank === 2 ? 'coords[0], j' : '';
     const indicesSnippet = `getIndices(${indicesString})`;
 
     const strideString = this.sliceDimGreaterThanOne ? 'uniforms.strides[j]' :
@@ -79,7 +75,8 @@ export class ScatterProgram implements WebGPUProgram {
         return index;
       }
       `;
-    } else if (this.dispatchLayout.x.length === 2) {
+    }
+    if (this.dispatchLayout.x.length === 2) {
       outCoordsString = 'vec2<i32>(flattenedIndex, coords[1])';
       getUpdatesCoordsFromFlatIndex = `
       fn getUpdatesCoordsFromFlatIndex(index : i32) -> vec2<i32> {

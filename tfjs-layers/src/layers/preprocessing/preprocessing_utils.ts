@@ -14,6 +14,8 @@ import { expandDims} from '@tensorflow/tfjs-core';
 import { ValueError } from '../../errors';
 import * as K from '../../backend/tfjs_backend';
 
+import {util} from '@tensorflow/tfjs-core';
+
 export type OutputMode = 'int' | 'oneHot' | 'multiHot' | 'count' | 'tfIdf';
 
 export function encodeCategoricalInputs(inputs: Tensor|Tensor[],
@@ -38,7 +40,7 @@ export function encodeCategoricalInputs(inputs: Tensor|Tensor[],
     input = expandDims(input, -1);
   }
 
-  if ((outputMode === 'oneHot') && (input.shape[input.shape.length - 1] !== 1)) {
+  if ((outputMode === 'oneHot') && (util.requiredNumericEntry(input.shape, input.shape.length - 1) !== 1)) {
       input = expandDims(input, -1);
     }
 

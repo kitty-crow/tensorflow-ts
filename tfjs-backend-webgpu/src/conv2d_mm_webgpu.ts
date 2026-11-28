@@ -199,32 +199,19 @@ export class Conv2DMMProgram implements WebGPUProgram {
 
     if (this.isVec4) {
       this.outputComponent = 4;
-      if (this.isChannelsLast && convInfo.inChannels % 4 !== 0) {
-        this.innerElementSize = 3;
-        this.variableComponents = [1, 4];
-      } else {
-        this.innerElementSize = 4;
-        this.variableComponents = [4, 4];
-      }
-
-      if (addBias) {
-        this.variableNames.push('bias');
-        this.variableComponents.push(4);
-      }
-
-      if (hasPreluActivationWeights) {
-        this.variableNames.push('preluActivationWeights');
-        this.variableComponents.push(4);
-      }
+      const packedThree = this.isChannelsLast && convInfo.inChannels % 4 !== 0;
+      this.innerElementSize = packedThree ? 3 : 4;
+      this.variableComponents = packedThree ? [1, 4] : [4, 4];
     } else {
       this.innerElementSize = this.elementsPerThread[0];
-      if (addBias) {
-        this.variableNames.push('bias');
-      }
-
-      if (hasPreluActivationWeights) {
-        this.variableNames.push('preluActivationWeights');
-      }
+    }
+    const extraNames = [
+      ...(addBias ? ['bias'] : []),
+      ...(hasPreluActivationWeights ? ['preluActivationWeights'] : [])
+    ];
+    this.variableNames.push(...extraNames);
+    if (this.isVec4) {
+      this.variableComponents.push(...extraNames.map(() => 4));
     }
 
     this.sequentialAccessByThreads = sequentialAccessByThreads;

@@ -282,8 +282,7 @@ export function ensureTensorsRank2OrHigher(tensors: Tensor|Tensor[]): Tensor[] {
   }
 
   // Make Tensors at least 2D.
-  for (let i = 0; i < tensors.length; ++i) {
-    const tensor = tensors[i];
+  for (const tensor of tensors) {
     if (tensor.rank === 1) {
       outs.push(expandDims(tensor, 1));
       continue;

@@ -56,12 +56,12 @@ export function stridedSlice(args: {
           x.shape, begin, end, strides, beginMask, endMask, ellipsisMask,
           newAxisMask, shrinkAxisMask);
 
-  let result: TensorInfo;
 
   if (isIdentity) {
     // Optimization #1, slice is a no-op plus reshape
-    result = reshape({inputs: {x}, backend, attrs: {shape: finalShape}});
-  } else if (sliceDim0 || isSimpleSlice) {
+    return reshape({inputs: {x}, backend, attrs: {shape: finalShape}});
+  }
+  if (sliceDim0 || isSimpleSlice) {
     // Optimization #2, slice is memory contiguous (only occurs in dim 0)
     util.assert(
         x.shape.length >= 1,
@@ -70,28 +70,26 @@ export function stridedSlice(args: {
     const size = slice_util.computeOutShape($begin, $end, $strides);
     // To tolerate begin[0] > end[0] (a 0-output slice), we min(begin, end).
     const sliced = slice({inputs: {x}, backend, attrs: {begin: $begin, size}});
-    result =
+    const result =
         reshape({inputs: {x: sliced}, backend, attrs: {shape: finalShape}});
     backend.disposeData(sliced.dataId);
-  } else {
-    const shouldExecuteOnCPU = backend.shouldExecuteOnCPU([x]);
-    if (shouldExecuteOnCPU) {
-      const values = backend.readSync(x.dataId) as TypedArray;
-      const xBuf = buffer(x.shape, x.dtype, values) as TensorBuffer<Rank>;
-      const resultValues =
-          stridedSliceImplCPU(finalShapeSparse, xBuf, $strides, $begin);
-      result = backend.makeTensorInfo(finalShape, x.dtype, resultValues.values);
-    } else {
-      const program = new StridedSliceProgram(finalShapeSparse);
-      const uniformData =
-          [{type: 'int32', data: $begin}, {type: 'int32', data: $strides}];
-      const resultValues =
-          backend.runWebGPUProgram(program, [x], x.dtype, uniformData);
-      result = reshape(
-          {inputs: {x: resultValues}, backend, attrs: {shape: finalShape}});
-      backend.disposeData(resultValues.dataId);
-    }
+    return result;
   }
+  if (backend.shouldExecuteOnCPU([x])) {
+    const values = backend.readSync(x.dataId) as TypedArray;
+    const xBuf = buffer(x.shape, x.dtype, values) as TensorBuffer<Rank>;
+    const resultValues =
+        stridedSliceImplCPU(finalShapeSparse, xBuf, $strides, $begin);
+    return backend.makeTensorInfo(finalShape, x.dtype, resultValues.values);
+  }
+  const program = new StridedSliceProgram(finalShapeSparse);
+  const uniformData =
+      [{type: 'int32', data: $begin}, {type: 'int32', data: $strides}];
+  const resultValues =
+      backend.runWebGPUProgram(program, [x], x.dtype, uniformData);
+  const result = reshape(
+      {inputs: {x: resultValues}, backend, attrs: {shape: finalShape}});
+  backend.disposeData(resultValues.dataId);
 
   return result;
 }

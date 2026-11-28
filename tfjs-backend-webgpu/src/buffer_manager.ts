@@ -80,18 +80,18 @@ export class BufferManager {
     this.numUsedBuffers--;
     this.numBytesUsed -= size;
 
-    if (reuse) {
-      let free = this.freeBuffers.get(key);
-      if (free == null) {
-        free = [];
-        this.freeBuffers.set(key, free);
-      }
-      free.push(buffer);
-      this.numFreeBuffers++;
-    } else {
+    if (!reuse) {
       buffer.destroy();
       this.numBytesAllocated -= size;
+      return;
     }
+    let free = this.freeBuffers.get(key);
+    if (free == null) {
+      free = [];
+      this.freeBuffers.set(key, free);
+    }
+    free.push(buffer);
+    this.numFreeBuffers++;
   }
 
   getNumUsedBuffers(): number {

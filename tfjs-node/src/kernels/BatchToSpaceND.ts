@@ -15,9 +15,10 @@
  * =============================================================================
  */
 
-import {BatchToSpaceND, BatchToSpaceNDAttrs, BatchToSpaceNDInputs, KernelConfig, KernelAttributes, tensor1d, tensor2d} from '@tensorflow/tfjs';
+import {BatchToSpaceND, BatchToSpaceNDAttrs, BatchToSpaceNDInputs, KernelConfig, KernelAttributes} from '@tensorflow/tfjs';
 
-import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {NodeJSKernelBackend} from '../nodejs_kernel_backend';
+import {executeSpatialBlockTransform} from './native_dispatch';
 
 export const batchToSpaceNDConfig: KernelConfig = {
   kernelName: BatchToSpaceND,
@@ -30,20 +31,6 @@ export const batchToSpaceNDConfig: KernelConfig = {
     const backend = args.backend;
     const {blockShape, crops} = args.attrs;
 
-    const blockShapeTensor = tensor1d(blockShape, 'int32');
-    const cropsTensor =
-        tensor2d(crops, [crops.length, crops[0].length], 'int32');
-    const opAttrs = [
-      createTensorsTypeOpAttr('T', x.dtype),
-      createTensorsTypeOpAttr('Tblock_shape', 'int32'),
-      createTensorsTypeOpAttr('Tcrops', cropsTensor.dtype)
-    ];
-    const res = backend.executeSingleOutput(
-        BatchToSpaceND, opAttrs, [x, blockShapeTensor, cropsTensor]);
-
-    cropsTensor.dispose();
-    blockShapeTensor.dispose();
-
-    return res;
+    return executeSpatialBlockTransform(backend, BatchToSpaceND, x, blockShape, crops);
   }
 };

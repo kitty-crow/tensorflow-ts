@@ -49,18 +49,7 @@ export function poolImpl(
         ]
       }
     });
-    let reduceX: TensorInfo;
-    if (poolType === 'avg') {
-      reduceX = mean(
-          {inputs: {x: reshapeX}, backend, attrs: {axis: 0, keepDims: false}});
-    } else {
-      util.assert(poolType === 'max', () => `Invalid pool type ${poolType}`);
-      reduceX = max({
-        inputs: {x: reshapeX},
-        backend,
-        attrs: {reductionIndices: 0, keepDims: false}
-      });
-    }
+    const reduceX = reduceSpatialPool(reshapeX, poolType, backend);
 
     const result = reshape(
         {inputs: {x: reduceX}, backend, attrs: {shape: convInfo.outShape}});
@@ -75,12 +64,7 @@ export function poolImpl(
   if (convInfo.filterHeight === 1 && convInfo.filterWidth === 1) {
     program = new PoolWithFilterSizeEqualsOneProgram(convInfo);
   } else {
-    if (poolType === 'avg') {
-      program = new Pool2DProgram(convInfo, 'avg');
-    } else {
-      util.assert(poolType === 'max', () => `Invalid pool type ${poolType}`);
-      program = new Pool2DProgram(convInfo, 'max');
-    }
+    program = new Pool2DProgram(convInfo, checkedPoolType(poolType));
 
     dimensions.push(
         {type: 'int32', data: [convInfo.padInfo.top, convInfo.padInfo.left]}, {
@@ -94,4 +78,21 @@ export function poolImpl(
   }
 
   return backend.runWebGPUProgram(program, [x], x.dtype, dimensions);
+}
+
+/** Preserve the runtime check for unsupported pool modes. */
+function checkedPoolType(poolType: PoolType): PoolType {
+  if (poolType === 'avg') {
+    return poolType;
+  }
+  util.assert(poolType === 'max', () => `Invalid pool type ${poolType}`);
+  return poolType;
+}
+
+function reduceSpatialPool(
+    x: TensorInfo, poolType: PoolType, backend: WebGPUBackend): TensorInfo {
+  if (checkedPoolType(poolType) === 'avg') {
+    return mean({inputs: {x}, backend, attrs: {axis: 0, keepDims: false}});
+  }
+  return max({inputs: {x}, backend, attrs: {reductionIndices: 0, keepDims: false}});
 }

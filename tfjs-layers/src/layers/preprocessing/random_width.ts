@@ -14,7 +14,7 @@ import { Shape } from '../../keras_format/common';
 import { Kwargs } from '../../types';
 import { ValueError } from '../../errors';
 import { BaseRandomLayer } from '../../engine/base_random_layer';
-import { randomUniform } from '@tensorflow/tfjs-core';
+import { randomUniform, util } from '@tensorflow/tfjs-core';
 import type {RandomResizeArgs as RandomWidthArgs} from '../../engine/base_random_layer';
 
 export type {RandomResizeArgs as RandomWidthArgs} from '../../engine/base_random_layer';
@@ -114,15 +114,15 @@ export class RandomWidth extends BaseRandomLayer {
 
     return tidy(() => {
       const input = getExactlyOneTensor(inputs);
-      this.imgHeight = input.shape[input.shape.length - 3];
-      const imgWidth = input.shape[input.shape.length - 2];
+      this.imgHeight = util.requiredNumericEntry(input.shape, input.shape.length - 3);
+      const imgWidth = util.requiredNumericEntry(input.shape, input.shape.length - 2);
 
       this.widthFactor = randomUniform([1],
         (1.0 + this.widthLower), (1.0 + this.widthUpper),
         'float32', this.randomGenerator.next()
       );
 
-      let adjustedWidth = this.widthFactor.dataSync()[0] * imgWidth;
+      let adjustedWidth = util.requiredNumericEntry(this.widthFactor.dataSync(), 0) * imgWidth;
       adjustedWidth = Math.round(adjustedWidth);
 
       const size:[number, number] = [this.imgHeight, adjustedWidth];
