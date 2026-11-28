@@ -83,6 +83,12 @@ describe('TensorArray', () => {
       tensorArray.writeMany([0, 1], [tensor, tensor2]);
       expect(tensorArray.size()).toBe(2);
     });
+    it('preserves the requested index order when writing and gathering', () => {
+      tensorArray.writeMany([1, 0], [tensor, tensor2]);
+      const gathered = tensorArray.gather([0, 1], DTYPE);
+      test_util.expectArraysEqual(gathered.dataSync(), [2, 1]);
+      gathered.dispose();
+    });
     it('should fail if dtype does not match', () => {
       const tensor = tensor2d([1], [1, 1], 'float32');
       expect(() => tensorArray.write(0, tensor)).toThrow();

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {concat, DataType, keep, reshape, scalar, slice, stack, Tensor, tensor, tidy, unstack, util} from '@tensorflow/tfjs-core';
+import {backend_util, concat, DataType, keep, reshape, scalar, slice, stack, Tensor, tensor, tidy, unstack, util} from '@tensorflow/tfjs-core';
 
 import {assertShapesMatchAllowUndefinedSize} from './tensor_utils';
 
@@ -170,7 +170,8 @@ export class TensorArray {
               tensors.length}.`);
     }
 
-    indices.forEach((i, index) => this.write(i, tensors[index]));
+    indices.forEach((i, index) =>
+        this.write(i, backend_util.requiredKernelEntry(tensors, index)));
   }
 
   /**
@@ -205,7 +206,8 @@ export class TensorArray {
     const tensors = this.readMany(indices);
 
     assertShapesMatchAllowUndefinedSize(
-        this.elementShape, tensors[0].shape, 'TensorArray shape mismatch: ');
+        this.elementShape, backend_util.requiredKernelEntry(tensors, 0).shape,
+        'TensorArray shape mismatch: ');
 
     return stack(tensors, 0);
   }
@@ -230,10 +232,11 @@ export class TensorArray {
     // Collect all the tensors from the tensors array.
     const tensors = this.readMany(indices);
 
+    const firstShape = backend_util.requiredKernelEntry(tensors, 0).shape;
     assertShapesMatchAllowUndefinedSize(
-        this.elementShape, tensors[0].shape,
+        this.elementShape, firstShape,
         `TensorArray shape mismatch: tensor array shape (${
-            this.elementShape}) vs first tensor shape (${tensors[0].shape})`);
+            this.elementShape}) vs first tensor shape (${firstShape})`);
 
     return concat(tensors, 0);
   }

@@ -40,6 +40,16 @@ describe('TensorList', () => {
     expect(tensorList.elementShape).toEqual(SHAPE);
   });
 
+  it('gathers in requested order and rejects an unwritten element', () => {
+    tensorList.setItem(0, tensor);
+    tensorList.setItem(1, tensor2);
+    const gathered = tensorList.gather([1, 0], DTYPE, SHAPE);
+    test_util.expectArraysEqual(gathered.dataSync(), [2, 1]);
+    gathered.dispose();
+    expect(() => tensorList.gather([2], DTYPE, SHAPE)).toThrowError(/Missing kernel entry/);
+    tensorList.clearAndClose();
+  });
+
   it('should allow scalar shape', () => {
     tensorList = new TensorList([], -1, DTYPE, SIZE);
     expect(tensorList.size()).toEqual(0);

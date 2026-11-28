@@ -15,7 +15,19 @@
  * =============================================================================
  */
 import {expectArraysEqual} from '../test_util';
-import {CompositeArrayBuffer} from './composite_array_buffer';
+import {CompositeArrayBuffer, search} from './composite_array_buffer';
+
+describe('sorted buffer search', () => {
+  it('returns minus one for missing values without reading outside the array', () => {
+    const values = [1, 3, 5];
+    expect(search([], (value: number) => 3 - value)).toBe(-1);
+    expect(search(values, value => 0 - value)).toBe(-1);
+    expect(search(values, value => 4 - value)).toBe(-1);
+    expect(search(values, value => 6 - value)).toBe(-1);
+    expect(search(values, value => 1 - value)).toBe(0);
+    expect(search(values, value => 5 - value)).toBe(2);
+  });
+});
 
 describe('CompositeArrayBuffer', () => {
   const uniformBuffers = [

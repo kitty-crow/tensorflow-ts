@@ -15,6 +15,7 @@
  * =============================================================================
  */
 import {TypedArray} from '../types';
+import {requiredKernelEntry} from '../ops/shape_dimension';
 import * as util from '../util';
 
 type BufferShard = {
@@ -122,7 +123,7 @@ export class CompositeArrayBuffer {
     const outputArray = new Uint8Array(outputBuffer);
     let sliced = 0;
     for (let i = startShardIndex; i < this.shards.length; i++) {
-      const shard = this.shards[i];
+      const shard = requiredKernelEntry(this.shards, i);
 
       const globalStart = start + sliced;
       const localStart = globalStart - shard.start;
@@ -172,7 +173,7 @@ export class CompositeArrayBuffer {
     }
 
     // For efficiency, try the previous shard first.
-    if (check(this.shards[this.previousShardIndex]) === 0) {
+    if (check(requiredKernelEntry(this.shards, this.previousShardIndex)) === 0) {
       return this.previousShardIndex;
     }
 
@@ -202,17 +203,17 @@ export class CompositeArrayBuffer {
 export function search<T>(sortedArray: T[], compare: (t: T) => number): number {
   // Binary search
   let min = 0;
-  let max = sortedArray.length;
+  let max = sortedArray.length - 1;
 
   while (min <= max) {
     const middle = Math.floor((max - min) / 2) + min;
-    const side = compare(sortedArray[middle]);
+    const side = compare(requiredKernelEntry(sortedArray, middle));
 
     if (side === 0) {
       return middle;
     }
     if (side < 0) {
-      max = middle;
+      max = middle - 1;
     } else {
       min = middle + 1;
     }

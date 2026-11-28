@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {concat, DataType, keep, reshape, scalar, slice, stack, Tensor, tensor, tidy, unstack, util} from '@tensorflow/tfjs-core';
+import {backend_util, concat, DataType, keep, reshape, scalar, slice, stack, Tensor, tensor, tidy, unstack, util} from '@tensorflow/tfjs-core';
 
 import {assertShapesMatchAllowUndefinedSize, inferElementShape, mergeElementShape} from './tensor_utils';
 
@@ -212,16 +212,16 @@ export class TensorList {
           elementIndex} in a list with ${this.tensors.length} elements.`);
     }
 
-    if (this.tensors[elementIndex] == null) {
+    const element = this.tensors[elementIndex];
+    if (element == null) {
       throw new Error(`element at index ${elementIndex} is null.`);
     }
 
     assertShapesMatchAllowUndefinedSize(
-        this.tensors[elementIndex].shape, elementShape,
-        'TensorList shape mismatch: ');
+        element.shape, elementShape, 'TensorList shape mismatch: ');
     const outputElementShape =
         inferElementShape(this.elementShape, this.tensors, elementShape);
-    return reshape(this.tensors[elementIndex], outputElementShape);
+    return reshape(element, outputElementShape);
   }
 
   /**
@@ -246,8 +246,9 @@ export class TensorList {
     keep(tensor);
 
     // dispose the previous value if it is replacing.
-    if (this.tensors[elementIndex] != null) {
-      this.tensors[elementIndex].kept = false;
+    const previous = this.tensors[elementIndex];
+    if (previous != null) {
+      previous.kept = false;
     }
 
     this.tensors[elementIndex] = tensor;
@@ -281,7 +282,8 @@ export class TensorList {
 
     return tidy(() => {
       const tensors =
-          indices.map(i => reshape(this.tensors[i], outputElementShape));
+          indices.map(i => reshape(
+              backend_util.requiredKernelEntry(this.tensors, i), outputElementShape));
       return stack(tensors, 0);
     });
   }
@@ -373,7 +375,7 @@ export function scatter(
   const list = new TensorList([], elementShape, tensor.dtype, numElements);
   const tensors = unstack(tensor, 0);
   indices.forEach((value, index) => {
-    list.setItem(value, tensors[index]);
+    list.setItem(value, backend_util.requiredKernelEntry(tensors, index));
   });
   return list;
 }
@@ -419,8 +421,8 @@ export function split(
 
   const list = new TensorList([], elementShape, tensor.dtype, length.length);
 
-  for (let i = 0; i < tensors.length; i++) {
-    list.setItem(i, tensors[i]);
+  for (const [index, element] of tensors.entries()) {
+    list.setItem(index, element);
   }
   return list;
 }

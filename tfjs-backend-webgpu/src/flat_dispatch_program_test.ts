@@ -16,6 +16,7 @@
  */
 
 import {shaderEntry, symbolicallyComputeStrides} from './shader_util';
+import {concatOffsetUniforms} from './kernels/Concat_impl';
 import {MatMulPackedProgram} from './matmul_packed_webgpu';
 import {MatMulSplitKProgram} from './matmul_splitK_webgpu';
 import {computeWorkgroupInfoForMatMul} from './webgpu_util';
@@ -35,6 +36,15 @@ import {ReduceProgram} from './reduce_webgpu';
 import {ResizeBilinearProgram} from './resize_bilinear_webgpu';
 import {MergeProgram, SwapProgram} from './top_k_webgpu';
 import {resizeBackpropGeometry} from './kernels/resize_backprop_geometry';
+
+describe('concat prefix width uniforms', () => {
+  it('preserves zero widths and omits the final matrix width', () => {
+    expect(concatOffsetUniforms([[1, 2]])).toEqual([]);
+    expect(concatOffsetUniforms([[1, 2], [1, 0], [1, 3], [1, 7]]))
+        .toEqual([{type: 'int32', data: [2]}, {type: 'int32', data: [2]},
+          {type: 'int32', data: [5]}]);
+  });
+});
 
 describe('flat WebGPU program dispatch', () => {
   it('retains shape identity and scalar and empty dispatches', () => {

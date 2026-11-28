@@ -28,7 +28,7 @@ import {reshape} from './Reshape';
 
 export function concatImpl(
     inputs: ConcatInputs, axis: number, backend: WebGPUBackend): TensorInfo {
-  const dtype = inputs[0].dtype;
+  const dtype = backend_util.requiredKernelEntry(inputs, 0).dtype;
   if (dtype === 'complex64') {
     const reals = inputs.map((t) => real({inputs: {input: t}, backend}));
     const imags = inputs.map((t) => imag({inputs: {input: t}, backend}));
@@ -80,7 +80,8 @@ export function concatImpl(
     // Concats 2d tensors along axis=1.
     const outShape =
         backend_util.computeOutShape(tensors2D.map(t => t.shape), 1 /* axis */);
-    const simplyConcat = tensors2D[0].shape[0] === 1;
+    const simplyConcat = backend_util.requiredDimension(
+        backend_util.requiredKernelEntry(tensors2D, 0).shape, 0) === 1;
     const outVals =
         concatImplCPU(inputsValShapes, outShape, dtype, simplyConcat);
 
@@ -116,25 +117,28 @@ export function concatImpl(
   const shapes = (tensors2D).map(t => t.shape as [number, number]);
   const program = new ConcatProgram(shapes);
 
-  const uniformData: Array<{type: string; data: number[]}> = [];
-  const offsets: number[] = new Array<number>(shapes.length - 1);
-  if (offsets.length > 0) {
-    offsets[0] = shapes[0][1];
-    uniformData.push({type: 'int32', data: [offsets[0]]});
-    for (let i = 1; i < offsets.length; i++) {
-      offsets[i] = offsets[i - 1] + shapes[i][1];
-      uniformData.push({type: 'int32', data: [offsets[i]]});
-    }
-  }
+  const uniformData = concatOffsetUniforms(shapes);
 
   const res = backend.runWebGPUProgram(
-      program, tensors2D, tensors2D[0].dtype, uniformData);
+      program, tensors2D, dtype, uniformData);
   tensors2D.forEach(r => backend.disposeData(r.dataId));
 
   const reshapedResult =
       reshape({inputs: {x: res}, backend, attrs: {shape: outShape}});
   backend.disposeData(res.dataId);
   return reshapedResult;
+}
+
+/** Return the prefix widths separating adjacent concatenated matrices. */
+export function concatOffsetUniforms(shapes: Array<[number, number]>):
+    Array<{type: string; data: number[]}> {
+  const uniforms: Array<{type: string; data: number[]}> = [];
+  let offset = 0;
+  for (const shape of shapes.slice(0, -1)) {
+    offset += backend_util.requiredDimension(shape, 1);
+    uniforms.push({type: 'int32', data: [offset]});
+  }
+  return uniforms;
 }
 
 function computeTensors2D(
