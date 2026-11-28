@@ -400,3 +400,27 @@ describeWithFlags('fused matmul', ALL_ENVS, () => {
     expectArraysClose(await db.data(), await fusedDb.array());
   });
 });
+
+describeWithFlags('fused matmul transpose gradient contracts', ALL_ENVS, () => {
+  for (const transposeA of [false, true]) {
+    for (const transposeB of [false, true]) {
+      it(`matches unfused gradients: ${transposeA}, ${transposeB}`, async () => {
+        const a = tf.tensor2d([1, 2, 3, 4, 5, 6],
+            transposeA ? [3, 2] : [2, 3]);
+        const b = tf.tensor2d([2, 3, 4, 5, 6, 7],
+            transposeB ? [2, 3] : [3, 2]);
+        const dy = tf.tensor2d([1, 2, 3, 4], [2, 2]);
+        const fused = tf.grads((a, b) => tf.fused.matMul({
+          a, b, transposeA, transposeB, activation: 'linear'
+        }));
+        const unfused = tf.grads((a, b) =>
+            tf.matMul(a, b, transposeA, transposeB));
+        const [actualA, actualB] = fused([a, b], dy);
+        const [expectedA, expectedB] = unfused([a, b], dy);
+        expectArraysClose(await actualA.data(), await expectedA.data());
+        expectArraysClose(await actualB.data(), await expectedB.data());
+        tf.dispose([a, b, dy, actualA, actualB, expectedA, expectedB]);
+      });
+    }
+  }
+});

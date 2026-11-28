@@ -665,9 +665,9 @@ export function getInitializer(identifier: InitializerIdentifier|Initializer|
         return deserializeInitializer(config);
       }
     }
-  } else if (identifier instanceof Initializer) {
-    return identifier;
-  } else {
-    return deserializeInitializer(identifier);
   }
+  if (identifier instanceof Initializer) {
+    return identifier;
+  }
+  return deserializeInitializer(identifier);
 }

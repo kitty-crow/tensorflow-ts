@@ -53,16 +53,15 @@ export class MathBackendCPU extends KernelBackend {
   override write(
       values: backend_util.BackendValues, shape: number[],
       dtype: DataType): DataId {
-    if (this.firstUse) {
-      this.firstUse = false;
-      if (env().get('IS_NODE')) {
-        backend_util.warn(
-            '\n============================\n' +
-            'Hi, looks like you are running TensorFlow.js in ' +
-            'Node.js. To speed things up dramatically, install our node ' +
-            'backend, visit https://github.com/tensorflow/tfjs-node for more details. ' +
-            '\n============================');
-      }
+    const firstUse = this.firstUse;
+    this.firstUse = false;
+    if (firstUse && env().get('IS_NODE')) {
+      backend_util.warn(
+          '\n============================\n' +
+          'Hi, looks like you are running TensorFlow.js in ' +
+          'Node.js. To speed things up dramatically, install our node ' +
+          'backend, visit https://github.com/tensorflow/tfjs-node for more details. ' +
+          '\n============================');
     }
     const dataId = {id: this.nextDataId()};
 
@@ -188,21 +187,22 @@ export class MathBackendCPU extends KernelBackend {
    * @oaram force Optional, remove the data regardless of refCount
    */
   override disposeData(dataId: DataId, force = false): boolean {
-    if (this.data.has(dataId)) {
-      this.data.get(dataId).refCount--;
-      if (!force && this.data.get(dataId).refCount > 0) {
-        return false;
-      }
-
-      const complexTensorInfos = this.data.get(dataId).complexTensorInfos ?? null;
-
-      if (complexTensorInfos != null) {
-        this.disposeData(complexTensorInfos.real.dataId, true);
-        this.disposeData(complexTensorInfos.imag.dataId, true);
-      }
-
-      this.data.delete(dataId);
+    if (!this.data.has(dataId)) {
+      return true;
     }
+    const data = this.data.get(dataId);
+    data.refCount--;
+    if (!force && data.refCount > 0) {
+      return false;
+    }
+
+    const complexTensorInfos = data.complexTensorInfos ?? null;
+    if (complexTensorInfos != null) {
+      this.disposeData(complexTensorInfos.real.dataId, true);
+      this.disposeData(complexTensorInfos.imag.dataId, true);
+    }
+
+    this.data.delete(dataId);
     return true;
   }
 

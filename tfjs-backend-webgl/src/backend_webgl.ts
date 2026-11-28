@@ -349,7 +349,7 @@ export class MathBackendWebGL extends KernelBackend {
       const tmpData = this.texData.get(tmpDownloadTarget.dataId);
 
       buffer = this.gpgpu.createBufferFromTexture(
-          tmpData.texture.texture, ...tex_util.getDenseTexShape(shape));
+          tex_util.requireTexture(tmpData).texture, ...tex_util.getDenseTexShape(shape));
     }
 
     this.pendingRead.set(dataId, []);
@@ -494,7 +494,7 @@ export class MathBackendWebGL extends KernelBackend {
       const vals =
           this.gpgpu
               .downloadMatrixFromPackedTexture(
-                  tmpData.texture.texture, ...tex_util.getDenseTexShape(shape))
+                  tex_util.requireTexture(tmpData).texture, ...tex_util.getDenseTexShape(shape))
               .subarray(0, size);
 
       this.disposeIntermediateTensorInfo(tmpTarget);
@@ -514,8 +514,8 @@ export class MathBackendWebGL extends KernelBackend {
     const tmpData = this.texData.get(output.dataId);
     const vals = this.gpgpu
                      .downloadByteEncodedFloatMatrixFromOutputTexture(
-                         tmpData.texture.texture, tmpData.texShape[0],
-                         tmpData.texShape[1])
+                         tex_util.requireTexture(tmpData).texture,
+                         ...tex_util.requireTextureShape(tmpData))
                      .subarray(0, size);
     this.disposeIntermediateTensorInfo(output);
 
@@ -695,7 +695,7 @@ export class MathBackendWebGL extends KernelBackend {
 
   getTexture(dataId: DataId): WebGLTexture {
     this.uploadToGPU(dataId);
-    return this.texData.get(dataId).texture.texture;
+    return tex_util.requireTexture(this.texData.get(dataId)).texture;
   }
 
   /**

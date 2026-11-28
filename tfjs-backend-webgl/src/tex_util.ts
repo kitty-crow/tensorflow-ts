@@ -101,6 +101,24 @@ export interface TextureData {
   };
 }
 
+/** Require the texture allocated for a GPU operation. */
+export function requireTexture(data: TextureData): Texture {
+  const texture = data.texture;
+  if (texture == null) {
+    throw new Error('GPU texture is not allocated.');
+  }
+  return texture;
+}
+
+/** Require the physical dimensions of a GPU texture. */
+export function requireTextureShape(data: TextureData): [number, number] {
+  const shape = data.texShape;
+  if (shape == null) {
+    throw new Error('GPU texture shape is not available.');
+  }
+  return shape;
+}
+
 export function getUnpackedMatrixTextureShapeWidthHeight(
     rows: number, columns: number): [number, number] {
   return [columns, rows];

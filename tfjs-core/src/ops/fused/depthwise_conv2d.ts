@@ -113,14 +113,12 @@ function fusedDepthwiseConv2d_<T extends Tensor3D|Tensor4D>({
   leakyreluAlpha?: number
 }): T {
   if (shouldFuse(ENGINE.state.gradientDepth, activation) === false) {
-    let result = unfusedDepthwiseConv2d(
+    const result = unfusedDepthwiseConv2d(
         x, filter, strides, pad, dataFormat, dilations, dimRoundingMode);
-    if (bias != null) {
-      result = add(result, bias);
-    }
+    const biasedResult = bias != null ? add(result, bias) : result;
 
     return applyActivation(
-               result, activation, preluActivationWeights, leakyreluAlpha) as T;
+               biasedResult, activation, preluActivationWeights, leakyreluAlpha) as T;
   }
 
   const $x = convertToTensor(x, 'x', 'depthwiseConv2d', 'float32');

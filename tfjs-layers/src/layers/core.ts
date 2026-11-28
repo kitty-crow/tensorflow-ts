@@ -264,15 +264,16 @@ export class Dense extends Layer {
   public override build(inputShape: Shape|Shape[]): void {
     inputShape = getExactlyOneShape(inputShape);
     const inputLastDim = requiredElement(inputShape, inputShape.length - 1);
-    if (this.kernel == null) {
+    const needsKernel = this.kernel == null;
+    if (needsKernel) {
       this.kernel = this.addWeight(
           'kernel', [inputLastDim, this.units], null, this.kernelInitializer,
           this.kernelRegularizer, true, this.kernelConstraint);
-      if (this.useBias) {
-        this.bias = this.addWeight(
-            'bias', [this.units], null, this.biasInitializer,
-            this.biasRegularizer, true, this.biasConstraint);
-      }
+    }
+    if (needsKernel && this.useBias) {
+      this.bias = this.addWeight(
+          'bias', [this.units], null, this.biasInitializer,
+          this.biasRegularizer, true, this.biasConstraint);
     }
 
     this.inputSpec = [{minNDim: 2, axes: {[-1]: inputLastDim}}];
@@ -293,22 +294,18 @@ export class Dense extends Layer {
       const input = getExactlyOneTensor(inputs);
       const fusedActivationName =
           mapActivationToFusedKernel(this.activation.getClassName());
-      let output: Tensor;
-
       if (fusedActivationName != null) {
-        output = K.dot(
+        return K.dot(
             input, this.kernel.read(), fusedActivationName,
             this.bias ? this.bias.read() : null);
-      } else {
-        output = K.dot(input, this.kernel.read());
-        if (this.bias != null) {
-          output = K.biasAdd(output, this.bias.read());
-        }
-        if (this.activation != null) {
-          output = this.activation.apply(output);
-        }
       }
-
+      let output = K.dot(input, this.kernel.read());
+      if (this.bias != null) {
+        output = K.biasAdd(output, this.bias.read());
+      }
+      if (this.activation != null) {
+        output = this.activation.apply(output);
+      }
       return output;
     });
   }

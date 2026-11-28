@@ -22,7 +22,7 @@ import {TransposePackedProgram} from './transpose_packed_gpu';
 import {TransposeProgram} from './transpose_gpu';
 import {ReversePackedProgram} from './reverse_packed_gpu';
 import {shaderEntry} from './packing_util';
-import {requireWebGL2TextureEnums} from './tex_util';
+import {requireTexture, requireTextureShape, requireWebGL2TextureEnums, TextureData} from './tex_util';
 import {shaderKeyShapeFlags} from './gpgpu_math';
 import {getLogicalCoordinatesFromFlatIndexByUniform} from './shader_compiler_util';
 import {samplerCoords, packedBroadcastReturn} from './shader_compiler';
@@ -356,5 +356,20 @@ describe('shared shader broadcast coordinate generation', () => {
         .toBe('return vec4(outputValue.xx, outputValue.zz);');
     expect(packedBroadcastReturn(2, 2, 4, 4, []))
         .toBe('return outputValue;');
+  });
+});
+
+describe('checked GPU texture metadata', () => {
+  it('rejects unallocated textures without manufacturing a texture', () => {
+    const data: TextureData = {shape: [2], dtype: 'float32', refCount: 1};
+    expect(() => requireTexture(data)).toThrowError(/not allocated/);
+    expect(() => requireTextureShape(data)).toThrowError(/not available/);
+  });
+  it('retains the original physical shape, including zero dimensions', () => {
+    const data: TextureData = {
+      shape: [0, 2], dtype: 'float32', refCount: 1, texShape: [0, 2]
+    };
+    expect(requireTextureShape(data)).toBe(data.texShape);
+    expect(requireTextureShape(data)).toEqual([0, 2]);
   });
 });

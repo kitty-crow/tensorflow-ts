@@ -40,9 +40,11 @@ export class LruCache<T> {
    * used recently.
    */
   public put(key: string, value: T): void {
-    if (this.cache.has(key)) {
+    const alreadyPresent = this.cache.has(key);
+    if (alreadyPresent) {
       this.cache.delete(key);
-    } else if (this.cache.size >= this.maxEntries) {
+    }
+    if (!alreadyPresent && this.cache.size >= this.maxEntries) {
       this.evictOldest();
     }
     this.cache.set(key, value);

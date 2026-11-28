@@ -19,6 +19,7 @@ import '../base_side_effects';
 
 import {expectArraysEqual} from '../test_util';
 import {CompositeArrayBuffer, search} from './composite_array_buffer';
+import {requiredWeightByteSize} from './types';
 
 describe('sorted buffer search', () => {
   it('returns minus one for missing values without reading outside the array', () => {
@@ -159,5 +160,23 @@ describe('CompositeArrayBuffer', () => {
     const array = new Uint8Array([1,2,3]);
     const composite = new CompositeArrayBuffer(array);
     expectArraysEqual(new Uint8Array(composite.slice(0, 2)), [1,2]);
+  });
+});
+
+describe('checked fixed-width weight sizes', () => {
+  it('retains each supported storage width', () => {
+    expect(requiredWeightByteSize('float32', 'a')).toBe(4);
+    expect(requiredWeightByteSize('int32', 'b')).toBe(4);
+    expect(requiredWeightByteSize('complex64', 'c')).toBe(8);
+    expect(requiredWeightByteSize('bool', 'd')).toBe(1);
+    expect(requiredWeightByteSize('uint8', 'e')).toBe(1);
+    expect(requiredWeightByteSize('uint16', 'f')).toBe(2);
+    expect(requiredWeightByteSize('float16', 'g')).toBe(2);
+  });
+  it('rejects missing and inherited byte-size entries', () => {
+    expect(() => requiredWeightByteSize('invalid', 'weight'))
+        .toThrowError(/Unsupported dtype/);
+    expect(() => requiredWeightByteSize('toString', 'weight'))
+        .toThrowError(/Unsupported dtype/);
   });
 });

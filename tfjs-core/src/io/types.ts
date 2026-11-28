@@ -30,6 +30,15 @@ export const DTYPE_VALUE_SIZE_MAP: {[dtype: string]: number} = {
   'complex64': 8
 };
 
+/** Fixed-width weight dtypes have a known positive byte size. */
+export function requiredWeightByteSize(dtype: string, name: string): number {
+  const size = DTYPE_VALUE_SIZE_MAP[dtype];
+  if (typeof size !== 'number') {
+    throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
+  }
+  return size;
+}
+
 /**
  * A weight manifest.
  *

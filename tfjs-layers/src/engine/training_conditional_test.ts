@@ -672,3 +672,16 @@ describe('bidirectional output and mask contracts', () => {
     expect(last.computeMask(input, mask)).toEqual([null, null]);
   });
 });
+
+describe('layer normalization axis validation', () => {
+  it('accepts integer axes and rejects fractional or missing array axes', () => {
+    expect(() => new LayerNormalization({axis: -1})).not.toThrow();
+    expect(() => new LayerNormalization({axis: [0, -1]})).not.toThrow();
+    expect(() => new LayerNormalization({axis: 0.5}))
+        .toThrowError(/Expected axis to be an integer/);
+    expect(() => new LayerNormalization({axis: [0, 1.5]}))
+        .toThrowError(/Expected axis to be an array of integers/);
+    expect(() => new LayerNormalization({axis: new Array<number>(1)}))
+        .toThrowError(/Expected axis to be an array of integers/);
+  });
+});

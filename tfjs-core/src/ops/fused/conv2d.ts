@@ -129,14 +129,12 @@ function fusedConv2d_<T extends Tensor3D|Tensor4D>({
             `only NHWC is currently supported for the case of gradient depth ` +
             `is 0 and the activation is not linear.`);
 
-    let result = unfusedConv2d(
+    const result = unfusedConv2d(
         x, filter, strides, pad, dataFormat, dilations, dimRoundingMode);
-    if (bias != null) {
-      result = add(result, bias);
-    }
+    const biasedResult = bias != null ? add(result, bias) : result;
 
     return applyActivation(
-               result, activation, preluActivationWeights, leakyreluAlpha) as T;
+               biasedResult, activation, preluActivationWeights, leakyreluAlpha) as T;
   }
 
   const $x = convertToTensor(x, 'x', 'conv2d', 'float32');

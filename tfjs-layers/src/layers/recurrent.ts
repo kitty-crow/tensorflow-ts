@@ -555,16 +555,15 @@ export class RNN extends Layer {
       stateSize = [this.cell.stateSize];
     }
 
-    if (this.stateSpec != null) {
-      if (!util.arraysEqual(
-              this.stateSpec.map(spec => spec.shape[spec.shape.length - 1]),
-              stateSize)) {
-        throw new ValueError(
-            `An initialState was passed that is not compatible with ` +
-            `cell.stateSize. Received stateSpec=${this.stateSpec}; ` +
-            `However cell.stateSize is ${this.cell.stateSize}`);
-      }
-    } else {
+    if (this.stateSpec != null && !util.arraysEqual(
+        this.stateSpec.map(spec => spec.shape[spec.shape.length - 1]),
+        stateSize)) {
+      throw new ValueError(
+          `An initialState was passed that is not compatible with ` +
+          `cell.stateSize. Received stateSpec=${this.stateSpec}; ` +
+          `However cell.stateSize is ${this.cell.stateSize}`);
+    }
+    if (this.stateSpec == null) {
       this.stateSpec =
           stateSize.map(dim => new InputSpec({shape: [null, dim]}));
     }

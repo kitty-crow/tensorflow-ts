@@ -511,6 +511,28 @@ export interface LayerNormalizationLayerArgs extends LayerArgs {
   gammaRegularizer?: RegularizerIdentifier|Regularizer;
 }
 
+/** Validate normalisation axes without changing their order or identity. */
+function validateLayerNormalizationAxis(axis: number|number[]): void {
+  if (typeof axis === 'number' && !Number.isInteger(axis)) {
+    throw new Error(`Expected axis to be an integer, but received ${axis}`);
+  }
+  if (typeof axis === 'number') {
+    return;
+  }
+  if (!Array.isArray(axis)) {
+    throw new Error(
+        `Expected axis to be an integer or an array of integers, ` +
+        `but received ${JSON.stringify(axis)}`);
+  }
+  for (const value of axis) {
+    if (!Number.isInteger(value)) {
+      throw new Error(
+          `Expected axis to be an array of integers, ` +
+          `but received ${JSON.stringify(axis)}`);
+    }
+  }
+}
+
 export class LayerNormalization extends Layer {
   /** @nocollapse */
   static className = 'LayerNormalization';
@@ -534,24 +556,7 @@ export class LayerNormalization extends Layer {
     super(args);
 
     this.axis = args.axis ?? -1;
-    if (typeof this.axis === 'number') {
-      if (!Number.isInteger(this.axis)) {
-        throw new Error(
-            `Expected axis to be an integer, but received ${this.axis}`);
-      }
-    } else if (Array.isArray(this.axis)) {
-      for (const axis of this.axis) {
-        if (!Number.isInteger(axis)) {
-          throw new Error(
-              `Expected axis to be an array of integers, ` +
-              `but received ${JSON.stringify(this.axis)}`);
-        }
-      }
-    } else {
-      throw new Error(
-          `Expected axis to be an integer or an array of integers, ` +
-          `but received ${JSON.stringify(this.axis)}`);
-    }
+    validateLayerNormalizationAxis(this.axis);
 
     this.epsilon = args.epsilon ?? 1e-3;
     this.center = args.center ?? true;

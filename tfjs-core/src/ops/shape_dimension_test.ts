@@ -309,3 +309,22 @@ describe('checked image batching dimensions', () => {
     expect(() => batchedImageShape(new Array<number>(4), 5)).toThrowError();
   });
 });
+
+describe('checked elided slice bounds', () => {
+  it('inserts full bounds and clamps negative explicit ends', () => {
+    expect(slice.startIndicesWithElidedDims(0, 0, 1, [0, 1], [2, 3]))
+        .toEqual([0, 1]);
+    expect(slice.stopIndicesWithElidedDims(0, 0, 1, [0, -1], [2, 3]))
+        .toEqual([2, 2]);
+  });
+  it('does not require masked bounds but rejects missing explicit bounds', () => {
+    expect(slice.startIndicesWithElidedDims(2, 0, 1, [], [2, 3]))
+        .toEqual([0, 0]);
+    expect(slice.stopIndicesWithElidedDims(2, 0, 1, [], [2, 3]))
+        .toEqual([2, 3]);
+    expect(() => slice.startIndicesWithElidedDims(0, 0, 1, [], [2, 3]))
+        .toThrowError(/Missing dimension/);
+    expect(() => slice.stopIndicesWithElidedDims(0, 0, 1, [], [2, 3]))
+        .toThrowError(/Missing dimension/);
+  });
+});

@@ -225,7 +225,7 @@ export function startIndicesWithElidedDims(
     const originalAxis =
         unnormalizeAxis(ellipsisInsertionIndex, numElidedAxes, axis);
     newIndices[axis] = beginMask & 1 << originalAxis ?
-        0 : originalBegin[originalAxis];
+        0 : requiredDimension(originalBegin, originalAxis);
   }
   return newIndices;
 }
@@ -246,16 +246,15 @@ export function stopIndicesWithElidedDims(
     const originalAxis =
         unnormalizeAxis(ellipsisInsertionIndex, numElidedAxes, axis);
     newIndices[axis] = endMask & 1 << originalAxis ?
-        Number.MAX_SAFE_INTEGER : originalEnd[originalAxis];
+        Number.MAX_SAFE_INTEGER : requiredDimension(originalEnd, originalAxis);
   }
 
   for (let i = 0; i < newIndices.length; i++) {
     // Handle negative indices
-    const axisSize = inputShape[i];
-    if (newIndices[i] < 0) {
-      newIndices[i] += axisSize;
-    }
-    newIndices[i] = util.clamp(0, newIndices[i], inputShape[i]);
+    const axisSize = requiredDimension(inputShape, i);
+    const index = requiredDimension(newIndices, i);
+    const adjusted = index < 0 ? index + axisSize : index;
+    newIndices[i] = util.clamp(0, adjusted, axisSize);
   }
   return newIndices;
 }
@@ -500,29 +499,12 @@ export function sliceInfo(
         !!((denseSpec.beginMask & (1 << i)) && (denseSpec.endMask & (1 << i)));
 
     if (denseSpec.beginValid && denseSpec.endValid) {
-      if (shrinkI) {
-        // If we are shrinking, the end index is now possibly incorrect. In
-        // particular foo[-1] produces sparseBegin = -1, sparseEnd = 0.
-        // and canonical puts these to n-1 and 0, which implies a degenerate
-        // interval. Fortunately, it is now safe to re-create end as begin + 1.
-        const beginIndex = requiredDimension(denseSpec.begin, i);
-        const xFwd = beginIndex < 0 ? dimI + beginIndex : beginIndex;
-        denseSpec.begin[i] = xFwd;
-        denseSpec.end[i] = xFwd + 1;
-        if (xFwd < 0 || xFwd >= dimI) {
-          throw Error(`slice index ${xFwd} of dimension ${
-              i} out of bounds.`);
-        }
-      } else {
-        denseSpec.begin[i] = canonical(
-            denseSpec.begin[i], 0, stride, dimI, masks,
-            validRange);
-        denseSpec.end[i] = canonical(
-            denseSpec.end[i], 1, stride, dimI, masks, validRange);
-      }
+      canonicalizeDenseBounds(denseSpec, i, shrinkI, dimI, stride,
+          masks, validRange);
       // Update optimization values
       const takeAllInDimension = stride === 1 &&
-          denseSpec.begin[i] === 0 && denseSpec.end[i] === dimI;
+          requiredDimension(denseSpec.begin, i) === 0 &&
+          requiredDimension(denseSpec.end, i) === dimI;
       isIdentity = isIdentity && takeAllInDimension;
       sliceDim0 = sliceDim0 &&
           ((i === 0 && stride === 1) || takeAllInDimension);
@@ -691,13 +673,34 @@ function appendDenseSliceAxis(
   return fullIndex + 1;
 }
 
-function canonical(
-    x: number, c: number, strideI: number, dimI: number, masks: number[],
-    validRange: number[]): number {
-  if (requiredDimension(masks, c)) {
-    return requiredDimension(validRange, strideI > 0 ? c : (c + 1) & 1);
+/** Canonicalise one dense slice axis while retaining masked omissions. */
+function canonicalizeDenseBounds(
+    dense: StridedSliceDenseSpec, i: number, shrink: boolean,
+    dimI: number, stride: number, masks: number[], validRange: number[]): void {
+  if (!shrink) {
+    dense.begin[i] = canonicalAt(dense.begin, i, 0, stride, dimI, masks, validRange);
+    dense.end[i] = canonicalAt(dense.end, i, 1, stride, dimI, masks, validRange);
+    return;
   }
-  const xFwd = x < 0 ? dimI + x : x;  // make negative indices positive
+  // A shrink interval is exactly one element, including negative indices.
+  const beginIndex = requiredDimension(dense.begin, i);
+  const xFwd = beginIndex < 0 ? dimI + beginIndex : beginIndex;
+  dense.begin[i] = xFwd;
+  dense.end[i] = xFwd + 1;
+  if (xFwd < 0 || xFwd >= dimI) {
+    throw Error(`slice index ${xFwd} of dimension ${i} out of bounds.`);
+  }
+}
+
+function canonicalAt(
+    indices: number[], axis: number, c: number, stride: number,
+    dim: number, masks: number[], validRange: number[]): number {
+  // Masked values are ignored; they need not be present in the sparse input.
+  if (requiredDimension(masks, c)) {
+    return requiredDimension(validRange, stride > 0 ? c : (c + 1) & 1);
+  }
+  const x = requiredDimension(indices, axis);
+  const xFwd = x < 0 ? dim + x : x;  // make negative indices positive
   const lower = requiredDimension(validRange, 0);
   const upper = requiredDimension(validRange, 1);
   return xFwd < lower ? lower : xFwd > upper ? upper : xFwd;

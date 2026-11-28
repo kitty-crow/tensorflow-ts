@@ -75,13 +75,11 @@ function fusedMatMul_({
   leakyreluAlpha?: number
 }): Tensor {
     if (shouldFuse(ENGINE.state.gradientDepth, activation) === false) {
-      let result = unfusedMatMul(a, b, transposeA, transposeB);
-      if (bias != null) {
-        result = add(result, bias);
-      }
+      const result = unfusedMatMul(a, b, transposeA, transposeB);
+      const biasedResult = bias != null ? add(result, bias) : result;
 
       return applyActivation(
-                 result, activation, preluActivationWeights, leakyreluAlpha);
+                 biasedResult, activation, preluActivationWeights, leakyreluAlpha);
     }
 
     const {a: $a, b: $b} = matchedBinaryInputs(a, b, 'fused matMul');
@@ -137,22 +135,12 @@ function fusedMatMul_({
       // the customOp.
       const dyActivation =
           getFusedDyActivation(reshape(dy, y.shape), y, activation);
-      let aDer: Tensor;
-      let bDer: Tensor;
-
-      if (!transposeA && !transposeB) {
-        aDer = unfusedMatMul(dyActivation, b3D, false, true);
-        bDer = unfusedMatMul(a3D, dyActivation, true, false);
-      } else if (!transposeA && transposeB) {
-        aDer = unfusedMatMul(dyActivation, b3D, false, false);
-        bDer = unfusedMatMul(dyActivation, a3D, true, false);
-      } else if (transposeA && !transposeB) {
-        aDer = unfusedMatMul(b3D, dyActivation, false, true);
-        bDer = unfusedMatMul(a3D, dyActivation, false, false);
-      } else {
-        aDer = unfusedMatMul(b3D, dyActivation, true, true);
-        bDer = unfusedMatMul(dyActivation, a3D, true, true);
-      }
+      const aDer = transposeA ?
+          unfusedMatMul(b3D, dyActivation, transposeB, true) :
+          unfusedMatMul(dyActivation, b3D, false, !transposeB);
+      const bDer = transposeB ?
+          unfusedMatMul(dyActivation, a3D, true, transposeA) :
+          unfusedMatMul(a3D, dyActivation, !transposeA, false);
 
       if (bias != null) {
         const biasDer = getFusedBiasGradient($bias, dyActivation);

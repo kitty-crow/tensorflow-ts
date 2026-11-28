@@ -21,7 +21,7 @@ import {NamedTensor, NamedTensorMap} from '../tensor_types';
 import {TypedArray} from '../types';
 import {requiredNumericEntry, sizeFromShape} from '../util';
 
-import {DTYPE_VALUE_SIZE_MAP, ModelArtifacts, ModelArtifactsInfo, ModelJSON, WeightData, WeightGroup, WeightsManifestConfig, WeightsManifestEntry} from './types';
+import {requiredWeightByteSize, ModelArtifacts, ModelArtifactsInfo, ModelJSON, WeightData, WeightGroup, WeightsManifestConfig, WeightsManifestEntry} from './types';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 import {Tensor} from '../tensor';
 import {backend} from '../globals';
@@ -145,7 +145,7 @@ function getWeightBytelength(spec: WeightsManifestEntry,
   }
   const dtype = 'quantization' in spec ?
       validateWeightQuantization(spec).dtype : spec.dtype;
-  return size * DTYPE_VALUE_SIZE_MAP[dtype];
+  return size * requiredWeightByteSize(dtype, spec.name);
 }
 
 async function getWeightBytelengthAsync(
@@ -165,7 +165,7 @@ async function getWeightBytelengthAsync(
   }
   const dtype = 'quantization' in spec ?
       validateWeightQuantization(spec).dtype : spec.dtype;
-  return size * DTYPE_VALUE_SIZE_MAP[dtype];
+  return size * requiredWeightByteSize(dtype, spec.name);
 }
 
 
@@ -188,7 +188,8 @@ function validateWeightQuantization(spec: WeightsManifestEntry):
         `Weight ${spec.name} with quantization ${dtype} ` +
         `doesn't have corresponding metadata min and scale.`);
   }
-  if (integerQuantization) {
+  if (integerQuantization && typeof min === 'number' &&
+      typeof scale === 'number') {
     return {dtype, min, scale};
   }
   if (dtype === 'float16' && spec.dtype !== 'float32') {
@@ -206,105 +207,87 @@ function validateWeightQuantization(spec: WeightsManifestEntry):
       `'uint8', 'uint16', and 'float16'.`);
 }
 
-function decodeWeight(
-  spec: WeightsManifestEntry,
-  byteBuffer: ArrayBuffer): Tensor {
-
-  const name = spec.name;
-  const dtype = spec.dtype;
-  const shape = spec.shape;
-  const size = sizeFromShape(shape);
-  let values: TypedArray | string[] | Uint8Array[];
-  let offset = 0;
-
-  if ('quantization' in spec) {
-    const quantization = validateWeightQuantization(spec);
-    const quantizationSizeFactor = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
-    const quantizedArray = (quantization.dtype === 'uint8') ?
-      new Uint8Array(byteBuffer) :
-      new Uint16Array(byteBuffer);
-    switch (dtype) {
-      case 'float32': {
-        if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
-          values = new Float32Array(quantizedArray.length);
-          for (let i = 0; i < quantizedArray.length; i++) {
-            const v = requiredNumericEntry(quantizedArray, i);
-            values[i] = v * quantization.scale + quantization.min;
-          }
-        } else {
-          // TODO: This is inefficient. Make getFloat16Decoder efficient.
-          const float16Decode = getFloat16Decoder();
-          values = float16Decode(quantizedArray as Uint16Array);
-        }
-        break;
-      }
-      case 'int32': {
-        if (quantization.dtype !== 'uint8' && quantization.dtype !== 'uint16') {
-          throw new Error(
-            `Unsupported quantization type ${quantization.dtype} ` +
-            `for weight type int32.`);
-        }
-        values = new Int32Array(quantizedArray.length);
-        for (let i = 0; i < quantizedArray.length; i++) {
-          const v = requiredNumericEntry(quantizedArray, i);
-          values[i] = Math.round(v * quantization.scale + quantization.min);
-        }
-        break;
-      }
-      default: {
-        throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
-      }
-    }
-    offset += size * quantizationSizeFactor;
-  } else if (dtype === 'string') {
-    const size = sizeFromShape(spec.shape);
-    values = [];
-    for (let i = 0; i < size; i++) {
-      const byteLength = requiredNumericEntry(new Uint32Array(
-        byteBuffer.slice(offset, offset + NUM_BYTES_STRING_LENGTH)), 0);
-      offset += NUM_BYTES_STRING_LENGTH;
-      const bytes = new Uint8Array(
-        byteBuffer.slice(offset, offset + byteLength));
-      (values as Uint8Array[]).push(bytes);
-      offset += byteLength;
-    }
-  } else {
-    const dtypeFactor = DTYPE_VALUE_SIZE_MAP[dtype];
-    switch (dtype) {
-      case 'float32': {
-        values = new Float32Array(byteBuffer);
-        break;
-      }
-      case 'int32': {
-        values = new Int32Array(byteBuffer);
-        break;
-      }
-      case 'bool': {
-        values = new Uint8Array(byteBuffer);
-        break;
-      }
-      case 'complex64': {
-        values = new Float32Array(byteBuffer);
-        const real = new Float32Array(values.length / 2);
-        const image = new Float32Array(values.length / 2);
-        for (let i = 0; i < real.length; i++) {
-          real[i] = requiredNumericEntry(values, i * 2);
-          image[i] = requiredNumericEntry(values, i * 2 + 1);
-        }
-        const realTensor = tensor(real, shape, 'float32');
-        const imageTensor = tensor(image, shape, 'float32');
-        const complexTensor = complex(realTensor, imageTensor);
-        realTensor.dispose();
-        imageTensor.dispose();
-        return complexTensor;
-      }
-      default: {
-        throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
-      }
-    }
-    offset += size * dtypeFactor;
+/** Decode quantized weights after validating their wire metadata. */
+function decodeQuantizedWeight(
+    spec: WeightsManifestEntry, byteBuffer: ArrayBuffer): Tensor {
+  const quantization = validateWeightQuantization(spec);
+  const quantizedArray = quantization.dtype === 'uint8' ?
+      new Uint8Array(byteBuffer) : new Uint16Array(byteBuffer);
+  if (spec.dtype === 'float32' && quantization.dtype === 'float16') {
+    return tensor(getFloat16Decoder()(quantizedArray as Uint16Array),
+        spec.shape, spec.dtype);
   }
-  return tensor(values, shape, dtype);
+  if (spec.dtype === 'int32' && quantization.dtype === 'float16') {
+    throw new Error(
+        `Unsupported quantization type ${quantization.dtype} ` +
+        'for weight type int32.');
+  }
+  if (spec.dtype !== 'float32' && spec.dtype !== 'int32') {
+    throw new Error(`Unsupported dtype in weight '${spec.name}': ${spec.dtype}`);
+  }
+  if (quantization.dtype === 'float16') {
+    throw new Error(`Unsupported quantization type ${quantization.dtype}.`);
+  }
+  const values = spec.dtype === 'float32' ?
+      new Float32Array(quantizedArray.length) :
+      new Int32Array(quantizedArray.length);
+  for (let i = 0; i < quantizedArray.length; i++) {
+    const value = requiredNumericEntry(quantizedArray, i) *
+        quantization.scale + quantization.min;
+    values[i] = spec.dtype === 'int32' ? Math.round(value) : value;
+  }
+  return tensor(values, spec.shape, spec.dtype);
+}
+
+function decodeStringWeight(
+    spec: WeightsManifestEntry, byteBuffer: ArrayBuffer): Tensor {
+  const size = sizeFromShape(spec.shape);
+  const values: Uint8Array[] = [];
+  let offset = 0;
+  for (let i = 0; i < size; i++) {
+    const byteLength = requiredNumericEntry(new Uint32Array(
+        byteBuffer.slice(offset, offset + NUM_BYTES_STRING_LENGTH)), 0);
+    offset += NUM_BYTES_STRING_LENGTH;
+    values.push(new Uint8Array(byteBuffer.slice(offset, offset + byteLength)));
+    offset += byteLength;
+  }
+  return tensor(values, spec.shape, 'string');
+}
+
+function decodeWeight(
+    spec: WeightsManifestEntry, byteBuffer: ArrayBuffer): Tensor {
+  const {name, dtype, shape} = spec;
+  if ('quantization' in spec) {
+    return decodeQuantizedWeight(spec, byteBuffer);
+  }
+  if (dtype === 'string') {
+    return decodeStringWeight(spec, byteBuffer);
+  }
+  switch (dtype) {
+    case 'float32':
+      return tensor(new Float32Array(byteBuffer), shape, dtype);
+    case 'int32':
+      return tensor(new Int32Array(byteBuffer), shape, dtype);
+    case 'bool':
+      return tensor(new Uint8Array(byteBuffer), shape, dtype);
+    case 'complex64': {
+      const values = new Float32Array(byteBuffer);
+      const real = new Float32Array(values.length / 2);
+      const image = new Float32Array(values.length / 2);
+      for (let i = 0; i < real.length; i++) {
+        real[i] = requiredNumericEntry(values, i * 2);
+        image[i] = requiredNumericEntry(values, i * 2 + 1);
+      }
+      const realTensor = tensor(real, shape, 'float32');
+      const imageTensor = tensor(image, shape, 'float32');
+      const complexTensor = complex(realTensor, imageTensor);
+      realTensor.dispose();
+      imageTensor.dispose();
+      return complexTensor;
+    }
+    default:
+      throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
+  }
 }
 
 async function readToLength(reader: ReadableStreamDefaultReader<ArrayBuffer>,

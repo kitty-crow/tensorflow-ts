@@ -23,7 +23,7 @@ import {requiredKernelEntry} from '../ops/shape_dimension';
 import {CompositeArrayBuffer} from './composite_array_buffer';
 import {decodeWeights} from './io_utils';
 import {monitorPromisesProgress} from './progress';
-import {DTYPE_VALUE_SIZE_MAP, LoadOptions, WeightsManifestConfig, WeightsManifestEntry} from './types';
+import {requiredWeightByteSize, LoadOptions, WeightsManifestConfig, WeightsManifestEntry} from './types';
 
 /**
  * Reads binary weights data from a number of URLs.
@@ -182,7 +182,7 @@ export function weightsLoaderFactory(
           weightsEntry.quantization.dtype :
           weightsEntry.dtype;
 
-        const weightsBytes = DTYPE_VALUE_SIZE_MAP[rawDtype] *
+        const weightsBytes = requiredWeightByteSize(rawDtype, weightsEntry.name) *
           util.sizeFromShape(weightsEntry.shape);
 
         const enqueueWeightsForFetchingFn = () => {
