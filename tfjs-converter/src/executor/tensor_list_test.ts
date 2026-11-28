@@ -15,6 +15,7 @@
  * =============================================================================
  */
 
+import '@tensorflow/tfjs-backend-cpu';
 import {memory, Tensor, tensor2d, tensor3d, test_util} from '@tensorflow/tfjs-core';
 
 import {reserve, scatter, split, TensorList} from './tensor_list';
