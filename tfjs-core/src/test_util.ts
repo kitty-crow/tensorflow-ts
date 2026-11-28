@@ -251,8 +251,7 @@ export function createVideoElement(source: HTMLSourceElement):
     Promise<HTMLVideoElement> {
   const video = document.createElement('video');
   if ('playsInline' in video) {
-    // tslint:disable-next-line:no-any
-    (video as any).playsInline = true;
+    video.playsInline = true;
   }
   video.muted = true;
   video.loop = true;
@@ -271,9 +270,8 @@ export function createVideoElement(source: HTMLSourceElement):
 export async function play(video: HTMLVideoElement) {
   await video.play();
   if ('requestVideoFrameCallback' in video) {
-    await new Promise(resolve => {
-      // tslint:disable-next-line:no-any
-      (video as any).requestVideoFrameCallback(resolve);
+    await new Promise<number>(resolve => {
+      video.requestVideoFrameCallback(resolve);
     });
   }
 }

@@ -16,6 +16,8 @@
  */
 
 import {requireComplexTensorInfos, requireTensorDataValues} from './tensor_data_values';
+import {stringSplitImpl} from './kernels/StringSplit_impl';
+import {sparseSegmentReductionImpl} from './kernels/SparseSegmentReduction_impl';
 import {transpose} from './kernels/Transpose';
 import {unpack} from './kernels/Unpack';
 import {splitV} from './kernels/SplitV';
@@ -1079,5 +1081,38 @@ describe('CPU multidimensional matrix batches and required tensor entries', () =
     const indices = buffer([1, 2], 'int32', new Int32Array([1, 0]));
     expect(gatherV2Impl(x, indices, [1, 1, 2, 1]).values)
         .toEqual(new Int32Array([4, 0]));
+  });
+});
+
+describe('string split and sparse segment branch regressions', () => {
+  it('preserves empty token policy for single and multiple delimiters', () => {
+    const input = [new Uint8Array([44, 97, 44, 44, 98, 44])];
+    for (const delimiter of [new Uint8Array([44]), new Uint8Array([44, 59])]) {
+      const [indices, tokens, shape] = stringSplitImpl(input, delimiter, false);
+      expect(Array.from(indices)).toEqual([0, 0, 0, 1, 0, 2, 0, 3, 0, 4]);
+      expect(tokens.map(token => Array.from(token))).toEqual([[], [97], [], [98], []]);
+      expect(shape).toEqual([1, 5]);
+      const [nonemptyIndices, nonemptyTokens, nonemptyShape] =
+          stringSplitImpl(input, delimiter, true);
+      expect(Array.from(nonemptyIndices)).toEqual([0, 0, 0, 1]);
+      expect(nonemptyTokens.map(token => Array.from(token))).toEqual([[97], [98]]);
+      expect(nonemptyShape).toEqual([1, 2]);
+    }
+  });
+
+  it('retains empty, repeated and gapped sparse segment behaviour', () => {
+    const input = new Float32Array([2, 4, 8]);
+    const [empty, emptyShape] = sparseSegmentReductionImpl(
+        input, [3, 1], 'float32', new Int32Array(0), new Int32Array(0), false, 7);
+    expect(Array.from(empty)).toEqual([]);
+    expect(emptyShape).toEqual([0, 1]);
+    const [values, shape] = sparseSegmentReductionImpl(
+        input, [3, 1], 'float32', new Int32Array([0, 1, 2]),
+        new Int32Array([0, 0, 2]), true, 7);
+    expect(Array.from(values)).toEqual([3, 7, 8]);
+    expect(shape).toEqual([3, 1]);
+    expect(() => sparseSegmentReductionImpl(
+        input, [3, 1], 'float32', new Int32Array([0, 1, 2]),
+        new Int32Array([1, 0, 2]))).toThrowError();
   });
 });

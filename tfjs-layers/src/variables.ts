@@ -97,11 +97,12 @@ export class LayerVariable {
     this.assertNotDisposed();
     checkShapesMatch(this.val, newVal);
     // Skip updating if this is the exact same tensor.
-    if (this.val.id !== newVal.id) {
-      this.val.assign(newVal);
-      if (this.constraint != null) {
-        this.val.assign(this.constraint.apply(this.val));
-      }
+    if (this.val.id === newVal.id) {
+      return this;
+    }
+    this.val.assign(newVal);
+    if (this.constraint != null) {
+      this.val.assign(this.constraint.apply(this.val));
     }
     return this;
   }

@@ -206,14 +206,12 @@ function getInputSamplingSnippet(
 
   const inShape = inInfo.shapeInfo.logicalShape;
   const outShape = outShapeInfo.logicalShape;
-  if (inShape.length <= outShape.length) {
-    if (usesPackedTextures) {
-      res += getPackedSamplerAtOutputCoords(inInfo, outShapeInfo);
-    } else {
-      res += getSamplerAtOutputCoords(inInfo, outShapeInfo);
-    }
+  if (inShape.length > outShape.length) {
+    return res;
   }
-  return res;
+  return res + (usesPackedTextures ?
+      getPackedSamplerAtOutputCoords(inInfo, outShapeInfo) :
+      getSamplerAtOutputCoords(inInfo, outShapeInfo));
 }
 
 function getPackedOutputSamplingSnippet(

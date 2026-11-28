@@ -75,8 +75,7 @@ function eye_(
   }
   throw new Error(
         `eye() currently supports only 1D and 2D ` +
-        // tslint:disable-next-line:no-any
-        `batchShapes, but received ${(batchShape as any).length}D.`);
+        `batchShapes, but received ${batchShape.length}D.`);
 
 }
 

@@ -139,11 +139,14 @@ class BrowserFiles implements IOHandler {
   async load(): Promise<ModelArtifacts> {
     return new Promise((resolve, reject) => {
       const jsonReader = new FileReader();
-      jsonReader.onload = (event: Event) => {
+      jsonReader.onload = () => {
         let modelJSON: ModelJSON;
         try {
-          // tslint:disable-next-line:no-any
-          modelJSON = JSON.parse((event.target as any).result);
+          const jsonText = jsonReader.result;
+          if (typeof jsonText !== 'string') {
+            throw new Error('Expected model JSON text.');
+          }
+          modelJSON = JSON.parse(jsonText);
         } catch {
           reject(new Error(`Failed to parse file ${
             this.jsonFile.name}: {e.message}`));
@@ -205,9 +208,12 @@ class BrowserFiles implements IOHandler {
   private loadWeightsFile(path: string, file: File): Promise<ArrayBuffer> {
     return new Promise((resolve, reject) => {
       const weightFileReader = new FileReader();
-      weightFileReader.onload = (event: Event) => {
-        // tslint:disable-next-line:no-any
-        const weightData = (event.target as any).result as ArrayBuffer;
+      weightFileReader.onload = () => {
+        const weightData = weightFileReader.result;
+        if (!(weightData instanceof ArrayBuffer)) {
+          reject(new Error(`Expected binary weights for file '${path}'.`));
+          return;
+        }
         resolve(weightData);
       };
       weightFileReader.onerror = error =>

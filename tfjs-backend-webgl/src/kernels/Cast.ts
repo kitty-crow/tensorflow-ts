@@ -34,11 +34,10 @@ export function cast(
   const {dtype} = attrs;
 
   // Casting to complex64.
+  if (dtype === 'complex64' && x.dtype === 'complex64') {
+    return identity({inputs: {x}, backend});
+  }
   if (dtype === 'complex64') {
-    if (x.dtype === 'complex64') {
-      return identity({inputs: {x}, backend});
-    }
-
     // TODO(annxingyuan): Import kernel function once zeros is modularized.
     const zerosTensor = tf.zeros(x.shape);
     const floatX = cast({inputs: {x}, backend, attrs: {dtype: 'float32'}});

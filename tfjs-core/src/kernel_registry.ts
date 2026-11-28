@@ -162,12 +162,10 @@ export function registerKernel(config: KernelConfig) {
 export function registerGradient(config: GradConfig) {
   const {kernelName} = config;
 
-  if (gradRegistry.has(kernelName)) {
-    // TODO (yassogba) after 3.0 assess whether we need to keep this gated
-    // to debug mode.
-    if (env().getBool('DEBUG')) {
-      log.warn(`Overriding the gradient for '${kernelName}'`);
-    }
+  // TODO (yassogba) after 3.0 assess whether we need to keep this gated
+  // to debug mode.
+  if (gradRegistry.has(kernelName) && env().getBool('DEBUG')) {
+    log.warn(`Overriding the gradient for '${kernelName}'`);
   }
   gradRegistry.set(kernelName, config);
 }

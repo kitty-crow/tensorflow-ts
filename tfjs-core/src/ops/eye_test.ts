@@ -76,6 +76,11 @@ describeWithFlags('eye', ALL_ENVS, () => {
     ]);
   });
 
+  it('retains the unsupported batch rank in the error', () => {
+    expect(() => tf.eye(2, 2, [1, 1, 1, 1]))
+        .toThrowError(/batchShapes, but received 4D/);
+  });
+
   it('3x3, int32', async () => {
     const r = tf.eye(3, 3, null, 'int32');
     expect(r.dtype).toBe('int32');

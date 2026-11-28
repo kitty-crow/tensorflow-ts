@@ -29,13 +29,14 @@ export class AdapterInfo {
   }
 
   private getIntelGPUGeneration() {
-    if (this.isIntel()) {
-      if (this.architecture.startsWith('gen')) {
-        return Number(this.architecture.match(/\d+/));
-      }
-      if (this.architecture.startsWith('xe')) {
-        return 12;
-      }
+    if (!this.isIntel()) {
+      return 0;
+    }
+    if (this.architecture.startsWith('gen')) {
+      return Number(this.architecture.match(/\d+/));
+    }
+    if (this.architecture.startsWith('xe')) {
+      return 12;
     }
     return 0;
   }

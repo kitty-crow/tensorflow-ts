@@ -389,24 +389,16 @@ describe('tensorBoard callback', () => {
     const trainCallArgs = trainWriterScalarSpy.calls.allArgs();
     // Assert that the epoch numbers used to log the epoch-end loss and metric
     // reflect initialEpoch.
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 0), 0)).toEqual('epoch_loss');
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 0), 2)).toEqual(3);
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 1), 0)).toEqual('epoch_MAE');
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 1), 2)).toEqual(3);
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 2), 0)).toEqual('epoch_loss');
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 2), 2)).toEqual(4);
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 3), 0)).toEqual('epoch_MAE');
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(trainCallArgs, 3), 2)).toEqual(4);
+    expect(trainCallArgs.map(([name, , step]) => ({name, step}))).toEqual([
+        {name: 'epoch_loss', step: 3}, {name: 'epoch_MAE', step: 3},
+        {name: 'epoch_loss', step: 4}, {name: 'epoch_MAE', step: 4}
+      ]);
     expect(valWriterScalarSpy).toHaveBeenCalledTimes(4);
     const valCallArgs = valWriterScalarSpy.calls.allArgs();
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 0), 0)).toEqual('epoch_loss');
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 0), 2)).toEqual(3);
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 1), 0)).toEqual('epoch_MAE');
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 1), 2)).toEqual(3);
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 2), 0)).toEqual('epoch_loss');
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 2), 2)).toEqual(4);
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 3), 0)).toEqual('epoch_MAE');
-    expect(tf.test_util.requiredTestElement(tf.test_util.requiredTestElement(valCallArgs, 3), 2)).toEqual(4);
+    expect(valCallArgs.map(([name, , step]) => ({name, step}))).toEqual([
+        {name: 'epoch_loss', step: 3}, {name: 'epoch_MAE', step: 3},
+        {name: 'epoch_loss', step: 4}, {name: 'epoch_MAE', step: 4}
+      ]);
   });
 
   it('fit(): histogramFreq 2, with validation', async () => {

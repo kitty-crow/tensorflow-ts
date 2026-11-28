@@ -226,9 +226,8 @@ function isNonEmptyPixels(pixels: PixelData|ImageData|HTMLImageElement|
   return pixels != null && pixels.width !== 0 && pixels.height !== 0;
 }
 
-function canWrapPixelsToImageBitmap(pixels: PixelData|ImageData|
-                                    HTMLImageElement|HTMLCanvasElement|
-                                    HTMLVideoElement|ImageBitmap) {
+function canWrapPixelsToImageBitmap(pixels: PixelSource):
+    pixels is Exclude<PixelSource, PixelData|ImageBitmap> {
   return isImageBitmapFullySupported() && !(pixels instanceof ImageBitmap) &&
       isNonEmptyPixels(pixels) && !isPixelData(pixels);
 }
@@ -272,15 +271,14 @@ export async function fromPixelsAsync(
       canWrapPixelsToImageBitmap(pixels)) {
     // Force the imageBitmap creation to not do any premultiply alpha
     // ops.
-    let imageBitmap;
+    let imageBitmap: ImageBitmap;
 
     try {
       // wrap in try-catch block, because createImageBitmap may not work
       // properly in some browsers, e.g.
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1335594
-      // tslint:disable-next-line: no-any
-      imageBitmap = await (createImageBitmap as any)(
-          pixels as ImageBitmapSource, {premultiplyAlpha: 'none'});
+      imageBitmap = await createImageBitmap(
+          pixels, {premultiplyAlpha: 'none'});
     } catch (e) {
       imageBitmap = null;
     }

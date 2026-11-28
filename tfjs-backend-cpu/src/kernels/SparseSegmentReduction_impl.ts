@@ -49,9 +49,7 @@ export function sparseSegmentReductionImpl(
   // Note that we do not initialize the output buffer with a default value, so
   // we need to explicitly set missing indices to the default value.
   if (numIndices === 0) {
-    if (outputRows > 0) {
-      output.fill(defaultValue);
-    }
+    // No segment IDs means outputRows is zero, so there is nothing to fill.
     return [output, outputShape];
   }
 
@@ -66,19 +64,16 @@ export function sparseSegmentReductionImpl(
   let outIndex = requiredCpuEntry(segmentIds, start);
 
   while (true) {
-    // We initialize nextIndex to 0 to avoid may be uninitialized warning
-    let nextIndex = 0;
-    if (end < numIndices) {
-      nextIndex = requiredCpuEntry(segmentIds, end);
-      if (outIndex === nextIndex) {
-        ++end;
-        continue;
-      }
-      // We have a new segment here.  Verify that the segment ids are growing.
-      if (outIndex >= nextIndex) {
-        throw new Error(backend_util
-            .getSparseSegmentReductionNonIncreasingSegmentIdsErrorMessage());
-      }
+    const hasNext = end < numIndices;
+    const nextIndex = hasNext ? requiredCpuEntry(segmentIds, end) : 0;
+    if (hasNext && outIndex === nextIndex) {
+      ++end;
+      continue;
+    }
+    // We have a new segment here. Verify that the segment ids are growing.
+    if (hasNext && outIndex >= nextIndex) {
+      throw new Error(backend_util
+          .getSparseSegmentReductionNonIncreasingSegmentIdsErrorMessage());
     }
 
     if (outIndex < 0 || outIndex >= outputRows) {

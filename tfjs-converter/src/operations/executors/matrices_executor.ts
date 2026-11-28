@@ -63,16 +63,14 @@ export const executeOp: InternalOpExecutor =
               getParamValue('leakyreluAlpha', node, tensorMap, context) as
               number;
 
-          if (isBiasAdd) {
-            if (isPrelu && numArgs !== 2) {
-              throw new Error(
-                  'Fused MatMul with BiasAdd and Prelu must have two ' +
-                  'extra arguments: bias and alpha.');
-            }
-            if (!isPrelu && numArgs !== 1) {
-              throw new Error(
-                  'Fused MatMul with BiasAdd must have one extra argument: bias.');
-            }
+          if (isBiasAdd && isPrelu && numArgs !== 2) {
+            throw new Error(
+                'Fused MatMul with BiasAdd and Prelu must have two ' +
+                'extra arguments: bias and alpha.');
+          }
+          if (isBiasAdd && !isPrelu && numArgs !== 1) {
+            throw new Error(
+                'Fused MatMul with BiasAdd must have one extra argument: bias.');
           }
           const [biasArg, preluArg] =
               getParamValue('args', node, tensorMap, context) as Tensor[];

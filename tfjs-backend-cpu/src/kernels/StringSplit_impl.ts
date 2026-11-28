@@ -18,6 +18,14 @@
 import {TypedArray, util} from '@tensorflow/tfjs-core';
 import {requiredCpuEntry} from '../cpu_util';
 
+/** Keep empty tokens only when requested, for either delimiter path. */
+function appendToken(
+    result: Uint8Array[], token: Uint8Array, skipEmpty: boolean): void {
+  if (!skipEmpty || token.length !== 0) {
+    result.push(token);
+  }
+}
+
 function split(
     str: Uint8Array, delimiters: Uint8Array, skipEmpty: boolean,
     result: Uint8Array[]): void {
@@ -37,15 +45,11 @@ function split(
     let f = str.indexOf(delimiter);
     while (f !== -1) {
       const token = str.subarray(0, f);
-      if (!skipEmpty || token.length !== 0) {
-        result.push(token);
-      }
+      appendToken(result, token, skipEmpty);
       str = str.subarray(f + 1);
       f = str.indexOf(delimiter);
     }
-    if (!skipEmpty || str.length !== 0) {
-      result.push(str);
-    }
+    appendToken(result, str, skipEmpty);
     return;
   }
   // When there are multiple delimiters, the input is split at every instance
@@ -55,9 +59,7 @@ function split(
     if (!((i === str.length) || (delimiters.indexOf(requiredCpuEntry(str, i)) !== -1))) continue;
     {
       const token = str.subarray(tokenStart, i);
-      if (!skipEmpty || token.length !== 0) {
-        result.push(token);
-      }
+      appendToken(result, token, skipEmpty);
       tokenStart = i + 1;
     }
   }

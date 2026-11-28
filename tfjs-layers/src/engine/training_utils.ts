@@ -38,23 +38,21 @@ function standardizeSampleOrClassWeights(
   if (xWeight == null || (Array.isArray(xWeight) && xWeight.length === 0)) {
     return outputNames.map(name => null);
   }
+  if (numOutputs === 1 && Array.isArray(xWeight) && xWeight.length === 1) {
+    return xWeight;
+  }
   if (numOutputs === 1) {
-    if (Array.isArray(xWeight) && xWeight.length === 1) {
-      return xWeight;
-    }
-    if (typeof xWeight === 'object' && outputNames[0] in xWeight) {
-      return [(xWeight as ClassWeightMap)[outputNames[0]]];
-    } else {
-      return [xWeight as ClassWeight];
-    }
+    return typeof xWeight === 'object' && outputNames[0] in xWeight ?
+        [(xWeight as ClassWeightMap)[outputNames[0]]] :
+        [xWeight as ClassWeight];
+  }
+  if (Array.isArray(xWeight) && xWeight.length !== numOutputs) {
+    throw new Error(
+        `Provided ${weightType} is an array of ${xWeight.length} ` +
+        `element(s), but the model has ${numOutputs} outputs. ` +
+        `Make sure a set of weights is provided for each model output.`);
   }
   if (Array.isArray(xWeight)) {
-    if (xWeight.length !== numOutputs) {
-      throw new Error(
-          `Provided ${weightType} is an array of ${xWeight.length} ` +
-          `element(s), but the model has ${numOutputs} outputs. ` +
-          `Make sure a set of weights is provided for each model output.`);
-    }
     return xWeight;
   }
   if (

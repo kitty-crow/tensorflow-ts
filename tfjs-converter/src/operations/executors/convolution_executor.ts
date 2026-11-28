@@ -48,17 +48,15 @@ function fusedConvAndDepthWiseParams(
 
   const numArgs =
       (getParamValue('numArgs', node, tensorMap, context) as number);
-  if (isBiasAdd) {
-    if (isPrelu && numArgs !== 2) {
-      throw new Error(
-          'FusedConv2d and DepthwiseConv2d with BiasAdd and Prelu ' +
-          'must have two extra arguments: bias and alpha.');
-    }
-    if (!isPrelu && isBiasAdd && numArgs !== 1) {
-      throw new Error(
-          'FusedConv2d and DepthwiseConv2d with BiasAdd must have ' +
-          'one extra argument: bias.');
-    }
+  if (isBiasAdd && isPrelu && numArgs !== 2) {
+    throw new Error(
+        'FusedConv2d and DepthwiseConv2d with BiasAdd and Prelu ' +
+        'must have two extra arguments: bias and alpha.');
+  }
+  if (isBiasAdd && !isPrelu && numArgs !== 1) {
+    throw new Error(
+        'FusedConv2d and DepthwiseConv2d with BiasAdd must have ' +
+        'one extra argument: bias.');
   }
   if (isBatchNorm) {
     throw new Error(
