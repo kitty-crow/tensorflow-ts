@@ -262,18 +262,18 @@ function standardizeDataIteratorOutput(
     tfc.util.assert(
         requiredElement(requiredElement(flattenedXs, xIndex).shape, 0) === batchSize,
         () => `Batch size mismatch: input ` +
-            `${model.inputNames[xIndex]} has ${
+            `${requiredElement(model.inputNames, xIndex)} has ${
                   requiredElement(requiredElement(flattenedXs, xIndex).shape, 0)}; ` +
-            `expected  ${batchSize} based on input ${model.inputNames[0]}.`);
+            `expected  ${batchSize} based on input ${requiredElement(model.inputNames, 0)}.`);
   }
 
   for (let yIndex = 0; yIndex < flattenedYs.length; yIndex++) {
     tfc.util.assert(
         requiredElement(requiredElement(flattenedYs, yIndex).shape, 0) === batchSize,
         () => `Batch size mismatch: output ` +
-            `${model.outputNames[yIndex]} has ${
+            `${requiredElement(model.outputNames, yIndex)} has ${
                   requiredElement(requiredElement(flattenedYs, yIndex).shape, 0)}; ` +
-            `expected  ${batchSize} based on input ${model.inputNames[0]}.`);
+            `expected  ${batchSize} based on input ${requiredElement(model.inputNames, 0)}.`);
   }
 
   return {xs: flattenedXs, ys: flattenedYs};
@@ -635,7 +635,7 @@ async function resolveDatasetSampleWeights(
   }
   const standardClassWeights = standardizeClassWeights(classWeight, outputNames);
   for (let i = 0; i < standardClassWeights.length; ++i) {
-    sampleWeights.push(await standardizeWeights(requiredElement(ys, i), null, standardClassWeights[i]));
+    sampleWeights.push(await standardizeWeights(requiredElement(ys, i), null, requiredElement(standardClassWeights, i)));
   }
   return sampleWeights;
 }

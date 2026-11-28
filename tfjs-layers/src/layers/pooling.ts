@@ -150,6 +150,38 @@ export declare interface Pooling1DLayerArgs extends LayerArgs {
   padding?: PaddingMode;
 }
 
+/** Normalize a one-dimensional pooling argument without changing tuple identity. */
+function pooling1DSize(value: number|[number], property: string): [number] {
+  if (typeof value === 'number') {
+    return [value];
+  }
+  if (Array.isArray(value) && value.length === 1 &&
+      typeof value[0] === 'number') {
+    return value;
+  }
+  throw new ValueError(
+      `${property} for 1D convolutional layer must be a number or an ` +
+      `Array of a single number, but received ${JSON.stringify(value)}`);
+}
+
+/** Normalize multidimensional strides and retain the configured tuple. */
+function poolingStrides<T extends number[]>(
+    value: number|T, poolSize: T, rank: number, expand: (size: number) => T): T {
+  if (value == null) {
+    return poolSize;
+  }
+  if (!Array.isArray(value)) {
+    return expand(value);
+  }
+  if (value.length !== rank) {
+    throw new ValueError(
+        `If the strides property of a ${rank}D pooling layer is an Array, ` +
+        `it is expected to have a length of ${rank}, but received length ` +
+        `${value.length}.`);
+  }
+  return value;
+}
+
 /**
  * Abstract class for different pooling 1D layers.
  */
@@ -165,41 +197,13 @@ export abstract class Pooling1D extends Layer {
    * config.poolSize defaults to 2.
    */
   constructor(args: Pooling1DLayerArgs) {
-    if (args.poolSize == null) {
-      args.poolSize = 2;
-    }
+    args.poolSize ??= 2;
     super(args);
-    if (typeof args.poolSize === 'number') {
-      this.poolSize = [args.poolSize];
-    } else if (
-        Array.isArray(args.poolSize) &&
-        (args.poolSize as number[]).length === 1 &&
-        typeof (args.poolSize as number[])[0] === 'number') {
-      this.poolSize = args.poolSize;
-    } else {
-      throw new ValueError(
-          `poolSize for 1D convolutional layer must be a number or an ` +
-          `Array of a single number, but received ` +
-          `${JSON.stringify(args.poolSize)}`);
-    }
+    this.poolSize = pooling1DSize(args.poolSize, 'poolSize');
     assertPositiveInteger(this.poolSize, 'poolSize');
-    if (args.strides == null) {
-      this.strides = this.poolSize;
-    } else {
-      if (typeof args.strides === 'number') {
-        this.strides = [args.strides];
-      } else if (
-          Array.isArray(args.strides) &&
-          (args.strides as number[]).length === 1 &&
-          typeof (args.strides as number[])[0] === 'number') {
-        this.strides = args.strides;
-      } else {
-        throw new ValueError(
-            `strides for 1D convolutional layer must be a number or an ` +
-            `Array of a single number, but received ` +
-            `${JSON.stringify(args.strides)}`);
-      }
-    }
+    const strides = args.strides;
+    this.strides = strides == null ?
+        this.poolSize : pooling1DSize(strides, 'strides');
     assertPositiveInteger(this.strides, 'strides');
 
     this.padding = args.padding ?? 'valid';
@@ -322,27 +326,13 @@ export abstract class Pooling2D extends Layer {
   protected readonly dataFormat: DataFormat;
 
   constructor(args: Pooling2DLayerArgs) {
-    if (args.poolSize == null) {
-      args.poolSize = [2, 2];
-    }
+    args.poolSize ??= [2, 2];
     super(args);
-    this.poolSize = Array.isArray(args.poolSize) ?
-        args.poolSize :
-        [args.poolSize, args.poolSize];
-    if (args.strides == null) {
-      this.strides = this.poolSize;
-    } else if (Array.isArray(args.strides)) {
-      if (args.strides.length !== 2) {
-        throw new ValueError(
-            `If the strides property of a 2D pooling layer is an Array, ` +
-            `it is expected to have a length of 2, but received length ` +
-            `${args.strides.length}.`);
-      }
-      this.strides = args.strides;
-    } else {
-      // `config.strides` is a number.
-      this.strides = [args.strides, args.strides];
-    }
+    const poolSize = args.poolSize;
+    this.poolSize = Array.isArray(poolSize) ?
+        poolSize : [poolSize, poolSize];
+    this.strides = poolingStrides(
+        args.strides ?? null, this.poolSize, 2, size => [size, size]);
     assertPositiveInteger(this.poolSize, 'poolSize');
     assertPositiveInteger(this.strides, 'strides');
     this.padding = args.padding ?? 'valid';
@@ -476,27 +466,13 @@ export abstract class Pooling3D extends Layer {
   protected readonly dataFormat: DataFormat;
 
   constructor(args: Pooling3DLayerArgs) {
-    if (args.poolSize == null) {
-      args.poolSize = [2, 2, 2];
-    }
+    args.poolSize ??= [2, 2, 2];
     super(args);
-    this.poolSize = Array.isArray(args.poolSize) ?
-        args.poolSize :
-        [args.poolSize, args.poolSize, args.poolSize];
-    if (args.strides == null) {
-      this.strides = this.poolSize;
-    } else if (Array.isArray(args.strides)) {
-      if (args.strides.length !== 3) {
-        throw new ValueError(
-            `If the strides property of a 3D pooling layer is an Array, ` +
-            `it is expected to have a length of 3, but received length ` +
-            `${args.strides.length}.`);
-      }
-      this.strides = args.strides;
-    } else {
-      // `config.strides` is a number.
-      this.strides = [args.strides, args.strides, args.strides];
-    }
+    const poolSize = args.poolSize;
+    this.poolSize = Array.isArray(poolSize) ?
+        poolSize : [poolSize, poolSize, poolSize];
+    this.strides = poolingStrides(
+        args.strides ?? null, this.poolSize, 3, size => [size, size, size]);
     assertPositiveInteger(this.poolSize, 'poolSize');
     assertPositiveInteger(this.strides, 'strides');
     this.padding = args.padding ?? 'valid';

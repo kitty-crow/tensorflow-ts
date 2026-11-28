@@ -23,6 +23,7 @@ import {InputSpec, Layer, LayerArgs} from '../engine/topology';
 import {ValueError} from '../errors';
 import {DataFormat, Shape} from '../keras_format/common';
 import {Kwargs} from '../types';
+import {requiredElement} from '../utils/generic_utils';
 import {getExactlyOneShape, getExactlyOneTensor} from '../utils/types_utils';
 
 /**
@@ -130,6 +131,47 @@ export declare interface ZeroPadding2DLayerArgs extends LayerArgs {
   dataFormat?: DataFormat;
 }
 
+/** Normalize the three supported padding representations. */
+function normalizeZeroPadding2D(
+    padding: number|[number, number]|[[number, number], [number, number]]):
+    [[number, number], [number, number]] {
+  if (padding == null) {
+    return [[1, 1], [1, 1]];
+  }
+  if (typeof padding === 'number') {
+    return [[padding, padding], [padding, padding]];
+  }
+  if (padding.length !== 2) {
+    throw new ValueError(
+        `ZeroPadding2D expects padding to be a length-2 array, but ` +
+        `received a length-${padding.length} array.`);
+  }
+  const [height, width] = padding;
+  if (typeof height === 'number' && typeof width === 'number') {
+    return [[height, height], [width, width]];
+  }
+  if (!Array.isArray(height) || !Array.isArray(width)) {
+    throw new ValueError('ZeroPadding2D expects two numbers or two padding arrays.');
+  }
+  if (height.length !== 2) {
+    throw new ValueError(
+        `ZeroPadding2D expects height padding to be a length-2 array, ` +
+        `but received a length-${height.length} array.`);
+  }
+  if (width.length !== 2) {
+    throw new ValueError(
+        `ZeroPadding2D expects width padding to be a length-2 array, ` +
+        `but received a length-${width.length} array.`);
+  }
+  return [height, width];
+}
+
+/** Preserve unknown symbolic dimensions when applying spatial padding. */
+function paddedDimension(dimension: number, padding: [number, number]): number {
+  return dimension != null && dimension >= 0 ?
+      dimension + padding[0] + padding[1] : null;
+}
+
 export class ZeroPadding2D extends Layer {
   /** @nocollapse */
   static className = 'ZeroPadding2D';
@@ -142,81 +184,24 @@ export class ZeroPadding2D extends Layer {
     }
     super(args);
 
-    this.dataFormat =
-        args.dataFormat == null ? imageDataFormat() : args.dataFormat;
-    // TODO(cais): Maybe refactor the following logic surrounding `padding`
-    //   into a helper method.
-    if (args.padding == null) {
-      this.padding = [[1, 1], [1, 1]];
-    } else if (typeof args.padding === 'number') {
-      this.padding =
-          [[args.padding, args.padding], [args.padding, args.padding]];
-    } else {
-      args.padding = args.padding;
-      if (args.padding.length !== 2) {
-        throw new ValueError(
-            `ZeroPadding2D expects padding to be a length-2 array, but ` +
-            `received a length-${args.padding.length} array.`);
-      }
-
-      let heightPadding: [number, number];
-      let widthPadding: [number, number];
-      if (typeof args.padding[0] === 'number') {
-        heightPadding = [args.padding[0], args.padding[0]];
-        widthPadding = [args.padding[1] as number, args.padding[1] as number];
-      } else {
-        args.padding = args.padding as [[number, number], [number, number]];
-
-        if (args.padding[0].length !== 2) {
-          throw new ValueError(
-              `ZeroPadding2D expects height padding to be a length-2 array, ` +
-              `but received a length-${args.padding[0].length} array.`);
-        }
-        heightPadding = args.padding[0] as [number, number];
-
-        if (args.padding[1].length !== 2) {
-          throw new ValueError(
-              `ZeroPadding2D expects width padding to be a length-2 array, ` +
-              `but received a length-${args.padding[1].length} array.`);
-        }
-        widthPadding = args.padding[1] as [number, number];
-      }
-      this.padding = [heightPadding, widthPadding];
-    }
+    this.dataFormat = args.dataFormat ?? imageDataFormat();
+    this.padding = normalizeZeroPadding2D(args.padding ?? null);
     this.inputSpec = [new InputSpec({ndim: 4})];
   }
 
   override computeOutputShape(inputShape: Shape|Shape[]): Shape|Shape[] {
     inputShape = getExactlyOneShape(inputShape);
 
-    let rows: number;
-    let cols: number;
-    if (!(this.dataFormat === 'channelsFirst')) {
-      if (inputShape[1] != null && inputShape[1] >= 0) {
-        rows = inputShape[1] + this.padding[0][0] + this.padding[0][1];
-      } else {
-        rows = null;
-      }
-      if (inputShape[2] != null && inputShape[2] >= 0) {
-        cols = inputShape[2] + this.padding[1][0] + this.padding[1][1];
-      } else {
-        cols = null;
-      }
-      return [inputShape[0], rows, cols, inputShape[3]];
+    const batch = requiredElement(inputShape, 0);
+    if (this.dataFormat === 'channelsFirst') {
+      const channels = requiredElement(inputShape, 1);
+      const rows = paddedDimension(inputShape[2] ?? null, this.padding[0]);
+      const cols = paddedDimension(inputShape[3] ?? null, this.padding[1]);
+      return [batch, channels, rows, cols];
     }
-    {
-      if (inputShape[2] != null && inputShape[2] >= 0) {
-        rows = inputShape[2] + this.padding[0][0] + this.padding[0][1];
-      } else {
-        rows = null;
-      }
-      if (inputShape[3] != null && inputShape[3] >= 0) {
-        cols = inputShape[3] + this.padding[1][0] + this.padding[1][1];
-      } else {
-        cols = null;
-      }
-      return [inputShape[0], inputShape[1], rows, cols];
-    }
+    const rows = paddedDimension(inputShape[1] ?? null, this.padding[0]);
+    const cols = paddedDimension(inputShape[2] ?? null, this.padding[1]);
+    return [batch, rows, cols, requiredElement(inputShape, 3)];
   }
 
   override call(inputs: Tensor|Tensor[], kwargs: Kwargs): Tensor|Tensor[] {

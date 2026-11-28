@@ -24,6 +24,8 @@ import {ReLULayerConfig} from '../keras_format/layers/advanced_activation_serial
 import {LayerMetadata} from '../keras_format/topology_config';
 import {ReLU} from '../layers/advanced_activations';
 import {Dropout} from '../layers/core';
+import {MaxPooling1D, MaxPooling2D, MaxPooling3D} from '../layers/pooling';
+import {ZeroPadding2D} from '../layers/padding';
 import {TimeDistributed} from '../layers/wrappers';
 import {LayerNormalization} from '../layers/normalization';
 import {LSTMCell, SimpleRNNCell, StackedRNNCells, standardizeArgs} from '../layers/recurrent';
@@ -494,5 +496,36 @@ describe('single-read configuration defaults', () => {
     expect(reads).toBe(1);
     expect(requiredEntry(initializer.getConfig(), 'gain')).toBe(0);
     expect(requiredEntry(new Identity({}).getConfig(), 'gain')).toBe(1);
+  });
+});
+
+describe('pooling and padding shape contracts', () => {
+  it('preserves pooling stride defaults and explicit tuple identity', () => {
+    const pool: [number, number] = [2, 3];
+    const stride: [number, number, number] = [1, 2, 3];
+    const one = new MaxPooling1D({poolSize: 3});
+    const two = new MaxPooling2D({poolSize: pool});
+    const three = new MaxPooling3D({poolSize: 2, strides: stride});
+    expect(one.getConfig().strides).toEqual([3]);
+    expect(two.getConfig().poolSize).toBe(pool);
+    expect(two.getConfig().strides).toBe(pool);
+    expect(three.getConfig().strides).toBe(stride);
+    expect(three.getConfig().poolSize).toEqual([2, 2, 2]);
+    expect(() => new MaxPooling1D({strides: 0})).toThrowError();
+    expect(() => new MaxPooling2D({poolSize: 0})).toThrowError();
+    expect(() => new MaxPooling3D({strides: 0})).toThrowError();
+  });
+
+  it('normalizes padding and preserves unknown spatial dimensions', () => {
+    expect(new ZeroPadding2D().padding).toEqual([[1, 1], [1, 1]]);
+    expect(new ZeroPadding2D({padding: 0}).padding).toEqual([[0, 0], [0, 0]]);
+    const layer = new ZeroPadding2D({padding: [2, 3]});
+    expect(layer.computeOutputShape([null, 4, -1, 2]))
+        .toEqual([null, 8, null, 2]);
+    const first = new ZeroPadding2D({
+      padding: [[1, 2], [3, 4]], dataFormat: 'channelsFirst'
+    });
+    expect(first.computeOutputShape([null, 2, 4, null]))
+        .toEqual([null, 2, 7, null]);
   });
 });

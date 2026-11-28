@@ -28,7 +28,7 @@ import * as Metrics from '../metrics';
 import * as optimizers from '../optimizers';
 import {LossOrMetricFn, NamedTensor} from '../types';
 import {checkUserDefinedMetadata} from '../user_defined_metadata';
-import {count, pyListRepeat, requiredElement, singletonOrArray, toCamelCase, toSnakeCase, unique} from '../utils/generic_utils';
+import {count, pyListRepeat, requiredElement, requiredEntry, singletonOrArray, toCamelCase, toSnakeCase, unique} from '../utils/generic_utils';
 import {printSummary} from '../utils/layer_utils';
 import {range} from '../utils/math_utils';
 import {convertPythonicToTs} from '../utils/serialization_utils';
@@ -259,7 +259,7 @@ export function checkArrayLengths(
   if (setX.length > 0 && setY.length > 0 && !util.arraysEqual(setX, setY)) {
     throw new ValueError(
         `Input Tensors should have the same number of samples as target ` +
-        `Tensors. Found ${setX[0]} input sample(s) and ${setY[0]} target ` +
+        `Tensors. Found ${requiredElement(setX, 0)} input sample(s) and ${requiredElement(setY, 0)} target ` +
         `sample(s).`);
   }
 }
@@ -283,7 +283,6 @@ function checkLossAndTargetCompatibility(
   for (let i = 0; i < targets.length; ++i) {
     const y = requiredElement(targets, i);
     const loss = lossFns[i];
-    const shape = outputShapes[i];
     if (loss == null) {
       continue;
     }
@@ -297,6 +296,7 @@ function checkLossAndTargetCompatibility(
       }
     if (!(keyLosses.indexOf(loss) !== -1)) continue;
     {
+      const shape = requiredElement(outputShapes, i);
       const slicedYShape = y.shape.slice(1);
       const slicedShape = shape.slice(1);
       for (let j = 0; j < slicedYShape.length; ++j) {
@@ -425,7 +425,7 @@ export function collectMetrics(
   const nestedMetrics: Array<Array<string|LossOrMetricFn>> = [];
   for (const name of outputNames) {
     const outputMetrics: string|LossOrMetricFn|Array<string|LossOrMetricFn> =
-        metrics.hasOwnProperty(name) ? metrics[name] : [];
+        metrics.hasOwnProperty(name) ? requiredEntry(metrics, name) : [];
     nestedMetrics.push(Array.isArray(outputMetrics) ? outputMetrics : [outputMetrics]);
   }
   return nestedMetrics;
@@ -1264,7 +1264,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       standardSampleWeights = [];
       for (let i = 0; i < classWeights.length; ++i) {
         standardSampleWeights.push(
-            await standardizeWeights(requiredElement(standardYs, i), null, classWeights[i]));
+            await standardizeWeights(requiredElement(standardYs, i), null, requiredElement(classWeights, i)));
       }
     }
 
@@ -2011,11 +2011,12 @@ export class LayersModel extends Container implements tfc.InferenceModel {
     const losses =
         this.loss as {[outputName: string]: LossOrMetricFn | string};
     for (const outputName of outputNames) {
-      if (typeof losses[outputName] !== 'string') {
+      const loss = losses[outputName];
+      if (typeof loss !== 'string') {
         throw new Error('Serialization of non-string loss is not supported.');
       }
       lossNames[outputName] =
-          toSnakeCase(losses[outputName] as string) as LossIdentifier;
+          toSnakeCase(loss) as LossIdentifier;
     }
     return lossNames;
   }
@@ -2033,7 +2034,7 @@ export class LayersModel extends Container implements tfc.InferenceModel {
       const metricsIdentifiers: {[key: string]: MetricsIdentifier} = {};
       for (const key in this.metrics) {
         metricsIdentifiers[key] =
-            toSnakeCase(Metrics.getLossOrMetricName(this.metrics[key]));
+            toSnakeCase(Metrics.getLossOrMetricName(requiredEntry(this.metrics, key)));
       }
       return metricsIdentifiers;
     }
@@ -2339,7 +2340,7 @@ function deserializeTrainingLoss(loss: TrainingConfig['loss']): ModelCompileArgs
   }
   const result: {[outputName: string]: LossIdentifier} = {};
   for (const key in loss) {
-    result[key] = toCamelCase(loss[key]) as LossIdentifier;
+    result[key] = toCamelCase(requiredEntry(loss, key)) as LossIdentifier;
   }
   return result;
 }
@@ -2355,7 +2356,7 @@ function deserializeTrainingMetrics(
   }
   const result: {[outputName: string]: MetricsIdentifier} = {};
   for (const key in metrics) {
-    result[key] = toCamelCase(metrics[key]) as MetricsIdentifier;
+    result[key] = toCamelCase(requiredEntry(metrics, key)) as MetricsIdentifier;
   }
   return result;
 }
